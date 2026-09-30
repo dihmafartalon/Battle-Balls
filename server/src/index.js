@@ -11,7 +11,7 @@
    ===================================================================== */
 
 import { CAT } from "./catalog.js";
-import { ECON_KEYS, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdict, retire, RETIRED, newStats, snap, recordAct, watchFlags, suspicion, summary, seasonReset } from "./econ.js";
+import { ECON_KEYS, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdict, retire, RETIRED, newStats, snap, recordAct, watchFlags, suspicion, summary, seasonReset, rankClean } from "./econ.js";
 const RETIRED_RE = new RegExp('"(' + Object.keys(RETIRED.abil).join("|") + ')"');
 import { adminPage, handleAdmin, ADMIN_TRIES, ADMIN_WINDOW_MS } from "./admin.js";
 import { SimHost, SIM_ID } from "./sim.js";
@@ -724,7 +724,9 @@ export class Vault {
        happens to buy something. Last season's RP is kept as s0rp. */
     if (rec) {
       const sv = JSON.parse(rec.data);
-      if (sv && typeof sv === "object" && seasonReset(sv)) {
+      const ok = sv && typeof sv === "object" && !Array.isArray(sv);
+      const reset = ok && seasonReset(sv), cleaned = ok && rankClean(sv);     // both run: neither may be skipped
+      if (reset || cleaned) {
         rec = { data: JSON.stringify(sv), rev: rec.rev + 1, at: now }; await st.put("save", rec);
         const who = (await st.get("sub")) || body.sub || "";
         if (who) dirCall(this.env, { op: "touch", sub: who, name: sv.netName || "", rp: sv.rp | 0, season: sv.season | 0 });

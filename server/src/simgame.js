@@ -1436,6 +1436,9 @@ function currentRankIndex(){
 }
 function currentRank(){return RANKS[currentRankIndex()];}
 function grantRankRewards(silent){
+  // signed in, the server owns what you have and grants rank rewards itself. A game
+  // doing it too could hand out rewards from an RP it had not caught up on yet.
+  if(econOn())return [];
   var idx=currentRankIndex(),granted=[];
   for(var i=0;i<=idx;i++){
     // a tier can hand over more than one thing, and one of them can be an ability
@@ -12586,7 +12589,7 @@ var LIMITED_DROPS=[
    blurb:"Spirit of Cruz debuts here, alongside two mythics you cannot normally buy.",
    items:[["sword","orbiter"],["sword","serpent"],["abil","cruz"],["abil","gale"],["skin","wraith"],["skin","emberline"]]},
   // 4.0 launch week: the Black Cat (gone for good after this) and the three new mythics
-  {name:"THE BLACK CAT DROP",from:"2026-10-01",to:"2026-10-08",
+  {name:"THE BLACK CAT DROP",from:"2026-09-30",to:"2026-10-08",
    blurb:"The Black Cat is here for one week only. Ricky's .9, Dylan's Warts and Grey's 14 Inches launch alongside it.",
    items:[["skin","blackcat"],["sword","ricky9"],["abil","warts"],["abil","grey"],["sword","orbiter"],["skin","wraith"]]}
 ];
@@ -12600,7 +12603,8 @@ var EVENT_SHOPS={
 // Rodriga: one item a month, for a Rodriga token. A token is a one in ten million
 // drop from any match, of any kind
 var RODRIGA={chance:1e-7,
-  months:{"2026-10":{tab:"sword",id:"pbfetus"}}};
+  // PB Fetus from launch day (the last day of September) through October
+  months:{"2026-09":{tab:"sword",id:"pbfetus"},"2026-10":{tab:"sword",id:"pbfetus"}}};
 // the login calendar: thirty days, claimed in order, one a day. Missing a day never
 // resets it. c coins, y yen, s free chest spins, L free LEGENDARY+ spins
 var LOGIN_CAL={id:"oct26",name:"OCTOBER LOGIN CALENDAR",
