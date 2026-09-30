@@ -12,7 +12,7 @@ r = applyAct(s, { k: "event", shop: "wendigo" }, { now: oct3 }); assert.equal(r.
 let s2 = ensure({ yen: 5000 }); r = applyAct(s2, { k: "event", shop: "wendigo" }, { now: oct9 }); assert.equal(r.ok, false, "closed after week");
 // rodriga
 r = applyAct(s, { k: "rodriga" }, { now: oct3 }); assert.equal(r.ok, false, "needs token");
-s.tokens = 1; r = applyAct(s, { k: "rodriga" }, { now: oct3 }); assert.ok(r.ok, JSON.stringify(r)); assert.ok(s.swords.rodbroom); assert.equal(s.tokens, 0);
+s.tokens = 1; r = applyAct(s, { k: "rodriga" }, { now: oct3 }); assert.ok(r.ok, JSON.stringify(r)); assert.ok(s.swords.pbfetus); assert.equal(s.tokens, 0);
 // login
 r = applyAct(s, { k: "login", day: "2026-10-03" }, { now: oct3 }); assert.ok(r.ok, JSON.stringify(r)); assert.equal(s.login.n, 1); assert.equal(s.coins, 250);
 r = applyAct(s, { k: "login", day: "2026-10-03" }, { now: oct3 }); assert.equal(r.ok, false, "twice a day");
