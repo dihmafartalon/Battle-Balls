@@ -1337,7 +1337,7 @@ button.chip:active{transform:translateY(2px)}
       </div>
       <div class="note chg">
         <h5>REDONE</h5>
-        <p><b>Bert Sampsoon</b> is a true classic now: the scarlet speedster. The <b>DEV</b> skin is redone as a void knight to match its blade. Divine Right and its swing are reworked. The starter gear got a glow-up too: <b>Rookie</b> has a proper kit, <b>Shadow</b> a deep hood, <b>Neon</b> is lit trim head to toe and <b>Static</b> has a TV for a head. <b>Trainer</b>, <b>Steel Katana</b>, <b>Crimson Fang</b> and <b>Gold Executioner</b> are all rebuilt.</p>
+        <p><b>Bert Sampsoon</b> is a true classic now: the scarlet speedster. The <b>DEV</b> skin is redone as a void knight to match its blade. Divine Right and its swing are reworked. <b>PB Fetus</b> is bigger and whirls on its cord, <b>Ricky's .9</b> twirls and double-taps, and <b>Apex</b> gets its own golden strike and a crown over the #1's head. <b>Grey's 14 Inches</b> is fixed: it rolls from in front of you and knocks people back instead of flooding the screen. <b>Dylan's Warts</b> has no cooldown: spin again the moment it stops. The starter gear got a glow-up too: <b>Rookie</b> has a proper kit, <b>Shadow</b> a deep hood, <b>Neon</b> is lit trim head to toe and <b>Static</b> has a TV for a head. <b>Trainer</b>, <b>Steel Katana</b>, <b>Crimson Fang</b> and <b>Gold Executioner</b> are all rebuilt.</p>
       </div>
       <div class="note chg">
         <h5>FIXES &amp; BALANCE</h5>
@@ -1824,9 +1824,9 @@ var SWORDS=[
   desc:"Not a sword. A block is a shot: the ball is blown back the way you are aiming with a crack, a muzzle flash and a tracer across the arena."},
  {id:"divineright",name:"Divine Right",price:-1,rank:"god",blade:0xdce6f2,hilt:0xd8b050,glow:0x7ad8ff,shape:"divine",hold:"rhip",swing:"divine",idle:"orbit",
   desc:"The GOD rank's blade. Worn on the right hip and drawn in one stroke: the wings open, the runes light, and every cut sheds feathers of light."},
- {id:"crown",name:"Apex",rarity:"ultra",price:-1,ultra:true,code:true,top1:true,blade:0xfff0c0,hilt:0x0e0c0a,glow:0xffd27a,shape:"apex",hold:"lance",size:.9,swing:"slash",idle:"none",
+ {id:"crown",name:"Apex",rarity:"ultra",price:-1,ultra:true,code:true,top1:true,blade:0xfff0c0,hilt:0x0e0c0a,glow:0xffd27a,shape:"apex",hold:"lance",size:.9,swing:"apex",idle:"none",
   desc:"RANKED EXCLUSIVE. Only ever held by the #1 on the global leaderboard, and taken back the moment they are not. \"There is only one.\""},
- {id:"pbfetus",name:"PB Fetus",rarity:"mythic",price:-1,event:"rodriga",blade:0xe8a8a0,hilt:0xd88888,glow:0xc8101c,shape:"fetus",hold:"dangle",swing:"slash",idle:"none",
+ {id:"pbfetus",name:"PB Fetus",rarity:"mythic",price:-1,event:"rodriga",blade:0xe8a8a0,hilt:0xd88888,glow:0xc8101c,shape:"fetus",hold:"dangle",swing:"fetus",idle:"none",
   desc:"Not a sword. Swung on its own cord; it cries, it drips, and it screams when it gets a kill. \"Please stop asking where it came from.\" October's item at Rodriga's shack, for a Rodriga token."},
  // Season 1 ranked path: a different weapon at every step
  {id:"s1wood",name:"Season 1 Driftwood Glaive",season:1,price:-1,rank:"wood",blade:0xc89a5a,hilt:0x4a2c14,glow:0x9aff6a,shape:"s1glaive",hold:"glaive",swing:"slash",idle:"drift",
@@ -1922,9 +1922,9 @@ var ABILITIES=[
  {id:"infinity",name:"Infinity",rarity:"mythic",price:13000,yen:350,cd:26,color:0x8affd8,
   desc:"Starts a four second timer: a ball that comes close to you before it runs out is caught and held on your blade for the time that is left. Walk with it, aim it, and press again to throw it back faster. You cannot parry while you hold it, so anything else in the air will kill you."},
  {id:"grey",name:"Grey's 14 Inches",rarity:"mythic",price:15500,yen:340,cd:30,color:0x3ab4ff,
-  desc:"A wall of water rises behind you and crashes across the whole arena. Everyone it reaches is shoved back, and when it catches the ball it carries it forward much faster."},
- {id:"warts",name:"Dylan's Warts",rarity:"mythic",price:16000,yen:345,cd:10,color:0xffc040,
-  desc:"Spin the chamber. Survive and keep a buff for the rest of the round: faster feet, a shorter cooldown or harder returns. Every spin after that is riskier (1 in 6, then 5, 4, 3, 2). Hit BUST and you are out. Stop whenever you like."},
+  desc:"A wall of water rises in front of you and rolls away where you are aiming. Everyone it reaches is knocked back and off their feet, and if it catches the ball it hurls it on ahead, faster."},
+ {id:"warts",name:"Dylan's Warts",rarity:"mythic",price:16000,yen:345,cd:1.8,color:0xffc040,
+  desc:"Spin the chamber. No cooldown: spin again the moment it stops. Survive and keep a buff for the rest of the round: faster feet or harder returns. Every spin after that is riskier (1 in 6, then 5, 4, 3, 2). Hit BUST and you are out. Stop whenever you like."},
  {id:"divine",name:"Divine Judgment",rarity:"rank",price:-1,rank:"god",cd:34,color:0xfff0b0,
   desc:"The GOD rank's ability. Cast while the ball is going for someone: a circle of light opens under them, the ball stops dead, a beam falls on them and the ball is thrown straight down onto them at tremendous speed. Parry it and it is over."},
  {id:"opi",name:"Opi's Wrath",rarity:"mythic",price:22000,yen:465,cd:26,color:0xff3a6e,
@@ -5931,6 +5931,7 @@ Fighter.prototype.setSword=function(id){
   this.bladeReach=clamp(len/3.1,0.62,1.85);
   this.bladeHeft=clamp(Math.pow(bbm.sx*bbm.sz*bbm.sy/0.9,0.34),0.70,1.55);
   this.restSword();
+  apexCrown(this);
 };
 // Colossus used to multiply the blade's scale and never undo it, so it grew
 // 1.45x on every cast for the whole match. Set it, then put it back.
@@ -6323,6 +6324,7 @@ Fighter.prototype.eliminate=function(){
 };
 Fighter.prototype.update=function(dt,t){
   var g=this.mesh;
+  if(this._apexCrown)apexCrownTick(this,t);
   if(!this.alive){
     if(this.shell&&this.shell.visible)this.shell.visible=false;   // however it died
     if(this.hbox&&this.hbox.visible)this.hbox.visible=false;
@@ -7477,7 +7479,8 @@ function ballHits(b,f,forced){
       netSend({t:"hit",w:(f.netId||("bot"+f.botIndex)),
         by:(killer?(killer.netId||("bot"+killer.botIndex)):null)});
     sfx("ko");
-    if(killer&&killer!==f&&killer.swordDef&&killer.swordDef.shape==="fetus")fetusSfx("kill");
+    if(killer&&killer!==f&&killer.swordDef&&killer.swordDef.shape==="fetus"){fetusSfx("kill");fetusSplash(killer,{x:f.pos.x,y:f.y+1.6,z:f.pos.z},true);}
+    if(killer&&killer!==f&&killer.swordDef&&killer.swordDef.top1)apexKill(f);
     if(f.isPlayer){flashVig();flashWarn("ELIMINATED",1.2,"#ff3ca8");}
     if(f.decoy)feed(killer?(killer.name+" fell for the decoy"):"The decoy took it","good");
     else feed(f.name+" was eliminated"+(killer&&killer!==f?" by "+killer.name:""),"ko");
@@ -9322,12 +9325,38 @@ function sigAnimate(f,p,arm,la,sw,h,bx,by,bz){
     f.legs[1].rotation.x=k(p,[[0,0],[.34,-.3],[.60,.3],[1,0]]);
     tw=k(p,[[0,0],[.34,.95],[.76,.95-TAU-.4],[1,-TAU]]);
   } else if(style==="gunshot"){
-    // raised and levelled at arm's length, the shot kicks the wrist up, and back down
-    arm.rotation.x=k(p,[[0,ra0],[.18,-1.45],[.30,-1.55],[.40,-1.98],[.62,-1.5],[1,ra0]]);
-    arm.rotation.z=k(p,[[0,rz],[.18,.04],[.62,.04],[1,rz]]);
-    E=k(p,[[0,eRest],[.18,1.57],[.30,1.57],[.40,1.2],[.62,1.57],[1,eRest]]);
-    arm.position.z=bz+k(p,[[0,0],[.18,.12],[.40,-.06],[.62,.1],[1,0]]);
-    tw=k(p,[[0,0],[.18,-.28],[.40,-.2],[1,0]]);
+    // a gunslinger: the pistol twirls round the trigger finger as it comes up
+    // level, fires twice (each shot kicks the wrist), then twirls back down
+    var LV=1.57+TAU;
+    arm.rotation.x=k(p,[[0,ra0],[.16,-1.5],[.27,-1.55],[.33,-1.98],[.43,-1.52],[.49,-1.55],[.55,-2.05],[.68,-1.5],[.84,-.9],[1,ra0]]);
+    arm.rotation.z=k(p,[[0,rz],[.16,.05],[.68,.05],[1,rz]]);
+    E=k(p,[[0,eRest],[.16,LV],[.27,LV],[.33,LV-.5],[.43,LV],[.49,LV],[.55,LV-.6],[.68,LV],[1,eRest+TAU*2]]);
+    arm.position.z=bz+k(p,[[0,0],[.16,.14],[.27,.14],[.33,-.12],[.43,.12],[.49,.14],[.55,-.14],[.68,.1],[1,0]]);
+    arm.position.y=by+k(p,[[0,0],[.27,.06],[.55,.06],[1,0]]);
+    f.legs[1].rotation.x=k(p,[[0,0],[.16,-.25],[.68,-.25],[1,0]]);
+    f.legs[0].rotation.x=k(p,[[0,0],[.16,.2],[.68,.2],[1,0]]);
+    tw=k(p,[[0,0],[.16,-.35],[.33,-.22],[.49,-.3],[.55,-.2],[1,0]]);
+  } else if(style==="fetus"){
+    // hauled up overhead and whirled round on its cord, then slammed down
+    arm.rotation.x=k(p,[[0,ra0],[.16,-2.95],[.44,-2.7],[.58,-.35],[.72,-.6],[1,ra0]]);
+    arm.rotation.z=k(p,[[0,rz],[.16,.35],[.44,-.25],[.58,.1],[1,rz]]);
+    E=Math.PI;                                        // it always hangs; the cord does the rest
+    var dgl=sw.userData.dangle;
+    if(dgl){dgl.rotation.x=k(p,[[0,0],[.14,.6],[.44,TAU*1.2],[.58,TAU*1.75],[.8,TAU*2],[1,TAU*2]]);dgl.rotation.z=0;}
+    f.legs[1].rotation.x=k(p,[[0,0],[.44,.3],[.6,-.5],[1,0]]);
+    f.legs[0].rotation.x=k(p,[[0,0],[.44,-.2],[.6,.35],[1,0]]);
+    tw=k(p,[[0,0],[.16,.45],[.44,-.3],[.6,-.6],[1,0]]);
+  } else if(style==="apex"){
+    // wind up: the spear drawn back high over the shoulder; the slash: one
+    // long golden sweep across the front; recover to rest
+    arm.rotation.x=k(p,[[0,ra0],[.26,-2.75],[.34,-2.8],[.52,-.55],[.66,-.7],[1,ra0]]);
+    arm.rotation.z=k(p,[[0,rz],[.26,.7],[.34,.72],[.52,-.55],[.66,-.45],[1,rz]]);
+    E=k(p,[[0,eRest],[.26,-1.25],[.34,-1.35],[.52,1.5],[.66,1.4],[1,eRest]]);
+    sw.rotation.z=k(p,[[0,s2],[.26,s2+.45],[.52,s2-.7],[.66,s2-.6],[1,s2]]);
+    arm.position.z=bz+k(p,[[0,0],[.26,-.1],[.52,.3],[.66,.25],[1,0]]);
+    f.legs[1].rotation.x=k(p,[[0,0],[.26,.25],[.52,-.55],[.7,-.45],[1,0]]);
+    f.legs[0].rotation.x=k(p,[[0,0],[.26,-.2],[.52,.45],[.7,.35],[1,0]]);
+    tw=k(p,[[0,0],[.26,.75],[.34,.8],[.52,-.85],[.66,-.75],[1,0]]);
   } else if(style==="riftslash"||style==="wendigo"||style==="divine"){
     /* The sling's own draw and cut, made fluid: the draw, the cut and the
        return home overlap, each easing in and out (smootherstep), so the blade
@@ -9395,8 +9424,11 @@ function sigBeat(f,S,b,i){
   var X=f.pos.x,Y=f.y,Z=f.pos.z,fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),c,k,a;
   if(st!=="frenzy"&&st!=="gunshot")spawnSlash(f,b.st,col,b.rev);
   if(st==="gunshot"){
-    gunTracer(f);
-    if(f===player)shakeCam(.08);
+    gunBlast(f,!!b.fin,col);
+  } else if(st==="fetus"){
+    fetusSplash(f,tip,!!b.fin);
+  } else if(st==="apex"){
+    apexStrike(f,tip);
   } else if(st==="divine"){
     // the wing: a wide blue arc, feathers breaking off it and drifting down,
     // gold streaks through it, a starburst where it starts and where it ends
@@ -9511,9 +9543,21 @@ function sigSwingSfx(d){
     setTimeout(function(){noiseHit(.5,.34,650);tone(110,40,.5,"sawtooth",.26);tone(700,240,.4,"square",.07);},60);
     setTimeout(function(){noiseHit(.35,.18,3600);},180);
   } else if(st==="gunshot"){
-    // the crack of a nine: a sharp noise hit, a low thump and a ring of brass
-    noiseHit(.08,.5,5200);tone(160,50,.14,"square",.3);noiseHit(.22,.18,900);
-    setTimeout(function(){tone(3200,2600,.05,"triangle",.05);},140);
+    // the twirl's whirr, then two cracks of a nine, brass on the floor, the twirl home
+    var gd=SIG_SWING.gunshot.dur*1000;
+    tone(420,980,.14,"triangle",.05);setTimeout(function(){tone(520,1100,.12,"triangle",.04);},70);
+    [.27,.49].forEach(function(w,i){setTimeout(function(){
+      noiseHit(.09,.55,5600);tone(170,45,.18,"square",.32);noiseHit(.3,.2,800);tone(1200,300,.06,"sawtooth",.08);
+      setTimeout(function(){tone(3400+i*300,2800,.05,"triangle",.05);},160);
+      setTimeout(function(){tone(2900,2500,.04,"triangle",.04);},240);},gd*w);});
+    setTimeout(function(){tone(900,420,.18,"triangle",.04);},gd*.72);
+  } else if(st==="apex"){
+    // steel drawn, a rising shing, the strike rings like a struck bell over a low boom
+    var ad=SIG_SWING.apex.dur*1000;
+    noiseHit(.3,.08,6000);tone(1200,2400,.3,"triangle",.05);
+    setTimeout(function(){noiseHit(.35,.35,1600);tone(2600,3800,.25,"triangle",.08);
+      [440,554.37,659.25,880].forEach(function(fq,i){setTimeout(function(){tone(fq,fq,.9,"sine",.06);tone(fq*2,fq*2.003,.6,"sine",.02);},i*20);});
+      tone(80,40,.6,"sine",.25);noiseHit(.5,.2,400);},ad*.46);
   } else if(st==="divine"){
     // ethereal: a choir chord that swells and rings out, a shimmer over it
     [523.25,659.25,783.99,1046.5].forEach(function(fq,i){setTimeout(function(){tone(fq,fq*1.002,.9,"sine",.07);tone(fq*2,fq*2.004,.6,"sine",.025);},i*25);});
@@ -10586,7 +10630,19 @@ SWORD_ICON.s1null="<path d='M16 24C16 14 18 8 22 2l2 2c-3 6-4 12-4 20z' fill='{B
 SWORD_ICON.s1hook="<path d='M20 4v8' stroke='#8a8a94' stroke-width='3' stroke-dasharray='2 1.5'/><path d='M20 12v8c0 8 10 8 10 0v-3' stroke='{B}' stroke-width='3.4' fill='none' stroke-linecap='round'/>"+
   "<path d='M30 17l2 3-4 0z' fill='{B}'/><circle cx='26' cy='24' r='1.4' fill='#a80a1a'/>";
 // signature swings: the gunshot and the divine draw
-SIG_SWING.gunshot={dur:.36,col:0xffb040,beats:[{w:.30,st:{span:.9,tilt:.1,r:1.2,w:.4,hot:1},fin:true}]};
+// Ricky's .9: a twirl up into the aim, a double tap, and a twirl back down
+SIG_SWING.gunshot={dur:.66,col:0xffb040,beats:[
+  {w:.27,st:{span:1.5,tilt:1.35,r:1.2,w:.35,hot:1},col:0xffd070},
+  {w:.49,st:{span:2.4,tilt:1.3,r:1.35,w:.45,hot:1},col:0xffc040,fin:true}]};
+// PB Fetus: whirled round on its cord, then slammed down
+SIG_SWING.fetus={dur:.7,col:0xc8101c,beats:[
+  {w:.30,st:{span:6.28,tilt:.3,r:1.35,w:1.1,hot:1},col:0xff2a3a},
+  {w:.58,st:{span:3.2,tilt:1.35,r:1.8,w:1.3,hot:1},col:0xc8101c,fin:true}]};
+SLASH_STYLE.fetus=SIG_SWING.fetus.beats[1].st;SWEEP.fetus=SWEEP.overhead;
+// APEX: drawn back over the shoulder, one golden crescent, a starburst on the strike
+SIG_SWING.apex={dur:.62,col:0xffd27a,beats:[
+  {w:.46,st:{span:5.9,tilt:.28,r:2.5,w:1.7,hot:1},col:0xfff0c0,fin:true}]};
+SLASH_STYLE.apex=SIG_SWING.apex.beats[0].st;SWEEP.apex=SWEEP.slash;
 SLASH_STYLE.gunshot=SIG_SWING.gunshot.beats[0].st;SWEEP.gunshot=SWEEP.stab;
 // slung on the right hip, blade hanging down and back: drawn and cut in one
 // worn like a sheathed blade: the grip forward and up at the hip, the blade
@@ -10731,10 +10787,10 @@ SIG_SHAPE.fetus=function(g,seg,B,H,G){
   var vein=new THREE.MeshBasicMaterial({color:0xb01020}),blood=new THREE.MeshBasicMaterial({color:0xc8101c});
   var eyeM=new THREE.MeshPhongMaterial({color:0x100204,shininess:140,specular:0xffffff}),red=new THREE.MeshBasicMaterial({color:0x7a0008});
   // the cord: twisted segments out of the fist
-  var dg=new THREE.Group();dg.scale.setScalar(.56);g.add(dg);g.userData.dangle=dg;
-  for(i=0;i<6;i++){var c=new THREE.Mesh(GEO.sphLo,i%2?flesh:flesh2);c.scale.set(.2,.28,.2);c.position.set(Math.sin(i*1.6)*.05,.1+i*.18,Math.cos(i*1.6)*.05);dg.add(c);}
+  var dg=new THREE.Group();dg.scale.setScalar(.82);g.add(dg);g.userData.dangle=dg;
+  for(i=0;i<3;i++){var c=new THREE.Mesh(GEO.sphLo,i%2?flesh:flesh2);c.scale.set(.2,.28,.2);c.position.set(Math.sin(i*1.6)*.05,.1+i*.18,Math.cos(i*1.6)*.05);dg.add(c);}
   // the head, big and round, veined
-  var hd=new THREE.Group();hd.position.y=1.6;hd.rotation.z=Math.PI;dg.add(hd);   // hung by the crown: the face is upright
+  var hd=new THREE.Group();hd.position.y=1.05;hd.rotation.z=Math.PI;dg.add(hd);   // hung by the crown: the face is upright
   var head=new THREE.Mesh(GEO.sph,flesh);head.scale.set(1.25,1.2,1.2);hd.add(head);
   for(i=0;i<6;i++){var v=new THREE.Mesh(GEO.box,vein);v.scale.set(.03,.4,.03);var a=i/6*TAU;v.position.set(Math.cos(a)*.55,.15+Math.sin(i)*.2,Math.sin(a)*.55);v.rotation.set(Math.sin(a)*.8,0,Math.cos(a)*.8+i);hd.add(v);}
   // the face, turned out: big black eyes, bloody tears, an open mouth
@@ -10747,16 +10803,19 @@ SIG_SHAPE.fetus=function(g,seg,B,H,G){
   }
   var mo=new THREE.Mesh(GEO.sphLo,new THREE.MeshBasicMaterial({color:0x3a0408}));mo.scale.set(.18,.14,.08);mo.position.set(0,-.26,-.55);hd.add(mo);
   // the body, curled up underneath, with little limbs
-  var bd=new THREE.Mesh(GEO.sph,flesh2);bd.scale.set(.55,.5,.45);bd.position.set(0,2.38,0);dg.add(bd);
+  var bd=new THREE.Mesh(GEO.sph,flesh2);bd.scale.set(.55,.5,.45);bd.position.set(0,1.83,0);dg.add(bd);
   for(sd=-1;sd<=1;sd+=2){
-    var ar=new THREE.Mesh(GEO.sphLo,flesh);ar.scale.set(.16,.28,.16);ar.position.set(sd*.28,2.35,-.14);ar.rotation.x=.8;dg.add(ar);
-    var lg=new THREE.Mesh(GEO.sphLo,flesh);lg.scale.set(.18,.3,.2);lg.position.set(sd*.18,2.7,-.05);lg.rotation.x=-.6;dg.add(lg);
-    var ft=new THREE.Mesh(GEO.sphLo,flesh2);ft.scale.set(.14,.12,.18);ft.position.set(sd*.18,2.86,-.2);dg.add(ft);
+    var ar=new THREE.Mesh(GEO.sphLo,flesh);ar.scale.set(.16,.28,.16);ar.position.set(sd*.28,1.8,-.14);ar.rotation.x=.8;dg.add(ar);
+    var lg=new THREE.Mesh(GEO.sphLo,flesh);lg.scale.set(.18,.3,.2);lg.position.set(sd*.18,2.15,-.05);lg.rotation.x=-.6;dg.add(lg);
+    var ft=new THREE.Mesh(GEO.sphLo,flesh2);ft.scale.set(.14,.12,.18);ft.position.set(sd*.18,2.31,-.2);dg.add(ft);
   }
   var drips=new THREE.Group();drips.userData.aura=true;dg.add(drips);g.userData.drips=drips;
+  // a sick red glow round it, so it reads from across the arena
+  var aura=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:glowTex(),color:0xff2030,transparent:true,opacity:.45,blending:THREE.AdditiveBlending,depthWrite:false}));
+  aura.scale.setScalar(2.6);aura.position.y=1.3;aura.userData.aura=true;aura.userData.bill=true;dg.add(aura);g.userData.fetusAura=aura;
   g.userData.pulse=null;g.userData.flareMul=.35;
   B.emissiveIntensity=.1;
-  return 1.7;
+  return 1.9;
 };
 
 SWORD_ICON.pistol="<rect x='17' y='4' width='7' height='24' rx='1' fill='#141418' stroke='#d8a83a' stroke-width='1.4'/>"+
@@ -10781,10 +10840,14 @@ function v4SwordIdle(f,sw,t,dt){
     dg.rotation.x=Math.sin(t*2.6+f.phase)*.18+clamp(sp*.012,0,.5)+sw2*.9;
     dg.rotation.z=Math.sin(t*1.9+f.phase)*.14;
     if(QUAL>0&&Math.random()<dt*(f===player?6:1.5)){
-      f.mesh.updateMatrixWorld(true);var v=_v4v||(_v4v=new THREE.Vector3());v.set(0,2.0,0);dg.localToWorld(v);
-      spark(v.x,v.y,v.z,0,-.5,0,.8,.05,.1,.28,.8,9);
+      f.mesh.updateMatrixWorld(true);var v=_v4v||(_v4v=new THREE.Vector3());v.set(0,1.5,0);dg.localToWorld(v);
+      spark(v.x,v.y,v.z,0,-.5,0,.8,.05,.1,.34,.9,9);
+      // and a drop left on the floor behind you as you walk
+      if(sp>3&&Math.random()<.5)spark(v.x,.06,v.z,0,0,0,.45,.02,.04,.5,2.4,0);
     }
   }
+  var fa=sw.userData.fetusAura;
+  if(fa&&camera){fa.lookAt(camera.position);fa.material.opacity=.35+.15*Math.sin(t*3+f.phase);}
   var fr=sw.userData.frags;
   if(fr)for(var i=0;i<fr.children.length;i++){var m=fr.children[i],b=m.userData.base;
     m.position.set(b[0]+Math.sin(t*1.3+i)*.06,b[1]+Math.sin(t*1.7+i*1.3)*.12,b[2]);m.rotation.y=t*2+i;}
@@ -10802,7 +10865,7 @@ var _v4v=null;
 SIG_SWING.divine={dur:.62,col:0x9ad8ff,beats:[{w:.40,st:{span:5.6,tilt:.2,r:2.2,w:1.6,hot:1},col:0xe8f8ff,fin:true}]};
 SLASH_STYLE.divine=SIG_SWING.divine.beats[0].st;SWEEP.divine=SWEEP.slash;
 HOLD.pistol={sp:[0,-1.22,.06],sr:[2.56,0,-0.06],ra:[-0.2,0,0.12],la:null};        // low ready: down and forward, muzzle off the floor
-HOLD.dangle={sp:[0,-1.28,0],sr:[Math.PI,0,0],ra:[-0.1,0,0.18],la:null};               // hanging from the fist
+HOLD.dangle={sp:[0,-1.28,0.04],sr:[Math.PI+0.85,0,0],ra:[-0.85,0,0.2],la:null};     // held out in front by its cord, hanging
 FXD.divinefx={rate:40,c1:0xcff2ff,c2:0x6ac8ff,vy:[.4,1.8],sp:.5,g:-.6,sz:.62,life:1.2,along:1.0,sheath:.55,motes:6,ring:0x7ae8ff};
 FXD.apexfx={rate:30,c1:0xffe8a0,c2:0xfff8e0,vy:[.2,1.4],sp:.5,g:-.8,sz:.5,life:1.0,along:1.0,sheath:.4,motes:4,ring:0xe8c060};
 FXD.fetusfx={rate:14,c1:0xc8101c,c2:0x5a0008,vy:[-1.2,-.2],sp:.3,g:6,sz:.4,life:.7,along:.4,sheath:0};
@@ -10811,11 +10874,88 @@ Object.assign(SWORD_FX,{crown:"apexfx",pbfetus:"fetusfx",divineright:"divinefx"}
 function fetusSfx(kind){
   if(!AC)return;
   try{
-    if(kind==="swing"){noiseHit(.16,.22,600);tone(260,120,.18,"sine",.08);
-      if(Math.random()<.35)setTimeout(function(){tone(620,880,.22,"sawtooth",.05);tone(640,900,.22,"square",.03);},90);}
+    if(kind==="swing"){
+      var fd=SIG_SWING.fetus.dur*1000;
+      // the whirl: three wet whooshes, a wailing cry going round with it
+      [0,.12,.24].forEach(function(w,i){setTimeout(function(){noiseHit(.14,.18+i*.04,500+i*200);},fd*w+60);});
+      for(var c=0;c<6;c++)(function(c){setTimeout(function(){var b=560+Math.sin(c*1.7)*120;tone(b,b*1.35,.12,"sawtooth",.045);tone(b*1.01,b*1.4,.12,"square",.025);},fd*.1+c*55);})(c);
+      // the slam: a wet splat and a low thud
+      setTimeout(function(){noiseHit(.28,.45,420);tone(110,38,.3,"sine",.25);noiseHit(.2,.2,2400);},fd*.58);}
     else if(kind==="kill"){[0,90,200].forEach(function(ms,i){setTimeout(function(){tone(900-i*120,1500-i*300,.34,"sawtooth",.09);tone(920,1520,.3,"square",.05);},ms);});
       setTimeout(function(){noiseHit(.3,.25,500);},420);}
   }catch(e){}
+}
+/* Ricky's .9, each shot: the tracer, a white-gold muzzle flash with four
+   points, a shockwave ring, smoke, a spent case, and a gold arc that follows
+   the recoil. The second shot is bigger. */
+function gunBlast(f,big,col){
+  var tip=f.swordTip(),yaw=f.isPlayer?camYaw:(f.aimYaw!=null?f.aimYaw:f.yaw),fx=Math.sin(yaw),fz=Math.cos(yaw),rx=fz,rz=-fx;
+  gunTracer(f);
+  burst(tip.x,tip.y,tip.z,QUAL>1?(big?34:22):12,big?16:12,0xffffff,big?1.8:1.4,.12,0);
+  burst(tip.x,tip.y,tip.z,QUAL>1?20:10,10,0xffc040,1.4,.2,0);
+  for(var s=0;s<4;s++){var a=s*Math.PI/2+.4,ux=Math.cos(a)*rx,uy=Math.sin(a),uz=Math.cos(a)*rz;
+    for(var j=1;j<=5;j++)spark(tip.x+ux*j*.18,tip.y+uy*j*.18,tip.z+uz*j*.18,0,0,0,1,.9,.6,.55-j*.07,.12,0);}
+  ringBurst(tip.x,tip.y,tip.z,QUAL>1?20:10,big?9:6,0xffe0a0,1.1,.3);
+  for(var k=0;k<(QUAL>1?8:4);k++)spark(tip.x+fx*.4,tip.y,tip.z+fz*.4,fx*hr(1,3)+hr(-.5,.5),hr(1,2.4),fz*hr(1,3)+hr(-.5,.5),.55,.55,.6,hr(.6,1),hr(.8,1.4),-.6);
+  spawnSlash(f,big?{span:2.6,tilt:1.25,r:1.4,w:.5,hot:1}:{span:1.6,tilt:1.3,r:1.25,w:.35,hot:1},col||0xffc040,big);
+  if(big){slashRing(tip.x,tip.y,tip.z,0xffd070,0,Math.PI/2);if(f===player)shakeCam(.14);}
+  else if(f===player)shakeCam(.09);
+}
+/* PB Fetus: a spray of blood off the whirl, and on the slam a splash on the
+   floor, a red ring, drops everywhere and a cry */
+function fetusSplash(f,tip,slam){
+  var n=QUAL>1?(slam?46:26):(slam?20:12),X=tip.x,Y=tip.y,Z=tip.z;
+  for(var i=0;i<n;i++){var a=Math.random()*TAU,sp=hr(2,slam?9:6);
+    spark(X,Y,Z,Math.cos(a)*sp,hr(1,slam?7:4),Math.sin(a)*sp,hr(.6,.9),0,hr(0,.08),hr(.3,.6),hr(.5,1),12);}
+  burst(X,Y,Z,slam?24:12,slam?10:6,0xc8101c,1.3,.4,-8);
+  if(slam){
+    var gx=f.pos.x+Math.sin(f.yaw)*2.2,gz=f.pos.z+Math.cos(f.yaw)*2.2;
+    slashRing(gx,f.y+.08,gz,0xc8101c,0,0);slashRing(gx,f.y+.08,gz,0xff3a4a,.08,0);
+    ringBurst(gx,f.y+.3,gz,QUAL>1?28:14,8,0xff2030,1.3,.5);
+    for(var d=0;d<(QUAL>1?18:8);d++){var da=Math.random()*TAU,dr=hr(.3,2.4);
+      spark(gx+Math.cos(da)*dr,f.y+.06,gz+Math.sin(da)*dr,0,0,0,.5,.02,.05,hr(.5,.9),hr(2,3.2),0);}
+    if(f===player)shakeCam(.12);
+  }
+}
+/* APEX, the strike: a golden starburst where the spear lands, a pillar of
+   light, shards thrown out, and a gold ring racing across the floor */
+function apexStrike(f,tip){
+  var fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),X=f.pos.x+fx*3,Z=f.pos.z+fz*3,Y=f.y;
+  spawnSlash(f,{span:5.2,tilt:.22,r:1.9,w:.7,hot:1},0xffffff,true);
+  burst(tip.x,tip.y,tip.z,QUAL>1?40:18,14,0xfff0c0,1.8,.35,0);
+  for(var s=0;s<8;s++){var a=s/8*TAU;for(var j=1;j<=7;j++)
+    spark(tip.x+Math.cos(a)*j*.28,tip.y+Math.sin(a)*j*.28,tip.z,0,0,0,1,.85,.45,(s%2?.45:.7)-j*.05,.22,0);}
+  hwBeam(X,Y,Z,0xffd27a,1.1,.5);hwBeam(X,Y,Z,0xffffff,.45,.35);
+  slashRing(f.pos.x,Y+.1,f.pos.z,0xffd27a,0,0);slashRing(f.pos.x,Y+.1,f.pos.z,0xfff0c0,.1,0);
+  ringBurst(f.pos.x,Y+.4,f.pos.z,QUAL>1?36:16,14,0xffd27a,1.4,.55);
+  for(var k=0;k<(QUAL>1?16:8);k++){var sa=f.yaw+hr(-1.2,1.2);
+    spark(tip.x,tip.y,tip.z,Math.sin(sa)*hr(6,14),hr(1,6),Math.cos(sa)*hr(6,14),1,.8,.35,hr(.4,.7),hr(.5,.9),-6);}
+  if(f===player)shakeCam(.16);
+}
+// the #1's crown: it floats over whoever holds Apex, for everyone to see
+function apexCrown(f){
+  if(f._apexCrown){if(f._apexCrown.parent)f._apexCrown.parent.remove(f._apexCrown);disposeTree(f._apexCrown);f._apexCrown=null;}
+  if(!f.swordDef||!f.swordDef.top1||!f.mesh)return;
+  var c=new THREE.Group(),gold=v4Phong(0xffd23f,140,0x6a4400,.6),gem=new THREE.MeshBasicMaterial({color:0xfff4d0});
+  var band=new THREE.Mesh(new THREE.TorusGeometry(.42,.07,6,20),gold);band.rotation.x=Math.PI/2;c.add(band);
+  for(var i=0;i<5;i++){var a=i/5*TAU,sp=new THREE.Mesh(GEO.cone,gold);sp.scale.set(.12,.34,.12);sp.position.set(Math.cos(a)*.42,.18,Math.sin(a)*.42);c.add(sp);
+    var g2=new THREE.Mesh(new THREE.OctahedronGeometry(.06),gem);g2.position.set(Math.cos(a)*.42,.4,Math.sin(a)*.42);c.add(g2);}
+  var glow=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:glowTex(),color:0xffd27a,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false}));
+  glow.scale.setScalar(1.8);glow.userData.aura=true;glow.userData.bill=true;c.add(glow);
+  c.position.y=4.25;c.userData.glow=glow;f.mesh.add(c);f._apexCrown=c;
+}
+function apexCrownTick(f,t){
+  var c=f._apexCrown;if(!c)return;
+  c.rotation.y=t*.9;c.position.y=4.25+Math.sin(t*2+f.phase)*.08;
+  if(c.userData.glow&&camera)c.userData.glow.lookAt(camera.position);
+  c.visible=f.alive;
+}
+// a kill with Apex: judged from above
+function apexKill(v){
+  hwBeam(v.pos.x,v.y,v.pos.z,0xffd27a,1.4,.7);hwBeam(v.pos.x,v.y,v.pos.z,0xffffff,.6,.5);
+  ringBurst(v.pos.x,v.y+.3,v.pos.z,QUAL>1?40:18,16,0xffd27a,1.6,.7);
+  burst(v.pos.x,v.y+2,v.pos.z,QUAL>1?50:20,14,0xfff0c0,1.8,.8,-3);
+  try{tone(880,1760,.5,"sine",.1);tone(1320,2640,.6,"sine",.06);noiseHit(.5,.25,900);tone(70,35,.8,"sine",.25);}catch(e){}
 }
 // a shot's tracer: from the muzzle straight out along the aim, with a flash,
 // a ring of smoke and a spent case flicked out of the side
@@ -11390,63 +11530,58 @@ function v4Mine(o){return (o.isPlayer&&!o.isRemote)||(o.isBot&&(!NET.on||NET.isH
    you are facing. Everyone it passes is carried with it; the ball, when it is
    reached, is thrown on much faster at whoever is ahead of it. Then the flood
    drains away. */
-var WAVE={speed:30,h:9,push:34,boost:0.85};
+var WAVE={speed:26,h:7,w:20,push:16,pop:9,boost:0.6};
 function greyWave(f,yaw){
-  var R=arenaEdgeFor(f)+4,dx=Math.sin(yaw),dz=Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw);
-  // it starts behind you, clear of the edge, and runs until it has crossed everything
-  var startD=-8,endD=R*2+10,ox=f.pos.x,oz=f.pos.z;
+  /* A wave you can read: it rises in FRONT of you, rolls away across a lane
+     as wide as a few fighters, and crashes at the far side. Anyone it reaches
+     is knocked back and up once (not dragged across the map), and the ball,
+     if it catches it, is hurled on ahead faster. */
+  var dx=Math.sin(yaw),dz=Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw);
+  var R=arenaEdgeFor(f),W=WAVE.w,startD=1.5,endD=R*1.7,ox=f.pos.x,oz=f.pos.z;
   var g=new THREE.Group();scene.add(g);
-  var water=new THREE.MeshPhongMaterial({color:0x2a8ad8,transparent:true,opacity:.72,shininess:120,emissive:0x0a3a6a,emissiveIntensity:.4,side:THREE.DoubleSide,depthWrite:false});
-  var foam=new THREE.MeshBasicMaterial({color:0xe8f8ff,transparent:true,opacity:.9});
-  var W=R*2.4;
-  // the wall itself: a curling face, a crest of foam and spray
-  var face=new THREE.Mesh(GEO.box,water);face.scale.set(W,WAVE.h,3.2);face.position.y=WAVE.h/2;g.add(face);
-  var curl=new THREE.Mesh(GEO.cyl,water);curl.scale.set(3.4,W,3.4);curl.rotation.z=Math.PI/2;curl.position.set(0,WAVE.h,1.3);g.add(curl);
-  var crest=new THREE.Mesh(GEO.box,foam);crest.scale.set(W,.7,1.4);crest.position.set(0,WAVE.h+1.3,2.2);g.add(crest);
-  var back=new THREE.Mesh(GEO.box,water);back.scale.set(W,WAVE.h*.55,6);back.position.set(0,WAVE.h*.27,-4);g.add(back);
-  // debris riding the wave
-  var debris=[];
-  for(var i=0;i<14;i++){
-    var d=new THREE.Mesh(GEO.box,new THREE.MeshLambertMaterial({color:[0x6a4a2a,0x8a6a3a,0x4a3a2a][i%3]}));
-    d.scale.set(rr(.6,1.8),rr(.2,.4),rr(.4,1.2));d.position.set(rr(-W/2,W/2),rr(2,WAVE.h),rr(-1,2));g.add(d);
-    debris.push({m:d,ph:Math.random()*TAU,sp:rr(1,3)});
-  }
+  var deep=new THREE.MeshPhongMaterial({color:0x1a6ec8,shininess:140,specular:0xbfe8ff,emissive:0x0a2a5a,emissiveIntensity:.5,transparent:true,opacity:.92});
+  var light=new THREE.MeshPhongMaterial({color:0x4ab8ff,shininess:160,specular:0xffffff,emissive:0x0a3a6a,emissiveIntensity:.5,transparent:true,opacity:.86});
+  var foam=new THREE.MeshBasicMaterial({color:0xeaf8ff,transparent:true,opacity:.95});
+  // one smooth curl along the lane: a hollow C that opens forward, a lip of
+  // foam hanging over the front, foam boiling at its foot
+  var r=WAVE.h/2,body=new THREE.Group();g.add(body);
+  var curl=new THREE.Mesh(new THREE.CylinderGeometry(r,r,W,32,1,true,Math.PI/2-.8,Math.PI*1.5+.8-Math.PI/2+.0),light);
+  light.side=THREE.DoubleSide;curl.rotation.z=Math.PI/2;curl.position.y=r;body.add(curl);
+  var backs=new THREE.Mesh(new THREE.CylinderGeometry(r*1.02,r*1.02,W,32,1,true,Math.PI,Math.PI*.5),deep);
+  deep.side=THREE.DoubleSide;backs.rotation.z=Math.PI/2;backs.position.y=r;body.add(backs);
+  var lip=new THREE.Mesh(GEO.cyl,foam);lip.scale.set(.8,W,.8);lip.rotation.z=Math.PI/2;lip.position.set(0,r+r*Math.sin(.77),r*Math.cos(.77));body.add(lip);
+  var foot=new THREE.Mesh(GEO.box,foam);foot.scale.set(W,.45,2.2);foot.position.set(0,.2,.6);body.add(foot);
+  for(var e=-1;e<=1;e+=2){var cap=new THREE.Mesh(GEO.sph,deep);cap.scale.set(.6,r,r);cap.position.set(e*W/2,r,-r*.1);body.add(cap);}
   g.rotation.y=yaw;
-  // the flood it leaves behind: a sheet of water that spreads, then drains
-  var sheet=new THREE.Mesh(GEO.plane,new THREE.MeshPhongMaterial({color:0x2a7ac8,transparent:true,opacity:.5,shininess:140,depthWrite:false}));
-  sheet.rotation.x=-Math.PI/2;scene.add(sheet);
-  var hitSet={},ballHit={},dist=startD,drain=0,t=0;
-  function place(){
-    var cx=ox+dx*dist,cz=oz+dz*dist;g.position.set(cx,0,cz);
-    var L=Math.max(.1,dist-startD);
-    sheet.scale.set(W,L,1);sheet.position.set(ox+dx*(startD+L/2),.12,oz+dz*(startD+L/2));sheet.rotation.z=-yaw;
-  }
-  place();
-  sfx("ko");
-  try{noiseHit(1.6,.5,380);tone(90,40,1.4,"sine",.25);noiseHit(1.0,.25,1600);}catch(e){}
-  if(player&&v4Mine(player))shakeCam(.3);
+  var hit=[],ballHit={},dist=startD,t=0,crash=0,H=0;
+  function place(){g.position.set(ox+dx*dist,0,oz+dz*dist);}
+  function shape(h){var k=Math.max(.02,h/WAVE.h);body.scale.set(1,k,.6+.4*k);
+    lip.scale.set(.8+.15*Math.sin(t*9),W,.8);}
+  place();shape(.5);
+  try{noiseHit(1.4,.45,420);tone(110,45,1.2,"sine",.22);noiseHit(.8,.2,2400);}catch(e){}
+  if(f===player)shakeCam(.18);
+  burst(ox+dx*2,1,oz+dz*2,30,10,0xbfe8ff,1.4,.6,-6);
   V4FX.push({tick:function(dt){
     t+=dt;
     if(dist<endD){
+      // it rises as it sets off, then rolls
+      H=Math.min(WAVE.h,H+dt*WAVE.h*3.2);shape(H);
       dist+=WAVE.speed*dt;place();
-      var front=dist+1.8;
-      // fighters it reaches are carried along
-      var all=livingFighters(false);
+      var front=dist+2.2,all=livingFighters(false);
       for(var k=0;k<all.length;k++){var o=all[k];
-        if(o===f||!hostileTo(f,o)||!v4Mine(o))continue;
+        if(o===f||!hostileTo(f,o)||hit.indexOf(o)>=0)continue;
         var along=(o.pos.x-ox)*dx+(o.pos.z-oz)*dz,side=(o.pos.x-ox)*rx+(o.pos.z-oz)*rz;
-        if(Math.abs(side)>W/2)continue;
-        if(along<front&&along>front-5){
-          o.vel.x=dx*WAVE.push;o.vel.z=dz*WAVE.push;
-          if(!hitSet[k]){hitSet[k]=1;o.vy=Math.max(o.vy,9);o.grounded=false;
-            burst(o.pos.x,o.y+1,o.pos.z,18,8,0xbfe8ff,1.3,.5,-5);}
-        }
+        if(Math.abs(side)>W/2+.8||along>front||along<front-3.5)continue;
+        hit.push(o);
+        burst(o.pos.x,o.y+1.2,o.pos.z,26,9,0xbfe8ff,1.4,.55,-6);
+        // knocked back, never knocked out: gentler the nearer they are to the edge
+        var edge=clamp((R-Math.hypot(o.pos.x,o.pos.z))/10,.15,1),pw=WAVE.push*edge;
+        if(v4Mine(o)){o.vel.x=dx*pw;o.vel.z=dz*pw;o.vy=Math.max(o.vy,WAVE.pop);o.grounded=false;o.stun=Math.max(o.stun||0,.35);}
       }
-      // the ball, when the wave reaches it, is thrown on ahead of it
       if(!(NET.on&&!NET.isHost))for(var bi=0;bi<balls.length;bi++){var b=balls[bi];
         if(!b.active||b.held>0||ballHit[bi])continue;
         var ba=(b.pos.x-ox)*dx+(b.pos.z-oz)*dz,bs=(b.pos.x-ox)*rx+(b.pos.z-oz)*rz;
-        if(Math.abs(bs)<W/2&&ba<front&&ba>front-6){
+        if(Math.abs(bs)<W/2+1&&ba<front+1&&ba>front-5){
           ballHit[bi]=1;
           b.freeze=0;b.lastHit=f;b.mult+=WAVE.boost;
           var tgt=aimPick(b,f,yaw);
@@ -11455,26 +11590,30 @@ function greyWave(f,yaw){
           if(NET.on&&NET.isHost)netBroadcastBall();
         }
       }
-      // spray off the crest
-      if(QUAL>0)for(var s2=0;s2<(QUAL>1?10:4);s2++){var u=rr(-W/2,W/2);
-        spark(g.position.x+rx*u,WAVE.h+rr(.5,2),g.position.z+rz*u,dx*rr(4,10),rr(2,6),dz*rr(4,10),.85,.95,1,rr(.5,1),rr(.4,.8),-9);}
-      for(var d2=0;d2<debris.length;d2++){var db=debris[d2];db.m.rotation.x+=dt*db.sp;db.m.rotation.z+=dt*db.sp*.7;db.m.position.y=2+((Math.sin(t*db.sp+db.ph)+1)*.5)*(WAVE.h-2);}
+      if(QUAL>0)for(var s3=0;s3<(QUAL>1?4:2);s3++){var fu=rr(-W/2,W/2);
+        spark(g.position.x+rx*fu-dx*rr(0,2),.15,g.position.z+rz*fu-dz*rr(0,2),0,.2,0,.75,.9,1,rr(.8,1.4),rr(.8,1.4),0);}
+      if(QUAL>0)for(var s2=0;s2<(QUAL>1?8:3);s2++){var uu=rr(-W/2,W/2);
+        spark(g.position.x+rx*uu+dx*2,H+rr(.2,1.2),g.position.z+rz*uu+dz*2,dx*rr(3,8),rr(3,7),dz*rr(3,8),.85,.95,1,rr(.5,1),rr(.4,.8),-10);}
       return true;
     }
-    // gone past everything: the wall sinks and the flood drains fast
-    drain+=dt;
-    var k2=clamp(drain/1.1,0,1);
-    g.scale.y=Math.max(.01,1-k2);g.position.y=-k2*2;
-    sheet.material.opacity=.5*(1-k2);water.opacity=.72*(1-k2);
-    return drain<1.1;
-  },done:function(){scene.remove(g);scene.remove(sheet);disposeTree(g);if(sheet.material.dispose)sheet.material.dispose();}});
+    // the crash: it folds over and bursts at the far side
+    if(crash===0){try{noiseHit(.9,.4,700);tone(80,35,.8,"sine",.18);}catch(e){}
+      for(var c=0;c<(QUAL>1?40:16);c++){var cu=rr(-W/2,W/2);
+        spark(g.position.x+rx*cu,rr(.5,H),g.position.z+rz*cu,dx*rr(2,6)+rr(-2,2),rr(4,10),dz*rr(2,6)+rr(-2,2),.8,.93,1,rr(.6,1.2),rr(.6,1.1),-12);}}
+    crash+=dt;
+    var k2=clamp(crash/.7,0,1);
+    shape(H*(1-k2));g.position.y=-k2*.5;
+    deep.opacity=.92*(1-k2);light.opacity=.86*(1-k2);foam.opacity=.95*(1-k2);
+    return crash<.7;
+  },done:function(){scene.remove(g);disposeTree(g);}});
 }
 
 /* ---- DYLAN'S WARTS ----
    A six-chamber cylinder spins over your head. Survive and keep a buff for the
    rest of the round; every spin after is riskier (1/6, 1/5, 1/4, 1/3, 1/2).
    BUST and you are out. Stop whenever you like. */
-var WARTS_BUFFS=[{k:"spd",n:"FASTER FEET",c:"#6bffb0"},{k:"cd",n:"SHORTER COOLDOWN",c:"#8fd8ff"},{k:"pow",n:"HARDER RETURNS",c:"#ffb040"}];
+// no cooldown to shorten any more: the spin itself (the chamber animation) is the only wait
+var WARTS_BUFFS=[{k:"spd",n:"FASTER FEET",c:"#6bffb0"},{k:"pow",n:"HARDER RETURNS",c:"#ffb040"}];
 function wartsOdds(n){return 1/Math.max(2,6-n);}
 function wartsRoll(f){
   var W=f.warts||(f.warts={n:0,spd:0,cd:0,pow:0});
@@ -13387,7 +13526,8 @@ function netApplyHit(m){
     if(by&&by!==f)f.killedBy=by;
     f.eliminate();
     sfx("ko");
-    if(by&&by!==f&&by.swordDef&&by.swordDef.shape==="fetus")fetusSfx("kill");
+    if(by&&by!==f&&by.swordDef&&by.swordDef.shape==="fetus"){fetusSfx("kill");fetusSplash(by,{x:f.pos.x,y:f.y+1.6,z:f.pos.z},true);}
+    if(by&&by!==f&&by.swordDef&&by.swordDef.top1)apexKill(f);
     if(f.isPlayer){flashVig();flashWarn("ELIMINATED",1.2,"#ff3ca8");}
     feed(f.name+" was eliminated","ko");
     setAlive();
