@@ -8,7 +8,8 @@
    anticheat: {kind, sev:"flag"|"ban", detail}. */
 import { CAT } from "./catalog.js";
 
-export const ECON_KEYS = ["coins", "yen", "rp", "swords", "abils", "skins", "pass", "freeSpins", "redeemed", "casino", "econ"];
+export const ECON_KEYS = ["coins", "yen", "rp", "swords", "abils", "skins", "pass", "freeSpins", "redeemed", "casino", "econ",
+  "freeSpinsL", "tokens", "login", "season", "s0rp"];
 const BAG = { sword: "swords", abil: "abils", skin: "skins" };
 const EQ = { sword: "eqSword", abil: "eqAbil", skin: "eqSkin" };
 const TABS = ["sword", "abil", "skin"];
@@ -30,9 +31,24 @@ export function retire(s) {
   }
   return changed;
 }
+/* A new season: everybody's RP starts again from nothing. What was earned on
+   the old ladder is kept (rank rewards are never taken back), and the old
+   total is remembered as s0rp. */
+export function seasonReset(s) {
+  const S = CAT.season;
+  if (!S || s.season === S.id) return false;
+  if (typeof s.season !== "number" || s.season < S.id) {
+    s.s0rp = Math.max(typeof s.s0rp === "number" ? s.s0rp : 0, typeof s.rp === "number" && isFinite(s.rp) ? s.rp : 0);
+    s.rp = 0;
+  }
+  s.season = S.id;
+  return true;
+}
 export function ensure(s) {
   retire(s);
-  for (const k of ["coins", "yen", "rp", "freeSpins"]) if (typeof s[k] !== "number" || !isFinite(s[k]) || s[k] < 0) s[k] = 0;
+  for (const k of ["coins", "yen", "rp", "freeSpins", "freeSpinsL", "tokens", "s0rp"]) if (typeof s[k] !== "number" || !isFinite(s[k]) || s[k] < 0) s[k] = 0;
+  if (!s.login || typeof s.login !== "object" || Array.isArray(s.login)) s.login = { id: "", n: 0, last: "" };
+  seasonReset(s);
   for (const t of TABS) if (!s[BAG[t]] || typeof s[BAG[t]] !== "object" || Array.isArray(s[BAG[t]])) s[BAG[t]] = {};
   if (!s.redeemed || typeof s.redeemed !== "object") s.redeemed = {};
   if (!s.casino || typeof s.casino !== "object") s.casino = { hands: 0, bjWins: 0, spins: 0, upgrades: 0 };
@@ -90,7 +106,8 @@ const RO = CAT.rarorder;
 function gradeAllows(g, r) { const m = (CAT.grades[g] || CAT.grades.normal).min; return RO.indexOf(r) <= RO.indexOf(m); }
 export function chestPool(tab) {
   const d = CAT.items[tab];
-  return d.list.filter(it => !(it.rank || it.r === "rank" || it.ultra || it.pass || it.id === d.starter || it.free));
+  return d.list.filter(it => !(it.rank || it.r === "rank" || it.ultra || it.pass || it.id === d.starter || it.free || it.event ||
+    !(CAT.rarity[it.r] > 0)));
 }
 function chestTiers(tab, grade) {
   const pool = chestPool(tab).filter(it => gradeAllows(grade, it.r)), tiers = {}, keys = [];
@@ -108,7 +125,7 @@ export function rollItem(tab, grade, rnd) {
 }
 
 /* ---- the limited shelf ---- */
-function limEligible(it) { return !it.rank && !it.code && !it.pass && it.r !== "rank" && !it.free && it.v > 0; }
+function limEligible(it) { return !it.rank && !it.code && !it.pass && it.r !== "rank" && !it.free && !it.event && it.v > 0; }
 function limPrice(it) { return Math.ceil(it.v * CAT.lim.markup / 50) * 50; }
 export function limitedOn(day) {
   for (const dr of CAT.lim.drops) if (day >= dr.from && day < dr.to) return dr.items;
@@ -124,6 +141,7 @@ export function limitedOn(day) {
   return out;
 }
 function utcDay(ms) { return new Date(ms).toISOString().slice(0, 10); }
+function monthKey(ms) { return new Date(ms).toISOString().slice(0, 7); }
 
 /* ---- blackjack ---- */
 const RANKC = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
@@ -186,7 +204,7 @@ function slotMul(a, b, c) {
    has passed. The fixed part of a match (its base and win bonus) needs a match
    long enough to be one. */
 export const MATCH = { base: 300, perSec: 15, win: 300, maxSecs: 1800, bankMax: 5400, fullSecs: 30, minCharge: 10,
-  rpWin: 100, rpLose: -30, rpMinSecs: 0, passMinSecs: 20, passMatchesPerHour: 30 };
+  rpWin: 60, rpLose: -40, rpMinSecs: 15, passMinSecs: 30, passMatchesPerHour: 20 };
 // most a match of `secs` can pay. A win carries its bonus however quick it was
 // (every match draws at least minCharge from the bank, so quick "wins" are bounded)
 export function matchCap(mode, secs, won) {
@@ -237,10 +255,15 @@ export function applyAct(s, a, ctx) {
     if (!tab) return { ok: false, why: "bad tab" };
     const grade = CAT.grades[a.grade] ? a.grade : "normal", n = Math.min(10, int(a.n, 1, 1000) || 1), free = !!a.free;
     let unit = grade !== "normal" ? CAT.grades[grade].cost : CAT.items[tab].cost;
-    if (free) { if (!(s.freeSpins > 0) || grade !== "normal" || n !== 1) return { ok: false, why: "No free spins." }; unit = 0; }
+    // a free spin is one normal chest; a free LEGENDARY+ spin (the login calendar) is one legendary+ chest
+    if (free) {
+      const okN = grade === "normal" && s.freeSpins > 0, okL = grade === "legendary" && s.freeSpinsL > 0;
+      if (n !== 1 || !(okN || okL)) return { ok: false, why: "No free spins." };
+      unit = 0;
+    }
     if (s.coins < unit * n) return { ok: false, why: "Not enough coins." };
     if (!chestTiers(tab, grade).pool.length) return { ok: false, why: "Nothing in that chest." };
-    if (free) s.freeSpins--;
+    if (free) { if (grade === "legendary") s.freeSpinsL--; else s.freeSpins--; }
     s.coins -= unit * n;
     const won = []; let best = null;
     for (let i = 0; i < n; i++) {
@@ -263,6 +286,49 @@ export function applyAct(s, a, ctx) {
     if (s.yen < cost) return { ok: false, why: "Not enough yen." };
     s.yen -= cost; give(s, tab, it.id); s[EQ[tab]] = it.id;
     return { ok: true, res: { cost } };
+  }
+
+  /* ---- the event stalls: one item, for yen, between two dates (the Wendigo shrine) ---- */
+  if (a.k === "event") {
+    const E = CAT.events && typeof a.shop === "string" && Object.prototype.hasOwnProperty.call(CAT.events, a.shop) ? CAT.events[a.shop] : null;
+    if (!E || now < E.from || now >= E.to) return { ok: false, why: "That stall is closed." };
+    const it = itemOf(E.tab, E.id);
+    if (!it) return { ok: false, why: "That stall is closed." };
+    if (own(s, E.tab, it.id)) return { ok: false, why: "You already own that." };
+    if (s.yen < E.yen) return { ok: false, why: "Not enough yen." };
+    s.yen -= E.yen; give(s, E.tab, it.id); s[EQ[E.tab]] = it.id;
+    return { ok: true, res: { cost: E.yen } };
+  }
+  /* ---- Rodriga: a Rodriga token buys this month's item ---- */
+  if (a.k === "rodriga") {
+    const R = CAT.rodriga, m = R && R.months[monthKey(now)];
+    if (!m) return { ok: false, why: "Rodriga has nothing for sale this month." };
+    const it = itemOf(m.tab, m.id);
+    if (!it) return { ok: false, why: "Rodriga has nothing for sale this month." };
+    if (own(s, m.tab, it.id)) return { ok: false, why: "You already own that." };
+    if (!(s.tokens >= 1)) return { ok: false, why: "You need a Rodriga token." };
+    s.tokens -= 1; give(s, m.tab, it.id); s[EQ[m.tab]] = it.id;
+    return { ok: true, res: { id: it.id } };
+  }
+  /* ---- the login calendar: one day's reward per day, in order, while it runs ---- */
+  if (a.k === "login") {
+    const L = CAT.login;
+    if (!L || now < L.from || now >= L.to) return { ok: false, why: "The calendar is not running." };
+    const day = typeof a.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(a.day) ? a.day : null;
+    // the player's own date, within a day and a half of the server's
+    if (!day || Math.abs(Date.parse(day) - Date.parse(utcDay(now))) > 36 * 3600 * 1000) return { ok: false, why: "Check your clock." };
+    const lg = s.login;
+    if (lg.id !== L.id) { lg.id = L.id; lg.n = 0; lg.last = ""; }
+    if (lg.last === day) return { ok: false, why: "Already claimed today." };
+    if (lg.last && day < lg.last) return { ok: false, why: "Already claimed today." };
+    if (lg.n >= L.rewards.length) return { ok: false, why: "All thirty days claimed." };
+    const r = L.rewards[lg.n];
+    lg.n++; lg.last = day;
+    if (r.c) s.coins += r.c;
+    if (r.y) s.yen += r.y;
+    if (r.s) s.freeSpins += r.s;
+    if (r.L) s.freeSpinsL += r.L;
+    return { ok: true, res: { n: lg.n, r } };
   }
 
   // selling and upgrading: never a starter, a free item, a rank reward, an ULTRA, a pass item, or what you have on
@@ -368,6 +434,9 @@ export function applyAct(s, a, ctx) {
     if (m.ranked) {
       rp = Math.max(MATCH.rpLose, Math.min(MATCH.rpWin, Math.round(Number(a.rp) || 0)));
       if (rp > 0 && secs < MATCH.rpMinSecs) rp = 0;                 // no ranked win in a few seconds
+      // GOD is played against people only: at that rank, a match against bots moves nothing
+      const cur = CAT.ranks[rankIndex(s.rp)];
+      if (cur && cur.pvp && !m.pvp) rp = 0;
     }
     const before = rankIndex(s.rp);
     s.rp = Math.max(0, s.rp + rp);
@@ -378,10 +447,13 @@ export function applyAct(s, a, ctx) {
       e.pm.push(now);
       pass = passAddXp(s, a.won ? P.xpWin : P.xpGame);
     }
+    // one in ten million: a Rodriga token, in any match that really was a match
+    let token = false;
+    if (CAT.rodriga && real && rnd() < CAT.rodriga.chance) { s.tokens = (s.tokens | 0) + 1; token = true; }
     // the blocks this game timed for itself
     const v = parryVerdict(int(a.blocks, 0, 100000), int(a.perfects, 0, 100000));
     if (v) flags.push({ kind: "autoparry", sev: v.sev, detail: Math.round(v.rate * 100) + "% perfect over " + a.blocks + " blocks (" + mode + ")" });
-    return { ok: true, res: { coins, rp, ranked, pass } };
+    return { ok: true, res: { coins, rp, ranked, pass, token } };
   }
 
   return { ok: false, why: "unknown act" };

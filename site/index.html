@@ -592,6 +592,48 @@ details.move[open] summary::before{transform:rotate(90deg)}
 #limGrid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}
 #limMsg{min-height:22px;margin-top:6px;font-size:14px;font-weight:700}
 
+/* ================= 4.0: SHRINE, RODRIGA, LOGIN ================= */
+.evtgrid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:640px){.evtgrid{grid-template-columns:1fr}}
+.evtpic{display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px;text-align:center}
+.evtpic.wendigo{background:radial-gradient(90% 70% at 50% 40%,#1e4a6e 0%,#0a1828 70%)}
+.evtpic.rod{background:linear-gradient(180deg,#4a7a2a,#1e2e10)}
+.evtpic svg{width:150px;height:150px;filter:drop-shadow(0 4px 0 rgba(8,16,48,.6))}
+.rodtok{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:12px;background:rgba(11,25,66,.5)}
+.rodtok svg{width:38px;height:38px}.rodtok b{font-family:var(--disp);font-size:26px;color:#b8ff8f}.rodtok span{font-weight:700;font-size:13px}
+.logsub{font-size:14px;font-weight:600;text-align:center;margin:2px 0 10px;color:#fff8d8}
+.loggrid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:7px}
+@media (max-width:760px){.loggrid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.logday{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px 7px;border-radius:12px;
+  background:linear-gradient(180deg,#2e4a8e,#1c2c5e);border:3px solid var(--nv);box-shadow:0 4px 0 var(--nv)}
+.logday .ln{font-size:10.5px;font-weight:700;opacity:.8;letter-spacing:.04em}
+.logday .li svg{width:30px;height:30px}
+.logday .lw{font-size:11px;font-weight:700;color:#ffe89a;text-align:center;line-height:1.05}
+.logday.big{background:linear-gradient(180deg,#ffb02e,#b85a00);box-shadow:0 0 0 2px #ffe25a,0 4px 0 var(--nv)}
+.logday.big .lw{color:#fff;font-size:9.5px}
+.logday.got{opacity:.5}
+.logday.now{animation:hwNow 1.4s ease-in-out infinite;background:linear-gradient(180deg,#5fd06a,#1f8a3a)}
+.logday .lk{position:absolute;top:-8px;right:-6px;width:22px;height:22px}
+.logday .lk svg{width:22px;height:22px}
+#lbLogin{--bc1:#ffe25a;--bc2:#e0701a;grid-column:1/-1;width:auto;height:52px;flex-direction:row;justify-content:flex-start;gap:6px;padding:0 10px 0 8px}
+#lbLogin .lbi{margin-top:0}#lbLogin .lbl{display:none}
+#lbLogin .lbw{display:block;font-family:var(--disp);font-size:15px;line-height:.95;text-align:left;--oc:#5a2400}
+#lbLoginN.ready{background:#1f8a3a;border-color:#b8ff8f;color:#fff}
+.rodfx{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  background:radial-gradient(circle at 50% 42%,rgba(60,140,30,.85),rgba(6,14,4,.96) 70%);opacity:0;transition:opacity .35s;overflow:hidden}
+.rodfx.in{opacity:1}
+.rodrays{position:absolute;left:50%;top:42%;width:1600px;height:1600px;margin:-800px 0 0 -800px;opacity:.35;
+  background:repeating-conic-gradient(from 0deg,rgba(180,255,120,.55) 0deg 8deg,transparent 8deg 22deg);animation:rodSpin 9s linear infinite}
+@keyframes rodSpin{to{transform:rotate(360deg)}}
+.rodcoin{width:220px;height:220px;animation:rodDrop 1.3s cubic-bezier(.2,1.4,.4,1) both,rodFlip 2.4s linear 1.3s infinite;filter:drop-shadow(0 0 40px #7aff5a)}
+.rodcoin svg{width:220px;height:220px}
+@keyframes rodDrop{0%{transform:translateY(-120vh) rotateY(0)}100%{transform:translateY(0) rotateY(1080deg)}}
+@keyframes rodFlip{to{transform:rotateY(360deg)}}
+.rodtxt{font-family:var(--disp);font-size:54px;color:#d8ffb0;letter-spacing:.03em;animation:rodPop .6s 1.1s both;--oc:#0a2a04}
+.rodsub{font-size:16px;font-weight:700;color:#fff;animation:rodPop .6s 1.4s both;--oc:#0a2a04;text-align:center;padding:0 16px}
+@keyframes rodPop{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.rodfx .big{animation:rodPop .5s 1.8s both}
+
 /* ================= MULTIPLAYER ================= */
 .mpstat{font-size:14px;font-weight:700;min-height:20px;text-align:center}
 .mppanel{margin-top:10px;display:flex;flex-direction:column;align-items:center;gap:10px}
@@ -860,6 +902,7 @@ button.chip:active{transform:translateY(2px)}
   <div id="tauntWheel" class="hide"><div class="twc">TAUNT<span>T to close</span></div></div>
   <div id="lobbyBar">
     <button class="lbtn" id="lbPass"><span class="lbi"><svg viewBox='0 0 40 40'><path d='M20 9c1-4 4-6 7-6' stroke='#2e6a1a' stroke-width='3' fill='none' stroke-linecap='round'/><ellipse cx='13' cy='23' rx='9' ry='12' fill='#e8650c' stroke='#0b1942' stroke-width='2.4'/><ellipse cx='27' cy='23' rx='9' ry='12' fill='#e8650c' stroke='#0b1942' stroke-width='2.4'/><ellipse cx='20' cy='23' rx='9' ry='13' fill='#ff8a1e' stroke='#0b1942' stroke-width='2.4'/><path d='M12 19l4 4h-5zM28 19l-4 4h5z' fill='#ffe25a'/><path d='M11 28c3 3 6 4 9 4s6-1 9-4l-2 1-2-2-2 2-3-2-3 2-2-2-2 2z' fill='#ffe25a'/></svg></span><span class="lbl">PASS</span><span class="lbw">HALLOWEEN<br>PASS</span><span class="lbn" id="lbPassLv">0</span></button>
+    <button class="lbtn" id="lbLogin"><span class="lbi"><svg viewBox='0 0 40 40'><rect x='5' y='8' width='30' height='27' rx='4' fill='#fff' stroke='#0b1942' stroke-width='2.6'/><rect x='5' y='8' width='30' height='8' rx='3' fill='#ff5a3a' stroke='#0b1942' stroke-width='2.6'/><path d='M12 5v7M28 5v7' stroke='#0b1942' stroke-width='3' stroke-linecap='round'/><path d='M13 25l5 4 9-9' stroke='#35a81d' stroke-width='3.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg></span><span class="lbl">LOGIN</span><span class="lbw">DAILY<br>REWARDS</span><span class="lbn" id="lbLoginN">0</span></button>
     <button class="lbtn" id="lbShop"><span class="lbi"><svg viewBox='0 0 40 40'><path d='M6 18C6 8 34 8 34 18z' fill='#c8662a' stroke='#0b1942' stroke-width='2.6' stroke-linejoin='round'/><rect x='6' y='18' width='28' height='15' rx='2.5' fill='#e3843c' stroke='#0b1942' stroke-width='2.6'/><rect x='6' y='16.5' width='28' height='4.5' fill='#ffd23f' stroke='#0b1942' stroke-width='2.2'/><rect x='16.5' y='14' width='7' height='11' rx='2' fill='#ffd23f' stroke='#0b1942' stroke-width='2.2'/><circle cx='20' cy='20.5' r='1.6' fill='#0b1942'/><path d='M10 12.5c3-2.4 8-3.2 12-2.8' stroke='#ffb27a' stroke-width='2' stroke-linecap='round' fill='none'/></svg></span><span class="lbl">SHOP</span></button>
     <button class="lbtn" id="lbBlade"><span class="lbi" id="lbBladeIco"></span><span class="lbl">BLADES</span></button>
     <button class="lbtn" id="lbAbil"><span class="lbi" id="lbAbilIco"></span><span class="lbl">ABILITIES</span></button>
@@ -1030,6 +1073,15 @@ button.chip:active{transform:translateY(2px)}
     <div class="ladder lb" id="lboard"></div>
     <div class="sechead">THE PATH</div>
     <div class="ladder" id="ladder"></div>
+  </div>
+</div>
+
+<div class="screen hide" id="evt">
+  <div class="wnd mid" id="evtWnd">
+    <div class="win-title" id="evtTitle">EVENT</div>
+    <button class="win-x" id="evtBack" aria-label="Close">BACK</button>
+    <div id="evtBody"></div>
+    <div id="evtMsg" class="fine" style="min-height:22px;text-align:center;font-weight:700;margin-top:8px"></div>
   </div>
 </div>
 
@@ -1743,8 +1795,8 @@ var SWORDS=[
   desc:"Slung across the back and drawn in one motion. The cut tears a hole in the world that hangs open for a moment, full of stars, before it zips itself shut."},
  {id:"auroralance",name:"Aurora Lance",rarity:"mythic",price:12000,yen:355,blade:0xbff4ff,hilt:0x16224a,glow:0x7afcff,shape:"aurora",hold:"float",swing:"spin",idle:"orbit",
   desc:"A lance of standing light. Three ribbons turn around a core that never stops."},
- {id:"meatcleaver",name:"Prime Cut",price:-1,rank:"meat",blade:0xff5e6e,hilt:0x2a0810,glow:0xff2a4a,shape:"cleaver",hold:"shoulder",swing:"overhead",idle:"ember",
-  desc:"Carried on the shoulder like a day's work. Comes down like one too."},
+ {id:"meatcleaver",name:"Season 0 Prime Cut",season:0,price:-1,rank:"meat",blade:0xff5e6e,hilt:0x2a0810,glow:0xff2a4a,shape:"cleaver",hold:"shoulder",swing:"overhead",idle:"ember",
+  desc:"Season 0 ranked reward (Meat). Carried on the shoulder like a day's work. Comes down like one too."},
  {id:"trainer",name:"Trainer",rarity:"common",price:0,yen:10,blade:0xd8e2ef,hilt:0x4a5568,glow:0x9fb4cc,shape:"straight",hold:"one",swing:"slash",idle:"none",
   desc:"Standard issue. Honest, balanced, slightly embarrassing."},
  {id:"katana",name:"Steel Katana",rarity:"common",price:250,yen:10,blade:0xeef4ff,hilt:0x1d2330,glow:0x8fd8ff,shape:"curved",hold:"one",swing:"slash",idle:"none",
@@ -1803,14 +1855,14 @@ var SWORDS=[
  {id:"judgement",name:"Judgement",price:0,yen:265,rarity:"mythic",blade:0xfff0c0,hilt:0x4a3a08,glow:0xffc020,shape:"huge",hold:"two",swing:"hammer",idle:"ember",fx:"aura",
   desc:"Enormous, golden, and entirely too heavy. It falls like a verdict."},
  // ranked path rewards
- {id:"oak",name:"Oak Splitter",price:-1,rank:"wood",blade:0x8a6a3a,hilt:0x4a3418,glow:0xc8a05a,shape:"cleaver",hold:"two",swing:"overhead",idle:"none",
-  desc:"Ranked reward. Rough timber, heavier than it looks."},
- {id:"ironfang",name:"Iron Fang",price:-1,rank:"iron",blade:0xb0b8c4,hilt:0x30343c,glow:0xdfe8f4,shape:"jagged",hold:"one",swing:"slash",idle:"none",
-  desc:"Ranked reward. Pitted iron with a bite to it."},
- {id:"rubyedge",name:"Ruby Edge",price:-1,rank:"ruby",blade:0xe0245e,hilt:0x3a0a18,glow:0xff5e8a,shape:"crystal",hold:"one",swing:"spin",idle:"shimmer",
-  desc:"Ranked reward. Cut from a single flawless stone."},
- {id:"omega",name:"Omega Blade",price:-1,rank:"omega",blade:0xffffff,hilt:0x101018,glow:0x00ffe0,shape:"glaive",hold:"float",swing:"spin",idle:"orbit",
-  desc:"Ranked reward. The last blade on the path. It hums."},
+ {id:"oak",name:"Season 0 Oak Splitter",season:0,price:-1,rank:"wood",blade:0x8a6a3a,hilt:0x4a3418,glow:0xc8a05a,shape:"cleaver",hold:"two",swing:"overhead",idle:"none",
+  desc:"Season 0 ranked reward (Wood). Rough timber, heavier than it looks."},
+ {id:"ironfang",name:"Season 0 Iron Fang",season:0,price:-1,rank:"iron",blade:0xb0b8c4,hilt:0x30343c,glow:0xdfe8f4,shape:"jagged",hold:"one",swing:"slash",idle:"none",
+  desc:"Season 0 ranked reward (Iron). Pitted iron with a bite to it."},
+ {id:"rubyedge",name:"Season 0 Ruby Edge",season:0,price:-1,rank:"ruby",blade:0xe0245e,hilt:0x3a0a18,glow:0xff5e8a,shape:"crystal",hold:"one",swing:"spin",idle:"shimmer",
+  desc:"Season 0 ranked reward (Ruby). Cut from a single flawless stone."},
+ {id:"omega",name:"Season 0 Omega Blade",season:0,price:-1,rank:"omega",blade:0xffffff,hilt:0x101018,glow:0x00ffe0,shape:"glaive",hold:"float",swing:"spin",idle:"orbit",
+  desc:"Season 0 ranked reward (Omega). The last blade on the old path. It hums."},
  // Halloween Pass: only ever from the pass, never chests, shops, codes or selling
  {id:"carver",name:"Carving Knife",rarity:"halloween",pass:15,price:-1,blade:0xe4eaf2,hilt:0x121016,glow:0xff4a1a,shape:"chef",hold:"one",swing:"frenzy",idle:"none",
   desc:"A kitchen knife that has carved more than pumpkins. Cuts an X and drives the point home."},
@@ -1818,9 +1870,29 @@ var SWORDS=[
   desc:"A scythe with a lit jack-o'-lantern where the blade meets the shaft. Reaps a full circle of fire."},
  {id:"hexblade",name:"Hexblade",rarity:"halloween",pass:40,price:-1,blade:0xd9a8ff,hilt:0x1c0a33,glow:0xb14aff,shape:"hexblade",hold:"one",swing:"hex",idle:"orbit",
   desc:"A violet crystal blade circled by two turning rings of runes. Rises, whirls overhead and brands a hex into the floor."},
- // not out yet: its own code only. At launch: rarity "ultra" and put it in the Limited shop
- {id:"wendigo",name:"Wendigo Katana",rarity:"unreleased",price:-1,code:true,ultra:true,blade:0xe8eaf0,hilt:0x2a1a0a,glow:0x4ab8ff,shape:"wendigo",hold:"hip",swing:"wendigo",idle:"breathe",
-  desc:"A blade that grew, not forged. Roots creep up from the grip, and the cracks are where the cold gets in."}
+ // ULTRA, and only ever from its own shrine beside Gnorman, for one week (see EVENT_SHOPS)
+ {id:"wendigo",name:"Wendigo Katana",rarity:"ultra",price:-1,ultra:true,event:"wendigo",blade:0xe8eaf0,hilt:0x2a1a0a,glow:0x4ab8ff,shape:"wendigo",hold:"hip",swing:"wendigo",idle:"breathe",
+  desc:"A blade that grew, not forged. Roots creep up from the grip, and the cracks are where the cold gets in. Sold at its shrine for one week only, then never again."},
+ // ---- 4.0 ----
+ {id:"ricky9",name:"Ricky's .9",rarity:"mythic",price:16500,yen:345,blade:0x26262e,hilt:0x121216,glow:0xffb040,shape:"pistol",hold:"one",swing:"gunshot",idle:"none",
+  desc:"Not a sword. A block is a shot: the ball is blown back the way you are aiming with a crack, a muzzle flash and a tracer across the arena."},
+ {id:"divineright",name:"Divine Right",price:-1,rank:"god",blade:0xfff8e6,hilt:0xd8b45a,glow:0xfff0b0,shape:"divine",hold:"rhip",swing:"divine",idle:"orbit",
+  desc:"The GOD rank's blade. Worn on the right hip and drawn in one stroke; every cut rings like a bell and leaves feathers of light behind it."},
+ {id:"crown",name:"The Crown",rarity:"ultra",price:-1,ultra:true,code:true,top1:true,blade:0xffe070,hilt:0x3a1a08,glow:0xffd23f,shape:"crownblade",hold:"one",swing:"slash",idle:"orbit",
+  desc:"Only ever held by whoever is #1 on the leaderboard, and taken back the moment they are not."},
+ {id:"rodbroom",name:"Rodriga's Broom",rarity:"ultra",price:-1,ultra:true,event:"rodriga",blade:0x3a2a14,hilt:0x2a1a0a,glow:0x7aff5a,shape:"broom",hold:"staff",swing:"spin",idle:"drift",
+  desc:"Rodriga's own broom, bristles still smoking green. October's item at her shack, for a Rodriga token."},
+ // Season 1 ranked path: a different weapon at every step
+ {id:"s1wood",name:"Season 1 Driftwood Glaive",season:1,price:-1,rank:"wood",blade:0xc89a5a,hilt:0x4a2c14,glow:0x9aff6a,shape:"s1glaive",hold:"staff",swing:"slash",idle:"drift",
+  desc:"Season 1 ranked reward (Wood). A long branch with a blade lashed to the end, still sprouting leaves."},
+ {id:"s1iron",name:"Season 1 Iron Maul",season:1,price:-1,rank:"iron",blade:0x8a929e,hilt:0x2a2e36,glow:0xffa040,shape:"s1maul",hold:"two",swing:"hammer",idle:"ember",
+  desc:"Season 1 ranked reward (Iron). A riveted block of iron with a forge still glowing in its heart."},
+ {id:"s1ruby",name:"Season 1 Ruby Twins",season:1,price:-1,rank:"ruby",blade:0xff2a5e,hilt:0x2a0a14,glow:0xff5e8a,shape:"s1twins",hold:"dual",swing:"twirl",idle:"shimmer",
+  desc:"Season 1 ranked reward (Ruby). A pair of gem daggers, one in each hand, cut from the same stone."},
+ {id:"s1omega",name:"Season 1 Null Edge",season:1,price:-1,rank:"omega",blade:0x0a0a12,hilt:0x05050a,glow:0x00ffe0,shape:"s1null",hold:"reverse",swing:"uppercut",idle:"crackle",
+  desc:"Season 1 ranked reward (Omega). A black katana held backwards, its edge a line of live cyan static."},
+ {id:"s1meat",name:"Season 1 Butcher's Hook",season:1,price:-1,rank:"meat",blade:0xd8d8e0,hilt:0x4a0a14,glow:0xff2a4a,shape:"s1hook",hold:"one",swing:"overhead",idle:"ember",
+  desc:"Season 1 ranked reward (Meat). A meat hook on a chain handle. It does not cut so much as collect."}
 ];
 var ABILITIES=[
  // ULTRA: never in a chest, the shop, the upgrader, a bot's hands or the all-items code
@@ -1903,6 +1975,12 @@ var ABILITIES=[
   desc:"Brace for two seconds. Anything reaching you is returned and its sender frozen."},
  {id:"infinity",name:"Infinity",rarity:"mythic",price:13000,yen:350,cd:26,color:0x8affd8,
   desc:"Starts a four second timer: a ball that comes close to you before it runs out is caught and held on your blade for the time that is left. Walk with it, aim it, and press again to throw it back faster. You cannot parry while you hold it, so anything else in the air will kill you."},
+ {id:"grey",name:"Grey's 14 Inches",rarity:"mythic",price:15500,yen:340,cd:30,color:0x3ab4ff,
+  desc:"A wall of water rises behind you and crashes across the whole arena. Everyone it reaches is shoved back, and when it catches the ball it carries it forward much faster."},
+ {id:"warts",name:"Dylan's Warts",rarity:"mythic",price:16000,yen:345,cd:10,color:0xffc040,
+  desc:"Spin the chamber. Survive and keep a buff for the rest of the round: faster feet, a shorter cooldown or harder returns. Every spin after that is riskier (1 in 6, then 5, 4, 3, 2). Hit BUST and you are out. Stop whenever you like."},
+ {id:"divine",name:"Divine Judgment",rarity:"rank",price:-1,rank:"god",cd:34,color:0xfff0b0,
+  desc:"The GOD rank's ability. Cast while the ball is going for someone: a circle of light opens under them, the ball stops dead, a beam falls on them and the ball is thrown straight down onto them at tremendous speed. Parry it and it is over."},
  {id:"opi",name:"Opi's Wrath",rarity:"mythic",price:22000,yen:465,cd:26,color:0xff3a6e,
   desc:"Starts a four second timer: a ball that comes close to you before it runs out is pinned in the air in front of you. Until the timer ends, every press hits it again and makes it faster, with the count over the ball. Then it fires wherever you are looking. You cannot parry anything else while you hold it."}
 ];
@@ -1997,8 +2075,8 @@ var SKINS=[
   desc:"Charcoal plate with a live coal seam running through every crack."},
  {id:"nightbloom",name:"Nightbloom",price:6800,yen:140,rarity:"legendary",style:"petal",body:0x3a1a5c,limb:0x1a0a2e,skin:0xf0d8ff,glow:0xc86aff,
   desc:"Petals open across the shoulders in the dark and close when you swing."},
- {id:"meatsuit",name:"Grade A",rarity:"rank",style:"prime",price:-1,rank:"meat",body:0x9c1c30,limb:0x2e0810,skin:0xffd8dc,glow:0xff2a4a,
-  desc:"The Meat rank, worn. Butcher's red over bone, and it steams faintly."},
+ {id:"meatsuit",name:"Season 0 Grade A",season:0,rarity:"rank",style:"prime",price:-1,rank:"meat",body:0x9c1c30,limb:0x2e0810,skin:0xffd8dc,glow:0xff2a4a,
+  desc:"Season 0 ranked reward (Meat). Butcher's red over bone, and it steams faintly."},
  {id:"bert",name:"Bert Sampsoon",free:true,price:0,yen:10,rarity:"common",style:"bolt",body:0x2a3a8c,limb:0x121a44,skin:0x2a3a8c,glow:0xffc400,bodyGlow:0x1a3cff,
   desc:"Free for everyone. Storm-blue speed kit split by a live lightning bolt, with a visor and sparks coming off the heels."},
  {id:"rookie",name:"Rookie",price:0,yen:10,rarity:"common",style:"plain",body:0x35e8ff,limb:0x2a2f45,skin:0xffd9a8,glow:0x000000,
@@ -2034,38 +2112,58 @@ var SKINS=[
  {id:"wraith",name:"Wraith",price:0,yen:330,rarity:"mythic",style:"wraith",body:0x181422,limb:0x0a0810,skin:0x9a3aff,glow:0xb14aff,
   desc:"Curved horns, a ragged shroud and two violet embers where eyes should be."},
  // ranked path rewards
- {id:"papercut",name:"Paper Cut",rarity:"rank",style:"paper",price:-1,rank:"paper",body:0xf4f0e4,limb:0xd8d0bc,skin:0xf8f4ea,glow:0xbfb8a4,
-  desc:"Ranked reward. Crisp, white, and surprisingly sharp."},
- {id:"granite",name:"Granite",rarity:"rank",style:"stone",price:-1,rank:"stone",body:0x74787e,limb:0x4a4e54,skin:0x9aa0a8,glow:0x2a2e34,
-  desc:"Ranked reward. Carved rather than tailored."},
- {id:"gilded",name:"Gilded",rarity:"rank",style:"royal",price:-1,rank:"gold",body:0xffd23f,limb:0x6a4a08,skin:0xffeab0,glow:0xffb020,
-  desc:"Ranked reward. Solid gold. Loud on purpose."},
- {id:"diamond",name:"Diamond Shell",rarity:"rank",style:"crystal",price:-1,rank:"diamond",body:0xa8f0ff,limb:0x3a7a8a,skin:0xe8feff,glow:0x00e0ff,
-  desc:"Ranked reward. Faceted armour that scatters the arena lights."},
- {id:"omegaskin",name:"Omega",rarity:"rank",style:"omega",price:-1,rank:"omega",body:0x0a0a10,limb:0x000004,skin:0x00ffe0,glow:0x00ffe0,
-  desc:"Ranked reward. Void black with a cyan core. End of the path."},
+ {id:"papercut",name:"Season 0 Paper Cut",season:0,rarity:"rank",style:"paper",price:-1,rank:"paper",body:0xf4f0e4,limb:0xd8d0bc,skin:0xf8f4ea,glow:0xbfb8a4,
+  desc:"Season 0 ranked reward (Paper). Crisp, white, and surprisingly sharp."},
+ {id:"granite",name:"Season 0 Granite",season:0,rarity:"rank",style:"stone",price:-1,rank:"stone",body:0x74787e,limb:0x4a4e54,skin:0x9aa0a8,glow:0x2a2e34,
+  desc:"Season 0 ranked reward (Stone). Carved rather than tailored."},
+ {id:"gilded",name:"Season 0 Gilded",season:0,rarity:"rank",style:"royal",price:-1,rank:"gold",body:0xffd23f,limb:0x6a4a08,skin:0xffeab0,glow:0xffb020,
+  desc:"Season 0 ranked reward (Gold). Solid gold. Loud on purpose."},
+ {id:"diamond",name:"Season 0 Diamond Shell",season:0,rarity:"rank",style:"crystal",price:-1,rank:"diamond",body:0xa8f0ff,limb:0x3a7a8a,skin:0xe8feff,glow:0x00e0ff,
+  desc:"Season 0 ranked reward (Diamond). Faceted armour that scatters the arena lights."},
+ {id:"omegaskin",name:"Season 0 Omega",season:0,rarity:"rank",style:"omega",price:-1,rank:"omega",body:0x0a0a10,limb:0x000004,skin:0x00ffe0,glow:0x00ffe0,
+  desc:"Season 0 ranked reward (Omega). Void black with a cyan core. The end of the old path."},
  // Halloween Pass
  {id:"scarecrow",name:"Scarecrow",rarity:"halloween",pass:15,style:"scarecrow",price:-1,body:0x7a1e1c,limb:0x3a2c1c,skin:0xc89a5a,glow:0xff8a1e,bodyGlow:0x2a0604,
   desc:"A stitched sack for a face, a candle burning behind the eyes and straw coming out of every seam."},
  {id:"horseman",name:"Headless Horseman",rarity:"halloween",pass:30,style:"horseman",price:-1,body:0x1e1728,limb:0x0d0a12,skin:0x1e1728,glow:0xff7a12,bodyGlow:0x14061e,
   desc:"A rider's coat, a fire where the head should be, and the head itself carried in one hand, grinning."},
  {id:"hexwitch",name:"Hex Witch",rarity:"halloween",pass:40,style:"hexwitch",price:-1,body:0x2c1452,limb:0x150a2a,skin:0xa8d89a,glow:0xc86aff,bodyGlow:0x1a0636,
-  desc:"A tall crooked hat with a burning violet band, a flared robe and runes that circle her as she walks."}
+  desc:"A tall crooked hat with a burning violet band, a flared robe and runes that circle her as she walks."},
+ // ---- 4.0 ----
+ {id:"blackcat",name:"Black Cat",rarity:"halloween",yen:340,price:-1,style:"blackcat",body:0x141218,limb:0x0a090c,skin:0x1a181e,glow:0xffd23f,bodyGlow:0x0a0808,
+  desc:"Pointed ears, a tail that never stops moving and two gold eyes in the dark. On Gnorman's stall for one week of October, then gone."},
+ {id:"ascended",name:"Ascended",price:-1,rank:"god",rarity:"rank",style:"ascended",body:0x0c0a10,limb:0x060508,skin:0x14121a,glow:0xfff0c0,bodyGlow:0x2a2210,
+  desc:"The GOD rank, worn. Black, split by cracks of white-gold light, a halo turning behind the head. Stand still and you rise off the floor."},
+ // Season 1 ranked path
+ {id:"s1paper",name:"Season 1 Origami",season:1,rarity:"rank",style:"origami",price:-1,rank:"paper",body:0xf6f2e8,limb:0xd8cfbc,skin:0xfaf7f0,glow:0xff5a5a,
+  desc:"Season 1 ranked reward (Paper). Folded, not sewn: pleated plates and a paper crane riding on the shoulder."},
+ {id:"s1stone",name:"Season 1 Golem",season:1,rarity:"rank",style:"golem",price:-1,rank:"stone",body:0x6a6e76,limb:0x3e4248,skin:0x8a8f98,glow:0x6bffb0,
+  desc:"Season 1 ranked reward (Stone). Boulders stacked into a body, held together by glowing runes and moss."},
+ {id:"s1gold",name:"Season 1 Pharaoh",season:1,rarity:"rank",style:"pharaoh",price:-1,rank:"gold",body:0xffd23f,limb:0x1a3a8a,skin:0xc8905a,glow:0x35e8ff,
+  desc:"Season 1 ranked reward (Gold). Striped headdress, a collar of lapis and gold, and a crook at the hip."},
+ {id:"s1diamond",name:"Season 1 Prism Knight",season:1,rarity:"rank",style:"prismknight",price:-1,rank:"diamond",body:0xc8f4ff,limb:0x3a8aaa,skin:0xe8feff,glow:0x9af0ff,
+  desc:"Season 1 ranked reward (Diamond). Plate cut like a gem, with crystals that throw rainbows as you move."},
+ {id:"s1omegaskin",name:"Season 1 Null",season:1,rarity:"rank",style:"null",price:-1,rank:"omega",body:0x040406,limb:0x000002,skin:0x040406,glow:0x00ffe0,
+  desc:"Season 1 ranked reward (Omega). A hole in the shape of a person, outlined in cyan wire, with a broken halo."},
+ {id:"s1meatskin",name:"Season 1 Butcher",season:1,rarity:"rank",style:"butcher",price:-1,rank:"meat",body:0xe8e2d8,limb:0x2a0a10,skin:0xf0c8b0,glow:0xff2a4a,
+  desc:"Season 1 ranked reward (Meat). A stained apron, rubber gloves, a cleaver on the belt and a hook on the back."}
 ];
 var RANKS=[
  {id:"poop",    name:"Poop",    rp:0,    map:"sky",     color:0x6a4a2a,edge:0xc8a070,glyph:"\u2022",reward:null},
- {id:"paper",   name:"Paper",   rp:120,  map:"grove",   color:0xe8e4d8,edge:0x8a8474,glyph:"I",   reward:{kind:"skin",id:"papercut"}},
- {id:"wood",    name:"Wood",    rp:320,  map:"colo",    color:0x8a6a3a,edge:0xd8b070,glyph:"II",  reward:{kind:"sword",id:"oak"}},
- {id:"stone",   name:"Stone",   rp:640,  map:"dune",    color:0x74787e,edge:0xc0c6cc,glyph:"III", reward:{kind:"skin",id:"granite"}},
- {id:"iron",    name:"Iron",    rp:1100, map:"reactor", color:0xa8b0bc,edge:0x60666e,glyph:"IV",  reward:{kind:"sword",id:"ironfang"}},
- {id:"gold",    name:"Gold",    rp:1800, map:"temple",  color:0xffd23f,edge:0x8a6410,glyph:"V",   reward:{kind:"skin",id:"gilded"}},
- {id:"ruby",    name:"Ruby",    rp:2700, map:"magma",   color:0xe0245e,edge:0xff9ab8,glyph:"VI",  reward:{kind:"sword",id:"rubyedge"}},
- {id:"diamond", name:"Diamond", rp:3900, map:"ice",     color:0x7fe8ff,edge:0x1a6a8a,glyph:"VII", reward:{kind:"skin",id:"diamond"}},
+ {id:"paper",   name:"Paper",   rp:120,  map:"grove",   color:0xe8e4d8,edge:0x8a8474,glyph:"I",   reward:{kind:"skin",id:"s1paper"}},
+ {id:"wood",    name:"Wood",    rp:320,  map:"colo",    color:0x8a6a3a,edge:0xd8b070,glyph:"II",  reward:{kind:"sword",id:"s1wood"}},
+ {id:"stone",   name:"Stone",   rp:640,  map:"dune",    color:0x74787e,edge:0xc0c6cc,glyph:"III", reward:{kind:"skin",id:"s1stone"}},
+ {id:"iron",    name:"Iron",    rp:1100, map:"reactor", color:0xa8b0bc,edge:0x60666e,glyph:"IV",  reward:{kind:"sword",id:"s1iron"}},
+ {id:"gold",    name:"Gold",    rp:1800, map:"temple",  color:0xffd23f,edge:0x8a6410,glyph:"V",   reward:{kind:"skin",id:"s1gold"}},
+ {id:"ruby",    name:"Ruby",    rp:2700, map:"magma",   color:0xe0245e,edge:0xff9ab8,glyph:"VI",  reward:{kind:"sword",id:"s1ruby"}},
+ {id:"diamond", name:"Diamond", rp:3900, map:"ice",     color:0x7fe8ff,edge:0x1a6a8a,glyph:"VII", reward:{kind:"skin",id:"s1diamond"}},
  {id:"omega",   name:"Omega",   rp:5400, map:"void",    color:0x101018,edge:0x00ffe0,glyph:"\u03a9",
-   // the Omega skin says it is the end of the path, but only the blade was ever handed out
-   rewards:[{kind:"sword",id:"omega"},{kind:"skin",id:"omegaskin"}]},
+   rewards:[{kind:"sword",id:"s1omega"},{kind:"skin",id:"s1omegaskin"}]},
  {id:"meat",    name:"Meat",    rp:10000,map:"neon",    color:0x9c1c30,edge:0xff7a8a,glyph:"\u2739",
-  rewards:[{kind:"sword",id:"meatcleaver"},{kind:"skin",id:"meatsuit"},{kind:"abil",id:"jordan"}]}
+  rewards:[{kind:"sword",id:"s1meat"},{kind:"skin",id:"s1meatskin"},{kind:"abil",id:"jordan"}]},
+ // GOD: people only. At this rank ranked matches are against other players, never bots
+ {id:"god",     name:"GOD",     rp:15000,map:"temple",  color:0xfff4d8,edge:0xffc020,glyph:"\u2600",pvp:true,
+  rewards:[{kind:"sword",id:"divineright"},{kind:"skin",id:"ascended"},{kind:"abil",id:"divine"}]}
 ];
 var MAPS=[
  {id:"sky",name:"Sky Ring",r:34,floor:0x1b1740,line:0x35e8ff,pillar:0x2b2358,accentA:0x35e8ff,accentB:0xff3ca8,
@@ -2125,7 +2223,7 @@ var MODES=[
    end-to-end by bots.js -- these numbers are the real return rates, not an
    abstract "skill". Omega is the 98% wall; Meat above it is near enough
    perfect. */
-var RANK_SKILL=[0.45,0.54,0.62,0.70,0.77,0.84,0.90,0.95,0.985,0.998];
+var RANK_SKILL=[0.45,0.54,0.62,0.70,0.77,0.84,0.90,0.95,0.985,0.998,0.999];
 function rankSkillAt(f){
   var n=RANK_SKILL.length-1;
   var x=clamp(f,0,1)*n,i=Math.floor(x),t=x-i;
@@ -2147,7 +2245,7 @@ var CASUAL_TIERS={
 };
 function casualTier(modeId){
   var sp=CASUAL_TIERS[modeId]||[0.0,0.8];
-  var n=RANK_SKILL.length-1;
+  var n=RANK_SKILL.length-2;          // up to Meat: GOD is people, never a bot
   return clamp(Math.round(lerp(sp[0],sp[1],Math.random())*n),0,n);
 }
 function rankedTuning(f){
@@ -2195,8 +2293,9 @@ function defaultSave(){
     wins:0,games:0,streak:0,bestStreak:0,fov:66,qual:1,sens:1,shiftLock:false,redeemed:{},
     mouseLock:true,invertY:false,camDist:13,ballColor:"#9aa3ad",ballGlow:true,
     musicVol:0.45,sfxVol:0.75,musicUrl:"",musicOn:true,showFps:false,nameTags:true,feedOn:true,showHitbox:false,
-    yen:0,yenV:2,t:0,seenVersion:"",casino:{hands:0,bjWins:0,spins:0,upgrades:0},netName:"",serverUrl:"",
-    freeSpins:0,pass:{id:"",xp:0,got:0}};
+    yen:0,yenV:2,t:0,seenVersion:"",casino:{hands:0,bjWins:0,spins:0,upgrades:0},netName:"",serverUrl:"",rangeBest:0,
+    freeSpins:0,pass:{id:"",xp:0,got:0},
+    freeSpinsL:0,tokens:0,login:{id:"",n:0,last:""},season:0,s0rp:0};
 }
 // the settings a wipe keeps: how the game looks and feels, not what you own
 var KEEP_ON_WIPE=["fov","qual","sens","shiftLock","mouseLock","invertY","camDist",
@@ -2251,6 +2350,10 @@ function applySaveObject(o){
   if(!SAVE.pass||typeof SAVE.pass!=="object")SAVE.pass={id:"",xp:0,got:0};
   passState();                           // put a pass that says it paid more than its level right
   if(typeof SAVE.freeSpins!=="number"||!(SAVE.freeSpins>=0))SAVE.freeSpins=0;
+  if(typeof SAVE.freeSpinsL!=="number"||!(SAVE.freeSpinsL>=0))SAVE.freeSpinsL=0;
+  if(typeof SAVE.tokens!=="number"||!(SAVE.tokens>=0))SAVE.tokens=0;
+  if(!SAVE.login||typeof SAVE.login!=="object")SAVE.login={id:"",n:0,last:""};
+  seasonReset(SAVE);
   SAVE.casino=SAVE.casino||{hands:0,bjWins:0,spins:0,upgrades:0};
   if(typeof SAVE.yen!=="number")SAVE.yen=0;
   if(!(o.yenV>=YEN_V)){SAVE.yen=Math.round(SAVE.yen/9);}
@@ -2300,7 +2403,7 @@ document.addEventListener("visibilitychange",function(){
 var GOOGLE_CLIENT_ID="710765331188-b711mqvsvv7kf9n08f41suvmf030fav5.apps.googleusercontent.com";
 var CLOUDKEY="battleballs_cloud";
 var DEVICE_KEYS=["fov","qual","sens","shiftLock","mouseLock","invertY","camDist","musicVol","sfxVol","musicUrl",
-  "musicOn","showFps","nameTags","feedOn","showHitbox","serverUrl","seenVersion"];
+  "musicOn","showFps","nameTags","feedOn","showHitbox","serverUrl","seenVersion","rangeBest"];
 var CLOUD_T={settle:2,gap:4,retry:20,pull:8};          // seconds: wait after a change, least time between sends, after a failure, between checks
 var CLOUD_OPS_PER=60;                                     // the server takes this many batches per request
 var CLOUD={tok:"",rev:0,view:null,pending:[],dirty:false,name:"",at:0,busy:false,timer:null,timerAt:0,lastPush:0,lastPull:0,
@@ -2402,7 +2505,8 @@ function cloudId(){return Math.random().toString(36).slice(2,10)+Date.now().toSt
    of a match -- and takes the server's answer, and every roll of the dice is
    the server's. Signed out, or against an older server, they stay on this
    device the way they always did. */
-var ECON_KEYS=["coins","yen","rp","swords","abils","skins","pass","freeSpins","redeemed","casino","econ"];
+var ECON_KEYS=["coins","yen","rp","swords","abils","skins","pass","freeSpins","redeemed","casino","econ",
+  "freeSpinsL","tokens","login","season","s0rp"];
 function econOn(){return cloudOn()&&!!CLOUD.ec&&!CLOUD.legacy;}
 function econStrip(o){if(!o||!econOn())return o;var c={},k;for(k in o)if(ECON_KEYS.indexOf(k)<0)c[k]=o[k];return c;}
 function econSnap(){var o={},i,k;for(i=0;i<ECON_KEYS.length;i++){k=ECON_KEYS[i];if(SAVE[k]!==undefined)o[k]=JSON.parse(JSON.stringify(SAVE[k]));}return o;}
@@ -2460,10 +2564,11 @@ function econFlush(){
   if(!econOn()||!(CLOUD.acts&&CLOUD.acts.length)||CLOUD.actBusy)return;
   CLOUD.actBusy=true;
   var batch=CLOUD.acts.slice(0,5);
-  econAct(batch,function(err){
+  econAct(batch,function(err,rs){
     CLOUD.actBusy=false;
     if(err==="offline"||err==="slow"){setTimeout(econFlush,err==="slow"?4000:20000);return;}
     var ids=batch.map(function(a){return a.id;});
+    (rs||[]).forEach(function(r){if(r&&r.ok&&r.res&&r.res.token)setTimeout(rodrigaTokenFx,600);});
     CLOUD.acts=CLOUD.acts.filter(function(a){return ids.indexOf(a.id)<0;});
     cloudKeepMeta();
     if(CLOUD.acts.length)setTimeout(econFlush,300);
@@ -3463,6 +3568,43 @@ function addObstacle(x,z,r,mesh){
   OBST.push({x:x,z:z,r:r});
   if(mesh){mesh.castShadow=QUAL>0;mesh.receiveShadow=QUAL>0;arena.add(mesh);}
 }
+// a solid rectangle, hw by hd half-extents, turned rot about the vertical like a
+// mesh's rotation.y: the shape of a stall or a shack, which a row of circles
+// only ever roughly covered (you could walk into the corners and the back)
+function addBoxObstacle(x,z,hw,hd,rot,top){
+  OBST.push({x:x,z:z,r:Math.sqrt(hw*hw+hd*hd),hw:hw,hd:hd,rot:rot||0,top:top||5});
+}
+function pushOutObstacle(f,ob){
+  var need=0.55,ddx=f.pos.x-ob.x,ddz=f.pos.z-ob.z;
+  if(f.y>=(ob.top||5))return;
+  if(!ob.hw){
+    need+=ob.r;
+    var dd=Math.sqrt(ddx*ddx+ddz*ddz);
+    if(dd<need&&dd>0.0001){
+      var ux=ddx/dd,uz=ddz/dd;
+      f.pos.x=ob.x+ux*need;f.pos.z=ob.z+uz*need;
+      var into=f.vel.x*ux+f.vel.z*uz;
+      if(into<0){f.vel.x-=ux*into;f.vel.z-=uz*into;}
+    }
+    return;
+  }
+  if(ddx*ddx+ddz*ddz>(ob.r+need)*(ob.r+need))return;
+  var c=Math.cos(ob.rot),s=Math.sin(ob.rot);
+  var lx=ddx*c-ddz*s,lz=ddx*s+ddz*c;
+  var cx=clamp(lx,-ob.hw,ob.hw),cz=clamp(lz,-ob.hd,ob.hd);
+  var ex=lx-cx,ez=lz-cz,d=Math.sqrt(ex*ex+ez*ez),nx,nz;
+  if(d>=need)return;
+  if(d>0.0001){nx=ex/d;nz=ez/d;lx=cx+nx*need;lz=cz+nz*need;}
+  else{
+    // inside it: out through the nearest face
+    var px=ob.hw-Math.abs(lx),pz=ob.hd-Math.abs(lz);
+    if(px<pz){nx=lx<0?-1:1;nz=0;lx=nx*(ob.hw+need);}
+    else{nx=0;nz=lz<0?-1:1;lz=nz*(ob.hd+need);}
+  }
+  f.pos.x=ob.x+lx*c+lz*s;f.pos.z=ob.z-lx*s+lz*c;
+  var wx=nx*c+nz*s,wz=-nx*s+nz*c,into2=f.vel.x*wx+f.vel.z*wz;
+  if(into2<0){f.vel.x-=wx*into2;f.vel.z-=wz*into2;}
+}
 function ringSpots(n,minR,maxR){
   var out=[];
   for(var i=0;i<n;i++){
@@ -3660,6 +3802,8 @@ function clearVenue(){
   }
   ZONES.length=0;VENUE_BB.length=0;OBST.length=0;
   VFX.length=0;SHOWCASE=null;
+  if(typeof RANGE!=="undefined"){RANGE.on=false;RANGE.ball=null;RANGE.sign=null;}
+  SHRINE=null;RODSHACK=null;
 }
 // anything in a venue that animates registers itself here
 var VFX=[],SHOWCASE=null;
@@ -3897,116 +4041,324 @@ function buildStall(x,z){
   disc.rotation.x=-Math.PI/2;disc.position.set(x,.2,z+4.3);disc.scale.setScalar(2.8);venue.add(disc);
   vFloorText("LIMITED",PINK,x,z+7.6,6);
   ZONES.push({x:x,z:z+4.3,r:3.6,label:"GNORMAN'S STALL",action:function(){openLimited();},ring:ring,col:PINK});
-  // the stall is solid
-  addObstacle(x-2.6,z+.4,1.95,null);addObstacle(x,z+.4,1.95,null);addObstacle(x+2.6,z+.4,1.95,null);
+  // the stall is solid: platform, counter and awning posts, corner to corner
+  addBoxObstacle(x,z+.35,4.25,2.35,0,5.2);
   return st;
 }
+/* ---- THE LOBBY, HALLOWEEN ----
+   Same room, same pads in the same places, dressed for the month: a harvest
+   moon over an orange horizon, jack-o'-lanterns along the wall, gravestones,
+   candles, bats and ground fog. It is wider than it was, so it has room for a
+   target range on the right, Rodriga's shack behind where you come in and the
+   Wendigo shrine beside Gnorman. */
+var LOBBY_R=40;
+var HW={ORANGE:0xff7a1a,PURPLE:0x8a3aff,GREEN:0x7aff5a,BONE:0xe8dcc4,STONE:0x3a3346,DARK:0x140a1c};
+function hwBat(x,y,z){
+  var g=new THREE.Group(),m=new THREE.MeshBasicMaterial({color:0x0a0410});
+  var body=new THREE.Mesh(GEO.sphLo,m);body.scale.set(.35,.3,.45);g.add(body);
+  var wings=[];
+  for(var s=-1;s<=1;s+=2){
+    var pv=new THREE.Group();pv.position.set(s*.12,0,0);g.add(pv);
+    var w=new THREE.Mesh(GEO.cone,m);w.scale.set(.5,1.1,.08);w.rotation.z=-s*Math.PI/2;w.position.set(s*.5,0,0);pv.add(w);
+    wings.push(pv);
+  }
+  var ey=new THREE.MeshBasicMaterial({color:0xff5a1a});
+  for(var e=-1;e<=1;e+=2){var eye=new THREE.Mesh(GEO.sphLo,ey);eye.scale.setScalar(.07);eye.position.set(e*.08,.06,.2);g.add(eye);}
+  g.position.set(x,y,z);g.userData.wings=wings;venue.add(g);return g;
+}
+function hwGrave(x,z,rot,s){
+  s=s||1;
+  var g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot||0;venue.add(g);
+  gPart(g,GEO.box,HW.STONE,1.3*s,1.7*s,.32*s,0,.85*s,0).rotation.z=rr(-.12,.12);
+  gPart(g,GEO.cyl,HW.STONE,1.3*s,.32*s,1.3*s,0,1.7*s,0).rotation.x=Math.PI/2;
+  gPart(g,GEO.box,0x5a4a6a,.62*s,.12*s,.34*s,0,1.35*s,0);     // the cross on its face
+  gPart(g,GEO.box,0x5a4a6a,.12*s,.62*s,.34*s,0,1.3*s,0);
+  gPart(g,GEO.box,0x241a14,1.5*s,.14*s,2.2*s,0,.07,.9*s);     // the grave itself
+  return g;
+}
+function hwCandles(x,z,n){
+  for(var i=0;i<n;i++){
+    var a=rr(0,TAU),r=rr(0,.7),h=rr(.5,1.1),cx=x+Math.cos(a)*r,cz=z+Math.sin(a)*r;
+    var c=vBox(.22,h,.22,cx,h/2,cz,0xf0e6d0);c.castShadow=false;
+    var fl=vGlow(.16,.3,.16,cx,h+.2,cz,0xffb040);
+    vAnim(fl,"flicker",{a:1,ph:rr(0,9)});
+  }
+}
+function hwSky(){
+  var c=cvs(16,256),x=c.getContext("2d");
+  var g=x.createLinearGradient(0,0,0,256);
+  g.addColorStop(0,"#07030f");g.addColorStop(.42,"#241036");g.addColorStop(.74,"#5a1a3a");g.addColorStop(.92,"#e0561a");g.addColorStop(1,"#ff8a2a");
+  x.fillStyle=g;x.fillRect(0,0,16,256);
+  return c;
+}
+function hwWeb(x,y,z,rot,s){
+  var c=cvs(256,256),g=c.getContext("2d");
+  g.strokeStyle="rgba(235,235,255,.55)";g.lineWidth=2;
+  for(var k=0;k<7;k++){var a=k/6*Math.PI/2;g.beginPath();g.moveTo(0,0);g.lineTo(Math.cos(a)*256,Math.sin(a)*256);g.stroke();}
+  for(var r=40;r<260;r+=42){g.beginPath();for(var k2=0;k2<=6;k2++){var a2=k2/6*Math.PI/2,rr2=r*(k2%2?0.9:1);
+    if(k2===0)g.moveTo(Math.cos(a2)*rr2,Math.sin(a2)*rr2);else g.quadraticCurveTo(Math.cos(a2-.13)*rr2*.93,Math.sin(a2-.13)*rr2*.93,Math.cos(a2)*rr2,Math.sin(a2)*rr2);}g.stroke();}
+  var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(c,1,1),transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+  m.scale.set(s,s,1);m.position.set(x,y,z);m.rotation.set(0,rot,0);venue.add(m);return m;
+}
 function buildLobby(){
-  clearVenue();venueKind="lobby";ARENA_R=32;
+  clearVenue();venueKind="lobby";ARENA_R=LOBBY_R;
   arena.visible=false;venue.visible=true;
-  scene.fog.color.setHex(0x120c28);renderer.setClearColor(0x120c28,1);
-  hemi.color.setHex(0x9ab0f0);hemi.groundColor.setHex(0x1a1234);hemi.intensity=0.55;
-  sun.intensity=0.60;rimLight.intensity=0.38;
-  sun.color.setHex(0xd8c8ff);
+  scene.fog.color.setHex(0x1a0a1e);renderer.setClearColor(0x1a0a1e,1);
+  hemi.color.setHex(0xc8a8ff);hemi.groundColor.setHex(0x2a0f1a);hemi.intensity=0.55;
+  sun.intensity=0.55;rimLight.intensity=0.45;
+  sun.color.setHex(0xffc890);
   if(skyDome){
     if(skyDome.material.map&&skyDome.material.map.dispose)skyDome.material.map.dispose();
-    skyDome.material.map=mkTex(skyCanvas({skyTop:"#3a2a7c",skyMid:"#1b1442",skyBot:"#08061a"}),1,1);
+    skyDome.material.map=mkTex(hwSky(),1,1);
     skyDome.material.needsUpdate=true;
   }
-  var floor=new THREE.Mesh(new THREE.CylinderGeometry(32,32,2,50),
-    new THREE.MeshLambertMaterial({map:mkTex(floorCanvas(
-      {floor:0x1c1640,line:0x6a5aff}),8,8)}));
+  var R0=LOBBY_R;
+  var floor=new THREE.Mesh(new THREE.CylinderGeometry(R0,R0,2,64),
+    new THREE.MeshLambertMaterial({map:mkTex(floorCanvas({floor:0x1e1226,line:0xff7a1a}),10,10)}));
   floor.position.y=-1;floor.receiveShadow=true;venue.add(floor);
-  var edge=new THREE.Mesh(new THREE.TorusGeometry(32,.3,8,60),
-    new THREE.MeshBasicMaterial({color:0x6a5aff}));
+  var edge=new THREE.Mesh(new THREE.TorusGeometry(R0,.3,8,80),new THREE.MeshBasicMaterial({color:HW.ORANGE}));
   edge.rotation.x=-Math.PI/2;edge.position.y=.1;venue.add(edge);
-  // a low wall so you cannot wander off
-  for(var i=0;i<26;i++){
-    var a=(i/26)*TAU;
-    vBox(2.6,5,1.2,Math.cos(a)*33,2.5,Math.sin(a)*33,0x1d1740,[0,-a,0]);
+  // a crooked graveyard wall, a jack-o'-lantern on every other stone
+  var i,nW=34;
+  for(i=0;i<nW;i++){
+    var a=(i/nW)*TAU,wx=Math.cos(a)*(R0+1),wz=Math.sin(a)*(R0+1),h=4.2+((i*7)%5)*0.25;
+    vBox(3.6,h,1.3,wx,h/2,wz,i%2?0x241a30:0x2c2038,[0,-a+Math.PI/2,(i%3-1)*0.03]);
+    if(i%2===0){
+      var pk=sigPumpkin(1.0+((i*3)%4)*0.12);pk.position.set(wx,h+.55,wz);pk.rotation.y=-a-Math.PI/2;venue.add(pk);
+      vAnim(pk.userData.core,"pulse",{lo:.12,hi:.34,sp:3+i%4,ph:i});
+    }
   }
-  // a banner high over the middle, readable from anywhere in the room
-  vLabel("BATTLE BALLS","WALK ONTO A PAD TO PLAY \u00b7 GNORMAN SELLS LIMITED GEAR",0xffd23f,0,19,0,2.4);
-  vFloorText("LOBBY",0x6a5aff,0,0,13);
-  // only real destinations are pads now. gear and profile live on the button bar.
+  // the harvest moon, and the banner under it
+  var moon=new THREE.Mesh(GEO.sph,new THREE.MeshBasicMaterial({color:0xffe0a8,fog:false}));
+  moon.scale.setScalar(26);moon.position.set(-70,78,-150);venue.add(moon);
+  var halo=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(TEX.glow,1,1),color:0xff9a4a,transparent:true,opacity:.55,
+    blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+  halo.scale.setScalar(110);halo.position.set(-68,78,-148);halo.lookAt(0,4,0);venue.add(halo);
+  vLabel("BATTLE BALLS","HAPPY HALLOWEEN · WALK ONTO A PAD TO PLAY",HW.ORANGE,0,19,0,2.4);
+  vFloorText("LOBBY",HW.ORANGE,0,0,13);
+  // the four pads, exactly where they always were
   var R=18,PAD0=-Math.PI/4;
-  vPad(Math.cos(PAD0)*R,Math.sin(PAD0)*R,0x35e8ff,"CASUAL","PLAY A MATCH \u00b7 6 MODES",
+  vPad(Math.cos(PAD0)*R,Math.sin(PAD0)*R,0x35e8ff,"CASUAL","PLAY A MATCH · 7 MODES",
     function(){buildModeCards();showScreen("modes");});
-  vPad(Math.cos(PAD0+1.571)*R,Math.sin(PAD0+1.571)*R,0xffd23f,"RANKED","1v1 AND 2v2 \u00b7 CLIMB FOR RP",
+  vPad(Math.cos(PAD0+1.571)*R,Math.sin(PAD0+1.571)*R,0xffd23f,"RANKED","1v1 AND 2v2 · CLIMB FOR RP",
     function(){buildLadder();buildBoard();showScreen("ranked");});
-  vPad(Math.cos(PAD0+3.142)*R,Math.sin(PAD0+3.142)*R,0x6bffb0,"MULTIPLAYER","PLAY FRIENDS \u00b7 PRIVATE CODE",
+  vPad(Math.cos(PAD0+3.142)*R,Math.sin(PAD0+3.142)*R,0x6bffb0,"MULTIPLAYER","PUBLIC LOBBIES · PLAY FRIENDS",
     function(){openMPScreen();});
-  vPad(Math.cos(PAD0+4.712)*R,Math.sin(PAD0+4.712)*R,0xff8a3c,"CASINO","BLACKJACK \u00b7 SLOTS \u00b7 UPGRADER",
+  vPad(Math.cos(PAD0+4.712)*R,Math.sin(PAD0+4.712)*R,0xff8a3c,"CASINO","BLACKJACK · SLOTS · UPGRADER",
     function(){enterCasino();});
-  buildStall(0,-24.5);
-  buildLbBoard(-25.5,0);
-  // ---- pillars, now with hanging lamps and light shafts ----
+  buildStall(0,-27);
+  buildWendigoShrine(-13,-27);
+  buildLbBoard(-29,0);
+  buildRange(22,0);
+  buildRodrigaShack(0,31);
+  // ---- pillars become dead trees' worth of lamp posts: orange and violet lanterns ----
   for(i=0;i<8;i++){
     var aa=(i/8)*TAU+0.4;
-    var px=Math.cos(aa)*26,pz=Math.sin(aa)*26;
-    vBox(1.6,12,1.6,px,6,pz,0x1d1740);
-    vBox(2.2,.5,2.2,px,12.1,pz,0x2a2258);
-    var lampC=i%2?0x35e8ff:0xff3ca8;
+    var px=Math.cos(aa)*33,pz=Math.sin(aa)*33;
+    // keep the range and the shack clear
+    if(Math.abs(pz)<9&&px>0)continue;
+    if(Math.abs(px)<9&&pz>0)continue;
+    if(dist2(px,pz,-13,-27)<64)continue;          // the Wendigo shrine stands there
+    vBox(1.6,12,1.6,px,6,pz,0x21152c);
+    vBox(2.2,.5,2.2,px,12.1,pz,0x33203f);
+    var lampC=i%2?HW.PURPLE:HW.ORANGE;
     vGlow(1.9,.5,1.9,px,12.3,pz,lampC);
-    // a shaft of light falling from each lamp
     vAnim(vBeam(1.1,9,px,5.5,pz,lampC,.05,[0,aa,0]),"pulse",{lo:.03,hi:.07,sp:1.1,ph:i});
-    // a lamp that hangs and swings gently
-    var lamp=vGlow(.7,.7,.7,px*0.72,9.4,pz*0.72,lampC);
+    var lamp=vGlow(.7,.7,.7,px*0.8,9.4,pz*0.8,lampC);
     vAnim(lamp,"bob",{y0:9.4,amp:.35,sp:.9,ph:i*1.3});
+    hwWeb(px,11,pz,-aa+Math.PI/2,3.2);
   }
-  // ---- the centre: a tiered podium showing off what you have equipped ----
-  var tier1=new THREE.Mesh(new THREE.CylinderGeometry(5.2,5.7,.55,36),
-    new THREE.MeshLambertMaterial({color:0x191340}));
+  // ---- the centre: the podium showing off what you have equipped. It is solid now ----
+  var tier1=new THREE.Mesh(new THREE.CylinderGeometry(5.2,5.7,.55,36),new THREE.MeshLambertMaterial({color:0x22122e}));
   tier1.position.y=.28;tier1.receiveShadow=QUAL>0;venue.add(tier1);
-  var tier2=new THREE.Mesh(new THREE.CylinderGeometry(3.3,3.8,.55,30),
-    new THREE.MeshLambertMaterial({color:0x201950}));
+  var tier2=new THREE.Mesh(new THREE.CylinderGeometry(3.3,3.8,.55,30),new THREE.MeshLambertMaterial({color:0x2e1838}));
   tier2.position.y=.82;tier2.receiveShadow=QUAL>0;venue.add(tier2);
-  var plinth=new THREE.Mesh(new THREE.CylinderGeometry(1.0,1.4,1.1,22),
-    new THREE.MeshLambertMaterial({color:0x2a2068}));
+  var plinth=new THREE.Mesh(new THREE.CylinderGeometry(1.0,1.4,1.1,22),new THREE.MeshLambertMaterial({color:0x3a1e48}));
   plinth.position.y=1.6;venue.add(plinth);
-  vAnim(vRing(2.1,.07,0,1.14,0,0x8a7aff,.55),"spinz",{sp:.5});
-  vAnim(vRing(4.0,.07,0,.58,0,0x35e8ff,.40),"spinz",{sp:-.32});
-  // your blade, floating and turning above the plinth with its aura live
+  addObstacle(0,0,5.3,null);
+  vAnim(vRing(2.1,.07,0,1.14,0,0xff9a3a,.55),"spinz",{sp:.5});
+  vAnim(vRing(4.0,.07,0,.58,0,HW.PURPLE,.40),"spinz",{sp:-.32});
+  for(i=0;i<4;i++){var pa2=i*TAU/4+.78;var pk2=sigPumpkin(.8);pk2.position.set(Math.cos(pa2)*4.6,.95,Math.sin(pa2)*4.6);pk2.rotation.y=-pa2+Math.PI/2;venue.add(pk2);}
   var eq=swordById(SAVE.eqSword)||SWORDS[0];
   var disp=buildSword(eq);
   disp.position.set(0,2.9,0);disp.scale.setScalar(1.0);
   venue.add(disp);
   SHOWCASE={mesh:disp,y0:2.9,fx:fxFor(eq),acc:0};
-  // a column of light around it
   vAnim(vBeam(1.4,4.5,0,6.6,0,eq.glow,.06,[0,0,0]),"pulse",{lo:.03,hi:.08,sp:1.6});
   vLabel(eq.name.toUpperCase(),"YOUR EQUIPPED BLADE",eq.glow,0,7.4,0,1.4);
-  // three motes orbiting the podium
   for(i=0;i<3;i++){
     var mo3=vGlow(.36,.36,.36,0,2.9,0,eq.glow);
     vAnim(mo3,"orbit",{r:1.9,y0:2.9,amp:.42,sp:.8,ph:(i/3)*TAU});
   }
-  // ---- slim totems set BEHIND each destination pad ----
-  // an arch over the pad sat exactly where the camera rests behind the player,
-  // so its cross-bar filled the bottom of the screen. Thin posts, set back
-  // past the pad, mark the same spot without ever blocking the view.
+  // ---- slim totems behind each pad, lit like lanterns ----
   for(i=0;i<4;i++){
     var pa=PAD0+i*1.5708;
     var acol=[0x35e8ff,0xffd23f,0x6bffb0,0xff8a3c][i];
     var bx=Math.cos(pa)*(R+5),bz=Math.sin(pa)*(R+5);
     for(var sgn=-1;sgn<=1;sgn+=2){
       var ox=Math.cos(pa+1.5708)*3.4*sgn,oz=Math.sin(pa+1.5708)*3.4*sgn;
-      vBox(.45,9,.45,bx+ox,4.5,bz+oz,0x1d1740);
+      vBox(.45,9,.45,bx+ox,4.5,bz+oz,0x21152c);
       var cap=vGlow(.9,.9,.9,bx+ox,9.4,bz+oz,acol);
       vAnim(cap,"pulse",{lo:.5,hi:1,sp:2.0,ph:i*1.6+sgn});
     }
   }
-  // ---- three slow rings turning high overhead ----
+  // ---- gravestones and candles in the corners nobody walks through ----
+  var graves=[[-20,-32,.3],[-24,-28,.7],[-17,-35,-.2],[26,-24,-.6],[30,-18,-.9],[-33,14,1.3],[-30,20,1.0],[-26,26,.8],[24,27,-.8],[29,21,-1.0]];
+  for(i=0;i<graves.length;i++){
+    var gv=graves[i];
+    hwGrave(gv[0],gv[1],gv[2]+Math.atan2(-gv[0],-gv[1]),rr(.85,1.2));
+    addObstacle(gv[0],gv[1],.9,null);
+    if(i%2===0)hwCandles(gv[0]+rr(-1.6,1.6),gv[1]+rr(-1.6,1.6),3);
+  }
+  // ---- three slow rings high overhead, now orange, violet and green ----
   for(i=0;i<3;i++){
-    var hr2=vRing(12+i*5,.16,0,16+i*2.2,0,[0x6a5aff,0x35e8ff,0xff3ca8][i],.30);
+    var hr2=vRing(12+i*5,.16,0,16+i*2.2,0,[HW.ORANGE,HW.PURPLE,HW.GREEN][i],.28);
     vAnim(hr2,"spinz",{sp:(i%2?1:-1)*(0.16+i*0.05)});
   }
-  // a pulsing disc on the floor under the banner
-  var glowDisc=new THREE.Mesh(GEO.ring,new THREE.MeshBasicMaterial({color:0x6a5aff,
-    transparent:true,opacity:.2,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,
-    depthWrite:false}));
+  // bats circling the room
+  for(i=0;i<9;i++){
+    var bat=hwBat(0,14,0);
+    vAnim(bat,"bat",{r:rr(14,30),y0:rr(11,20),sp:rr(.25,.5)*(i%2?1:-1),ph:rr(0,TAU)});
+  }
+  // ground fog drifting over the floor
+  for(i=0;i<14;i++){
+    var fg=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(TEX.glow,1,1),color:0x9a7ac8,transparent:true,opacity:.1,
+      depthWrite:false,blending:THREE.AdditiveBlending}));
+    fg.rotation.x=-Math.PI/2;fg.scale.set(rr(12,20),rr(8,14),1);fg.position.set(0,.25+i*.02,0);venue.add(fg);
+    vAnim(fg,"fog",{r:rr(8,32),sp:rr(.02,.05)*(i%2?1:-1),ph:rr(0,TAU)});
+  }
+  var glowDisc=new THREE.Mesh(GEO.ring,new THREE.MeshBasicMaterial({color:HW.ORANGE,
+    transparent:true,opacity:.2,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));
   glowDisc.rotation.x=-Math.PI/2;glowDisc.position.y=.06;glowDisc.scale.setScalar(30);
   venue.add(glowDisc);
-  vAnim(glowDisc,"pulse",{lo:.10,hi:.24,sp:1.0});
+  vAnim(glowDisc,"pulse",{lo:.08,hi:.2,sp:1.0});
+}
+
+/* ---- THE TARGET RANGE ----
+   On the right of the lobby. A ball waits over the middle of the range; walk up
+   and press block (F, click or tap) to send it at one of the targets. It comes
+   straight back off the target, a little faster each time, and you keep the
+   rally going for as long as you can. Miss and it floats back to the middle. */
+var RANGE={on:false,x:0,z:0,ball:null,targets:[],state:"idle",t:0,speed:0,streak:0,best:0,tgt:-1,
+  from:new THREE.Vector3(),to:new THREE.Vector3(),pos:new THREE.Vector3(),sign:null,dur:0};
+function rangeTargetCanvas(){
+  var c=cvs(256,256),g=c.getContext("2d"),cols=["#ff7a1a","#f4ecd8","#ff7a1a","#f4ecd8","#1a0a1e"];
+  for(var k=0;k<5;k++){g.beginPath();g.arc(128,128,124-k*25,0,TAU);g.fillStyle=cols[k];g.fill();}
+  g.lineWidth=6;g.strokeStyle="#140a1c";g.beginPath();g.arc(128,128,124,0,TAU);g.stroke();
+  return c;
+}
+function rangeSignDraw(){
+  var s=RANGE.sign;if(!s)return;
+  var g=s.c.getContext("2d");
+  g.clearRect(0,0,1024,256);
+  g.fillStyle="rgba(12,6,20,.9)";g.fillRect(0,0,1024,256);
+  g.fillStyle="#ff7a1a";g.fillRect(0,0,1024,12);g.fillRect(0,244,1024,12);
+  g.textAlign="center";g.font="bold 92px Fredoka, Trebuchet MS, Arial";
+  g.lineWidth=10;g.strokeStyle="rgba(0,0,0,.85)";g.strokeText("TARGET RANGE",512,108);g.fillStyle="#fff";g.fillText("TARGET RANGE",512,108);
+  g.font="600 54px Fredoka, Trebuchet MS, Arial";
+  var txt="STREAK "+RANGE.streak+"   ·   BEST "+RANGE.best;
+  g.lineWidth=7;g.strokeText(txt,512,196);g.fillStyle="#ffb070";g.fillText(txt,512,196);
+  s.tex.needsUpdate=true;
+}
+function buildRange(x,z){
+  RANGE.on=true;RANGE.x=x;RANGE.z=z;RANGE.targets.length=0;RANGE.state="idle";RANGE.streak=0;
+  RANGE.best=SAVE.rangeBest|0;
+  // a low fenced lane running out to the right-hand wall
+  var laneL=15,cx=x+laneL/2+1;
+  var lane=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({color:HW.ORANGE,transparent:true,opacity:.1,depthWrite:false}));
+  lane.rotation.x=-Math.PI/2;lane.scale.set(laneL+2,16,1);lane.position.set(cx,.12,z);venue.add(lane);
+  for(var s=-1;s<=1;s+=2){
+    for(var k=0;k<6;k++){vBox(.3,1.4,.3,x+2+k*2.7,.7,z+s*8,0x3a2418);}
+    vBox(laneL,.18,.18,cx,1.3,z+s*8,0x5a3a20);
+    addBoxObstacle(cx,z+s*8,laneL/2,.2,0,1.4);
+  }
+  // three targets at the far end, on posts, facing you
+  var tex=mkTex(rangeTargetCanvas(),1,1),tz=[-5.5,0,5.5];
+  for(var i=0;i<3;i++){
+    var px=x+laneL+rr(-.3,.3),pz=z+tz[i],py=2.6+(i===1?.9:0);
+    vBox(.35,py,.35,px+.4,py/2,pz,0x3a2418);
+    var face=new THREE.Mesh(new THREE.CircleGeometry(1.35,32),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));
+    face.position.set(px,py,pz);face.rotation.y=-Math.PI/2;venue.add(face);
+    var back=vBox(.2,2.9,2.9,px+.18,py,pz,0x2a1810);back.rotation.x=Math.PI/4;
+    addObstacle(px+.3,pz,1.2,null);
+    RANGE.targets.push({x:px,y:py,z:pz,face:face,hit:0});
+  }
+  // the ball: a little glowing pumpkin
+  var b=new THREE.Group();
+  var core=new THREE.Mesh(GEO.sph,new THREE.MeshBasicMaterial({color:0xffa040}));
+  core.scale.setScalar(1.2);b.add(core);
+  var glow=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(TEX.glow,1,1),color:0xff7a1a,transparent:true,opacity:.8,
+    blending:THREE.AdditiveBlending,depthWrite:false}));
+  glow.scale.setScalar(4);b.add(glow);b.userData.glow=glow;
+  venue.add(b);RANGE.ball=b;
+  RANGE.home=new THREE.Vector3(x+7,2.4,z);
+  RANGE.pos.copy(RANGE.home);b.position.copy(RANGE.home);
+  // the scoreboard over the lane
+  var c=cvs(1024,256),st=mkTex(c,1,1);
+  var sign=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:st,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+  sign.scale.set(11,2.75,1);sign.position.set(x+laneL+.6,8.2,z);sign.rotation.y=-Math.PI/2;venue.add(sign);
+  vBox(.4,7,.4,x+laneL+.9,3.5,z-5.2,0x3a2418);vBox(.4,7,.4,x+laneL+.9,3.5,z+5.2,0x3a2418);
+  RANGE.sign={c:c,tex:st};rangeSignDraw();
+  vFloorText("TARGETS",HW.ORANGE,x+1,z,7).rotation.z=-Math.PI/2;
+}
+// a press in the lobby: hit the practice ball if it is close enough, and say so
+function rangeSwing(){
+  if(!RANGE.on||!RANGE.ball||!player||!player.alive)return false;
+  var p=RANGE.pos,dx=p.x-player.pos.x,dz=p.z-player.pos.z,dy=p.y-(player.y+1.9);
+  var reach=4.6+RANGE.speed*0.05,near=dx*dx+dz*dz+dy*dy<reach*reach;
+  if(!near)return false;
+  player.swing();
+  if(RANGE.state==="toTarget")return true;         // already on its way
+  // off it goes, at one of the targets
+  RANGE.tgt=Math.floor(Math.random()*RANGE.targets.length);
+  var t=RANGE.targets[RANGE.tgt];
+  if(RANGE.state!=="toPlayer")RANGE.speed=26;
+  else {RANGE.streak++;RANGE.speed=Math.min(90,RANGE.speed+3.2);}
+  if(RANGE.streak>RANGE.best){RANGE.best=RANGE.streak;SAVE.rangeBest=RANGE.best;}
+  RANGE.from.copy(p);RANGE.to.set(t.x-.2,t.y,t.z);
+  RANGE.state="toTarget";RANGE.t=0;RANGE.dur=RANGE.from.distanceTo(RANGE.to)/RANGE.speed;
+  burst(p.x,p.y,p.z,16,9,0xff9a3a,1.2,.4,-3);sfx("parry");
+  rangeSignDraw();
+  return true;
+}
+function rangeTick(dt,t){
+  if(!RANGE.on||!RANGE.ball||venueKind!=="lobby")return;
+  var b=RANGE.ball,p=RANGE.pos;
+  if(player){var rdx=p.x-player.pos.x,rdz=p.z-player.pos.z,rrch=4.6+RANGE.speed*0.05;RANGE.near=rdx*rdx+rdz*rdz<rrch*rrch;}
+  for(var i=0;i<RANGE.targets.length;i++){var tg=RANGE.targets[i];
+    if(tg.hit>0){tg.hit=Math.max(0,tg.hit-dt*2.5);tg.face.scale.setScalar(1+tg.hit*.25);}}
+  if(RANGE.state==="idle"){
+    p.set(RANGE.home.x,RANGE.home.y+Math.sin(t*2)*.3,RANGE.home.z);
+  } else if(RANGE.state==="toTarget"||RANGE.state==="toPlayer"){
+    RANGE.t+=dt;
+    var k=Math.min(1,RANGE.t/Math.max(.05,RANGE.dur));
+    p.lerpVectors(RANGE.from,RANGE.to,k);
+    p.y+=Math.sin(k*Math.PI)*(RANGE.state==="toPlayer"?1.2:.8);
+    if(QUAL>0&&Math.random()<.7)spark(p.x,p.y,p.z,0,.2,0,1,.55,.15,.6,.3,0);
+    if(k>=1){
+      if(RANGE.state==="toTarget"){
+        var tg2=RANGE.targets[RANGE.tgt];tg2.hit=1;
+        burst(p.x,p.y,p.z,26,12,0xffd070,1.4,.5,-4);ringBurst(p.x,p.y,p.z,14,6,0xff7a1a,1,.4);sfx("coin");
+        // back at you, a touch faster, landing where you are standing now
+        RANGE.from.copy(p);
+        RANGE.to.set(player?player.pos.x:RANGE.home.x,(player?player.y:0)+2,player?player.pos.z:RANGE.home.z);
+        RANGE.state="toPlayer";RANGE.t=0;RANGE.dur=RANGE.from.distanceTo(RANGE.to)/RANGE.speed;
+      } else {
+        // you missed it
+        RANGE.state="miss";RANGE.t=0;
+        if(RANGE.streak>0)feed("Target range: streak of "+RANGE.streak,"gold");
+        RANGE.streak=0;rangeSignDraw();
+        burst(p.x,p.y,p.z,16,6,0x9a7ac8,1.1,.5,-2);
+      }
+    }
+  } else if(RANGE.state==="miss"){
+    RANGE.t+=dt;
+    p.lerp(RANGE.home,Math.min(1,dt*2.2));
+    if(RANGE.t>1.4)RANGE.state="idle";
+  }
+  b.position.copy(p);
+  var gl=b.userData.glow;gl.lookAt(camera.position);
+  gl.material.opacity=.55+.25*Math.sin(t*6);
 }
 function buildCasino(){
   clearVenue();venueKind="casino";ARENA_R=28;
@@ -4113,7 +4465,7 @@ function enterLobby(){
   riftAbort();
   clearBalls();clearFighters();clearWarn();
   buildLobby();
-  spawnVenuePlayer(0,8);
+  spawnVenuePlayer(0,10.5);
   STATE="venue";
   showScreen(null);
   $("ui").classList.add("on");
@@ -4125,6 +4477,7 @@ function enterLobby(){
   $("vRank").textContent=currentRank().name.toUpperCase();
   $("vRankIco").innerHTML=rankIcon(currentRank(),28);
   refreshSaveWarn();
+  refreshLoginButton();loginNudge();
 }
 function enterCasino(){
   clearFighters();clearWarn();
@@ -4171,14 +4524,16 @@ function updateVenue(dt,t){
     }
   }
   var p=$("zonePrompt");
-  var lbl=nearZone?nearZone.label:null;
+  var lbl=nearZone?nearZone.label:(RANGE.on&&RANGE.near&&RANGE.state==="idle"?"HIT THE BALL":null);
   if(lbl){
     if(hudC.zone!==lbl){$("zoneLabel").textContent=lbl;$("zoneKey").textContent=touchMode?"TAP":"F";hudC.zone=lbl;}
     p.classList.add("on");
   } else {p.classList.remove("on");hudC.zone=null;}
   for(i=0;i<VENUE_BB.length;i++){
     var bb=VENUE_BB[i];
-    bb.rotation.y=camYaw;
+    // face the camera's POSITION: turned to its yaw, every sign in the room
+    // faced away from you -- culled, or mirrored where it was double-sided
+    bb.rotation.y=Math.atan2(camera.position.x-bb.position.x,camera.position.z-bb.position.z);
     if(bb.userData.baseW){
       var dd=Math.sqrt(dist2(bb.position.x,bb.position.z,camera.position.x,camera.position.z));
       var k=1+clamp((dd-14)/46,0,0.75);       // keeps far signs legible
@@ -4186,6 +4541,7 @@ function updateVenue(dt,t){
     }
   }
   updateVenueFX(dt,t);
+  rangeTick(dt,t);shrineTick(dt,t);rodrigaTick(dt,t);
   $("vCoins").textContent=SAVE.coins.toLocaleString();
   $("vYen").textContent=SAVE.yen.toLocaleString();
 }
@@ -4218,6 +4574,19 @@ function updateVenueFX(dt,t){
       m.scale.y=1.05*(1+Math.sin(t*2.3)*.025);
       var wp=t%5.5;
       v.arm.rotation.z=wp<1.4?(2.5+Math.sin(wp*13)*.35):.28;
+    } else if(v.kind==="flicker"){
+      var fk=0.75+Math.random()*0.35+Math.sin(t*9+(v.ph||0))*0.1;
+      m.scale.y=0.3*fk;m.material.opacity=0.65+0.35*fk;
+    } else if(v.kind==="bat"){
+      var ba=t*v.sp+v.ph;
+      m.position.set(Math.cos(ba)*v.r,v.y0+Math.sin(t*1.7+v.ph)*1.4,Math.sin(ba)*v.r);
+      m.rotation.y=-ba+(v.sp>0?0:Math.PI);
+      var fl2=Math.sin(t*16+v.ph)*0.8,wg=m.userData.wings;
+      if(wg){wg[0].rotation.z=fl2;wg[1].rotation.z=-fl2;}
+    } else if(v.kind==="fog"){
+      var fa=t*v.sp+v.ph;
+      m.position.x=Math.cos(fa)*v.r;m.position.z=Math.sin(fa)*v.r;
+      m.material.opacity=0.07+0.05*Math.sin(t*.5+v.ph);
     } else if(v.kind==="sweep"){
       m.rotation.y=t*v.sp;
       m.material.opacity=(v.lo+(v.hi-v.lo)*(0.5+0.5*Math.sin(t*v.sp*2)))
@@ -6166,18 +6535,7 @@ Fighter.prototype.update=function(dt,t){
     this.vel.x=0;this.vel.z=0;
   }
   // terrain obstacles
-  for(var oi=0;oi<OBST.length;oi++){
-    var ob=OBST[oi];
-    var ddx=this.pos.x-ob.x,ddz=this.pos.z-ob.z;
-    var need=ob.r+0.55;
-    var dd=Math.sqrt(ddx*ddx+ddz*ddz);
-    if(dd<need&&dd>0.0001&&this.y<5){
-      var ux=ddx/dd,uz=ddz/dd;
-      this.pos.x=ob.x+ux*need;this.pos.z=ob.z+uz*need;
-      var into=this.vel.x*ux+this.vel.z*uz;
-      if(into<0){this.vel.x-=ux*into;this.vel.z-=uz*into;}
-    }
-  }
+  for(var oi=0;oi<OBST.length;oi++)pushOutObstacle(this,OBST[oi]);
   var d=Math.sqrt(this.pos.x*this.pos.x+this.pos.z*this.pos.z);
   var edge=ARENA_R-1.3;
   if(d>edge){
@@ -8660,7 +9018,13 @@ function passResultHtml(r){
   return s;
 }
 // free spins from the pass: one normal chest, any tab
-function freeSpinOk(){return (SAVE.freeSpins|0)>0&&chestGrade==="normal"&&chestQty===1;}
+function freeSpinOk(){
+  if(chestQty!==1)return false;
+  if(chestGrade==="normal")return (SAVE.freeSpins|0)>0;
+  if(chestGrade==="legendary")return (SAVE.freeSpinsL|0)>0;   // from the login calendar
+  return false;
+}
+function freeLeft(){return chestGrade==="legendary"?(SAVE.freeSpinsL|0):(SAVE.freeSpins|0);}
 
 /* ---------------- the screen ---------------- */
 var passSel=0;
@@ -9672,6 +10036,508 @@ SKIN_FX.scarecrow={c:0xffa030,rate:7,vy:[.2,1.0],g:-1.0,sz:.4,life:.8,r:.7};
 SKIN_FX.horseman={c:0xff6a12,rate:9,vy:[.4,1.4],g:-.8,sz:.46,life:.9,r:.7};
 SKIN_FX.hexwitch={c:0xc86aff,rate:13,vy:[.2,1.3],g:-1.1,sz:.5,life:1.1,r:.85};
 /* ==== HALLOWEEN PASS END ==== */
+/* ==== 4.0 BEGIN ==== */
+/* ============================================================
+   4.0 -- SEASON 1
+   The Wendigo shrine, Rodriga and her tokens, the login calendar, the new
+   season's reset and its ranked grind. Everything with a date on it reads
+   the tables beside LIMITED_DROPS (EVENT_SHOPS, RODRIGA, LOGIN_CAL, SEASON).
+   ============================================================ */
+
+/* ---------- the season ----------
+   A new season id starts everybody's RP again from nothing. Rank rewards are
+   never taken back, so whatever you earned on the old ladder is kept; the old
+   total is remembered as s0rp. Signed in, the server does exactly this to its
+   copy (econ.js seasonReset). */
+function seasonReset(s){
+  if(!s||typeof SEASON==="undefined"||s.season===SEASON.id)return false;
+  if(typeof s.season!=="number"||s.season<SEASON.id){
+    s.s0rp=Math.max(typeof s.s0rp==="number"?s.s0rp:0,typeof s.rp==="number"&&isFinite(s.rp)?s.rp:0);
+    s.rp=0;
+  }
+  s.season=SEASON.id;
+  return true;
+}
+/* ---------- ranked RP ----------
+   A sitting could take a player from nothing to 10,000 in about forty
+   minutes. A win is now worth less the higher you are, a loss costs more, and
+   a performance bonus is small. Near the top, a 50% win rate goes nowhere. */
+function rpFor(won,perf,teams){
+  var f=currentRankIndex()/Math.max(1,RANKS.length-2);          // 0 at Poop, 1 at Meat
+  f=clamp(f,0,1);
+  if(won){
+    var base=Math.round(lerp(40,18,f)),bonus=Math.round(clamp(perf/6,0,lerp(10,6,f)));
+    return base+bonus;
+  }
+  return -Math.round(lerp(teams?12:15,teams?28:34,f));
+}
+// GOD is people only: at that rank a ranked match against bots moves no RP
+function rankIsPvp(){var r=currentRank();return !!(r&&r.pvp);}
+function rankedRp(won,perf,teams){
+  if(rankIsPvp()&&!(MODE&&MODE.pvp))return 0;
+  return rpFor(won,perf,teams);
+}
+
+/* ---------- little helpers for the event screens ---------- */
+function evtLeft(ms){
+  ms=Math.max(0,ms);
+  var d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5),m=Math.floor(ms%36e5/6e4);
+  if(d>=1)return d+"d "+h+"h";
+  return h+"h "+String(m).padStart(2,"0")+"m";
+}
+function evtOpen(E,now){now=now||Date.now();return now>=E.from&&now<E.to;}
+function evtShow(title,cls,html){
+  $("evtTitle").textContent=title;
+  $("evtTitle").className="win-title "+(cls||"");
+  $("evtWnd").className="wnd mid "+(cls==="hw"?"hw":"");
+  $("evtBody").innerHTML=html;
+  $("evtMsg").innerHTML="";
+  showScreen("evt");
+}
+function evtSay(html,good){$("evtMsg").innerHTML="<span style='color:"+(good?"#b8ff8f":"#ffc2b8")+"'>"+html+"</span>";}
+function evtBillboard(w,h,x,y,z){
+  var c=cvs(1024,Math.round(1024*h/w)),tex=mkTex(c,1,1);
+  var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,fog:false,side:THREE.DoubleSide}));
+  m.scale.set(w,h,1);m.position.set(x,y,z);m.userData.billboard=true;
+  VENUE_BB.push(m);venue.add(m);
+  return {mesh:m,c:c,tex:tex};
+}
+
+/* ============================================================
+   THE WENDIGO SHRINE
+   Beside Gnorman: the katana floating over a bone altar, the price and the
+   time left written underneath. One week, then the shrine is gone for good.
+   ============================================================ */
+var SHRINE=null;
+function shrineSignDraw(){
+  if(!SHRINE)return;
+  var E=EVENT_SHOPS.wendigo,now=Date.now(),g=SHRINE.sign.c.getContext("2d"),W=1024,H=SHRINE.sign.c.height;
+  g.clearRect(0,0,W,H);
+  g.fillStyle="rgba(6,12,24,.88)";if(g.roundRect){g.beginPath();g.roundRect(8,8,W-16,H-16,40);g.fill();}else g.fillRect(8,8,W-16,H-16);
+  g.strokeStyle="#4ab8ff";g.lineWidth=10;if(g.roundRect){g.beginPath();g.roundRect(8,8,W-16,H-16,40);g.stroke();}
+  g.textAlign="center";g.lineJoin="round";
+  g.font="bold 104px Fredoka, Trebuchet MS, Arial";g.lineWidth=14;g.strokeStyle="#041020";
+  g.strokeText("WENDIGO KATANA",W/2,122);g.fillStyle="#e8f6ff";g.fillText("WENDIGO KATANA",W/2,122);
+  g.font="bold 64px Fredoka, Trebuchet MS, Arial";
+  var line=E.yen.toLocaleString()+" YEN  ·  ULTRA";
+  g.strokeText(line,W/2,212);g.fillStyle="#ffd23f";g.fillText(line,W/2,212);
+  g.font="600 50px Fredoka, Trebuchet MS, Arial";
+  var t=now<E.from?"OPENS IN "+evtLeft(E.from-now):"ONE WEEK ONLY · GONE IN "+evtLeft(E.to-now);
+  g.lineWidth=10;g.strokeText(t,W/2,290);g.fillStyle="#7fd0ff";g.fillText(t,W/2,290);
+  SHRINE.sign.tex.needsUpdate=true;
+}
+function buildWendigoShrine(x,z){
+  SHRINE=null;
+  var E=EVENT_SHOPS.wendigo;
+  if(Date.now()>=E.to)return;                      // gone forever
+  var st=new THREE.Group();st.position.set(x,0,z);st.rotation.y=Math.atan2(-x,-z);venue.add(st);
+  var BONE=0xe8e0cc,STONE=0x2a3444,ICE=0x7fd0ff,i;
+  // a stepped stone altar
+  gPart(st,GEO.cyl8,STONE,5.2,.5,5.2,0,.25,0);
+  gPart(st,GEO.cyl8,0x344256,3.8,.6,3.8,0,.8,0);
+  gPart(st,GEO.cyl8,0x3e4e66,2.2,1.4,2.2,0,1.8,0);
+  // antlers sweeping up either side, like the thing itself is standing behind it
+  for(var sd=-1;sd<=1;sd+=2){
+    var base=gPart(st,GEO.cyl8,BONE,.36,4.2,.36,sd*2.1,2.4,-1.2);base.rotation.z=sd*.2;
+    for(i=0;i<4;i++){
+      var tine=gPart(st,GEO.cone,BONE,.22,1.5-i*.15,.22,sd*(2.4+i*.35),3.2+i*.8,-1.2);
+      tine.rotation.z=sd*(-.9-i*.12);
+    }
+    var tipB=gPart(st,GEO.cone,BONE,.24,1.3,.24,sd*2.55,4.9,-1.2);tipB.rotation.z=-sd*.25;
+    // a brazier of blue fire at each front corner
+    gPart(st,GEO.cyl8,0x1a2230,.7,1.6,.7,sd*2.6,.8,1.7);
+    var fl=vGlow(.5,.7,.5,0,0,0,0x4ab8ff);venue.remove(fl);st.add(fl);fl.position.set(sd*2.6,1.95,1.7);
+    vAnim(fl,"flicker",{a:1,ph:sd*3});
+  }
+  // a skull on the altar's face
+  var sk=gPart(st,GEO.sph,BONE,.9,.8,.8,0,1.9,1.1);
+  for(sd=-1;sd<=1;sd+=2){var ey=new THREE.Mesh(GEO.sphLo,new THREE.MeshBasicMaterial({color:0x4ab8ff}));ey.scale.setScalar(.18);ey.position.set(sd*.2,2.0,1.48);st.add(ey);}
+  // the katana, floating and turning over the altar
+  var sw=buildSword(swordById("wendigo"));
+  sw.position.set(0,3.2,0);sw.scale.setScalar(1.05);st.add(sw);
+  var ring=vRing(2.3,.08,x,.4,z,ICE,.6);vAnim(ring,"spinz",{sp:.6});
+  var beam=vBeam(1.6,7,x,6,z,ICE,.07);vAnim(beam,"pulse",{lo:.04,hi:.1,sp:1.3});
+  // the price and the clock, under the blade
+  var sign=evtBillboard(7.6,7.6*320/1024,x+(-x/Math.hypot(x,z))*2.6,1.6,z+(-z/Math.hypot(x,z))*2.6);
+  SHRINE={x:x,z:z,sword:sw,sign:sign,t:0};
+  shrineSignDraw();
+  addObstacle(x,z,2.9,null);
+  // walk up and press F
+  var fx=x-(x/Math.hypot(x,z))*5.4,fz=z-(z/Math.hypot(x,z))*5.4;
+  var zr=vRing(2.6,.13,fx,.32,fz,ICE,.85);
+  ZONES.push({x:fx,z:fz,r:3.2,label:"WENDIGO SHRINE",action:function(){openWendigo();},ring:zr,col:ICE});
+}
+function shrineTick(dt,t){
+  if(!SHRINE||venueKind!=="lobby")return;
+  var s=SHRINE.sword;
+  s.rotation.y=t*.7;s.position.y=3.3+Math.sin(t*1.3)*.25;s.rotation.z=Math.sin(t*.8)*.08;
+  if(s.userData.crackMat)s.userData.crackMat.opacity=.6+.4*Math.abs(Math.sin(t*2.2));
+  SHRINE.t+=dt;if(SHRINE.t>20){SHRINE.t=0;shrineSignDraw();}
+  if(QUAL>0&&Math.random()<dt*14){
+    var a=Math.random()*TAU;
+    spark(SHRINE.x+Math.cos(a)*1.4,rr(2.4,5),SHRINE.z+Math.sin(a)*1.4,rr(-.2,.2),rr(.4,1.2),rr(-.2,.2),.6,.85,1,rr(.3,.6),rr(.8,1.4),-.3);
+  }
+}
+function openWendigo(){
+  var E=EVENT_SHOPS.wendigo,now=Date.now(),it=swordById("wendigo"),d=shopData("sword"),own=!!SAVE.swords.wendigo;
+  var h="<div class='evtgrid'><div class='well evtpic wendigo'>"+swordIcon(it).replace("width='34' height='34'","width='150' height='150'")+"</div><div class='well'>"+
+    detailHead(it,d,"sword","BLADE")+
+    "<div class='dprice ol1'>"+E.yen.toLocaleString()+" YEN</div>";
+  if(own)h+="<button class='big ghost' disabled>YOU OWN THIS</button>";
+  else if(now<E.from)h+="<button class='big ghost' disabled>OPENS IN "+evtLeft(E.from-now).toUpperCase()+"</button>";
+  else if(now>=E.to)h+="<button class='big ghost' disabled>GONE FOREVER</button>";
+  else h+="<button class='big"+(SAVE.yen>=E.yen?"":" off")+"' id='evtBuy'>BUY FOR "+E.yen.toLocaleString()+" YEN</button>"+
+    "<div class='dnote'>On sale until the shrine closes in "+evtLeft(E.to-now)+". After that it can never be bought again.</div>";
+  h+="<div class='dnote'>You have <b>"+SAVE.yen.toLocaleString()+"</b> yen.</div></div></div>";
+  evtShow("THE WENDIGO SHRINE","",h);
+  var b=$("evtBuy");
+  if(b)b.addEventListener("click",function(){
+    if(SAVE.yen<E.yen){evtSay("Not enough yen: you need "+(E.yen-SAVE.yen).toLocaleString()+" more.");sfx("tick");return;}
+    function done(ok,why){
+      if(!ok){evtSay(why);sfx("tick");return;}
+      sfx("rank");SAVE.eqSword="wendigo";writeSave();refreshCoins();updateChips();updateLobbyBar();
+      openWendigo();evtSay("The Wendigo Katana is yours, and equipped.",true);
+    }
+    if(econOn()){
+      if(b.disabled)return;b.disabled=true;
+      econAct([{k:"event",shop:"wendigo"}],function(err,rs){var r0=rs&&rs[0];b.disabled=false;
+        done(!err&&r0&&r0.ok,(r0&&r0.why)||econErr(err));});
+      return;
+    }
+    if(!evtOpen(E)){done(false,"The shrine is closed.");return;}
+    if(SAVE.swords.wendigo){done(false,"You already own it.");return;}
+    SAVE.yen-=E.yen;SAVE.swords.wendigo=1;done(true);
+  });
+}
+
+/* ============================================================
+   RODRIGA
+   A very large ogre witch in a crooked shack behind where you come in. She
+   sells one thing a month, and only for a Rodriga token -- which drops once in
+   ten million matches, of any kind.
+   ============================================================ */
+function rodrigaMonth(ms){return new Date(ms||Date.now()).toISOString().slice(0,7);}
+function rodrigaOffer(){
+  var m=RODRIGA.months[rodrigaMonth()];
+  if(!m)return null;
+  var it=findId(shopData(m.tab).list,m.id);
+  return it?{tab:m.tab,it:it}:null;
+}
+function buildRodriga(){
+  var r=new THREE.Group();
+  var ROBE=0x2a1440,ROBE2=0x3a1a5a,GRN=0x6a9a3a,GRN2=0x4e7a2a,HAIR=0xb8b8b0,HAT=0x1a0a2a,GLOW=0x7aff5a;
+  var skirt=gPart(r,GEO.cone,ROBE,2.6,2.8,2.6,0,1.4,0);
+  gPart(r,GEO.cyl,0x1a0a26,2.62,.14,2.62,0,.07,0);                   // the hem, dragging
+  gPart(r,GEO.sph,ROBE2,2.0,1.7,1.7,0,3.0,0);                        // a great round body
+  gPart(r,GEO.sph,ROBE2,1.5,1.2,.9,0,2.6,.55);                       // and a belly
+  gPart(r,GEO.cyl,0x5a3018,1.9,.22,1.7,0,2.35,0);                    // a rope belt
+  var pouch=gPart(r,GEO.box,0x6a4020,.4,.45,.25,.7,2.1,.8);pouch.rotation.z=.2;
+  var bottle=new THREE.Mesh(GEO.cyl8,new THREE.MeshBasicMaterial({color:GLOW,transparent:true,opacity:.8}));
+  bottle.scale.set(.2,.36,.2);bottle.position.set(-.75,2.1,.78);r.add(bottle);
+  // the head: green, warty, tusked, with a long hooked nose
+  var head=new THREE.Group();head.position.set(0,4.25,.15);r.add(head);
+  gPart(head,GEO.sph,GRN,1.35,1.25,1.25,0,0,0);
+  gPart(head,GEO.sph,GRN,1.2,.7,1.0,0,-.45,.1);                      // heavy jaw
+  for(var sd=-1;sd<=1;sd+=2){
+    var tusk=gPart(head,GEO.cone,0xf0e8d0,.13,.36,.13,sd*.3,-.42,.55);tusk.rotation.x=-.2;
+    var ear=gPart(head,GEO.cone,GRN2,.22,.6,.12,sd*.7,.1,-.05);ear.rotation.z=-sd*1.2;
+    var eyeW=new THREE.Mesh(GEO.sphLo,new THREE.MeshBasicMaterial({color:0xd8ff6a}));eyeW.scale.set(.26,.22,.12);eyeW.position.set(sd*.25,.15,.58);head.add(eyeW);
+    var pupil=new THREE.Mesh(GEO.sphLo,new THREE.MeshBasicMaterial({color:0x0a0a0a}));pupil.scale.set(.1,.16,.06);pupil.position.set(sd*.25,.15,.64);head.add(pupil);
+    var brow=gPart(head,GEO.box,0x2a3a1a,.34,.08,.1,sd*.25,.34,.58);brow.rotation.z=sd*.35;
+  }
+  var nose=new THREE.Group();nose.position.set(0,.05,.62);head.add(nose);
+  var n1=gPart(nose,GEO.cone,GRN,.24,.7,.24,0,-.05,.28);n1.rotation.x=Math.PI/2+.35;
+  var n2=gPart(nose,GEO.cone,GRN,.14,.3,.14,0,-.3,.6);n2.rotation.x=Math.PI-.3;
+  gPart(nose,GEO.sph,GRN2,.14,.14,.14,.08,-.02,.38);                  // a wart on the nose
+  var warts=[[.35,-.2,.5],[-.42,.35,.45],[.5,.45,.3],[-.3,-.5,.45]];
+  for(var w=0;w<warts.length;w++)gPart(head,GEO.sph,GRN2,.13,.13,.13,warts[w][0],warts[w][1],warts[w][2]);
+  var mouth=new THREE.Mesh(GEO.box,new THREE.MeshBasicMaterial({color:0x1a0a0a}));mouth.scale.set(.6,.08,.05);mouth.position.set(0,-.32,.6);head.add(mouth);
+  // stringy grey hair out from under the hat
+  for(var hh=0;hh<9;hh++){var ha=(hh/8-.5)*2.6;
+    var strand=gPart(head,GEO.box,HAIR,.12,1.3+Math.abs(Math.sin(hh))*.4,.12,Math.sin(ha)*.62,-.35,Math.cos(ha)*-.5);strand.rotation.z=Math.sin(ha)*.2;}
+  // the hat: wide, tall and crooked, a lit band and a buckle
+  var hat=new THREE.Group();hat.position.set(0,.55,-.05);hat.rotation.z=.12;head.add(hat);
+  gPart(hat,GEO.cyl,HAT,3.0,.1,3.0,0,0,0);
+  var hc1=gPart(hat,GEO.cone,HAT,1.5,1.6,1.5,0,.85,0);
+  var hc2=gPart(hat,GEO.cone,HAT,.8,1.3,.8,.35,2.0,-.15);hc2.rotation.set(-.3,0,-.7);
+  var band=new THREE.Mesh(GEO.cyl,new THREE.MeshBasicMaterial({color:GLOW}));band.scale.set(1.42,.18,1.42);band.position.y=.2;hat.add(band);
+  gPart(hat,GEO.box,0xd8a83a,.36,.28,.08,0,.2,.72);
+  // arms: one stirs the cauldron with a ladle, the other beckons
+  var armL=new THREE.Group();armL.position.set(-1.25,3.4,0);r.add(armL);
+  gPart(armL,GEO.box,ROBE2,.62,1.3,.62,0,-.55,0).rotation.z=.2;
+  gPart(armL,GEO.sph,GRN,.5,.5,.5,-.18,-1.3,.25);
+  var ladle=new THREE.Group();ladle.position.set(-.18,-1.3,.25);armL.add(ladle);
+  gPart(ladle,GEO.cyl8,0x5a3a1a,.12,3.2,.12,0,-.9,.9).rotation.x=.9;
+  gPart(ladle,GEO.sph,0x3a3a3a,.4,.22,.4,0,-2.0,2.2);
+  var armR=new THREE.Group();armR.position.set(1.25,3.4,0);r.add(armR);
+  gPart(armR,GEO.box,ROBE2,.62,1.3,.62,0,-.55,0).rotation.z=-.2;
+  var handR=gPart(armR,GEO.sph,GRN,.5,.5,.5,.18,-1.3,.25);
+  for(var fg=0;fg<3;fg++){var fin=gPart(armR,GEO.cone,GRN,.1,.36,.1,.1+fg*.12,-1.62,.35);fin.rotation.x=Math.PI;}
+  r.userData={head:head,armL:armL,armR:armR,ladle:ladle,band:band};
+  return r;
+}
+var RODSHACK=null;
+function rodSignCanvas(){
+  var c=cvs(1024,300),g=c.getContext("2d");
+  g.fillStyle="#2a1a0c";g.fillRect(0,0,1024,300);
+  for(var i=0;i<6;i++){g.fillStyle=i%2?"#3a2410":"#321e0c";g.fillRect(0,i*50,1024,48);}
+  g.textAlign="center";g.lineJoin="round";
+  g.font="bold 150px Fredoka, Trebuchet MS, Arial";g.lineWidth=18;g.strokeStyle="#0a0604";
+  g.strokeText("RODRIGA'S",512,160);g.fillStyle="#9aff6a";g.fillText("RODRIGA'S",512,160);
+  g.font="bold 54px Fredoka, Trebuchet MS, Arial";g.lineWidth=10;
+  g.strokeText("ONE ITEM A MONTH · TOKENS ONLY",512,250);g.fillStyle="#ffe8a0";g.fillText("ONE ITEM A MONTH · TOKENS ONLY",512,250);
+  return c;
+}
+function buildRodrigaShack(x,z){
+  var st=new THREE.Group();st.position.set(x,0,z);st.rotation.y=Math.atan2(-x,-z);venue.add(st);
+  var WOOD=0x4a2e18,WOOD2=0x5e3a1e,DARK=0x241408,ROOF=0x2a1a2e,GLOW=0x7aff5a,i;
+  gPart(st,GEO.box,DARK,13,.4,8,0,.2,-1);                            // porch
+  gPart(st,GEO.box,WOOD,12,10.6,.5,0,5.4,-4.6).rotation.z=.02;       // back wall
+  for(var sd=-1;sd<=1;sd+=2){
+    gPart(st,GEO.box,WOOD2,.5,10,8,sd*6,5.2,-1).rotation.z=sd*.03;    // side walls, leaning
+    for(i=0;i<5;i++)gPart(st,GEO.box,i%2?WOOD:WOOD2,.56,.3,8.1,sd*6,1.2+i*2,-1);
+    // a crooked roof, one slab each side
+    var rf=gPart(st,GEO.box,ROOF,7.6,.5,10,sd*3.4,11.9,-1);rf.rotation.z=-sd*.42;
+    // posts at the front
+    gPart(st,GEO.box,DARK,.5,10.4,.5,sd*5.6,5.2,2.8).rotation.z=sd*.04;
+    // a skull on a post, and a green lantern
+    gPart(st,GEO.cyl8,DARK,.22,3.2,.22,sd*7.8,1.6,3.8);
+    gPart(st,GEO.sph,0xe8e0cc,.7,.62,.62,sd*7.8,3.5,3.8);
+    var lan=vGlow(.5,.7,.5,0,0,0,GLOW);venue.remove(lan);st.add(lan);lan.position.set(sd*5.6,8,3.2);
+    vAnim(lan,"flicker",{a:1,ph:sd*2});
+  }
+  gPart(st,GEO.box,DARK,12.6,.5,.5,0,10.4,2.8);                      // lintel
+  var chim=gPart(st,GEO.box,0x3a2a2a,1.2,3.2,1.2,3.6,13.8,-3);chim.rotation.z=.15;
+  var sign=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(rodSignCanvas(),1,1),transparent:true}));
+  sign.scale.set(8,8*300/1024,1);sign.position.set(0,11.6,3.6);sign.rotation.x=-.12;st.add(sign);
+  // shelves of jars along the back
+  for(i=0;i<3;i++){gPart(st,GEO.box,WOOD2,10,.2,1,0,2.4+i*1.6,-4.0);
+    for(var j=0;j<6;j++){var jc=[0x7aff5a,0xc86aff,0xff7a1a][(i+j)%3];
+      var jar=new THREE.Mesh(GEO.cyl8,new THREE.MeshBasicMaterial({color:jc,transparent:true,opacity:.75}));
+      jar.scale.set(.5,.7,.5);jar.position.set(-4+j*1.6,2.9+i*1.6,-4.0);st.add(jar);}}
+  // Rodriga herself, behind her cauldron
+  var rod=buildRodriga();rod.position.set(0,.4,-1.8);rod.scale.setScalar(1.8);st.add(rod);
+  var caul=new THREE.Group();caul.position.set(0,0,1.6);st.add(caul);
+  var pot=gPart(caul,GEO.sph,0x1a1a1e,3.2,2.4,3.2,0,1.4,0);
+  var rim=new THREE.Mesh(new THREE.TorusGeometry(1.45,.22,8,28),new THREE.MeshLambertMaterial({color:0x2a2a30}));rim.rotation.x=Math.PI/2;rim.position.y=2.35;caul.add(rim);
+  var brew=new THREE.Mesh(new THREE.CircleGeometry(1.4,28),new THREE.MeshBasicMaterial({color:GLOW}));brew.rotation.x=-Math.PI/2;brew.position.y=2.3;caul.add(brew);
+  for(i=0;i<3;i++){var lg=gPart(caul,GEO.cyl8,0x1a1a1e,.2,1,.2,Math.cos(i*2.1)*1.2,.3,Math.sin(i*2.1)*1.2);lg.rotation.z=Math.cos(i*2.1)*.3;}
+  var fire=vGlow(1.6,.5,1.6,0,0,0,0xff7a1a);venue.remove(fire);caul.add(fire);fire.position.y=.3;vAnim(fire,"flicker",{a:1,ph:1});
+  var bubbles=[];
+  for(i=0;i<6;i++){var bb=new THREE.Mesh(GEO.sphLo,new THREE.MeshBasicMaterial({color:0xb8ff9a,transparent:true,opacity:.9}));
+    bb.scale.setScalar(.3);caul.add(bb);bubbles.push({m:bb,ph:Math.random()*3,a:Math.random()*TAU,r:Math.random()*1.1});}
+  // the shack is solid; the cauldron too
+  var rot=st.rotation.y;
+  addBoxObstacle(x+Math.sin(rot)*-1,z+Math.cos(rot)*-1,6.3,4.2,rot,11);
+  var cx=x+Math.sin(rot)*1.6,cz=z+Math.cos(rot)*1.6;
+  addObstacle(cx,cz,1.9,null);
+  // walk up to the cauldron and press F
+  var fx=x+Math.sin(rot)*6.2,fz=z+Math.cos(rot)*6.2;
+  var zr=vRing(3,.13,fx,.32,fz,GLOW,.85);
+  ZONES.push({x:fx,z:fz,r:3.6,label:"RODRIGA'S SHACK",action:function(){openRodriga();},ring:zr,col:GLOW});
+  vFloorText("RODRIGA",GLOW,fx+Math.sin(rot)*3.4,fz+Math.cos(rot)*3.4,6).rotation.z=rot;
+  RODSHACK={x:x,z:z,rod:rod,st:st,caul:caul,bubbles:bubbles,brew:brew,chim:{x:x+Math.sin(rot)*-3+Math.cos(rot)*3.6,z:z+Math.cos(rot)*-3-Math.sin(rot)*3.6}};
+}
+function rodrigaTick(dt,t){
+  if(!RODSHACK||venueKind!=="lobby")return;
+  var R=RODSHACK,u=R.rod.userData;
+  // she stirs, sways, and turns her head to watch you
+  u.armL.rotation.x=-.5+Math.sin(t*1.6)*.35;u.armL.rotation.z=Math.cos(t*1.6)*.3;
+  u.armR.rotation.z=-.3+Math.sin(t*.9)*.1;u.armR.rotation.x=(t%7<1.2)?-1.6+Math.sin(t*10)*.3:-.2;
+  R.rod.position.y=.4+Math.sin(t*1.1)*.06;
+  if(player){
+    var wp=new THREE.Vector3();R.rod.getWorldPosition(wp);
+    var want=Math.atan2(player.pos.x-wp.x,player.pos.z-wp.z)-R.st.rotation.y;
+    while(want>Math.PI)want-=TAU;while(want<-Math.PI)want+=TAU;
+    u.head.rotation.y+=(clamp(want,-.9,.9)-u.head.rotation.y)*Math.min(1,dt*2.5);
+  }
+  u.band.material.color.setHSL(.3,1,.45+.15*Math.sin(t*3));
+  R.brew.material.color.setHSL(.3,1,.45+.1*Math.sin(t*2.3));
+  for(var i=0;i<R.bubbles.length;i++){var b=R.bubbles[i],k=((t*.7+b.ph)%1);
+    b.m.position.set(Math.cos(b.a+t*.3)*b.r,2.3+k*.5,Math.sin(b.a+t*.3)*b.r);b.m.scale.setScalar(.15+k*.3);b.m.material.opacity=1-k;}
+  if(QUAL>0&&Math.random()<dt*10){
+    var cp=new THREE.Vector3();R.caul.getWorldPosition(cp);
+    spark(cp.x+rr(-1,1),2.8,cp.z+rr(-1,1),rr(-.3,.3),rr(1.5,3),rr(-.3,.3),.5,1,.35,rr(.6,1.1),rr(1,1.8),-.6);
+    spark(R.chim.x+rr(-.3,.3),15.6,R.chim.z+rr(-.3,.3),rr(-.2,.2),rr(1,2),rr(-.2,.2),.45,.85,.35,rr(1,1.6),rr(1.6,2.6),-.4);
+  }
+}
+var RODRIGA_SAY=["Heh heh heh. One token. That is the price.","Tokens do not grow on trees, dearie. They fall out of matches. Very, very rarely.",
+  "Come back next month. I'll have something new bubbling.","You smell like someone who has never seen a Rodriga token."];
+function openRodriga(){
+  var off=rodrigaOffer(),tok=SAVE.tokens|0;
+  var h="<div class='evtgrid'><div class='well evtpic rod'>"+RODRIGA_SVG+"<div class='bubble'>"+pick(RODRIGA_SAY)+"</div>"+
+    "<ul class='gnomerules'><li>Paid with <b>Rodriga tokens</b> only</li><li>One item, and it changes every month</li>"+
+    "<li>A token drops <b>1 in 10,000,000</b> matches, any mode</li></ul>"+
+    "<div class='rodtok'>"+TOKEN_SVG+"<b>"+tok+"</b><span>TOKEN"+(tok===1?"":"S")+"</span></div></div><div class='well'>";
+  if(!off)h+="<div class='dname'>NOTHING THIS MONTH</div><div class='ddesc'>Rodriga's cauldron is empty. Come back next month.</div>";
+  else{
+    var d=shopData(off.tab),own=!!d.own[off.it.id];
+    h+=detailHead(off.it,d,off.tab,LIM_KIND[off.tab])+"<div class='dprice ol1'>1 RODRIGA TOKEN</div>";
+    if(own)h+="<button class='big ghost' disabled>YOU OWN THIS</button>";
+    else h+="<button class='big"+(tok>=1?"":" off")+"' id='evtBuy'>"+(tok>=1?"TRADE A TOKEN":"YOU NEED A TOKEN")+"</button>";
+    var nx=new Date(Date.now()),left=Date.UTC(nx.getUTCFullYear(),nx.getUTCMonth()+1,1)-Date.now();
+    h+="<div class='dnote'>This month's item. It leaves in "+evtLeft(left)+".</div>";
+  }
+  h+="</div></div>";
+  evtShow("RODRIGA'S SHACK","hw",h);
+  var b=$("evtBuy");
+  if(b)b.addEventListener("click",function(){
+    if((SAVE.tokens|0)<1){evtSay("You need a Rodriga token. They drop from matches, once in ten million.");sfx("tick");return;}
+    function done(ok,why){
+      if(!ok){evtSay(why);sfx("tick");return;}
+      sfx("rank");var d2=shopData(off.tab);SAVE[d2.eq]=off.it.id;writeSave();refreshCoins();updateChips();updateLobbyBar();
+      openRodriga();evtSay(off.it.name+" is yours. Heh heh heh.",true);
+    }
+    if(econOn()){
+      if(b.disabled)return;b.disabled=true;
+      econAct([{k:"rodriga"}],function(err,rs){var r0=rs&&rs[0];b.disabled=false;done(!err&&r0&&r0.ok,(r0&&r0.why)||econErr(err));});
+      return;
+    }
+    var d3=shopData(off.tab);
+    if(d3.own[off.it.id]){done(false,"You already own it.");return;}
+    SAVE.tokens--;d3.own[off.it.id]=1;done(true);
+  });
+}
+// after a match: the one-in-ten-million roll (on this device when signed out;
+// the server rolls its own when it owns the economy)
+function rodrigaRoll(){
+  if(econOn())return;
+  if(Math.random()<RODRIGA.chance){SAVE.tokens=(SAVE.tokens|0)+1;writeSave();setTimeout(rodrigaTokenFx,1900);}
+}
+/* The pull. Whatever you are doing stops: the screen goes dark and green, the
+   token falls spinning out of the top of the screen, Rodriga cackles, and the
+   whole arena erupts. */
+function rodrigaTokenFx(){
+  var d=document.createElement("div");
+  d.className="rodfx";
+  d.innerHTML="<div class='rodrays'></div><div class='rodcoin'>"+TOKEN_SVG+"</div>"+
+    "<div class='rodtxt ol1'>RODRIGA TOKEN!</div><div class='rodsub ol1'>ONE IN TEN MILLION. RODRIGA WILL SEE YOU NOW.</div>"+
+    "<button class='big' id='rodOk'>CLAIM IT</button>";
+  document.body.appendChild(d);
+  // the cackle, a gong and a rising shimmer
+  try{
+    tone(180,60,1.2,"sawtooth",.18);noiseHit(.6,.3,400);
+    [0,160,320,480,640].forEach(function(ms,i){setTimeout(function(){tone(520+i*40,380+i*30,.14,"square",.09);},600+ms);});
+    setTimeout(function(){tone(80,40,1.6,"sine",.3);tone(1200,2400,1.2,"triangle",.08);},250);
+    [0,120,240,360,480,600,720].forEach(function(ms,i){setTimeout(function(){tone(900+i*180,900+i*200,.12,"sine",.06);},1400+ms);});
+  }catch(e){}
+  if(player){
+    var p=player.pos;
+    for(var k=0;k<6;k++)setTimeout(function(){
+      ringBurst(p.x,.3,p.z,60,26,0x7aff5a,2.2,1.1);burst(p.x,2,p.z,80,24,0x9aff6a,2,1.2,-2);
+      if(typeof hwBeam==="function")hwBeam(p.x,0,p.z,0x7aff5a,2.4,1.2);
+    },k*260);
+    shakeCam(.35);
+  }
+  var ok=d.querySelector("#rodOk");
+  ok.addEventListener("click",function(){d.parentNode&&d.parentNode.removeChild(d);});
+  setTimeout(function(){d.classList.add("in");},30);
+}
+var TOKEN_SVG="<svg viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='#2a5a14' stroke='#0b1942' stroke-width='5'/>"+
+  "<circle cx='50' cy='50' r='38' fill='#7aff5a' stroke='#d8ffb0' stroke-width='3'/>"+
+  "<path d='M26 44c6-3 42-3 48 0-6 2-42 2-48 0z' fill='#1a0a2a'/><path d='M38 42L50 16l6 10-5-1 5 16z' fill='#1a0a2a'/>"+
+  "<ellipse cx='50' cy='58' rx='14' ry='13' fill='#5a8a2a'/><circle cx='44' cy='55' r='2.6' fill='#fff'/><circle cx='56' cy='55' r='2.6' fill='#fff'/>"+
+  "<path d='M50 57l-3 9h6z' fill='#4a7a22'/><path d='M43 66q7 4 14 0' stroke='#1a0a0a' stroke-width='2' fill='none'/>"+
+  "<text x='50' y='92' font-size='11' font-weight='bold' text-anchor='middle' fill='#0b1942' font-family='Trebuchet MS,Arial'>R</text></svg>";
+var RODRIGA_SVG="<svg viewBox='0 0 120 120'><ellipse cx='60' cy='114' rx='34' ry='5' fill='rgba(11,25,66,.35)'/>"+
+  "<path d='M26 112l6-44c2-12 14-18 28-18s26 6 28 18l6 44z' fill='#3a1a5a' stroke='#0b1942' stroke-width='3'/>"+
+  "<ellipse cx='60' cy='46' rx='22' ry='21' fill='#6a9a3a' stroke='#0b1942' stroke-width='3'/>"+
+  "<path d='M40 34c-2 14-3 30 2 40M80 34c2 14 3 30-2 40' stroke='#b8b8b0' stroke-width='4' fill='none'/>"+
+  "<path d='M14 30c14-6 78-6 92 0-14 5-78 5-92 0z' fill='#1a0a2a' stroke='#0b1942' stroke-width='3'/><path d='M40 29L62 2l6 12-6-2 8 17z' fill='#1a0a2a' stroke='#0b1942' stroke-width='3'/>"+
+  "<rect x='40' y='25' width='36' height='5' fill='#7aff5a'/>"+
+  "<circle cx='51' cy='43' r='4.5' fill='#d8ff6a' stroke='#0b1942' stroke-width='1.5'/><circle cx='69' cy='43' r='4.5' fill='#d8ff6a' stroke='#0b1942' stroke-width='1.5'/>"+
+  "<circle cx='51' cy='43' r='1.8'/><circle cx='69' cy='43' r='1.8'/>"+
+  "<path d='M60 44c4 6 10 12 14 13-6 1-11-3-14-6z' fill='#6a9a3a' stroke='#0b1942' stroke-width='2'/><circle cx='70' cy='54' r='2.2' fill='#4e7a2a'/>"+
+  "<path d='M49 58q11 6 22 0' stroke='#1a0a0a' stroke-width='3' fill='none'/><path d='M52 58l1-5M68 58l-1-5' stroke='#f0e8d0' stroke-width='3'/></svg>";
+
+/* ============================================================
+   THE LOGIN CALENDAR
+   Thirty days. Each day you play, the next square pays out -- missing a day
+   never resets it -- and every tenth square is a free LEGENDARY+ spin.
+   ============================================================ */
+function loginToday(){return limDay();}
+function loginLive(now){now=now||Date.now();return now>=LOGIN_CAL.from&&now<LOGIN_CAL.to;}
+function loginState(){
+  var L=SAVE.login;
+  if(!L||typeof L!=="object")L=SAVE.login={id:"",n:0,last:""};
+  if(L.id!==LOGIN_CAL.id){L.id=LOGIN_CAL.id;L.n=0;L.last="";}
+  return L;
+}
+function loginCanClaim(){
+  if(!loginLive())return false;
+  var L=loginState();
+  return L.n<LOGIN_CAL.rewards.length&&L.last!==loginToday();
+}
+function loginWhat(r){
+  var out=[];
+  if(r.L)out.push(r.L+" FREE LEGENDARY+ SPIN");
+  if(r.c)out.push(r.c.toLocaleString()+" COINS");
+  if(r.y)out.push(r.y.toLocaleString()+" YEN");
+  if(r.s)out.push(r.s+" FREE SPIN"+(r.s>1?"S":""));
+  return out.join(" + ");
+}
+function loginIcon(r){
+  if(r.L)return "<svg viewBox='0 0 40 40'><path d='M7 18C7 9 33 9 33 18z' fill='#ffd23f' stroke='#0b1942' stroke-width='2.4' stroke-linejoin='round'/>"+
+    "<rect x='7' y='18' width='26' height='15' rx='2.5' fill='#ff9a1a' stroke='#0b1942' stroke-width='2.4'/><rect x='7' y='16.5' width='26' height='4' fill='#fff3b0' stroke='#0b1942' stroke-width='2'/>"+
+    "<path d='M20 21l2 4 4 .5-3 3 .8 4-3.8-2-3.8 2 .8-4-3-3 4-.5z' fill='#fff' stroke='#0b1942' stroke-width='1.2'/></svg>";
+  if(r.s)return PASS_ICO.spin;
+  if(r.y)return UI_ICO.YEN;
+  return UI_ICO.COIN;
+}
+function loginGive(r){
+  if(r.c)addCoins(r.c);
+  if(r.y)addYen(r.y);
+  if(r.s)SAVE.freeSpins=(SAVE.freeSpins|0)+r.s;
+  if(r.L)SAVE.freeSpinsL=(SAVE.freeSpinsL|0)+r.L;
+}
+function openLogin(){
+  var L=loginState(),live=loginLive(),can=loginCanClaim(),h="";
+  var sub=!live?(Date.now()<LOGIN_CAL.from?"Starts on October 1.":"This calendar has finished."):
+    (can?"Today's square is ready.":(L.n>=LOGIN_CAL.rewards.length?"All thirty claimed. Nice.":"Come back tomorrow for the next one."));
+  h+="<div class='logsub'>"+sub+" Miss a day and nothing resets: the next square just waits for you. Every tenth is a <b>free LEGENDARY+ spin</b>.</div>";
+  h+="<div class='loggrid'>";
+  for(var i=0;i<LOGIN_CAL.rewards.length;i++){
+    var r=LOGIN_CAL.rewards[i],got=i<L.n,now=(i===L.n&&can),big=!!r.L;
+    h+="<div class='logday"+(got?" got":"")+(now?" now":"")+(big?" big":"")+"'><span class='ln'>DAY "+(i+1)+"</span>"+
+      "<span class='li'>"+loginIcon(r)+"</span><span class='lw'>"+(r.L?"LEGENDARY+":r.c?r.c.toLocaleString():r.y?r.y+" ¥":r.s+" SPIN"+(r.s>1?"S":""))+"</span>"+
+      (got?"<span class='lk'>"+UI_ICO.CHECK+"</span>":"")+"</div>";
+  }
+  h+="</div><div class='btnrow' style='justify-content:center;margin-top:10px'>"+
+    "<button class='big gold"+(can?"":" off")+"' id='logClaim'>"+(can?"CLAIM DAY "+(L.n+1):"CLAIMED")+"</button></div>";
+  evtShow(LOGIN_CAL.name,"gold",h);
+  var b=$("logClaim");
+  if(b&&can)b.addEventListener("click",function(){
+    var r=LOGIN_CAL.rewards[L.n];
+    function done(ok,why){
+      if(!ok){evtSay(why);sfx("tick");return;}
+      sfx("rank");refreshCoins();refreshLoginButton();openLogin();
+      evtSay("DAY "+loginState().n+": "+loginWhat(r)+"!",true);
+    }
+    if(econOn()){
+      if(b.disabled)return;b.disabled=true;
+      econAct([{k:"login",day:loginToday()}],function(err,rs){var r0=rs&&rs[0];b.disabled=false;done(!err&&r0&&r0.ok,(r0&&r0.why)||econErr(err));});
+      return;
+    }
+    if(!loginCanClaim()){done(false,"Already claimed today.");return;}
+    L.n++;L.last=loginToday();loginGive(r);writeSave();done(true);
+  });
+}
+function refreshLoginButton(){
+  var b=$("lbLogin");if(!b)return;
+  var show=loginLive()||Date.now()<LOGIN_CAL.from;
+  b.classList.toggle("hide",!show);
+  $("lbLoginN").textContent=loginCanClaim()?"!":String(Math.min(loginState().n,LOGIN_CAL.rewards.length));
+  $("lbLoginN").classList.toggle("ready",loginCanClaim());
+}
+// the first time you reach the lobby each day, the calendar opens by itself
+var LOGIN_SHOWN="";
+function loginNudge(){
+  if(!loginCanClaim()||LOGIN_SHOWN===loginToday())return;
+  LOGIN_SHOWN=loginToday();
+  setTimeout(function(){if(STATE==="venue"&&venueKind==="lobby"&&$("evt").classList.contains("hide"))openLogin();},900);
+}
+
+/* ==== 4.0 END ==== */
 
 function useAbility(f,remoteCast){
   if(f&&f.isPlayer&&f.stdT>0&&!remoteCast){stdChoose("dark");return;}
@@ -11272,8 +12138,9 @@ function netFinish(won){
   var rpGain=0;
   if(MODE.ranked){
     var perf=player?(player.deflects*2.5+player.perfects*3+player.kos*8):0;
-    rpGain=won?Math.round(clamp(50+perf,50,100)):-(MODE.teams?20:26);
+    rpGain=rankedRp(won,perf,!!MODE.teams);
   }
+  rodrigaRoll();
   if(won){
     SAVE.wins++;SAVE.streak++;
     if(SAVE.streak>SAVE.bestStreak)SAVE.bestStreak=SAVE.streak;
@@ -11378,13 +12245,14 @@ function endRound(){
     if(SAVE.streak>SAVE.bestStreak)SAVE.bestStreak=SAVE.streak;
     bonus=Math.round((MODE.bots>1?220:120)*MODE.mult);
     addCoins(bonus);run.coins+=bonus;
-    if(MODE.ranked)rpGain=Math.round(clamp(50+perf,50,100));
+    if(MODE.ranked)rpGain=rankedRp(true,perf,!!MODE.teams);
     sfx("win");
   } else {
     SAVE.streak=0;
-    if(MODE.ranked)rpGain=-(MODE.teams?20:26);
+    if(MODE.ranked)rpGain=rankedRp(false,perf,!!MODE.teams);
     sfx("lose");
   }
+  rodrigaRoll();
   var newRank=addRP(rpGain);
   writeSave();
   econMatch(won,rpGain);
@@ -11470,7 +12338,7 @@ function tryParry(){
       return;
     }
   }
-  if(!player||!player.alive||STATE!=="playing")return;
+  if(!player||!player.alive||(STATE!=="playing"&&STATE!=="venue"))return;
   if(paused)return;          // the world is frozen; a press here is free thinking time
   if(!pressBlock(player))return;
   // everyone sees the block go up; the host also uses the time of the press
@@ -11480,13 +12348,13 @@ function tryParry(){
    gets there, it becomes the miss it always was. */
 function resolveParryBuffer(dt){}
 function tryJump(){
-  if(!player||!player.alive||STATE!=="playing")return;
+  if(!player||!player.alive||(STATE!=="playing"&&STATE!=="venue"))return;
   if(paused)return;
   if(player.stun>0||player.frozen>0)return;
   if(riftLocked(player))return;
   if(player.grounded||player.coyote>0){
     player.vy=17.5;player.grounded=false;player.coyote=0;player.jumps=1;sfx("jump");
-    ringBurst(player.pos.x,0.2,player.pos.z,10,5,CURMAP.accentA,.8,.3);
+    ringBurst(player.pos.x,0.2,player.pos.z,10,5,STATE==="venue"?0xff8a1e:CURMAP.accentA,.8,.3);
   } else if(player.jumps<2){
     player.vy=15.5;player.jumps=2;sfx("jump");
     ringBurst(player.pos.x,player.y,player.pos.z,14,7,0x6bffb0,.9,.35);
@@ -11543,7 +12411,7 @@ window.addEventListener("keydown",function(e){
   if(typingInField(e)){keys={};return;}
   keys[e.code]=true;
   if(e.code==="Space"){tryJump();e.preventDefault();}
-  if(e.code==="KeyF"){if(STATE==="venue")interact();else tryParry();}
+  if(e.code==="KeyF"){if(STATE==="venue"){if(!rangeSwing())interact();}else tryParry();}
   if(e.code==="KeyG"&&player)useAbility(player);
   if(e.code==="KeyT"){if(tauntWheelOpen())closeTauntWheel();else openTauntWheel();}
   if(tauntWheelOpen()&&/^Digit[1-8]$/.test(e.code))doTaunt(TAUNTS[+e.code.slice(5)-1].id);
@@ -11593,6 +12461,7 @@ function unlockPointer(){
 function pointerLocked(){return document.pointerLockElement===canvas;}
 canvas.addEventListener("mousedown",function(e){
   if(e.button===0&&STATE==="playing")tryParry();
+  if(e.button===0&&STATE==="venue")rangeSwing();
   if(e.button===2){
     // right button is look: hold it to steer, and it grabs the cursor
     rightLook=true;dragging=true;lockPointer();refreshCursor();
@@ -11682,7 +12551,7 @@ function bindTouch(id,fn){
   el.addEventListener("mousedown",down);
   el.addEventListener("mouseup",up);
 }
-bindTouch("tParry",function(){if(STATE==="venue")interact();else tryParry();});
+bindTouch("tParry",function(){if(STATE==="venue"){if(!rangeSwing())interact();}else tryParry();});
 bindTouch("tJump",tryJump);
 bindTouch("tAbil",function(){if(player)useAbility(player);});
 bindTouch("tLock",function(){setShiftLock(!shiftLock);});
@@ -11785,7 +12654,12 @@ function startSpectating(){
 }
 function stopSpectating(){SPEC.on=false;SPEC.who="";}
 function refreshShowcase(){
-  if(showcase){scene.remove(showcase.mesh);showcase=null;}
+  if(showcase){dropShell(showcase);scene.remove(showcase.mesh);showcase=null;}
+  /* The turning figure belongs to the old menu screen only. Built from the
+     lobby -- after a purchase, a code, the casino or a cloud sync -- it stood
+     frozen in the middle of the room with nothing to animate or remove it:
+     the glitched figure on the podium. */
+  if(STATE!=="menu")return;
   showcase=new Fighter({name:"YOU",isPlayer:true,x:0,z:0,
     sword:SAVE.eqSword,ability:SAVE.eqAbil,skinDef:skinById(SAVE.eqSkin)});
   showcase.tag.visible=false;
@@ -11807,7 +12681,7 @@ function updateShowcase(dt){
 /* ============================================================
    16. SCREENS / SHOP / RANKED
    ============================================================ */
-var SCREENS=["boot","menu","modes","shop","ranked","howto","profile","results","pause","update","casino","picker","mp","settings","limited","pass"];
+var SCREENS=["boot","menu","modes","shop","ranked","howto","profile","results","pause","update","casino","picker","mp","settings","limited","pass","evt"];
 /* Your gear can change on any screen you reach from the lobby -- the picker,
    the shop, a code you redeemed. The figure standing in the venue was built
    with the old gear and nothing rebuilt it, so you walked back out still
@@ -11929,13 +12803,38 @@ var shopTab="sword";
 var LIMITED_DROPS=[
   {name:"THE CRUZ DROP",from:"2026-09-22",to:"2026-09-24",
    blurb:"Spirit of Cruz debuts here, alongside two mythics you cannot normally buy.",
-   items:[["sword","orbiter"],["sword","serpent"],["abil","cruz"],["abil","gale"],["skin","wraith"],["skin","emberline"]]}
+   items:[["sword","orbiter"],["sword","serpent"],["abil","cruz"],["abil","gale"],["skin","wraith"],["skin","emberline"]]},
+  // 4.0 launch week: the Black Cat (gone for good after this) and the three new mythics
+  {name:"THE BLACK CAT DROP",from:"2026-10-01",to:"2026-10-08",
+   blurb:"The Black Cat is here for one week only. Ricky's .9, Dylan's Warts and Grey's 14 Inches launch alongside it.",
+   items:[["skin","blackcat"],["sword","ricky9"],["abil","warts"],["abil","grey"],["sword","orbiter"],["skin","wraith"]]}
 ];
+/* ---- 4.0 events. Every date for this update is here, in one place. ----
+   Times are midnight Pacific (07:00 UTC in October), like the Halloween Pass. */
+// the Wendigo shrine beside Gnorman: one item, one price, one week, then never again
+var EVENT_SHOPS={
+  wendigo:{name:"THE WENDIGO SHRINE",tab:"sword",id:"wendigo",yen:2000,
+    from:Date.UTC(2026,9,1,7,0,0),to:Date.UTC(2026,9,8,7,0,0)}
+};
+// Rodriga: one item a month, for a Rodriga token. A token is a one in ten million
+// drop from any match, of any kind
+var RODRIGA={chance:1e-7,
+  months:{"2026-10":{tab:"sword",id:"rodbroom"}}};
+// the login calendar: thirty days, claimed in order, one a day. Missing a day never
+// resets it. c coins, y yen, s free chest spins, L free LEGENDARY+ spins
+var LOGIN_CAL={id:"oct26",name:"OCTOBER LOGIN CALENDAR",
+  from:Date.UTC(2026,9,1,7,0,0),to:Date.UTC(2026,10,1,7,0,0),
+  rewards:[
+   {c:250},{y:30},{s:1},{c:350},{y:45},{c:400},{s:2},{c:500},{y:60},{L:1},
+   {c:600},{y:75},{s:2},{c:750},{y:90},{c:900},{s:3},{c:1000},{y:110},{L:1},
+   {c:1200},{y:130},{s:3},{c:1500},{y:150},{c:1800},{s:4},{c:2200},{y:190},{L:1,c:5000}]};
+// the ranked season. A new id resets everybody's RP to zero (rewards are kept)
+var SEASON={id:1,name:"SEASON 1"};
 var LIM_MARKUP=2.5;
 function limDay(d){d=d||new Date();
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function limDate(s){var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}   // local midnight
-function limEligible(it){return !it.rank&&!it.code&&!it.pass&&it.rarity!=="rank"&&!it.free&&itemValue(it)>0;}
+function limEligible(it){return !it.rank&&!it.code&&!it.pass&&!it.event&&it.rarity!=="rank"&&!it.free&&itemValue(it)>0;}
 function limPrice(it){return Math.ceil(itemValue(it)*LIM_MARKUP/50)*50;}
 // the drop running right now: a hand-picked one if its dates cover today,
 // otherwise today's rotation
@@ -12049,6 +12948,8 @@ function chestPool(tab){
     var it=d.list[i];
     if(it.rank||it.rarity==="rank"||it.ultra||it.pass)continue;   // ranked rewards, ULTRAs and pass items are never in a chest
     if(it.id===d.starter||it.free)continue;          // free-for-all items are not prizes
+    // nor event items, nor anything whose rarity is never rolled (the Black Cat)
+    if(it.event||!((RARITY[it.rarity||"common"]||{}).w>0))continue;
     out.push(it);
   }
   return out;
@@ -12106,10 +13007,10 @@ function spinChests(tab,grade,n,free){
   tab=tab||shopTab;grade=grade||"normal";n=Math.max(1,n|0);
   var d=shopData(tab),unit=chestUnitCost(tab,grade);
   // a free spin from the pass: one normal chest, no coins
-  if(free){if(!((SAVE.freeSpins|0)>0)||grade!=="normal"||n!==1)return null;unit=0;}
+  if(free){if(n!==1||!((grade==="normal"&&(SAVE.freeSpins|0)>0)||(grade==="legendary"&&(SAVE.freeSpinsL|0)>0)))return null;unit=0;}
   if(SAVE.coins<unit*n)return null;
   if(!chestTiers(tab,grade).pool.length)return null;   // an empty pool: never charge for nothing
-  if(free)SAVE.freeSpins--;
+  if(free){if(grade==="legendary")SAVE.freeSpinsL--;else SAVE.freeSpins--;}
   SAVE.coins-=unit*n;
   var out=[],best=null,i;
   for(i=0;i<n;i++){
@@ -12241,9 +13142,12 @@ function buildShop(){
   }
   $("chestOdds").innerHTML=odds;
   $("chestSpin").classList.toggle("off",SAVE.coins<unit*chestQty&&!freeSpinOk());
-  if(freeSpinOk())$("chestCost").textContent="FREE ("+SAVE.freeSpins+" LEFT)";
-  $("chestFree").classList.toggle("hide",!(SAVE.freeSpins>0)||freeSpinOk());
-  $("chestFree").textContent="You have "+SAVE.freeSpins+" free spin"+(SAVE.freeSpins>1?"s":"")+" from the Halloween Pass. Pick 1\u00d7 on a normal chest to use one.";
+  if(freeSpinOk())$("chestCost").textContent="FREE ("+freeLeft()+" LEFT)";
+  var fN=SAVE.freeSpins|0,fL=SAVE.freeSpinsL|0,fTxt=[];
+  if(fN>0&&!(freeSpinOk()&&chestGrade==="normal"))fTxt.push("You have "+fN+" free spin"+(fN>1?"s":"")+". Pick 1\u00d7 on a normal chest to use one.");
+  if(fL>0&&!(freeSpinOk()&&chestGrade==="legendary"))fTxt.push("You have "+fL+" free LEGENDARY+ spin"+(fL>1?"s":"")+" from the login calendar. Pick LEGENDARY+ and 1\u00d7 to use one.");
+  $("chestFree").classList.toggle("hide",!fTxt.length);
+  $("chestFree").textContent=fTxt.join(" ");
   // everything the chest can drop, the ones you have ticked
   // only what THIS chest can give
   var pool=byRarityDesc(chestPool(shopTab).filter(function(it){return gradeAllows(chestGrade,it.rarity);})),owned=0;
@@ -12263,7 +13167,10 @@ var pickSel={sword:null,abil:null,skin:null};
 function itemTier(it){return (it.rank||it.rarity==="rank")?"rank":(it.rarity||"common");}
 function tierLabel(it){
   if(it.rarity==="unreleased")return "UNRELEASED";
+  if(it.top1)return "#1 ONLY";
   if(it.ultra)return "ULTRA";
+  if(it.season===0)return "SEASON 0";
+  if(it.rank==="god")return "GOD";
   if(it.pass)return "HALLOWEEN PASS";
   if(it.code)return "SECRET";
   if(it.rank||it.rarity==="rank")return "RANK REWARD";
@@ -12361,7 +13268,19 @@ function renderPickDetail(it){
   var btn="",rk=null;
   if(eq)btn="<button class='big ghost' id='pdAct' disabled>EQUIPPED</button>";
   else if(own)btn="<button class='big' id='pdAct'>EQUIP</button>";
+  else if(it.top1)btn="<button class='big ghost' disabled>#1 ON THE LEADERBOARD</button>"+
+    "<div class='dnote'>Whoever is #1 on the leaderboard holds it"+(LB.top1?", right now <b>"+LB.top1+"</b>":"")+". Fall from #1 and it is taken back.</div>";
   else if(it.code)btn="<button class='big ghost' disabled>SECRET</button>";
+  else if(it.event==="wendigo"){var EW=EVENT_SHOPS.wendigo,nw=Date.now();
+    btn=nw>=EW.to?"<button class='big ghost' disabled>GONE FOREVER</button><div class='dnote'>It was only at the Wendigo shrine for one week.</div>":
+      "<button class='big' id='pdAct'>WENDIGO SHRINE &middot; "+EW.yen.toLocaleString()+" YEN</button><div class='dnote'>"+(nw<EW.from?"The shrine beside Gnorman opens in "+evtLeft(EW.from-nw)+".":"At the shrine beside Gnorman for "+evtLeft(EW.to-nw)+" more.")+"</div>";}
+  else if(it.event==="rodriga")
+    btn="<button class='big' id='pdAct'>RODRIGA'S SHACK &middot; 1 TOKEN</button><div class='dnote'>Rodriga sells it for a Rodriga token, behind where you come into the lobby.</div>";
+  else if(it.season===0)
+    btn="<button class='big ghost' disabled>SEASON 0 REWARD</button><div class='dnote'>From the Season 0 ladder. It can no longer be earned.</div>";
+  else if(it.rarity==="halloween"&&!it.pass)
+    btn=onLimitedShelf(tab,it.id)?"<button class='big pink' id='pdAct'>GNORMAN'S STALL &middot; "+limPrice(it).toLocaleString()+" YEN</button><div class='dnote'>On Gnorman's Limited stall this week only.</div>":
+      "<button class='big ghost' disabled>GONE</button><div class='dnote'>It was only on Gnorman's stall for one week.</div>";
   else if(it.pass)
     btn="<button class='big hwgo' id='pdAct'>HALLOWEEN PASS &middot; LEVEL "+it.pass+"</button>"+
       "<div class='dnote'>Only on the Halloween Pass. Reach level "+it.pass+" before it ends to keep it for good.</div>";
@@ -12380,6 +13299,9 @@ function renderPickDetail(it){
   act.addEventListener("click",function(){
     if(own){equipFromPicker(it);return;}
     if(it.pass){openPass();return;}
+    if(it.event==="wendigo"){openWendigo();return;}
+    if(it.event==="rodriga"){openRodriga();return;}
+    if(it.rarity==="halloween"){openLimited();return;}
     shopTab=tab;buildShop();refreshCoins();showScreen("shop");
   });
 }
@@ -12504,9 +13426,17 @@ function lbFetch(cb,maxAge){
   LB.busy=true;
   cloudPost("/leaderboard",CLOUD.tok?{token:CLOUD.tok}:{}).then(function(r){
     LB.busy=false;
-    if(r.status===200&&r.j&&Array.isArray(r.j.top)){LB.j=r.j;LB.at=Date.now();LB.err=false;}else LB.err=true;
+    if(r.status===200&&r.j&&Array.isArray(r.j.top)){LB.j=r.j;LB.at=Date.now();LB.err=false;crownDesc();}else LB.err=true;
     lbDone();
   },function(){LB.busy=false;LB.err=true;lbDone();});
+}
+// The Crown's description names whoever holds it: the current #1
+function crownDesc(){
+  var top=LB.j&&LB.j.top&&LB.j.top[0];
+  LB.top1=top?top.name:"";
+  var c=findId(SWORDS,"crown");
+  if(c)c.desc=(LB.top1?"Held by the current #1 on the leaderboard: "+LB.top1+". ":"")+
+    "Only ever held by whoever is #1 on the leaderboard, and taken back the moment they are not.";
 }
 function lbDone(){
   var w=LB.wait;LB.wait=[];
@@ -13335,6 +14265,8 @@ function wireCasino(){
   $("lbBlade").addEventListener("click",function(){openPicker("sword");});
   $("lbShop").addEventListener("click",function(){buildShop();refreshCoins();showScreen("shop");});
   $("lbPass").addEventListener("click",function(){openPass();});
+  $("lbLogin").addEventListener("click",function(){openLogin();});
+  $("evtBack").addEventListener("click",function(){backToVenue();});
   $("passBack").addEventListener("click",function(){backToVenue();});
   $("passBuy").addEventListener("click",passBuyClick);
   $("lbProfile").addEventListener("click",function(){openProfile();});
@@ -13354,7 +14286,7 @@ function wireCasino(){
   $("pfHist").addEventListener("click",cloudHistory);
   $("pfUseCloud").addEventListener("click",function(){var c=CLOUD.choice;if(c)cloudLink(c.tok,c.rev,c.at,c.name,"account",c.save,c.ec);});
   $("pfUseLocal").addEventListener("click",function(){var c=CLOUD.choice;if(c)cloudLink(c.tok,c.rev,c.at,c.name,"device",c.save,c.ec);});
-  $("zonePrompt").addEventListener("click",function(){interact();});
+  $("zonePrompt").addEventListener("click",function(){if(!rangeSwing())interact();});
   $("pickBack").addEventListener("click",function(){
     if(pickReturn==="mp"){pickReturn=null;openMPScreen();return;}
     if(pickReturn==="profile"){pickReturn=null;openProfile();return;}
@@ -13527,7 +14459,10 @@ function frame(ts){
   }
   for(i=0;i<ringMeshes.length;i++)
     ringMeshes[i].material.opacity=0.24+Math.sin(gameT*2+i)*0.16;
-  for(i=0;i<BILLBOARDS.length;i++)BILLBOARDS[i].rotation.y=camYaw;
+  // turned to face the camera itself (to its yaw they faced away, and were culled)
+  var asc=arena.scale.x||1;
+  for(i=0;i<BILLBOARDS.length;i++){var bl=BILLBOARDS[i];
+    bl.rotation.y=Math.atan2(camera.position.x-bl.position.x*asc-arena.position.x,camera.position.z-bl.position.z*asc-arena.position.z);}
   var fc=camFocus();
   sun.target.position.set(fc?fc.pos.x:0,0,fc?fc.pos.z:0);
   sun.position.set((fc?fc.pos.x:0)+38,62,(fc?fc.pos.z:0)+24);
