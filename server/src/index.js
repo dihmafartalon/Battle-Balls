@@ -11,7 +11,7 @@
    ===================================================================== */
 
 import { CAT } from "./catalog.js";
-import { ECON_KEYS, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdict, retire, RETIRED, newStats, snap, recordAct, watchFlags, suspicion, summary } from "./econ.js";
+import { ECON_KEYS, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdict, retire, RETIRED, newStats, snap, recordAct, watchFlags, suspicion, summary, seasonReset } from "./econ.js";
 const RETIRED_RE = new RegExp('"(' + Object.keys(RETIRED.abil).join("|") + ')"');
 import { adminPage, handleAdmin, ADMIN_TRIES, ADMIN_WINDOW_MS } from "./admin.js";
 import { SimHost, SIM_ID } from "./sim.js";
@@ -718,6 +718,18 @@ export class Vault {
       const sv = JSON.parse(rec.data);
       if (retire(sv)) { rec = { data: JSON.stringify(sv), rev: rec.rev + 1, at: now }; await st.put("save", rec); }
     }
+    /* A new season: reset the STORED account the first time anything touches
+       it, not only the copy a game is shown -- or the save, the admin page, the
+       GOD queue and the player list keep last season's RP until the player
+       happens to buy something. Last season's RP is kept as s0rp. */
+    if (rec) {
+      const sv = JSON.parse(rec.data);
+      if (sv && typeof sv === "object" && seasonReset(sv)) {
+        rec = { data: JSON.stringify(sv), rev: rec.rev + 1, at: now }; await st.put("save", rec);
+        const who = (await st.get("sub")) || body.sub || "";
+        if (who) dirCall(this.env, { op: "touch", sub: who, name: sv.netName || "", rp: sv.rp | 0, season: sv.season | 0 });
+      }
+    }
     // ec: this server owns the economy, so a game knows to ask rather than write
     const view = () => ({ save: rec ? JSON.parse(rec.data) : null, rev: rec ? rec.rev : 0, at: rec ? rec.at : 0, ec: 1 });
 
@@ -1245,7 +1257,8 @@ export class Directory {
         if (q && !((a.name || "").toLowerCase().includes(q) || a.sub.includes(q))) continue;
         if (b.only === "flagged" && !(a.flags > 0)) continue;
         if (b.only === "banned" && !a.ban) continue;
-        out.push(a);
+        const cur = CAT.season ? CAT.season.id : 0;
+        out.push((a.season | 0) === cur ? a : Object.assign({}, a, { rp: 0, s0rp: a.rp || 0 }));
       }
       const key = { sus: a => (a.sum && a.sum.score) || 0, rp: a => a.rp || 0, games: a => (a.sum && a.sum.g) || 0,
         parry: a => (a.sum && a.sum.pr) || 0, streak: a => (a.sum && a.sum.sk) || 0, new: a => a.first || 0 }[b.sort];

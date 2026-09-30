@@ -45,3 +45,13 @@ const g2 = ensure({ rp: 500, econ: { v: 1 } }); r = applyAct(g2, { k: "match", m
 const sv = { swords: { crown: 1 }, eqSword: "crown" }; assert.ok(crownFix(sv, "a", "b")); assert.ok(!sv.swords.crown); assert.equal(sv.eqSword, "trainer");
 assert.ok(crownFix(sv, "b", "b")); assert.ok(sv.swords.crown); assert.ok(!crownFix(sv, "b", "b"));
 console.log("server tests passed");
+// a new season: an old device's RP does not come back through the one-time import
+{
+  const { importEcon } = await import("../src/econ.js");
+  const fl = [];
+  const s = importEcon({}, { coins: 10, rp: 4000 }, Date.now(), fl);
+  assert.equal(s.rp, 0, "last season's RP stays behind");
+  const s2 = importEcon({}, { coins: 10, rp: 300, season: 1 }, Date.now(), fl);
+  assert.equal(s2.rp, 300, "this season's RP comes along");
+  console.log("season import tests passed");
+}
