@@ -142,7 +142,7 @@ export const CAST = { cdShare: 0.78, slackS: 1.5, minCd: 3, strikesToBan: 3, pul
 // follow-ups a guest may send, and the ability each needs; every other follow-up,
 // and anything tagged as a bot's, is the host's alone -- and only these kinds
 const GUEST_FOLLOW = { taunt: null, riftsnap: "bloodrift", pull: "ramenhair" };
-const HOST_FOLLOW = { rift: 1, riftsnap: 1, flash: 1, say: 1, drone: 1, stdshow: 1, cat: 1, pull: 1, taunt: 1 };
+const HOST_FOLLOW = { rift: 1, riftsnap: 1, flash: 1, say: 1, drone: 1, stdshow: 1, cat: 1, pull: 1, taunt: 1, wave: 1, warts: 1, divine: 1 };
 const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 // the ability a message needs its sender to own, if any
 export function castNeeds(msg, isHost) {
