@@ -1,8 +1,10 @@
 /* =====================================================================
    BATTLE BALLS — room server
-   One Durable Object per lobby code. Elects a host, holds the roster,
-   relays gameplay. The host client is authoritative for the ball and
-   the bots; this server is a smart relay, not a simulator.
+   One Durable Object per lobby code. Holds the roster and RUNS EVERY MATCH
+   (4.0): the ball, the bots, every block, ability and hit, and who won, are
+   decided here by the game's own code (sim.js). The players' games only send
+   their own movement and presses, and show what the room tells them. The
+   longest-serving player is the room's leader: they pick the mode and start.
 
    Deploy:  npx wrangler deploy
    Connect: wss://<worker>.workers.dev/room/ABCDE?name=Ben
@@ -12,6 +14,7 @@ import { CAT } from "./catalog.js";
 import { ECON_KEYS, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdict, retire, RETIRED, newStats, snap, recordAct, watchFlags, suspicion, summary } from "./econ.js";
 const RETIRED_RE = new RegExp('"(' + Object.keys(RETIRED.abil).join("|") + ')"');
 import { adminPage, handleAdmin, ADMIN_TRIES, ADMIN_WINDOW_MS } from "./admin.js";
+import { SimHost, SIM_ID } from "./sim.js";
 
 const MAX_PLAYERS = 6;
 const ALPHA = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";   // no O/0/I/1
@@ -42,7 +45,8 @@ export function electHost(players) {
 export function buildRoster(players) {
   return {
     t: "roster",
-    host: electHost(players),
+    host: SIM_ID,                       // the server runs the match
+    leader: electHost(players),         // the player who picks and starts it
     count: players.length,
     players: players
       .slice()
@@ -56,9 +60,15 @@ export function buildRoster(players) {
 // is the two-sided offer protocol. Both are peer to peer.
 // hold: a guest hitting or throwing a ball it caught; only the host acts on it
 const RELAY = { state:1, parry:1, ability:1, swing:1, chat:1, pstate:1, trade:1, hold:1 };
-// setup is the host telling the room which gamemode and how many bots, so the
-// roster can see the choice before anyone presses ready
-const HOST_ONLY = { ball:1, hit:1, spawn:1, roundover:1, botstate:1, parryok:1, setup:1 };
+// only the room's own match may say these: from a player they are dropped
+const SIM_ONLY = { ball:1, hit:1, spawn:1, roundover:1, botstate:1, parryok:1 };
+// setup is the leader telling the room which gamemode and how many bots
+const LEADER_ONLY = { setup:1 };
+// what the match hears from a player; parry and hold are for it alone
+const SIM_FEED = { state:1, parry:1, ability:1, swing:1, hold:1 };
+const SIM_PRIVATE = { parry:1, hold:1 };
+// what the match says, for everyone
+const SIM_OUT = { ball:1, botstate:1, hit:1, ability:1, spawn:1, parryok:1, swing:1 };
 
 // A public game is a public endpoint. Without these, one script can hold a
 // socket open and flood the room, and every relayed byte is billed to you.
@@ -81,7 +91,7 @@ export function checkRate(state, now, budget, windowMs) {
   return state.count <= budget;
 }
 
-export function routeMessage(msg, senderId, hostId) {
+export function routeMessage(msg, senderId, hostId) {      // hostId: the room's leader
   if (!msg || typeof msg !== "object" || typeof msg.t !== "string")
     return { action: "drop", reason: "malformed" };
 
@@ -101,7 +111,7 @@ export function routeMessage(msg, senderId, hostId) {
     // bots however high the host actually was.
     const num = (v, lo, hi, dflt) =>
       (typeof v === "number" && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : dflt;
-    return { action: "broadcast", payload: {
+    return { action: "start", payload: {
       t: "start",
       mode: typeof msg.mode === "string" ? msg.mode : "mp",
       map:  typeof msg.map  === "string" ? msg.map  : "sky",
@@ -115,14 +125,11 @@ export function routeMessage(msg, senderId, hostId) {
   }
   if (msg.t === "ping")
     return { action: "reply", payload: { t:"pong", c: msg.c, s: Date.now() } };
-  // the host's timing of each guest's blocks, for the anticheat: never relayed
-  if (msg.t === "acrep") {
-    if (senderId !== hostId) return { action: "drop", reason: "not-host" };
-    return { action: "report" };
-  }
-
-  if (HOST_ONLY[msg.t]) {
-    if (senderId !== hostId) return { action: "drop", reason: "not-host" };
+  // block timing is measured by the room's own match now: a player's report is not asked for
+  if (msg.t === "acrep") return { action: "drop", reason: "server-only" };
+  if (SIM_ONLY[msg.t]) return { action: "drop", reason: "server-only" };
+  if (LEADER_ONLY[msg.t]) {
+    if (senderId !== hostId) return { action: "drop", reason: "not-leader" };
     return { action: "relay", payload: Object.assign({}, msg, { from: senderId }) };
   }
   if (RELAY[msg.t])
@@ -210,7 +217,7 @@ export class Room {
       const j = await r.json();
       if (r.status === 403) return { ok: false, why: "banned", reason: j.why || "" };
       if (r.status !== 200) return { ok: false, why: "signin" };
-      return { ok: true, sub: m[1], inv: j.inv };
+      return { ok: true, sub: m[1], inv: j.inv, rp: j.rp | 0 };
     } catch (e) { return { ok: false, why: "signin" }; }
   }
   async inventory(sub) {
@@ -281,7 +288,11 @@ export class Room {
       try { ws.send(text); } catch (e) { /* socket closing */ }
     }
   }
-  pushRoster(leaving) { this.broadcast(buildRoster(this.roster(leaving)), leaving); this.announce(null, leaving); }
+  pushRoster(leaving) {
+    const r = buildRoster(this.roster(leaving));
+    this.broadcast(r, leaving); this.announce(null, leaving);
+    if (this.sim && this.sim.running) this.sim.roster(r);      // somebody joined or left mid-match
+  }
   /* Public lobbies: every room tells the directory who is in it, what it is
      playing and whether it is open. A private room, a full one or one mid-match
      is simply not listed. */
@@ -336,7 +347,8 @@ export class Room {
       abil:  (url.searchParams.get("abil")  || "dash").slice(0, 24),
       ready: false,
       joinedAt: Date.now(),
-      sub: who.sub                                    // never sent to anyone: see buildRoster
+      sub: who.sub,                                   // never sent to anyone: see buildRoster
+      rp: who.rp | 0                                  // nor this: a ranked 2v2's bots are tuned from it
     };
     if (who.inv) { this.invs.set(who.sub, who.inv); this.checkLoadout(me, who.inv); }
     server.serializeAttachment(me);
@@ -345,9 +357,15 @@ export class Room {
     // a room made by the GOD queue is never listed
     if (url.searchParams.get("q") === "1" && this.ctx.storage) { const mt = (await this.ctx.storage.get("meta")) || {}; mt.q = true; await this.ctx.storage.put("meta", mt); }
     dirCall(this.env, { op: "room", code: normaliseCode(code), sub: who.sub, name: me.name });
-    server.send(JSON.stringify({ t:"welcome", you: me.id, host: this.hostId(),
+    server.send(JSON.stringify({ t:"welcome", you: me.id, host: SIM_ID, leader: this.hostId(), srv: 1,
                                  max: MAX_PLAYERS, now: Date.now() }));
     this.pushRoster();
+    // a GOD queue room starts itself the moment both players are in
+    if (url.searchParams.get("q") === "1" && this.roster().length === 2 && !this.qStarted) {
+      this.qStarted = true;
+      await this.startMatch({ t: "start", mode: "god1", q: 1, map: "random", gm: "ffa", bots: 0, rf: 0,
+        seed: (Math.random() * 2147483647) | 0, at: Date.now() });
+    }
     return new Response(null, { status: 101, webSocket: client });
   }
 
@@ -367,9 +385,8 @@ export class Room {
 
     const d = routeMessage(msg, me.id, this.hostId());
     if (d.action === "drop") return;
-    if (msg.t === "start") this.casts = new WeakMap();      // a new match: cooldowns start over
     if (msg.t === "ability" && me.sub) {
-      const isHost = me.id === this.hostId();
+      const isHost = false;                           // the room runs every match: no player is its host
       let st = this.casts.get(ws);
       if (!st) { st = {}; this.casts.set(ws, st); }
       // what this room remembers owning can be out of date (a chest, a pass level, a
@@ -407,15 +424,82 @@ export class Room {
     if (msg.t === "setup" && me.id === this.hostId())
       this.announce({ gm: typeof msg.gm === "string" ? msg.gm.slice(0, 16) : "ffa", map: typeof msg.map === "string" ? msg.map.slice(0, 16) : "sky",
         priv: !!msg.priv, playing: false });
-    if (msg.t === "start" && me.id === this.hostId()) this.announce({ playing: true });
-    if (msg.t === "roundover" && me.id === this.hostId()) this.announce({ playing: false });
+    if (d.action === "start")     { await this.startMatch(d.payload); return; }
     if (d.action === "reply")     { ws.send(JSON.stringify(d.payload)); return; }
-    if (d.action === "relay")     { this.broadcast(d.payload, ws); return; }
+    if (d.action === "relay") {
+      if (SIM_FEED[msg.t] && this.sim && this.sim.running) this.sim.feed(d.payload);
+      if (!SIM_PRIVATE[msg.t]) this.broadcast(d.payload, ws);
+      return;
+    }
     if (d.action === "broadcast") { this.broadcast(d.payload); return; }
   }
 
-  async webSocketClose(ws) { this.pushRoster(ws); }
-  async webSocketError(ws) { this.pushRoster(ws); }
+  async webSocketClose(ws) { this.left(ws); }
+  async webSocketError(ws) { this.left(ws); }
+  left(ws) {
+    this.pushRoster(ws);
+    if (!this.roster(ws).length) { if (this.sim) this.sim.stop(); this.match = null; this.qStarted = false; }
+  }
+
+  /* ---------- the match itself ----------
+     The start message every player gets is the one the room's own copy of the
+     game starts from, so everyone builds the identical match. */
+  async startMatch(p) {
+    const players = this.roster();
+    if (!players.length) return;
+    const meta = (this.ctx.storage && (await this.ctx.storage.get("meta"))) || {};
+    // GOD 1v1 only comes from the GOD queue; anything else asking for it plays casual
+    if (p.mode === "god1" && !meta.q) p.mode = "mp";
+    if (p.mode === "ranked2") {
+      // the bots are tuned from the leader's real rank, not a number their game sends
+      const lead = players.find(x => x.id === electHost(players)) || players[0];
+      let idx = 0; for (let i = 0; i < CAT.ranks.length; i++) if ((lead.rp | 0) >= CAT.ranks[i].rp) idx = i;
+      p.rf = +(idx / Math.max(1, CAT.ranks.length - 1)).toFixed(4);
+    }
+    if (!this.sim) this.sim = new SimHost(o => this.fromSim(o));
+    else if (this.sim.running) this.sim.stop();
+    if (p.map === "random") p.map = this.sim.maps[Math.floor(Math.random() * this.sim.maps.length)] || "sky";
+    this.match = { id: crypto.randomUUID(), at: Date.now(),
+      mode: p.mode === "ranked2" ? "mpranked2" : (p.mode === "god1" ? "god1" : "mp"),
+      players: players.map(x => ({ id: x.id, sub: x.sub })) };
+    this.casts = new WeakMap();                       // a new match: cooldowns start over
+    this.broadcast(p);
+    this.sim.start(p, buildRoster(players));
+    this.announce({ playing: true });
+  }
+  fromSim(o) {
+    if (!o || typeof o.t !== "string") return;
+    if (SIM_OUT[o.t]) { this.broadcast(Object.assign({}, o, { from: SIM_ID })); return; }
+    if (o.t === "roundover") { this.matchOver(o); return; }
+    if (o.t === "acrep") {
+      // the room timed every player's blocks against its own ball
+      const who = this.roster().find(p => p.id === o.who);
+      const v = who ? parryVerdict(Number(o.blocks) | 0, Number(o.perfects) | 0) : null;
+      if (v) this.report(who.sub, { kind: "autoparry-host", sev: v.sev, by: "room",
+        detail: "the room timed " + Math.round(v.rate * 100) + "% perfect over " + (o.blocks | 0) + " blocks" });
+    }
+    // anything else the game says (its own loadout, pings, lobby setup) is for nobody
+  }
+  /* The match is over. Before anyone is told, each account gets a ticket with
+     its result: that ticket, not the player's game, is what pays out. */
+  async matchOver(o) {
+    const M = this.match; this.match = null;
+    const mid = M ? M.id : "";
+    if (M && this.env && this.env.VAULT) {
+      let fighters = [];
+      try { fighters = this.sim.state().fighters || []; } catch (e) {}
+      const teamOf = id => { const f = fighters.find(x => x.netId === id); return f ? f.team : -9; };
+      const secs = Math.round((Date.now() - M.at) / 1000);
+      const jobs = M.players.filter(p => p.sub).map(p => {
+        const won = (typeof o.tm === "number" && o.tm >= 0) ? teamOf(p.id) === o.tm : o.w === p.id;
+        return toVault(this.env, p.sub, { op: "ticket", sub: p.sub, ticket: { id: mid, mode: M.mode, won, secs } }).catch(() => {});
+      });
+      await Promise.race([Promise.all(jobs), new Promise(r => setTimeout(r, 2500))]);
+    }
+    this.broadcast(Object.assign({}, o, { mid, from: SIM_ID }));
+    this.qStarted = false;
+    this.announce({ playing: false });
+  }
 }
 
 /* ---------- Cloud saves, tied to a Google account ----------
@@ -437,6 +521,9 @@ const OPS_PER_SYNC = 60;
 // every HIST_GAP_MS, the last HIST_KEPT kept, each under its own key
 const HIST_GAP_MS = 10 * 60 * 1000;
 const HIST_KEPT = 30;
+// online match results, written by the room that ran the match (see Room.matchOver)
+const TICKET_MS = 2 * 3600 * 1000;
+const TICKETS_KEPT = 12;
 
 /* ---- redeem codes ----
    They live here, not in the game: the page is readable by anyone, this is
@@ -657,6 +744,14 @@ export class Vault {
       const s = ensure(rec ? JSON.parse(rec.data) : {});
       return jsonRes({ inv: { swords: s.swords, abils: s.abils, skins: s.skins } });
     }
+    if (body.op === "ticket") {                      // a room writing down how this account's match ended
+      const t = body.ticket || {};
+      if (typeof t.id !== "string" || typeof t.mode !== "string") return jsonRes({ error: "bad ticket" }, 400);
+      const list = ((await st.get("tickets")) || []).filter(x => now - x.at < TICKET_MS && x.id !== t.id);
+      list.push({ id: t.id.slice(0, 40), mode: t.mode.slice(0, 16), won: !!t.won, secs: Math.max(0, Math.min(3600, Number(t.secs) || 0)), at: now });
+      await st.put("tickets", list.slice(-TICKETS_KEPT));
+      return jsonRes({ ok: true });
+    }
     if (body.op === "flag") {                        // a room caught something
       const b = await this.flagIn(sub, body.flag, now);
       return jsonRes({ ok: true, banned: !!b, why: b ? b.why : "" });
@@ -766,6 +861,7 @@ export class Vault {
       const flags = [];
       if (!save.econ) importEcon(save, body.imp, now, flags);
       const bj = (await st.get("bj")) || {};
+      const tickets = ((await st.get("tickets")) || []).filter(x => now - x.at < TICKET_MS);
       const res = [];
       // the watch: counts, match history and a ledger of every change (see econ.js)
       const stats = (await st.get("stats")) || newStats(now), hist = (await st.get("hist")) || [], ledger = (await st.get("ledger")) || [];
@@ -781,7 +877,7 @@ export class Vault {
         for (const a of (Array.isArray(body.acts) ? body.acts : []).slice(0, 5)) {
           // an act sent again after its answer was lost is not paid twice
           if (a && typeof a.id === "string" && a.id.length <= 32 && seen.indexOf(a.id) >= 0) { res.push({ ok: true, dup: true }); continue; }
-          const pre = snap(save), r = applyAct(save, a, { now, rnd: Math.random, bj, flags });
+          const pre = snap(save), r = applyAct(save, a, { now, rnd: Math.random, bj, flags, tickets });
           res.push(r);
           recordAct(stats, hist, ledger, a && typeof a.k === "string" ? a.k.slice(0, 12) : "?", a || {}, r, pre, snap(save), now);
           if (a && typeof a.id === "string" && a.id.length <= 32) seen.push(a.id);
@@ -793,7 +889,7 @@ export class Vault {
       if (data.length > SAVE_MAX_BYTES) return jsonRes({ error: "save too big" }, 413);
       const next = { data, rev: (rec ? rec.rev : 0) + 1, at: now };
       const keep = await this.snapshot(rec, now);
-      await st.put(Object.assign({ save: next, bj, actT: recent, stats, hist, ledger }, keep));
+      await st.put(Object.assign({ save: next, bj, actT: recent, stats, hist, ledger, tickets }, keep));
       let banned = null;
       for (const f of flags) banned = (await this.flagIn(sub, f, now)) || banned;
       // the directory (leaderboard, admin list) hears the new totals now
@@ -1035,7 +1131,7 @@ export default {
    told apart by the name they play under and the rooms they were in. */
 const KICK_MS = 10 * 60 * 1000;          // a kicked player is kept out of that room this long
 const DIR_ROOMS_KEPT = 60, DIR_ROOMS_PER_ACCOUNT = 12, DIR_FEED_KEPT = 200;
-const SERVER_VERSION = "2026-10-01";
+const SERVER_VERSION = "2026-10-01b";
 const LB_SIZE = 10, LB_CACHE_MS = 30 * 1000;
 const LOBBY_TTL_MS = 90 * 1000, QUEUE_TTL_MS = 8 * 1000;
 export class Directory {

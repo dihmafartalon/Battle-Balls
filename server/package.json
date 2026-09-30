@@ -2,6 +2,14 @@
   "name": "battle-balls-rooms",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "wrangler dev", "deploy": "wrangler deploy" },
-  "devDependencies": { "wrangler": "^4.0.0" }
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  },
+  "dependencies": {
+    "three": "0.128.0"
+  }
 }

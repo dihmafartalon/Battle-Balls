@@ -34,7 +34,13 @@ let tok = 0; for (let i = 0; i < 50; i++) { const t = ensure({ econ: { v: 1 } })
 assert.equal(tok, 50, "rnd 0 always pays a token");
 // GOD: pvp only
 let g = ensure({ rp: 0, econ: { v: 1 } }); g.rp = 15500; r = applyAct(g, { k: "match", mode: "ranked1", won: true, rp: 40, coins: 10, secs: 60 }, { now: oct3 }); assert.equal(r.res.rp, 0, "no RP vs bots at GOD");
-r = applyAct(g, { k: "match", mode: "god1", won: true, rp: 40, coins: 10, secs: 60 }, { now: oct3 + 5e6 }); assert.equal(r.res.rp, 40, "GOD 1v1 against a player pays RP");
+// online matches pay from the room's ticket, never from the claim
+const tickets = [{ id: "m1", mode: "god1", won: true, secs: 60, at: oct3 }];
+r = applyAct(g, { k: "match", mode: "god1", won: true, rp: 40, coins: 10, secs: 60, mt: "m1" }, { now: oct3 + 5e6, tickets }); assert.equal(r.res.rp, 40, "GOD 1v1 against a player pays RP");
+r = applyAct(g, { k: "match", mode: "god1", won: true, rp: 40, coins: 10, secs: 60, mt: "m1" }, { now: oct3 + 6e6, tickets }); assert.ok(r.res.rp < 0 && r.res.won === false, "a ticket pays once: " + JSON.stringify(r.res));
+r = applyAct(g, { k: "match", mode: "mp", won: true, rp: 0, coins: 10, secs: 60 }, { now: oct3 + 7e6, tickets }); assert.equal(r.res.won, false, "no ticket, no win");
+const lost = [{ id: "m2", mode: "mpranked2", won: false, secs: 80, at: oct3 }];
+const g2 = ensure({ rp: 500, econ: { v: 1 } }); r = applyAct(g2, { k: "match", mode: "mpranked2", won: true, rp: 40, coins: 10, secs: 80, mt: "m2" }, { now: oct3 + 8e6, tickets: lost }); assert.ok(r.res.rp < 0, "the ticket says lost: " + JSON.stringify(r.res));
 // crown
 const sv = { swords: { crown: 1 }, eqSword: "crown" }; assert.ok(crownFix(sv, "a", "b")); assert.ok(!sv.swords.crown); assert.equal(sv.eqSword, "trainer");
 assert.ok(crownFix(sv, "b", "b")); assert.ok(sv.swords.crown); assert.ok(!crownFix(sv, "b", "b"));

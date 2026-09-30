@@ -13,6 +13,7 @@ https://dash.cloudflare.com/sign-up — free plan, no card needed.
 ## 3. Deploy
 Unzip this folder, open a terminal inside it, and run:
 
+    npm install             # fetches three.js: the room runs the game itself (see below)
     npx wrangler login      # opens a browser, click Allow
     npx wrangler deploy
 
@@ -37,10 +38,30 @@ Nothing at your scale. Cloudflare's free plan covers Durable Objects,
 and a few friends playing is a rounding error against the free limits.
 
 ## What this does
-Holds one room per lobby code, elects the longest-connected player as
-host, and relays messages between everyone in the room. The host's
-browser is authoritative for the ball and the bots; this server is a
-smart relay that enforces who is allowed to send what.
+Holds one room per lobby code and **runs every multiplayer match itself**
+(4.0). The ball, the bots, every block, every ability's effect, every hit
+and who won are decided here, by the game's own code running with no
+screen (`src/sim.js`, `src/simgame.js`). The players' games only send their
+own movement and button presses, and show what the room tells them. Nobody's
+browser is "the host" any more, so a player cannot cheat the match by
+editing their game, and nobody lags the room for everyone else.
+
+The longest-connected player is the room's **leader**: they pick the mode,
+map and bots and press start. When a match ends the room writes each
+player's result straight to their account (a "ticket") before telling
+anyone, and the account is paid from that ticket, not from what the game
+claims.
+
+`src/simgame.js` is generated from the game. **After any change to
+`site/index.html`, run this from the repo root before deploying:**
+
+    node server/tools/gencatalog.cjs
+    node server/tools/buildsim.cjs
+
+Each running match costs the room about half a millisecond of CPU per
+frame (60 a second); Cloudflare gives every Durable Object 30 seconds of
+CPU after each message, and players send several a second, so a match
+never gets near it.
 
 ## Cloud saves (Sign in with Google)
 The same Worker also keeps each player's save, under Google's number for

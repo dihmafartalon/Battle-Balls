@@ -1313,7 +1313,7 @@ button.chip:active{transform:translateY(2px)}
       </div>
       <div class="note new">
         <h5>HALLOWEEN</h5>
-        <p>The lobby has gone Halloween, with a moon, graves and bats. There's a new casual mode, <b>Trick or Treat</b>: candy baskets, tricks, and a second pumpkin at the witching hour. The <b>Black Cat</b> skin is at Gnorman's for 340 yen, and the <b>Wendigo Katana</b> has its own shrine for one week only.</p>
+        <p>The lobby has gone Halloween, with a moon, graves and bats. There's a new casual mode, <b>Trick or Treat</b>: candy baskets, tricks, and a second pumpkin at the witching hour. The <b>Black Cat</b> skin is on Gnorman's shelf for 850 yen, and the <b>Wendigo Katana</b> has its own shrine for one week only.</p>
       </div>
       <div class="note new">
         <h5>RODRIGA</h5>
@@ -1328,6 +1328,10 @@ button.chip:active{transform:translateY(2px)}
         <p>Hosted lobbies are now public, so anyone can join from the list (flip <b>Private</b> to keep yours invite-only). The host picks the <b>map</b> too.</p>
       </div>
       <div class="note new">
+        <h5>THE SERVER RUNS EVERY MATCH</h5>
+        <p>Multiplayer no longer runs on one player's game. The <b>server</b> now runs the whole match: the ball, the bots, every block, every ability and who wins. Nobody gets an edge from hosting, a laggy host can't ruin the room, and a match result can't be faked. Whoever has been in the room longest still picks the mode and presses start.</p>
+      </div>
+      <div class="note new">
         <h5>THE LOBBY</h5>
         <p>A target range to warm up on, jumping, a proper hitbox on the centrepiece and Gnorman's shack, and you spawn further forward.</p>
       </div>
@@ -1337,7 +1341,7 @@ button.chip:active{transform:translateY(2px)}
       </div>
       <div class="note chg">
         <h5>FIXES &amp; BALANCE</h5>
-        <p><b>Endless</b> is retired (owners are refunded). Bots can now block Opi's Wrath and start moving before the countdown ends. Jordan is toned down in ranked 1v1. The block and ability buttons sit at the bottom of the screen on phones. The server address is gone from the multiplayer menu. The battle pass is a longer grind. Weapons are held more naturally: spears stand at your side, the pistol sits at low ready, and hip blades wear like a sheathed sword.</p>
+        <p><b>Endless</b> is retired (owners are refunded). Bots can now block Opi's Wrath and start moving before the countdown ends. Jordan is toned down in ranked 1v1. Nobody can be hit while <b>Ramen's Uncut Hair</b> is reeling them in. The block and ability buttons sit at the bottom of the screen on phones. The server address is gone from the multiplayer menu. The battle pass is a longer grind. Weapons are held more naturally: spears stand at your side, the pistol sits at low ready, and hip blades wear like a sheathed sword.</p>
       </div>
     </div>
     <div class="btnrow"><button class="big" id="updGo" style="font-size:22px;padding:12px 44px">PLAY</button></div>
@@ -1864,7 +1868,7 @@ var ABILITIES=[
  {id:"gale",name:"Gale Shroud",rarity:"epic",price:2800,yen:60,cd:16,color:0x9ff0d8,
   desc:"Wind cloak: 50% more speed for 5s and your next parry returns at double pace."},
  {id:"ramenhair",name:"Ramen's Uncut Hair",rarity:"rare",price:2600,yen:35,cd:6,color:0xffc46b,
-  desc:"Lash out and reel in whoever you are looking at: they land right in front of you, briefly off balance. Short cooldown."},
+  desc:"Lash out and reel in whoever you are looking at: they land right in front of you, briefly off balance. Nobody can be hit while they are being reeled in. Short cooldown."},
  {id:"swap",name:"Switch",rarity:"rare",price:3200,yen:35,cd:15,color:0xff8a3c,no1v1:true,
   desc:"Trade places with the nearest fighter. Hand your problem to them."},
  {id:"stdslash",name:"Santi's STD Slash",rarity:"mythic",price:15000,yen:340,cd:22,color:0xf2f0ff,
@@ -2527,7 +2531,8 @@ function econMatch(won,rpGain){
   run.reported=true;
   econQueue({k:"match",mode:MODE&&MODE.id||"",won:!!won,rp:rpGain|0,coins:run.coins|0,
     secs:Math.round((Date.now()-(run.at||Date.now()))/1000),
-    blocks:player?player.tBlocks|0:0,perfects:player?player.tPerfects|0:0});
+    blocks:player?player.tBlocks|0:0,perfects:player?player.tPerfects|0:0,
+    mt:(NET.on&&NET.mid)?NET.mid:undefined});
 }
 /* A message from whoever runs the game. It arrives on the back of any call to
    the server, is shown once, and is never anything the player typed. */
@@ -7797,7 +7802,10 @@ function hairLash(f,o,col){
   }
   sfx("parry");
 }
+// being reeled in, you have no hitbox: the ball cannot touch you until you land
+var PULL_SAFE=0.45;
 function applyPull(o,px,pz,by){
+  if(o&&o.alive)o.untarget=Math.max(o.untarget||0,PULL_SAFE);
   var mine=(o===player&&!o.isRemote)||(!o.isRemote&&!(NET.on&&!NET.isHost&&o.isBot));
   if(!NET.on||mine){startPull(o,px,pz);return;}
   // somebody else's fighter: tell whoever owns it
@@ -7808,6 +7816,7 @@ function startPull(o,px,pz){
   if(!o||!o.alive)return;
   o.pullT=0.2;o.pullDur=0.2;o.pullFx={x:o.pos.x,z:o.pos.z};o.pullTo={x:px,z:pz};
   o.stun=Math.max(o.stun,0.3);
+  o.untarget=Math.max(o.untarget||0,PULL_SAFE);
   if(o.isPlayer)flashWarn("REELED IN",0.5,"#ffc46b");
 }
 var WHITE_T=0,WHITE_MAX=0.5,WHITE_SHOWN=false;
@@ -12479,6 +12488,8 @@ var NET={
   seq:0
 };
 function netNow(){return Date.now()+NET.clockSkew;}
+// who picks the mode and presses start: the host of an old room, the leader of a 4.0 one
+function netLeads(){return NET.isHost||(!!NET.leader&&NET.leader===NET.you);}
 function netSend(o){
   if(!NET.ws||NET.ws.readyState!==1)return false;
   try{NET.ws.send(JSON.stringify(o));return true;}catch(e){return false;}
@@ -12564,6 +12575,9 @@ function netHandle(m){
   if(m.t==="welcome"){
     NET.you=m.you;NET.host=m.host||m.you;
     NET.isHost=(NET.host===NET.you);
+    // 4.0: the server runs every match itself, so no player is the host. The
+    // leader is whoever has been in the room longest: they pick and start.
+    NET.leader=m.leader||NET.host;NET.srvHost=!!m.srv;
     NET.status="lobby";
     NET.clockSkew=(m.now||Date.now())-Date.now();
     lobbyRender();
@@ -12580,14 +12594,15 @@ function netHandle(m){
     NET.players=m.players||[];
     NET.host=m.host||"";
     NET.isHost=(NET.host===NET.you);
+    NET.leader=m.leader||NET.host;
     /* The gamemode used to go out only when the host clicked a tab, so anyone
        who walked in afterwards was shown the default, Free For All, while the
        match that actually started was whatever the host had picked -- a "1v1
        FFA" that opened with Swarm's three balls. The host now re-announces the
        pick every time the room changes. */
-    if(NET.isHost&&NET.status==="lobby"&&!NET.queue)netSetup();
+    if(netLeads()&&NET.status==="lobby"&&!NET.queue)netSetup();
     // a GOD queue room: the moment both of you are in, the host starts it
-    if(NET.queue&&NET.isHost&&NET.status==="lobby"&&NET.players.length===2&&!NET.qStarted){
+    if(NET.queue&&!NET.srvHost&&NET.isHost&&NET.status==="lobby"&&NET.players.length===2&&!NET.qStarted){   // (a 4.0 server starts it itself)
       NET.qStarted=true;
       netSend({t:"start",mode:"god1",q:1,map:pick(MAPS).id});
     }
@@ -12902,7 +12917,7 @@ function startNetMatch(m){
     RANKF=m.rf||0;
   }
   NET.on=true;NET.status="playing";
-  NET.hist.length=0;NET.remote={};NET.seq=0;
+  NET.hist.length=0;NET.remote={};NET.seq=0;NET.mid="";
   // every client builds the identical arena from the host's seed
   seedWorld(m.seed);
   buildArena(mapById(m.map||"sky"));
@@ -12997,7 +13012,7 @@ function startNetMatch(m){
   if(myAb&&!abilityAllowed(myAb))feed(abilById(myAb).name+" is disabled in 1v1 \u2014 using Dash","ko");
   mpSendLoadout(false);          // clear the ready flags for the next vote
   updateSlotIcons();setAlive();
-  feed(NET.isHost?"You are hosting this match":"Connected to "+NET.code,"good");
+  feed(NET.isHost?"You are hosting this match":(NET.srvHost?"The server is running this match":"Connected to "+NET.code),"good");
 }
 // somebody joined or left mid-match
 function netSyncRoster(wasHost){
@@ -13378,6 +13393,8 @@ function netApplyHit(m){
 function netApplyRoundOver(m){
   if(!NET.on||NET.isHost)return;
   if(STATE==="over")return;
+  // the server's record of this match: the account is paid from that, not from what this game says
+  NET.mid=typeof m.mid==="string"?m.mid.slice(0,40):"";
   var w=fighterByNetId(m.w);
   // trust the host's winning team in a team mode; fall back to the survivor
   var won;
@@ -13422,7 +13439,7 @@ function netRenderRematch(){
   btn.classList.toggle("ghost",!!NET.rematch);
   $("rMenu").textContent="BACK TO ROOM";
   // the host pulls the trigger once the whole room has voted
-  if(NET.isHost&&total>=2&&n===total&&STATE==="over"&&!NET.startingRematch){
+  if(netLeads()&&total>=2&&n===total&&STATE==="over"&&!NET.startingRematch){
     NET.startingRematch=true;
     netSend({t:"start",mode:NET.lastMode||"mp",rf:NET.lastRf||0,
       gm:NET.lastGm||NETPICK.gm,bots:(NET.lastBots===undefined?NETPICK.bots:NET.lastBots),
@@ -15288,7 +15305,7 @@ function openMPScreen(){
    else sees the choice but cannot change it, because the host is the one whose
    start message every client builds the match from. */
 function renderNetSetup(){
-  var host=NET.isHost;
+  var host=netLeads();
   var wrap=$("mpGames");
   if(wrap){
     var html="";
@@ -15300,7 +15317,7 @@ function renderNetSetup(){
     wrap.innerHTML=html;
     var btns=wrap.querySelectorAll("button");
     for(var b=0;b<btns.length;b++)btns[b].addEventListener("click",function(){
-      if(!NET.isHost)return;
+      if(!netLeads())return;
       NETPICK.gm=this.getAttribute("data-gm");
       netSetup();
       renderNetSetup();
@@ -15314,7 +15331,7 @@ function renderNetSetup(){
     mw.innerHTML=mh;
     var mb=mw.querySelectorAll("button");
     for(var mi=0;mi<mb.length;mi++)mb[mi].addEventListener("click",function(){
-      if(!NET.isHost)return;NETPICK.map=this.getAttribute("data-map");netSetup();renderNetSetup();});
+      if(!netLeads())return;NETPICK.map=this.getAttribute("data-map");netSetup();renderNetSetup();});
   }
   var pv=$("mpPriv");
   if(pv){pv.textContent=NETPICK.priv?"PRIVATE":"PUBLIC";pv.className="big sm "+(NETPICK.priv?"red":"");pv.disabled=!host;pv.style.opacity=host?"1":".6";
@@ -15395,23 +15412,23 @@ function lobbyRender(){
       "</span><span>"+swordIcon(sw).replace("width='34' height='34'","width='18' height='18'")+
       "</span><span>"+abilIcon(ab,18)+"</span></div>"+
       "<div class='nm'>"+(p.name||"Player")+(p.id===NET.you?" (you)":"")+"</div>"+
-      (p.id===NET.host?"<div class='tagh'>HOST</div>":"")+
+      (p.id===(NET.leader||NET.host)?"<div class='tagh'>HOST</div>":"")+
       "<div class='rdy "+(p.ready?"yes":"no")+"'>"+(p.ready?"READY":"WAITING")+"</div>";
     host.appendChild(el);
   }
   var me=null;
   for(i=0;i<NET.players.length;i++)if(NET.players[i].id===NET.you)me=NET.players[i];
   $("mpReady").textContent=(me&&me.ready)?"NOT READY":"READY";
-  var canStart=NET.isHost&&NET.players.length>=2&&readyCount===NET.players.length;
-  $("mpStart").style.display=NET.isHost?"":"none";
+  var canStart=netLeads()&&NET.players.length>=2&&readyCount===NET.players.length;
+  $("mpStart").style.display=netLeads()?"":"none";
   $("mpStart").style.opacity=canStart?"1":".45";
   // ranked 2v2 needs exactly the two of you, both ready
-  var canRanked=NET.isHost&&NET.players.length===2&&readyCount===2;
+  var canRanked=netLeads()&&NET.players.length===2&&readyCount===2;
   var rb=$("mpRanked");
-  rb.style.display=NET.isHost?"":"none";
+  rb.style.display=netLeads()?"":"none";
   rb.style.opacity=canRanked?"1":".45";
   rb.textContent=NET.players.length===2?"QUEUE RANKED 2v2":"RANKED 2v2 NEEDS 2 PLAYERS";
-  $("mpHint").textContent=!NET.isHost
+  $("mpHint").textContent=!netLeads()
     ? "Waiting for the host to start."
     : (NET.players.length<2
         ? "Share the code. You need at least one more player."
@@ -15446,7 +15463,7 @@ function wireMP(){
     mpSendLoadout(!(me&&me.ready));
   });
   $("mpRanked").addEventListener("click",function(){
-    if(!NET.isHost)return;
+    if(!netLeads())return;
     if(NET.players.length!==2){feed("Ranked 2v2 is exactly two of you","ko");return;}
     var ready=0;
     for(var i=0;i<NET.players.length;i++)if(NET.players[i].ready)ready++;
@@ -15457,7 +15474,7 @@ function wireMP(){
       map:netMapPick()});
   });
   $("mpStart").addEventListener("click",function(){
-    if(!NET.isHost)return;
+    if(!netLeads())return;
     if(NET.players.length<2){NET.err="You need another player.";NET.status="lobby";lobbyRender();return;}
     var allReady=true;
     for(var i=0;i<NET.players.length;i++)if(!NET.players[i].ready)allReady=false;
@@ -15466,13 +15483,13 @@ function wireMP(){
       map:netMapPick()});
   });
   $("mpBotsUp").addEventListener("click",function(){
-    if(!NET.isHost)return;
+    if(!netLeads())return;
     NETPICK.bots=clamp(NETPICK.bots+1,0,8);
     netSetup();
     renderNetSetup();
   });
   $("mpBotsDown").addEventListener("click",function(){
-    if(!NET.isHost)return;
+    if(!netLeads())return;
     NETPICK.bots=clamp(NETPICK.bots-1,0,8);
     netSetup();
     renderNetSetup();
@@ -15486,7 +15503,7 @@ function wireMP(){
     }catch(e){}
   });
   $("mpLeave").addEventListener("click",function(){netDisconnect();lobbyRender();});
-  $("mpPriv").addEventListener("click",function(){if(!NET.isHost)return;NETPICK.priv=!NETPICK.priv;netSetup();renderNetSetup();sfx("tick");});
+  $("mpPriv").addEventListener("click",function(){if(!netLeads())return;NETPICK.priv=!NETPICK.priv;netSetup();renderNetSetup();sfx("tick");});
   $("mpPubRefresh").addEventListener("click",function(){pubFetch(true);});
   $("mpUrlSave").addEventListener("click",function(){
     SAVE.serverUrl=($("mpUrl").value||"").trim();

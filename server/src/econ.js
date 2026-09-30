@@ -245,6 +245,8 @@ export function codeReward(s, reward, rnd) {
 }
 
 /* ---- one act ---- */
+// the modes only ever played online, where the room server decides the result
+export const NET_MODES = { mp: 1, mpranked2: 1, god1: 1 };
 export function applyAct(s, a, ctx) {
   const rnd = ctx.rnd || Math.random, now = ctx.now || Date.now(), flags = ctx.flags || (ctx.flags = []);
   ensure(s);
@@ -415,11 +417,21 @@ export function applyAct(s, a, ctx) {
   if (a.k === "match") {
     const mode = typeof a.mode === "string" ? a.mode.slice(0, 16) : "", m = CAT.modes[mode] || { mult: 1, ranked: 0 };
     const e = s.econ;
+    /* An online match is run by the room server, which wrote down who won
+       (a ticket) before anyone was told. Pay that, not what the game says;
+       no ticket means no win, and each ticket pays once. */
+    let won = !!a.won, secsIn = Number(a.secs) || 0, tk = null;
+    if (NET_MODES[mode]) {
+      tk = (ctx.tickets || []).find(t => t && t.id === a.mt && !t.used && t.mode === mode) || null;
+      if (tk) { tk.used = true; won = !!tk.won; secsIn = tk.secs; }
+      else won = false;
+      a = Object.assign({}, a, { won });
+    }
     // fill the bank for the time that has passed, then pay this match out of it
     if (typeof e.bank !== "number" || !isFinite(e.bank)) { e.bank = MATCH.maxSecs; e.bankAt = now; }
     e.bank = Math.min(MATCH.bankMax, e.bank + Math.max(0, now - (e.bankAt || now)) / 1000);
     e.bankAt = now;
-    const own = Math.max(0, Math.min(MATCH.maxSecs, Number(a.secs) || 0));
+    const own = Math.max(0, Math.min(MATCH.maxSecs, secsIn));
     // a match costs at least minCharge seconds of bank, however short it says it was
     const got = Math.min(Math.max(own, MATCH.minCharge), e.bank);
     e.bank -= got;
@@ -433,6 +445,8 @@ export function applyAct(s, a, ctx) {
     let rp = 0;
     if (m.ranked) {
       rp = Math.max(MATCH.rpLose, Math.min(MATCH.rpWin, Math.round(Number(a.rp) || 0)));
+      // the server's ticket says who won: a win cannot cost RP, and a loss always does
+      if (NET_MODES[mode]) rp = won ? Math.max(1, rp) : Math.min(rp, Math.round(MATCH.rpLose / 2));
       if (rp > 0 && secs < MATCH.rpMinSecs) rp = 0;                 // no ranked win in a few seconds
       // GOD is played against people only: at that rank, a match against bots moves nothing
       const cur = CAT.ranks[rankIndex(s.rp)];
@@ -453,7 +467,7 @@ export function applyAct(s, a, ctx) {
     // the blocks this game timed for itself
     const v = parryVerdict(int(a.blocks, 0, 100000), int(a.perfects, 0, 100000));
     if (v) flags.push({ kind: "autoparry", sev: v.sev, detail: Math.round(v.rate * 100) + "% perfect over " + a.blocks + " blocks (" + mode + ")" });
-    return { ok: true, res: { coins, rp, ranked, pass, token } };
+    return { ok: true, res: { coins, rp, ranked, pass, token, won, ...(tk ? { tk: 1 } : {}) } };
   }
 
   return { ok: false, why: "unknown act" };
@@ -538,7 +552,7 @@ export function recordAct(st, hist, ledger, kind, a, res, pre, post, now) {
   if (drp > 0) { st.ec.rp += drp; day.rp += drp; }
   st.it += got.length;
   if (kind === "match" && res && res.ok !== false) {
-    const won = !!a.won, ranked = !!(CAT.modes[a.mode] && CAT.modes[a.mode].ranked);
+    const won = res.res && res.res.won !== undefined ? !!res.res.won : !!a.won, ranked = !!(CAT.modes[a.mode] && CAT.modes[a.mode].ranked);
     const bl = int(a.blocks, 0, 100000) || 0, pf = Math.min(bl, int(a.perfects, 0, 100000) || 0);
     const secs = Math.max(0, Math.min(MATCH.maxSecs, Number(a.secs) || 0));
     st.g++; day.g++; st.secs += secs; st.bl += bl; st.pf += pf;
