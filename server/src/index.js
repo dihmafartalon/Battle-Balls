@@ -687,7 +687,7 @@ export class Vault {
     const inbox = (await this.state.storage.get("inbox")) || [];
     if (!inbox.length) return undefined;
     await this.state.storage.put("inbox", []);
-    return inbox.map(m => ({ id: m.id, at: m.at, text: m.text }));
+    return inbox.map(m => ({ id: m.id, at: m.at, text: m.text, gift: m.gift }));
   }
   async flagIn(sub, f, now) {
     if (!f || typeof f !== "object") return null;
@@ -788,13 +788,19 @@ export class Vault {
     if (body.op === "adm_edit") {
       const save = ensure(rec ? JSON.parse(rec.data) : {});
       if (!save.econ) save.econ = { v: 1, at: now };
-      const done = [], pre = snap(save);
+      const done = [], pre = snap(save), gift = { items: [], coins: 0, yen: 0, spins: 0 };
       for (const e of (Array.isArray(body.edits) ? body.edits : []).slice(0, 200)) {
         if (!e || typeof e !== "object") continue;
         const bag = { sword: "swords", abil: "abils", skin: "skins" }[e.tab];
         if (e.k === "set" && ["coins", "yen", "rp", "freeSpins"].includes(e.key) && typeof e.v === "number" && isFinite(e.v) && e.v >= 0) {
+          const was = save[e.key] | 0;
           save[e.key] = Math.floor(e.v); done.push(e.key + "=" + save[e.key]);
-        } else if (e.k === "add" && bag && itemOf(e.tab, e.id)) { save[bag][e.id] = 1; done.push("+" + e.id); }
+          const up = save[e.key] - was, gk = { coins: "coins", yen: "yen", freeSpins: "spins" }[e.key];
+          if (gk && up > 0) gift[gk] += up;
+        } else if (e.k === "add" && bag && itemOf(e.tab, e.id)) {
+          if (!save[bag][e.id]) gift.items.push({ tab: e.tab, id: e.id });
+          save[bag][e.id] = 1; done.push("+" + e.id);
+        }
         else if (e.k === "del" && bag && save[bag][e.id]) {
           delete save[bag][e.id]; done.push("-" + e.id);
           const eq = { sword: "eqSword", abil: "eqAbil", skin: "eqSkin" }[e.tab];
@@ -806,7 +812,13 @@ export class Vault {
       const keep = await this.snapshot(rec, now, true);   // an admin edit can always be undone
       const stats = (await st.get("stats")) || newStats(now), hist = (await st.get("hist")) || [], ledger = (await st.get("ledger")) || [];
       recordAct(stats, hist, ledger, "admin", {}, null, pre, snap(save), now);
-      await st.put(Object.assign({ save: next, stats, ledger }, keep));
+      // a gift pops up in their game: what they got, and the note if there is one
+      const put = { save: next, stats, ledger };
+      if (!body.silent && (gift.items.length || gift.coins || gift.yen || gift.spins)) {
+        const note = String(body.note || "").trim().slice(0, 300);
+        put.inbox = ((await st.get("inbox")) || []).concat([{ id: randomHex(6), at: now, text: note, gift: gift.items.length ? gift : Object.assign(gift, { items: [] }) }]).slice(-20);
+      }
+      await st.put(Object.assign(put, keep));
       dirCall(this.env, { op: "touch", sub, name: save.netName || "", rp: save.rp | 0, season: save.season | 0 });
       const flags = (await st.get("flags")) || [];
       flags.push({ at: now, kind: "admin", sev: "note", detail: "admin edit: " + done.join(" ").slice(0, 300) });
