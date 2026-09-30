@@ -1333,11 +1333,11 @@ button.chip:active{transform:translateY(2px)}
       </div>
       <div class="note chg">
         <h5>REDONE</h5>
-        <p><b>Bert Sampsoon</b> is a true classic now: the scarlet speedster. The <b>DEV</b> skin is redone as a void knight to match its blade. Divine Right and its swing are reworked.</p>
+        <p><b>Bert Sampsoon</b> is a true classic now: the scarlet speedster. The <b>DEV</b> skin is redone as a void knight to match its blade. Divine Right and its swing are reworked. The starter gear got a glow-up too: <b>Rookie</b> has a proper kit, <b>Shadow</b> a deep hood, <b>Neon</b> is lit trim head to toe and <b>Static</b> has a TV for a head. <b>Trainer</b>, <b>Steel Katana</b>, <b>Crimson Fang</b> and <b>Gold Executioner</b> are all rebuilt.</p>
       </div>
       <div class="note chg">
         <h5>FIXES &amp; BALANCE</h5>
-        <p><b>Endless</b> is retired (owners are refunded). Bots can now block Opi's Wrath and start moving before the countdown ends. Jordan is toned down in ranked 1v1. The block and ability buttons sit at the bottom of the screen on phones. The server address is gone from the multiplayer menu. The battle pass is a longer grind.</p>
+        <p><b>Endless</b> is retired (owners are refunded). Bots can now block Opi's Wrath and start moving before the countdown ends. Jordan is toned down in ranked 1v1. The block and ability buttons sit at the bottom of the screen on phones. The server address is gone from the multiplayer menu. The battle pass is a longer grind. Weapons are held more naturally: spears stand at your side, the pistol sits at low ready, and hip blades wear like a sheathed sword.</p>
       </div>
     </div>
     <div class="btnrow"><button class="big" id="updGo" style="font-size:22px;padding:12px 44px">PLAY</button></div>
@@ -1739,15 +1739,15 @@ var SWORDS=[
   desc:"A lance of standing light. Three ribbons turn around a core that never stops."},
  {id:"meatcleaver",name:"Season 0 Prime Cut",season:0,price:-1,rank:"meat",blade:0xff5e6e,hilt:0x2a0810,glow:0xff2a4a,shape:"cleaver",hold:"shoulder",swing:"overhead",idle:"ember",
   desc:"Season 0 ranked reward (Meat). Carried on the shoulder like a day's work. Comes down like one too."},
- {id:"trainer",name:"Trainer",rarity:"common",price:0,yen:10,blade:0xd8e2ef,hilt:0x4a5568,glow:0x9fb4cc,shape:"straight",hold:"one",swing:"slash",idle:"none",
+ {id:"trainer",name:"Trainer",rarity:"common",price:0,yen:10,blade:0xd8e2ef,hilt:0x4a5568,glow:0x9fb4cc,shape:"trainer2",hold:"one",swing:"slash",idle:"none",
   desc:"Standard issue. Honest, balanced, slightly embarrassing."},
- {id:"katana",name:"Steel Katana",rarity:"common",price:250,yen:10,blade:0xeef4ff,hilt:0x1d2330,glow:0x8fd8ff,shape:"curved",hold:"one",swing:"slash",idle:"none",
+ {id:"katana",name:"Steel Katana",rarity:"common",price:250,yen:10,blade:0xeef4ff,hilt:0x1d2330,glow:0x8fd8ff,shape:"katana2",hold:"one",swing:"slash",idle:"none",
   desc:"Long and curved. One clean horizontal cut, held low and ready."},
- {id:"fang",name:"Crimson Fang",rarity:"common",price:600,yen:15,blade:0xff4a4a,hilt:0x2a0d0d,glow:0xff7070,shape:"jagged",hold:"reverse",swing:"uppercut",idle:"none",
+ {id:"fang",name:"Crimson Fang",rarity:"common",price:600,yen:15,blade:0xff4a4a,hilt:0x2a0d0d,glow:0xff7070,shape:"fang2",hold:"reverse",swing:"uppercut",idle:"none",
   desc:"Held backwards in an assassin's grip. Rips upward from the hip."},
  {id:"frost",name:"Frostbite",rarity:"rare",price:900,yen:25,blade:0xa8ecff,hilt:0x0f3a4a,glow:0x35e8ff,shape:"crystal",hold:"two",swing:"spin",idle:"shimmer",
   desc:"Two-handed arena ice. Spins a full circle and sheds frost."},
- {id:"exec",name:"Gold Executioner",rarity:"rare",price:1400,yen:25,blade:0xffd23f,hilt:0x4a3208,glow:0xffe98a,shape:"broad",hold:"shoulder",swing:"overhead",idle:"none",
+ {id:"exec",name:"Gold Executioner",rarity:"rare",price:1400,yen:25,blade:0xffd23f,hilt:0x4a3208,glow:0xffe98a,shape:"exec2",hold:"shoulder",swing:"overhead",idle:"none",
   desc:"Rested on the shoulder until it comes down on your head."},
  {id:"twin",name:"Twin Fang",rarity:"rare",price:1800,yen:30,blade:0xff8ad8,hilt:0x2a0d24,glow:0xff5ec8,shape:"twin",hold:"dual",swing:"twirl",idle:"none",
   desc:"A blade in each hand, twirling through the strike."},
@@ -1816,22 +1816,22 @@ var SWORDS=[
  {id:"wendigo",name:"Wendigo Katana",rarity:"ultra",price:-1,ultra:true,event:"wendigo",blade:0xe8eaf0,hilt:0x2a1a0a,glow:0x4ab8ff,shape:"wendigo",hold:"hip",swing:"wendigo",idle:"breathe",
   desc:"A blade that grew, not forged. Roots creep up from the grip, and the cracks are where the cold gets in. Sold at its shrine for one week only, then never again."},
  // ---- 4.0 ----
- {id:"ricky9",name:"Ricky's .9",rarity:"mythic",price:16500,yen:345,blade:0x141418,hilt:0x1c1c22,glow:0xffb040,shape:"pistol",hold:"pistol",swing:"gunshot",idle:"none",
+ {id:"ricky9",name:"Ricky's .9",rarity:"mythic",price:16500,yen:345,blade:0x141418,hilt:0x1c1c22,glow:0xffb040,shape:"pistol",hold:"pistol",size:.64,swing:"gunshot",idle:"none",
   desc:"Not a sword. A block is a shot: the ball is blown back the way you are aiming with a crack, a muzzle flash and a tracer across the arena."},
  {id:"divineright",name:"Divine Right",price:-1,rank:"god",blade:0xdce6f2,hilt:0xd8b050,glow:0x7ad8ff,shape:"divine",hold:"rhip",swing:"divine",idle:"orbit",
   desc:"The GOD rank's blade. Worn on the right hip and drawn in one stroke: the wings open, the runes light, and every cut sheds feathers of light."},
- {id:"crown",name:"Apex",rarity:"ultra",price:-1,ultra:true,code:true,top1:true,blade:0xfff0c0,hilt:0x0e0c0a,glow:0xffd27a,shape:"apex",hold:"shoulder",swing:"slash",idle:"none",
+ {id:"crown",name:"Apex",rarity:"ultra",price:-1,ultra:true,code:true,top1:true,blade:0xfff0c0,hilt:0x0e0c0a,glow:0xffd27a,shape:"apex",hold:"lance",size:.9,swing:"slash",idle:"none",
   desc:"RANKED EXCLUSIVE. Only ever held by the #1 on the global leaderboard, and taken back the moment they are not. \"There is only one.\""},
  {id:"pbfetus",name:"PB Fetus",rarity:"mythic",price:-1,event:"rodriga",blade:0xe8a8a0,hilt:0xd88888,glow:0xc8101c,shape:"fetus",hold:"dangle",swing:"slash",idle:"none",
   desc:"Not a sword. Swung on its own cord; it cries, it drips, and it screams when it gets a kill. \"Please stop asking where it came from.\" October's item at Rodriga's shack, for a Rodriga token."},
  // Season 1 ranked path: a different weapon at every step
- {id:"s1wood",name:"Season 1 Driftwood Glaive",season:1,price:-1,rank:"wood",blade:0xc89a5a,hilt:0x4a2c14,glow:0x9aff6a,shape:"s1glaive",hold:"staff",swing:"slash",idle:"drift",
+ {id:"s1wood",name:"Season 1 Driftwood Glaive",season:1,price:-1,rank:"wood",blade:0xc89a5a,hilt:0x4a2c14,glow:0x9aff6a,shape:"s1glaive",hold:"glaive",swing:"slash",idle:"drift",
   desc:"Season 1 ranked reward (Wood). A long branch with a blade lashed to the end, still sprouting leaves."},
  {id:"s1iron",name:"Season 1 Iron Maul",season:1,price:-1,rank:"iron",blade:0x8a929e,hilt:0x2a2e36,glow:0xffa040,shape:"s1maul",hold:"two",swing:"hammer",idle:"ember",
   desc:"Season 1 ranked reward (Iron). A riveted block of iron with a forge still glowing in its heart."},
  {id:"s1ruby",name:"Season 1 Ruby Twins",season:1,price:-1,rank:"ruby",blade:0xff2a5e,hilt:0x2a0a14,glow:0xff5e8a,shape:"s1twins",hold:"dual",swing:"twirl",idle:"shimmer",
   desc:"Season 1 ranked reward (Ruby). A pair of gem daggers, one in each hand, cut from the same stone."},
- {id:"s1omega",name:"Season 1 Null Edge",season:1,price:-1,rank:"omega",blade:0x0a0a12,hilt:0x05050a,glow:0x00ffe0,shape:"s1null",hold:"reverse",swing:"uppercut",idle:"crackle",
+ {id:"s1omega",name:"Season 1 Null Edge",season:1,price:-1,rank:"omega",blade:0x0a0a12,hilt:0x05050a,glow:0x00ffe0,shape:"s1null",hold:"rgrip",size:.88,swing:"uppercut",idle:"crackle",
   desc:"Season 1 ranked reward (Omega). A black katana held backwards, its edge a line of live cyan static."},
  {id:"s1meat",name:"Season 1 Butcher's Hook",season:1,price:-1,rank:"meat",blade:0xd8d8e0,hilt:0x4a0a14,glow:0xff2a4a,shape:"s1hook",hold:"one",swing:"overhead",idle:"ember",
   desc:"Season 1 ranked reward (Meat). A meat hook on a chain handle. It does not cut so much as collect."}
@@ -2005,7 +2005,7 @@ var SKINS=[
   desc:"The void knight. Black plate split by a rift with a core beating in it, circuit traces up every limb, a crown of rift shards, code turning round the helm, and a cape that will not hold still."},
  {id:"aurora",name:"Aurora",price:12000,yen:355,rarity:"mythic",style:"aurora",body:0x1b2b5e,limb:0x0c1330,skin:0xdff4ff,glow:0x7afcff,
   desc:"Polar light worn as armour: a halo, six crystals and a curtain that never settles."},
- {id:"static",name:"Static",price:1200,yen:15,rarity:"common",style:"snow",body:0x7d8794,limb:0x24272e,skin:0xe8ecf2,glow:0xbfe6ff,
+ {id:"static",name:"Static",price:1200,yen:15,rarity:"common",style:"static2",body:0x7d8794,limb:0x24272e,skin:0xe8ecf2,glow:0xbfe6ff,
   desc:"Dead-channel grey with a white strip down each limb. Cheap and mean."},
  {id:"vapor",name:"Vapor",price:2100,yen:30,rarity:"rare",style:"vent",body:0x2de0c8,limb:0x14323a,skin:0xd6fff6,glow:0xff5ec8,
   desc:"Teal plating with magenta vents. Runs hot and does not care."},
@@ -2021,11 +2021,11 @@ var SKINS=[
   desc:"Season 0 ranked reward (Meat). Butcher's red over bone, and it steams faintly."},
  {id:"bert",name:"Bert Sampsoon",free:true,price:0,yen:10,rarity:"common",style:"flash",body:0xb81414,limb:0x8a0c0c,skin:0xb81414,glow:0xffcc2a,bodyGlow:0x2a0000,
   desc:"Free for everyone. \"A true classic.\" The scarlet speedster: a red box helmet with a yellow visor band and an antenna, a lightning emblem on the chest and both sides of the head, and bolts round every limb."},
- {id:"rookie",name:"Rookie",price:0,yen:10,rarity:"common",style:"plain",body:0x35e8ff,limb:0x2a2f45,skin:0xffd9a8,glow:0x000000,
+ {id:"rookie",name:"Rookie",price:0,yen:10,rarity:"common",style:"rookie2",body:0x35e8ff,limb:0x2a2f45,skin:0xffd9a8,glow:0x000000,
   desc:"Standard arena kit in competition cyan. No frills, no armour."},
- {id:"shadow",name:"Shadow",price:400,yen:15,rarity:"common",style:"hooded",body:0x1a1826,limb:0x0e0c16,skin:0x6a6480,glow:0x5a3aa0,
+ {id:"shadow",name:"Shadow",price:400,yen:15,rarity:"common",style:"shadow2",body:0x1a1826,limb:0x0e0c16,skin:0x6a6480,glow:0x5a3aa0,
   desc:"A deep hood and a torn half-cape. You never see the face under it."},
- {id:"neon",name:"Neon",price:900,yen:25,rarity:"rare",style:"striped",body:0xff3ca8,limb:0x2a0a20,skin:0xffd0ee,glow:0xff3ca8,
+ {id:"neon",name:"Neon",price:900,yen:25,rarity:"rare",style:"neon2",body:0xff3ca8,limb:0x2a0a20,skin:0xffd0ee,glow:0xff3ca8,
   desc:"Magenta light-strips run down the arms, chest and shins."},
  {id:"glacier",name:"Glacier",price:1400,yen:35,rarity:"rare",style:"frostplate",body:0xa8ecff,limb:0x1a3a4a,skin:0xdff4ff,glow:0x35e8ff,
   desc:"Layered ice pauldrons over a segmented chestplate."},
@@ -5345,7 +5345,7 @@ function buildSword(def){
     }
     g.userData.shell=shell;g.userData.sheathMat=shMat;
   }
-  g.scale.setScalar(def.hold==="float"?0.72:0.80);
+  g.scale.setScalar((def.hold==="float"?0.72:0.80)*(def.size||1));   // size: a sidearm is not a greatsword
   return g;
 }
 // resting pose depends on how the weapon is carried
@@ -10577,7 +10577,15 @@ SWORD_ICON.s1hook="<path d='M20 4v8' stroke='#8a8a94' stroke-width='3' stroke-da
 SIG_SWING.gunshot={dur:.36,col:0xffb040,beats:[{w:.30,st:{span:.9,tilt:.1,r:1.2,w:.4,hot:1},fin:true}]};
 SLASH_STYLE.gunshot=SIG_SWING.gunshot.beats[0].st;SWEEP.gunshot=SWEEP.stab;
 // slung on the right hip, blade hanging down and back: drawn and cut in one
-HOLD.rhip={sp:[0.66,1.5,0.06],sr:[-2.69,0,-0.15],ra:[-0.24,0,0.12],la:null};
+// worn like a sheathed blade: the grip forward and up at the hip, the blade
+// sweeping back and down behind the leg, turned so the wings fold along it
+HOLD.rhip={sp:[0.64,2.07,1.02],sr:[-1.875,Math.PI/2,-0.1],ra:[-0.24,0,0.12],la:null};
+// a spear stood at rest: gripped low on the shaft with the arm easy at the
+// side, the shaft leaning a little back and away from the head
+HOLD.glaive={sp:[0,-1.95,0.02],sr:[0.1,0,-0.22],ra:[-0.35,0,0.14],la:null};  // same easy carry, gripped further up the shaft
+// reverse grip: the blade runs back from the fist and trails behind the leg
+HOLD.rgrip={sp:[0,-1.22,.02],sr:[-1.62,0,0.08],ra:[-0.26,0,0.16],la:null};
+HOLD.lance={sp:[0,-1.64,0.02],sr:[0.1,0,-0.24],ra:[-0.35,0,0.14],la:null};
 FXD.gunfx={rate:10,c1:0xffb040,c2:0x6a6a70,vy:[.2,1.2],sp:.2,g:-1.2,sz:.34,life:.5,along:1.0,sheath:0};
 FXD.nullfx={rate:36,c1:0x00ffe0,c2:0x001a18,vy:[-.4,1.2],sp:.6,g:0,sz:.44,life:.3,along:1.0,sheath:.5,arc:true,motes:3};
 Object.assign(SWORD_FX,{ricky9:"gunfx",
@@ -10769,7 +10777,9 @@ function v4SwordIdle(f,sw,t,dt){
   if(fr)for(var i=0;i<fr.children.length;i++){var m=fr.children[i],b=m.userData.base;
     m.position.set(b[0]+Math.sin(t*1.3+i)*.06,b[1]+Math.sin(t*1.7+i*1.3)*.12,b[2]);m.rotation.y=t*2+i;}
   var wg=sw.userData.wings;
-  if(wg)wg.scale.y=1+Math.sin(t*1.4)*.04;
+  // folded close while it is sheathed, thrown open on the draw
+  if(wg){var op=f.swingT>0?1:0;wg.userData.o=(wg.userData.o||0)+(op-(wg.userData.o||0))*Math.min(1,dt*(op?14:4));
+    var o=wg.userData.o;wg.scale.set(.45+.55*o,(.5+.5*o)*(1+Math.sin(t*1.4)*.04),1);}
   var rn=sw.userData.runes;
   if(rn)rn.material.color.setHSL(.53,1,.62+.18*Math.sin(t*3)+(f.swingT>0?.2:0));
 }
@@ -10779,7 +10789,7 @@ var _v4v=null;
 // Divine Right, in blue: the wing arc
 SIG_SWING.divine={dur:.62,col:0x9ad8ff,beats:[{w:.40,st:{span:5.6,tilt:.2,r:2.2,w:1.6,hot:1},col:0xe8f8ff,fin:true}]};
 SLASH_STYLE.divine=SIG_SWING.divine.beats[0].st;SWEEP.divine=SWEEP.slash;
-HOLD.pistol={sp:[0,-1.24,.08],sr:[Math.PI-.18,0,0],ra:[-0.12,0,0.14],la:null};         // down at your side
+HOLD.pistol={sp:[0,-1.22,.06],sr:[2.56,0,-0.06],ra:[-0.2,0,0.12],la:null};        // low ready: down and forward, muzzle off the floor
 HOLD.dangle={sp:[0,-1.28,0],sr:[Math.PI,0,0],ra:[-0.1,0,0.18],la:null};               // hanging from the fist
 FXD.divinefx={rate:40,c1:0xcff2ff,c2:0x6ac8ff,vy:[.4,1.8],sp:.5,g:-.6,sz:.62,life:1.2,along:1.0,sheath:.55,motes:6,ring:0x7ae8ff};
 FXD.apexfx={rate:30,c1:0xffe8a0,c2:0xfff8e0,vy:[.2,1.4],sp:.5,g:-.8,sz:.5,life:1.0,along:1.0,sheath:.4,motes:4,ring:0xe8c060};
@@ -11159,6 +11169,157 @@ SIG_SKIN_ICON.devarmor="<rect x='12' y='4' width='16' height='14' rx='1.5' fill=
   "<path d='M14 2l1.4 2M20 0.5v3M26 2l-1.4 2' stroke='#9a4bff' stroke-width='1.4'/>"+
   "<rect x='10' y='19' width='20' height='19' rx='2' fill='#0c0a14' stroke='#9a4bff' stroke-width='1.4'/><path d='M20 20l-1.5 3 3 3-1.5 3 1 3' stroke='#b06aff' stroke-width='1.4' fill='none'/><circle cx='20' cy='26' r='2' fill='#e0c8ff'/>"+
   "<path d='M6 12h2M32 14h2M5 17h2M33 9h2' stroke='#9a4bff' stroke-width='1.6'/>";
+/* ============================================================
+   4.0 -- the old gear, redone
+   ============================================================ */
+Object.assign(OWN_GRIP,{trainer2:1,katana2:1,fang2:1,exec2:1});
+function v4Grip(g,wrap,len,pom,band){          // a wrapped grip with a pommel under it
+  var gr=new THREE.Mesh(GEO.cyl8,wrap);gr.scale.set(.15,len,.15);gr.position.y=len/2-.05;g.add(gr);
+  for(var i=0;i<Math.round(len/.14);i++){var w=new THREE.Mesh(GEO.box,band);w.scale.set(.17,.035,.17);w.position.y=.02+i*.14;w.rotation.y=i%2?.6:-.6;g.add(w);}
+  var p=new THREE.Mesh(GEO.sphLo,pom);p.scale.set(.2,.17,.2);p.position.y=-.1;g.add(p);
+  return gr;
+}
+// TRAINER: a plain arming sword, done properly -- fuller, flared cross, a
+// leather grip and a wheel pommel
+SIG_SHAPE.trainer2=function(g,seg,B,H,G){
+  var steel=v4Phong(0x9aa6b8,110),leather=new THREE.MeshLambertMaterial({color:0x5a3a22}),dark=new THREE.MeshLambertMaterial({color:0x2e2418});
+  v4Grip(g,leather,.62,steel,dark);
+  seg(.9,.12,.2,.66,0,steel);
+  for(var s=-1;s<=1;s+=2){var e=new THREE.Mesh(GEO.box,steel);e.scale.set(.1,.2,.22);e.position.set(s*.46,.7,0);e.rotation.z=s*.35;g.add(e);}
+  seg(.26,2.35,.07,1.9);
+  var fu=new THREE.Mesh(GEO.box,new THREE.MeshLambertMaterial({color:0x8a94a6}));fu.scale.set(.07,1.9,.08);fu.position.y=1.72;g.add(fu);
+  var pt=new THREE.Mesh(GEO.cone,B);pt.scale.set(.26,.5,.07);pt.position.y=3.32;g.add(pt);
+  return 3.55;
+};
+// KATANA: a round tsuba, a diamond-wrapped hilt, the habaki collar, and a
+// curved blade with a lit temper line along the edge
+SIG_SHAPE.katana2=function(g,seg,B,H,G){
+  var ito=new THREE.MeshLambertMaterial({color:0x1d2330}),same=new THREE.MeshLambertMaterial({color:0xe8e2d0}),gold=v4Phong(0xc8a040,90);
+  var gr=new THREE.Mesh(GEO.cyl8,same);gr.scale.set(.15,.8,.13);gr.position.y=.34;g.add(gr);
+  for(var i=0;i<6;i++){var w=new THREE.Mesh(GEO.box,ito);w.scale.set(.17,.05,.15);w.position.y=.02+i*.13;w.rotation.z=i%2?.5:-.5;g.add(w);}
+  var kas=new THREE.Mesh(GEO.cyl8,gold);kas.scale.set(.17,.08,.15);kas.position.y=-.06;g.add(kas);
+  var ts=new THREE.Mesh(GEO.cyl,new THREE.MeshLambertMaterial({color:0x1a1a20}));ts.scale.set(.5,.05,.42);ts.position.y=.78;g.add(ts);
+  var tr=new THREE.Mesh(new THREE.TorusGeometry(.24,.02,4,16),gold);tr.rotation.x=Math.PI/2;tr.position.y=.8;g.add(tr);
+  var hb=new THREE.Mesh(GEO.box,gold);hb.scale.set(.17,.14,.09);hb.position.y=.88;g.add(hb);
+  var ham=new THREE.MeshBasicMaterial({color:0xdff4ff});
+  for(i=0;i<16;i++){var y=.98+i*.2,z=i*i*.0033;var b=seg(.15-i*.002,.26,.055,y,z);b.rotation.x=-i*.015;
+    var h=new THREE.Mesh(GEO.box,ham);h.scale.set(.04,.26,.06);h.position.set(.06,y,z);h.rotation.x=-i*.03;g.add(h);}
+  var tp=seg(.13,.42,.05,4.18,.86);tp.rotation.x=-.34;
+  return 4.3;
+};
+// CRIMSON FANG: a hooked reverse-grip blade, serrated like a jaw, with a
+// knuckle guard and a lit groove down the spine
+SIG_SHAPE.fang2=function(g,seg,B,H,G){
+  var dark=new THREE.MeshLambertMaterial({color:0x2a0d0d}),bone=v4Phong(0xe8dcc8,40);
+  v4Grip(g,dark,.6,bone,new THREE.MeshLambertMaterial({color:0x5a1a1a}));
+  var kg=new THREE.Mesh(new THREE.TorusGeometry(.32,.045,5,14,Math.PI),bone);kg.position.set(0,.32,.02);kg.rotation.z=-Math.PI/2;kg.position.x=.02;g.add(kg);
+  seg(.62,.14,.22,.68,0,bone);
+  for(var i=0;i<6;i++){var y=.95+i*.38,w=.34-i*.03;var b=seg(w,.4,.08,y);b.position.x=Math.sin(i*.5)*.06;
+    var t=new THREE.Mesh(GEO.cone,B);t.scale.set(.1,.22,.06);t.position.set(-w/2-.04+Math.sin(i*.5)*.06,y+.06,0);t.rotation.z=1.2;g.add(t);}
+  var gv=new THREE.Mesh(GEO.box,G);gv.scale.set(.05,2.1,.1);gv.position.set(.06,1.9,0);g.add(gv);
+  var hk=seg(.14,.5,.07,3.25);hk.rotation.z=-.5;hk.position.x=.14;
+  return 3.5;
+};
+// GOLD EXECUTIONER: the broad square-ended headsman's blade, a hole through
+// it, a heavy cross and a long two-hand grip
+SIG_SHAPE.exec2=function(g,seg,B,H,G){
+  var dark=new THREE.MeshLambertMaterial({color:0x2a1c08}),brass=v4Phong(0xa87a20,80);
+  v4Grip(g,dark,1.0,brass,brass);
+  seg(1.3,.22,.28,1.02,0,brass);
+  for(var s=-1;s<=1;s+=2){var e=new THREE.Mesh(GEO.cone,brass);e.scale.set(.12,.3,.12);e.position.set(s*.72,1.02,0);e.rotation.z=-s*Math.PI/2;g.add(e);}
+  seg(.66,2.3,.1,2.3);
+  var tip=seg(.72,.34,.1,3.6);
+  var ring=new THREE.Mesh(new THREE.TorusGeometry(.14,.05,6,14),new THREE.MeshBasicMaterial({color:0x140c02}));ring.position.set(0,3.25,0);g.add(ring);
+  var ed=new THREE.Mesh(GEO.box,G);ed.scale.set(.06,2.5,.12);ed.position.set(.34,2.45,0);g.add(ed);
+  for(var i=0;i<3;i++){var en=new THREE.Mesh(GEO.box,brass);en.scale.set(.4,.04,.12);en.position.y=1.5+i*.16;g.add(en);}
+  return 3.8;
+};
+SWORD_ICON.trainer2="<path d='M18.5 26V7l1.5-4 1.5 4v19z' fill='{B}' stroke='#0b1942' stroke-width='1.6'/><path d='M20 8v16' stroke='#8a94a6' stroke-width='1.2'/><path d='M11 25l2 2h14l2-2z' fill='#9aa6b8' stroke='#0b1942' stroke-width='1.4'/><rect x='18.6' y='28' width='2.8' height='7' fill='#5a3a22' stroke='#0b1942' stroke-width='1'/><circle cx='20' cy='37' r='2' fill='#9aa6b8' stroke='#0b1942' stroke-width='1'/>";
+SWORD_ICON.katana2="<path d='M19 25C19 16 21 9 26 2c-1 7-3 14-3 23z' fill='{B}' stroke='#0b1942' stroke-width='1.4'/><path d='M22 23c0-7 1.5-13 3.5-19' stroke='#dff4ff' stroke-width='.9' fill='none'/><ellipse cx='20.8' cy='26.3' rx='4.5' ry='1.4' fill='#1a1a20' stroke='#c8a040' stroke-width='1'/><rect x='19.3' y='27.5' width='3' height='10' fill='#e8e2d0' stroke='#0b1942' stroke-width='1'/><path d='M19.3 29l3 2M22.3 29l-3 2M19.3 32l3 2M22.3 32l-3 2M19.3 35l3 2M22.3 35l-3 2' stroke='#1d2330' stroke-width='1'/>";
+SWORD_ICON.fang2="<path d='M19 26V9c0-3 3-6 6-7-1 3-2 6-2 10v14z' fill='{B}' stroke='#0b1942' stroke-width='1.4'/><path d='M19 11l-3 1 3 2-3 1 3 2-3 1 3 2-3 1 3 2' fill='{B}' stroke='#0b1942' stroke-width='1'/><path d='M21 12v12' stroke='{G}' stroke-width='1.2'/><rect x='16' y='26' width='9' height='2.4' fill='#e8dcc8' stroke='#0b1942' stroke-width='1'/><path d='M22 29c4 1 4 7 0 8' stroke='#e8dcc8' stroke-width='1.4' fill='none'/><rect x='18.8' y='28.5' width='2.6' height='9' fill='#2a0d0d'/>";
+SWORD_ICON.exec2="<path d='M14 24V4h12v20z' fill='{B}' stroke='#0b1942' stroke-width='1.6'/><circle cx='20' cy='8' r='1.8' fill='#140c02'/><path d='M25 5v18' stroke='{G}' stroke-width='1.4'/><path d='M9 25l2-2h18l2 2-2 2H11z' fill='#a87a20' stroke='#0b1942' stroke-width='1.4'/><rect x='18.6' y='27' width='2.8' height='10' fill='#2a1c08' stroke='#0b1942' stroke-width='1'/><circle cx='20' cy='38' r='1.8' fill='#a87a20'/>";
+
+// ROOKIE: a proper kit -- a jersey with a number on it, a headband with its
+// tails flying, wristbands and white trainers
+SIG_SKIN.rookie2=function(f,g,sk,box,glowM,darkM,bodyM){
+  var white=new THREE.MeshLambertMaterial({color:0xf4f6fa}),trim=new THREE.MeshLambertMaterial({color:0x2a2f45});
+  box(1.02,.86,.62,0,2.3,0,bodyM);
+  box(1.04,.08,.64,0,2.7,0,trim);box(1.04,.08,.64,0,1.9,0,white);
+  var c=cvs(64,64),x=c.getContext("2d");x.fillStyle="#fff";x.font="bold 40px Trebuchet MS, Arial";x.textAlign="center";x.textBaseline="middle";x.fillText("01",32,34);
+  var tx=new THREE.CanvasTexture(c);
+  var num=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:tx,transparent:true}));num.scale.set(.44,.44,1);num.position.set(0,2.12,.36);g.add(num);
+  var nb=num.clone();nb.position.z=-.36;nb.position.y=2.3;nb.rotation.y=Math.PI;g.add(nb);
+  box(.9,.12,.86,0,3.24,0,white);                                   // headband
+  var tails=[];for(var s=-1;s<=1;s+=2){var t=new THREE.Group();t.position.set(s*.12,3.24,-.44);g.add(t);var tm=new THREE.Mesh(GEO.box,white);tm.scale.set(.1,.08,.4);tm.position.z=-.2;t.add(tm);tails.push(t);}
+  for(var i=0;i<2;i++){var wb=new THREE.Mesh(GEO.box,white);wb.scale.set(.31,.14,.31);wb.position.y=-1.08;f.arms[i].add(wb);
+    var sh=new THREE.Mesh(GEO.box,white);sh.scale.set(.36,.1,.54);sh.position.set(0,-1.37,.1);f.legs[i].add(sh);
+    var st=new THREE.Mesh(GEO.box,trim);st.scale.set(.37,.04,.3);st.position.set(0,-1.3,.14);f.legs[i].add(st);}
+  f.sig={kind:"rookie2",tails:tails};
+};
+SIG_TICK4.rookie2=function(f,s,dt,t){var sp=Math.hypot(f.vel.x,f.vel.z);for(var i=0;i<2;i++){s.tails[i].rotation.x=-.2-clamp(sp*.05,0,.8)+Math.sin(t*8+i)*.08*(1+sp*.1);s.tails[i].rotation.y=(i?1:-1)*.25;}};
+// SHADOW: a deep peaked hood with nothing in it but two violet eyes, a wrapped
+// scarf, a cape in torn strips and bound forearms
+SIG_SKIN.shadow2=function(f,g,sk,box,glowM,darkM,bodyM){
+  var black=new THREE.MeshBasicMaterial({color:0x040308}),wrap=new THREE.MeshLambertMaterial({color:0x2a2638}),eye=new THREE.MeshBasicMaterial({color:0xb38aff});
+  box(1.0,.84,.6,0,2.3,0,bodyM);
+  box(.98,.9,.94,0,3.02,-.04,darkM);box(.72,.62,.1,0,2.98,.42,black);                       // hood and the dark inside it
+  var pk=new THREE.Mesh(GEO.cone,darkM);pk.scale.set(.5,.4,.5);pk.position.set(0,3.5,-.18);pk.rotation.x=-.5;g.add(pk);
+  for(var s=-1;s<=1;s+=2)box(.14,.06,.03,s*.16,3.02,.48,eye);
+  box(.94,.22,.7,0,2.64,.02,wrap);box(.2,.5,.06,.2,2.34,.34,wrap,[0,0,.2]);                // scarf
+  box(.08,.8,.06,.26,2.3,.31,darkM,[0,0,-.6]);                                              // a strap across
+  var strips=[];
+  for(var i=0;i<5;i++){var st=new THREE.Group();st.position.set(-.36+i*.18,2.7,-.36);g.add(st);
+    var L=1.3+(i%2)*.35,m=new THREE.Mesh(GEO.box,darkM);m.scale.set(.17,L,.04);m.position.y=-L/2;st.add(m);strips.push(st);}
+  for(i=0;i<2;i++)for(var k=0;k<3;k++){var w=new THREE.Mesh(GEO.box,wrap);w.scale.set(.29,.05,.29);w.position.y=-.78-k*.12;w.rotation.y=k*.4;f.arms[i].add(w);}
+  f.sig={kind:"shadow2",strips:strips,eye:eye};
+};
+SIG_TICK4.shadow2=function(f,s,dt,t){var sp=clamp(Math.hypot(f.vel.x,f.vel.z)/10,0,1);
+  for(var i=0;i<s.strips.length;i++)s.strips[i].rotation.x=.12+sp*.9+Math.sin(t*3+i*1.3)*(.06+sp*.12);
+  s.eye.color.setHSL(.74,1,((t+f.phase)%4<.12)?.2:.72);};
+// NEON: a runner in light -- lit trim down every limb, a visor, headphones and
+// a glowing ring on the chest
+SIG_SKIN.neon2=function(f,g,sk,box,glowM,darkM,bodyM){
+  var cyan=new THREE.MeshBasicMaterial({color:0x35e8ff});
+  box(1.0,.84,.6,0,2.3,0,bodyM);
+  var r=new THREE.Mesh(new THREE.TorusGeometry(.18,.035,6,20),glowM);r.position.set(0,2.36,.31);g.add(r);
+  var rc=new THREE.Mesh(GEO.sphLo,cyan);rc.scale.setScalar(.07);rc.position.set(0,2.36,.32);g.add(rc);
+  for(var s=-1;s<=1;s+=2){box(.05,.84,.05,s*.5,2.3,.3,glowM);box(.05,.84,.05,s*.5,2.3,-.3,glowM);
+    box(.12,.3,.3,s*.47,3.02,0,darkM);box(.05,.2,.2,s*.53,3.02,0,glowM);}                     // headphones
+  box(.94,.06,.08,0,3.44,0,darkM);
+  box(.76,.14,.06,0,3.04,.43,cyan);                                                             // visor
+  box(1.02,.06,.62,0,1.92,0,glowM);
+  for(var i=0;i<2;i++){[[.165,-.3,.5],[.14,-.92,.46]].forEach(function(p){var q=new THREE.Mesh(GEO.box,glowM);q.scale.set(.04,p[2],.04);q.position.set(0,p[1],p[0]);f.arms[i].add(q);});
+    [[.21,-.3,.56],[.18,-.92,.52]].forEach(function(p){var q=new THREE.Mesh(GEO.box,glowM);q.scale.set(.04,p[2],.04);q.position.set(0,p[1],p[0]);f.legs[i].add(q);});
+    var so=new THREE.Mesh(GEO.box,cyan);so.scale.set(.36,.05,.54);so.position.set(0,-1.36,.1);f.legs[i].add(so);}
+  f.sig={kind:"neon2",ring:r};
+};
+SIG_TICK4.neon2=function(f,s,dt,t){s.ring.rotation.z=t*2;s.ring.scale.setScalar(1+Math.sin(t*6+f.phase)*.08);};
+// STATIC: an old TV for a head, full of snow, with a bent aerial
+SIG_SKIN.static2=function(f,g,sk,box,glowM,darkM,bodyM){
+  var shell=new THREE.MeshLambertMaterial({color:0x6a5a48}),frame=new THREE.MeshLambertMaterial({color:0x24272e});
+  box(1.0,.84,.6,0,2.3,0,bodyM);
+  for(var qi=0;qi<5;qi++)box(1.02,.06,.62,0,2.62-qi*.16,0,qi%2?glowM:darkM);
+  box(1.06,.9,.9,0,3.02,-.02,shell);box(.9,.72,.06,0,3.02,.43,frame);
+  var c=cvs(32,24),tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;
+  var scr=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:tx}));scr.scale.set(.74,.56,1);scr.position.set(0,3.02,.465);g.add(scr);
+  for(var s=-1;s<=1;s+=2){var k=new THREE.Mesh(GEO.cyl8,frame);k.scale.set(.08,.05,.08);k.rotation.x=Math.PI/2;k.position.set(s*.2,2.62,.46);g.add(k);}
+  box(.04,.7,.04,.18,3.72,-.06,darkM,[0,0,-.4]);box(.04,.62,.04,-.14,3.7,-.06,darkM,[0,0,.5]);
+  var qk=new THREE.Mesh(GEO.sphLo,glowM);qk.scale.setScalar(.09);qk.position.set(.33,4.02,-.06);g.add(qk);
+  f.sig={kind:"static2",c:c,tx:tx,next:0};
+  SIG_TICK4.static2(f,f.sig,0,1);
+};
+SIG_TICK4.static2=function(f,s,dt,t){
+  if(t<s.next)return;s.next=t+(f===player?.08:.2);
+  var x=s.c.getContext("2d"),img=x.createImageData(32,24),d=img.data,roll=((t*20)|0)%24,off=((t+f.phase)%5)<.25;
+  for(var i=0;i<32*24;i++){var v=off?(i/32|0)===roll?200:12:(Math.random()*200+30)|0;if(((i/32)|0)===roll)v=Math.min(255,v+60);d[i*4]=v;d[i*4+1]=v;d[i*4+2]=Math.min(255,v+20);d[i*4+3]=255;}
+  x.putImageData(img,0,0);s.tx.needsUpdate=true;
+};
+Object.assign(SIG_SKIN_ICON,{
+  rookie:"<rect x='12' y='4' width='16' height='13' rx='2' fill='#ffd9a8' stroke='#0b1942' stroke-width='1.6'/><rect x='12' y='5.5' width='16' height='2.4' fill='#f4f6fa'/><path d='M16 11h2M22 11h2' stroke='#0b1942' stroke-width='1.6'/><rect x='11' y='18' width='18' height='14' rx='2' fill='#35e8ff' stroke='#0b1942' stroke-width='1.6'/><text x='20' y='29' font-size='8' font-weight='bold' text-anchor='middle' fill='#fff' font-family='Arial'>01</text><rect x='13' y='32' width='5' height='7' fill='#2a2f45'/><rect x='22' y='32' width='5' height='7' fill='#2a2f45'/><rect x='12.5' y='37' width='6' height='2' fill='#f4f6fa'/><rect x='21.5' y='37' width='6' height='2' fill='#f4f6fa'/>",
+  shadow:"<path d='M11 17l2-10 7-5 7 5 2 10z' fill='#0e0c16' stroke='#0b1942' stroke-width='1.6'/><rect x='14' y='9' width='12' height='8' rx='2' fill='#040308'/><path d='M16 13h2M22 13h2' stroke='#b38aff' stroke-width='1.6'/><rect x='11' y='18' width='18' height='18' rx='2' fill='#1a1826' stroke='#0b1942' stroke-width='1.6'/><rect x='12' y='18' width='16' height='3' fill='#2a2638'/><path d='M12 36l2 3 2-3 2 3 2-3 2 3 2-3 2 3 2-3' stroke='#0e0c16' stroke-width='1.4' fill='none'/>",
+  neon:"<rect x='12' y='4' width='16' height='13' rx='2' fill='#ffd0ee' stroke='#0b1942' stroke-width='1.6'/><rect x='13' y='9' width='14' height='3' fill='#35e8ff'/><rect x='10' y='8' width='2.5' height='5' fill='#ff3ca8'/><rect x='27.5' y='8' width='2.5' height='5' fill='#ff3ca8'/><rect x='11' y='18' width='18' height='18' rx='2' fill='#2a0a20' stroke='#ff3ca8' stroke-width='1.6'/><circle cx='20' cy='25' r='3' fill='none' stroke='#ff3ca8' stroke-width='1.4'/><circle cx='20' cy='25' r='1' fill='#35e8ff'/>",
+  static:"<rect x='10' y='3' width='20' height='15' rx='2' fill='#6a5a48' stroke='#0b1942' stroke-width='1.6'/><rect x='12' y='5' width='16' height='11' fill='#bbb'/><path d='M13 7h3M18 8h5M14 11h8M20 13h6M13 14h4' stroke='#555' stroke-width='1.2'/><path d='M18 3l-3-3M22 3l3-3' stroke='#24272e' stroke-width='1.2'/><rect x='11' y='19' width='18' height='17' rx='2' fill='#7d8794' stroke='#0b1942' stroke-width='1.6'/><path d='M11 23h18M11 27h18M11 31h18' stroke='#bfe6ff' stroke-width='1.4'/>"
+});
 Object.assign(SKIN_FX,{
   blackcat:{c:0xffd23f,rate:5,vy:[-.2,.6],g:.4,sz:.3,life:.8,r:.6},
   ascended:{c:0xfff0c0,rate:22,vy:[.8,2.2],g:-1.4,sz:.4,life:1.3,r:.8},
