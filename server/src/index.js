@@ -13,7 +13,7 @@ import { ECON_KEYS, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdi
 const RETIRED_RE = new RegExp('"(' + Object.keys(RETIRED.abil).join("|") + ')"');
 import { adminPage, handleAdmin, ADMIN_TRIES, ADMIN_WINDOW_MS } from "./admin.js";
 
-export const MAX_PLAYERS = 6;
+const MAX_PLAYERS = 6;
 const ALPHA = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";   // no O/0/I/1
 
 /* ---------- pure logic, unit-testable without Cloudflare ---------- */
@@ -62,12 +62,12 @@ const HOST_ONLY = { ball:1, hit:1, spawn:1, roundover:1, botstate:1, parryok:1, 
 
 // A public game is a public endpoint. Without these, one script can hold a
 // socket open and flood the room, and every relayed byte is billed to you.
-export const MAX_MSG_BYTES = 8 * 1024;   // a ball snapshot is a few hundred bytes
+const MAX_MSG_BYTES = 8 * 1024;   // a ball snapshot is a few hundred bytes
 // A host legitimately sends ~60/s (state + ball + bots at 20Hz each) plus a
 // burst on every deflect, so this sits well clear of real play while still
 // stopping a flood, which runs to thousands a second.
-export const MSG_BUDGET    = 240;        // messages allowed per window
-export const MSG_WINDOW_MS = 1000;       // the window itself
+const MSG_BUDGET    = 240;        // messages allowed per window
+const MSG_WINDOW_MS = 1000;       // the window itself
 
 // Token bucket per connection. Returns false when the sender is over budget.
 export function checkRate(state, now, budget, windowMs) {
@@ -106,6 +106,7 @@ export function routeMessage(msg, senderId, hostId) {
       mode: typeof msg.mode === "string" ? msg.mode : "mp",
       map:  typeof msg.map  === "string" ? msg.map  : "sky",
       gm:   typeof msg.gm   === "string" ? msg.gm.slice(0, 16) : "ffa",
+      q:    msg.q ? 1 : 0,
       bots: num(msg.bots, 0, 8, 0) | 0,
       rf:   num(msg.rf, 0, 1, 0),
       seed: (Math.random() * 2147483647) | 0,
@@ -138,7 +139,7 @@ export function routeMessage(msg, senderId, hostId) {
    after the last one -- with room for the network. */
 const ABIL = {};
 for (const a of CAT.items.abil.list) ABIL[a.id] = a;
-export const CAST = { cdShare: 0.78, slackS: 1.5, minCd: 3, strikesToBan: 3, pullsPerCd: 10 };
+const CAST = { cdShare: 0.78, slackS: 1.5, minCd: 3, strikesToBan: 3, pullsPerCd: 10 };
 // follow-ups a guest may send, and the ability each needs; every other follow-up,
 // and anything tagged as a bot's, is the host's alone -- and only these kinds
 const GUEST_FOLLOW = { taunt: null, riftsnap: "bloodrift", pull: "ramenhair" };
@@ -262,9 +263,10 @@ export class Room {
     return p;
   }
 
-  roster() {
+  roster(leaving) {
     const out = [];
     for (const ws of this.ctx.getWebSockets()) {
+      if (ws === leaving) continue;                   // closing: it is not in the room any more
       const a = ws.deserializeAttachment();
       if (a) out.push(a);
     }
@@ -279,7 +281,22 @@ export class Room {
       try { ws.send(text); } catch (e) { /* socket closing */ }
     }
   }
-  pushRoster() { this.broadcast(buildRoster(this.roster())); }
+  pushRoster(leaving) { this.broadcast(buildRoster(this.roster(leaving)), leaving); this.announce(null, leaving); }
+  /* Public lobbies: every room tells the directory who is in it, what it is
+     playing and whether it is open. A private room, a full one or one mid-match
+     is simply not listed. */
+  async announce(extra, leaving) {
+    if (!this.env || !this.env.DIR || !this.ctx.storage) return;
+    const st = this.ctx.storage, meta = (await st.get("meta")) || {};
+    if (extra) Object.assign(meta, extra);
+    if (extra) await st.put("meta", meta);
+    const code = meta.code || (await st.get("code")) || "";
+    if (!code) return;
+    const players = this.roster(leaving), host = players.find(p => p.id === electHost(players));
+    const p = dirCall(this.env, { op: "lobby", code, n: players.length, max: MAX_PLAYERS, host: host ? host.name : "",
+      gm: meta.gm || "ffa", map: meta.map || "sky", priv: !!meta.priv, playing: !!meta.playing, q: !!meta.q });
+    if (this.ctx.waitUntil) this.ctx.waitUntil(p);
+  }
 
   async fetch(request) {
     if (new URL(request.url).hostname === "room-admin") return this.adminOp(await request.json());
@@ -324,6 +341,9 @@ export class Room {
     if (who.inv) { this.invs.set(who.sub, who.inv); this.checkLoadout(me, who.inv); }
     server.serializeAttachment(me);
     const code = (url.pathname.match(/\/room\/([A-Za-z0-9]{1,8})$/) || [])[1] || "";
+    if (this.ctx.storage && code) await this.ctx.storage.put("code", normaliseCode(code));
+    // a room made by the GOD queue is never listed
+    if (url.searchParams.get("q") === "1" && this.ctx.storage) { const mt = (await this.ctx.storage.get("meta")) || {}; mt.q = true; await this.ctx.storage.put("meta", mt); }
     dirCall(this.env, { op: "room", code: normaliseCode(code), sub: who.sub, name: me.name });
     server.send(JSON.stringify({ t:"welcome", you: me.id, host: this.hostId(),
                                  max: MAX_PLAYERS, now: Date.now() }));
@@ -383,13 +403,19 @@ export class Room {
       this.pushRoster();
       return;
     }
+    // the host's room settings: the directory lists them
+    if (msg.t === "setup" && me.id === this.hostId())
+      this.announce({ gm: typeof msg.gm === "string" ? msg.gm.slice(0, 16) : "ffa", map: typeof msg.map === "string" ? msg.map.slice(0, 16) : "sky",
+        priv: !!msg.priv, playing: false });
+    if (msg.t === "start" && me.id === this.hostId()) this.announce({ playing: true });
+    if (msg.t === "roundover" && me.id === this.hostId()) this.announce({ playing: false });
     if (d.action === "reply")     { ws.send(JSON.stringify(d.payload)); return; }
     if (d.action === "relay")     { this.broadcast(d.payload, ws); return; }
     if (d.action === "broadcast") { this.broadcast(d.payload); return; }
   }
 
-  async webSocketClose() { this.pushRoster(); }
-  async webSocketError() { this.pushRoster(); }
+  async webSocketClose(ws) { this.pushRoster(ws); }
+  async webSocketError(ws) { this.pushRoster(ws); }
 }
 
 /* ---------- Cloud saves, tied to a Google account ----------
@@ -400,17 +426,17 @@ export class Room {
    -- never an email, a name or a picture. After sign-in the game holds a
    session token of ours, so it does not have to go back to Google each time. */
 
-export const SAVE_MAX_BYTES = 64 * 1024;
-export const SESSION_MS = 60 * 24 * 3600 * 1000;      // 60 days
-export const SESSIONS_KEPT = 8;                        // devices signed in at once
-export const WRITE_GAP_MS = 4000;                      // no account saves more often than this
-export const SYNC_GAP_MS = 800;                        // changes can come faster: they are small
-export const OPS_KEPT = 1000;                          // change ids remembered, so a resend is never counted twice
-export const OPS_PER_SYNC = 60;
+const SAVE_MAX_BYTES = 64 * 1024;
+const SESSION_MS = 60 * 24 * 3600 * 1000;      // 60 days
+const SESSIONS_KEPT = 8;                        // devices signed in at once
+const WRITE_GAP_MS = 4000;                      // no account saves more often than this
+const SYNC_GAP_MS = 800;                        // changes can come faster: they are small
+const OPS_KEPT = 1000;                          // change ids remembered, so a resend is never counted twice
+const OPS_PER_SYNC = 60;
 // earlier versions of every save, so a bad day can be undone: a copy at most
 // every HIST_GAP_MS, the last HIST_KEPT kept, each under its own key
-export const HIST_GAP_MS = 10 * 60 * 1000;
-export const HIST_KEPT = 30;
+const HIST_GAP_MS = 10 * 60 * 1000;
+const HIST_KEPT = 30;
 
 /* ---- redeem codes ----
    They live here, not in the game: the page is readable by anyone, this is
@@ -426,8 +452,8 @@ const CODES = {
   "finnballs": "cruz"
 };
 // guessing is slow: this many tries a minute from any one address
-export const REDEEM_TRIES = 8;
-export const REDEEM_WINDOW_MS = 60 * 1000;
+const REDEEM_TRIES = 8;
+const REDEEM_WINDOW_MS = 60 * 1000;
 // the accounts codes work for: OWNER_ACCOUNTS = "1234567890,..." (Google account numbers)
 export function isOwner(env, sub) {
   return String((env && env.OWNER_ACCOUNTS) || "").split(",").map(x => x.trim()).filter(Boolean).includes(sub);
@@ -705,7 +731,7 @@ export class Vault {
     if (ban && body.op !== "logout") return jsonRes({ error: "banned", why: ban.why, at: ban.at }, 403);
     if (body.op === "whoami") {                      // a room checking who is joining
       const s = ensure(rec ? JSON.parse(rec.data) : {});
-      return jsonRes({ ok: true, name: s.netName || "", inv: { swords: s.swords, abils: s.abils, skins: s.skins } });
+      return jsonRes({ ok: true, name: s.netName || "", rp: s.rp | 0, inv: { swords: s.swords, abils: s.abils, skins: s.skins } });
     }
     // the player directory hears about this account now and then, never every save
     const dirAt = (await st.get("dirAt")) || 0;
@@ -855,7 +881,7 @@ export class Vault {
   }
 }
 
-export const DIR_TOUCH_MS = 5 * 60 * 1000;
+const DIR_TOUCH_MS = 5 * 60 * 1000;
 /* The Crown: held by the account at #1, taken back from anyone who is not.
    Returns whether the save changed. */
 export function crownFix(save, sub, top1) {
@@ -870,7 +896,7 @@ export function crownFix(save, sub, top1) {
   }
   return false;
 }
-export const ACTS_PER_10S = 40;
+const ACTS_PER_10S = 40;
 /* What an edited game tried to write. Items nobody can have, or a pile of
    coins out of nowhere, is a ban; the rest is a flag to look at. */
 export function tamperVerdict(ops) {
@@ -931,6 +957,20 @@ export async function handleLeaderboard(request, env) {
     me: j.me || null, total: j.total | 0 });
 }
 
+/* The GOD queue. Only a real session of an account that is GOD this season
+   gets in; the directory does the pairing. */
+export async function handleQueue(request, env) {
+  if (request.method !== "POST") return jsonRes({ error: "POST only" }, 405);
+  let body; try { body = await readJson(request); } catch (e) { return jsonRes({ error: "bad request" }, 400); }
+  const m = /^([A-Za-z0-9_-]{1,64})\.([0-9a-f]{48})$/.exec(String(body.token || ""));
+  if (!m || !env.VAULT) return jsonRes({ error: "signed out" }, 401);
+  const r = await toVault(env, m[1], { op: "whoami", sub: m[1], secret: m[2] });
+  if (r.status !== 200) return jsonRes({ error: "signed out" }, 401);
+  const j = await r.json();
+  const god = CAT.ranks.findIndex(x => x.pvp);
+  if (!body.leave && !(god >= 0 && (j.rp | 0) >= CAT.ranks[god].rp)) return jsonRes({ error: "not god" }, 403);
+  return jsonRes((await dirCall(env, { op: "queue", sub: m[1], leave: !!body.leave })) || { error: "unavailable" });
+}
 export async function handleCloud(request, env, path, opts) {
   if (request.method !== "POST") return jsonRes({ error: "POST only" }, 405);
   if (!env.VAULT) return jsonRes({ error: "cloud saves are not set up on this server" }, 503);
@@ -970,6 +1010,8 @@ export default {
       return handleCloud(request, env, url.pathname);
     if (url.pathname === "/redeem") return handleRedeem(request, env);
     if (url.pathname === "/leaderboard") return handleLeaderboard(request, env);
+    if (url.pathname === "/lobbies") return jsonRes((await dirCall(env, { op: "lobbies" })) || { lobbies: [] });
+    if (url.pathname === "/queue") return handleQueue(request, env);
     if (url.pathname === "/admin") return new Response(adminPage(), { headers: { "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store", "X-Frame-Options": "DENY", "Referrer-Policy": "no-referrer" } });
     if (url.pathname === "/admin/api") return handleAdmin(request, env, { toVault, dirCall, jsonRes, readJson, ipKey });
@@ -991,10 +1033,11 @@ export default {
    first and last seen, its flags and any ban, and the last rooms played and
    with whom -- what the admin page lists. No email, no real name: players are
    told apart by the name they play under and the rooms they were in. */
-export const KICK_MS = 10 * 60 * 1000;          // a kicked player is kept out of that room this long
-export const DIR_ROOMS_KEPT = 60, DIR_ROOMS_PER_ACCOUNT = 12, DIR_FEED_KEPT = 200;
-export const SERVER_VERSION = "2026-10-01";
-export const LB_SIZE = 10, LB_CACHE_MS = 30 * 1000;
+const KICK_MS = 10 * 60 * 1000;          // a kicked player is kept out of that room this long
+const DIR_ROOMS_KEPT = 60, DIR_ROOMS_PER_ACCOUNT = 12, DIR_FEED_KEPT = 200;
+const SERVER_VERSION = "2026-10-01";
+const LB_SIZE = 10, LB_CACHE_MS = 30 * 1000;
+const LOBBY_TTL_MS = 90 * 1000, QUEUE_TTL_MS = 8 * 1000;
 export class Directory {
   constructor(state, env) { this.state = state; this.env = env; }
   async fetch(request) {
@@ -1049,6 +1092,49 @@ export class Directory {
       }
       const all = this.top.all, i = sub ? all.findIndex(x => x.sub === sub) : -1;
       return jsonRes({ top: all.slice(0, LB_SIZE), me: i >= 0 ? { pos: i + 1, rp: all[i].rp } : null, total: all.length });
+    }
+    // ---- public lobbies ----
+    if (b.op === "lobby") {
+      const code = typeof b.code === "string" ? b.code.slice(0, 8) : "";
+      if (!code) return jsonRes({ error: "no code" }, 400);
+      const lob = (await st.get("lobbies")) || {};
+      if (!(b.n > 0)) delete lob[code];
+      else lob[code] = { code, n: b.n | 0, max: b.max | 0, host: String(b.host || "").slice(0, 14), gm: String(b.gm || "ffa").slice(0, 16),
+        map: String(b.map || "sky").slice(0, 16), priv: !!b.priv, playing: !!b.playing, q: !!b.q, at: now };
+      for (const k in lob) if (now - lob[k].at > LOBBY_TTL_MS) delete lob[k];
+      await st.put("lobbies", lob);
+      return jsonRes({ ok: true });
+    }
+    if (b.op === "lobbies") {
+      const lob = (await st.get("lobbies")) || {}, out = [];
+      for (const k in lob) { const l = lob[k]; if (now - l.at > LOBBY_TTL_MS || l.priv || l.q || l.playing || l.n >= l.max) continue; out.push(l); }
+      out.sort((x, y) => y.n - x.n || y.at - x.at);
+      return jsonRes({ lobbies: out.slice(0, 30) });
+    }
+    /* ---- the GOD queue: two GOD players make a ranked 1v1 ----
+       A player asks every couple of seconds. If somebody else is waiting, the
+       two are paired into a fresh room and both are told its code; the one who
+       was waiting first hosts. Nobody waiting: you are, for as long as you keep
+       asking. */
+    if (b.op === "queue") {
+      if (!sub) return jsonRes({ error: "no account" }, 400);
+      const q = (await st.get("godq")) || {};
+      for (const k in q) if (now - q[k].at > QUEUE_TTL_MS && !q[k].match) delete q[k];
+      for (const k in q) if (q[k].match && now - q[k].at > 60000) delete q[k];
+      if (b.leave) { delete q[sub]; await st.put("godq", q); return jsonRes({ ok: true }); }
+      const mine = q[sub];
+      if (mine && mine.match) { delete q[sub]; await st.put("godq", q); return jsonRes({ match: mine.match, host: mine.host }); }
+      const other = Object.keys(q).find(k => k !== sub && !q[k].match);
+      if (other) {
+        const code = "G" + Math.random().toString(36).slice(2, 6).toUpperCase().replace(/[^A-Z0-9]/g, "X");
+        q[other] = { at: now, match: code, host: true };
+        delete q[sub];
+        await st.put("godq", q);
+        return jsonRes({ match: code, host: false });
+      }
+      q[sub] = { at: now, since: mine ? mine.since : now };
+      await st.put("godq", q);
+      return jsonRes({ waiting: true, since: q[sub].since });
     }
     if (b.op === "top1") {
       if (!this.top || now - this.top.at > LB_CACHE_MS) await this.handle({ op: "top" });

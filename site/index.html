@@ -635,6 +635,15 @@ details.move[open] summary::before{transform:rotate(90deg)}
 .rodfx .big{animation:rodPop .5s 1.8s both}
 
 /* ================= MULTIPLAYER ================= */
+.mppub{display:flex;flex-direction:column;gap:6px;width:100%;max-width:560px;max-height:220px;overflow:auto}
+.mppubrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:10px;align-items:center;padding:7px 10px;border-radius:12px;
+  background:rgba(11,25,66,.45);border:2px solid rgba(255,255,255,.12)}
+.mppubrow b{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mppubrow span{font-size:12.5px;font-weight:700;opacity:.85;white-space:nowrap}
+#mpMaps .tab{font-size:11px;padding:5px 8px}
+.godq{display:flex;flex-direction:column;align-items:center;gap:8px;margin:8px 0;padding:12px;border-radius:14px;
+  background:linear-gradient(180deg,#3a2a08,#1a1204);border:3px solid #ffc020;box-shadow:0 0 22px rgba(255,200,40,.35)}
+.godq b{font-family:var(--disp);font-size:20px;color:#fff4d8}
 .mpstat{font-size:14px;font-weight:700;min-height:20px;text-align:center}
 .mppanel{margin-top:10px;display:flex;flex-direction:column;align-items:center;gap:10px}
 .mprow{display:flex;gap:9px;align-items:center;flex-wrap:wrap;justify-content:center}
@@ -1120,6 +1129,8 @@ button.chip:active{transform:translateY(2px)}
           spellcheck="false" autocomplete="off">
         <button class="big alt" id="mpJoinBtn">JOIN</button>
       </div>
+      <div class="mpor ol1" style="margin-top:6px">PUBLIC LOBBIES <button class="big ghost sm" id="mpPubRefresh" style="margin-left:8px">REFRESH</button></div>
+      <div class="mppub" id="mpPublic"><div class="fine">Looking for lobbies&hellip;</div></div>
     </div>
 
     <div id="mpRoom" class="mppanel hide">
@@ -1130,7 +1141,10 @@ button.chip:active{transform:translateY(2px)}
       </div>
       <div class="mplist" id="mpRoster"></div>
       <div id="mpSetup" class="mprow" style="flex-direction:column;gap:10px;margin-top:4px">
+        <div class="mprow" style="gap:8px"><span class="ol1" style="font-weight:700">LOBBY</span>
+          <button class="big sm" id="mpPriv">PUBLIC</button><span class="fine" id="mpPrivNote" style="margin:0"></span></div>
         <div class="tabs" id="mpGames"></div>
+        <div class="mprow" style="gap:6px;flex-wrap:wrap;justify-content:center"><span class="ol1" style="font-weight:700">MAP</span><div class="tabs" id="mpMaps"></div></div>
         <div id="mpGameDesc" class="fine" style="margin-top:0"></div>
         <div class="mprow" style="align-items:center;gap:10px">
           <span class="ol1" style="font-weight:700">BOTS</span>
@@ -11240,6 +11254,63 @@ function v4Pose(f,dt){
   }
 }
 
+
+/* ============================================================
+   THE GOD QUEUE
+   At GOD, ranked is people only. FIND A GOD OPPONENT asks the server every
+   couple of seconds; when another GOD player is waiting, the two of you are
+   put in a room of your own and the match starts itself. If nobody turns up,
+   it says so.
+   ============================================================ */
+var GODQ={on:false,started:0,tries:0};
+var GOD_WAIT_MS=45000;
+function godSay(html,good){
+  var b=$("godBox");
+  if(!b){b=document.createElement("div");b.id="godBox";b.className="godq";var anchor=$("rankDiff");anchor.parentNode.insertBefore(b,anchor.nextSibling);}
+  b.innerHTML="<div class='fine' style='margin:0;color:"+(good===false?"#ffc2b8":"#fff4d8")+"'>"+html+"</div>";
+  b.style.display="";
+}
+function godQueueStart(){
+  if(GODQ.on)return;
+  if(!cloudOn()){godSay("GOD is played against other players online. Sign in with Google on your Profile first.",false);return;}
+  GODQ.on=true;GODQ.started=Date.now();GODQ.tries=0;
+  godSay("<b>SEARCHING FOR A GOD OPPONENT</b><br><span id='godT'>0s</span> &middot; <button class='big ghost sm' id='godCancel'>CANCEL</button>");
+  $("godCancel").addEventListener("click",godQueueCancel);
+  godQueuePoll();
+}
+function godQueueCancel(){
+  if(!GODQ.on)return;
+  GODQ.on=false;
+  cloudPost("/queue",{token:CLOUD.tok,leave:true});
+  godSay("Stopped searching.");
+}
+function godQueuePoll(){
+  if(!GODQ.on)return;
+  var el=$("godT");if(el)el.textContent=Math.round((Date.now()-GODQ.started)/1000)+"s";
+  cloudPost("/queue",{token:CLOUD.tok}).then(function(r){
+    if(!GODQ.on)return;
+    var j=r&&r.j||{};
+    if(r.status===403){GODQ.on=false;godSay("You need to be GOD rank for this queue.",false);return;}
+    if(j.match){GODQ.on=false;godMatch(j.match);return;}
+    if(Date.now()-GODQ.started>GOD_WAIT_MS){
+      GODQ.on=false;cloudPost("/queue",{token:CLOUD.tok,leave:true});
+      godSay("No other GOD players are queuing right now. Try again in a little while.",false);sfx("tick");return;
+    }
+    setTimeout(godQueuePoll,2000);
+  },function(){GODQ.on=false;godSay("Could not reach the server.",false);});
+}
+function godMatch(code){
+  sfx("rank");
+  godSay("<b>OPPONENT FOUND</b><br>Connecting&hellip;");
+  NET.queue=true;NET.qStarted=false;
+  netConnect(code,function(){mpSendLoadout(true);});
+  // they never showed: give up cleanly
+  setTimeout(function(){
+    if(NET.queue&&STATE!=="playing"&&STATE!=="countdown"&&STATE!=="over"){
+      netDisconnect();NET.queue=false;godSay("Your opponent did not connect. Try again.",false);
+    }
+  },20000);
+}
 /* ==== 4.0 END ==== */
 
 function useAbility(f,remoteCast){
@@ -11936,7 +12007,7 @@ function wsUrlFor(code){
   var b=serverBase();
   if(!b)return "";
   var ws=b.replace(/^http:/,"ws:").replace(/^https:/,"wss:");
-  var q="?name="+encodeURIComponent((SAVE.netName||"Player").slice(0,14))+
+  var q=(NET.queue?"?q=1&":"?")+"name="+encodeURIComponent((SAVE.netName||"Player").slice(0,14))+
         "&sword="+encodeURIComponent(SAVE.eqSword)+
         "&skin="+encodeURIComponent(SAVE.eqSkin)+
         "&abil="+encodeURIComponent(SAVE.eqAbil)+
@@ -12029,7 +12100,12 @@ function netHandle(m){
        match that actually started was whatever the host had picked -- a "1v1
        FFA" that opened with Swarm's three balls. The host now re-announces the
        pick every time the room changes. */
-    if(NET.isHost&&NET.status==="lobby")netSend({t:"setup",gm:NETPICK.gm,bots:NETPICK.bots});
+    if(NET.isHost&&NET.status==="lobby"&&!NET.queue)netSetup();
+    // a GOD queue room: the moment both of you are in, the host starts it
+    if(NET.queue&&NET.isHost&&NET.status==="lobby"&&NET.players.length===2&&!NET.qStarted){
+      NET.qStarted=true;
+      netSend({t:"start",mode:"god1",q:1,map:pick(MAPS).id});
+    }
     // somebody walked in or out of the room: the lobby has to show it
     lobbyRender();
     netRenderRematch();
@@ -12042,6 +12118,8 @@ function netHandle(m){
        guard below, which is where it was and why guests never saw it. */
     if(typeof m.gm==="string")NETPICK.gm=netGameById(m.gm).id;
     if(typeof m.bots==="number")NETPICK.bots=clamp(Math.round(m.bots),0,8);
+    if(typeof m.map==="string")NETPICK.map=m.map==="random"?"random":mapById(m.map).id;
+    NETPICK.priv=!!m.priv;
     if(NET.status==="lobby")lobbyRender();
     return;
   }
@@ -12290,13 +12368,20 @@ function netGameById(id){
   for(var i=0;i<NETGAMES.length;i++)if(NETGAMES[i].id===id)return NETGAMES[i];
   return NETGAMES[0];
 }
-var NETPICK={gm:"ffa",bots:0};
+var NETPICK={gm:"ffa",bots:0,map:"",priv:false};
+// the room's settings: mode, bots, map and whether it is listed publicly
+function netSetup(){netSend({t:"setup",gm:NETPICK.gm,bots:NETPICK.bots,map:NETPICK.map||SAVE.eqMap||"sky",priv:!!NETPICK.priv});}
+function netMapPick(){var m=NETPICK.map||SAVE.eqMap||"sky";return m==="random"?pick(MAPS).id:mapById(m).id;}
 // queue ranked 2v2 with the person in your party: the two of you share team 0
 // and face two rank-scaled bots. The host simulates the bots and streams them.
 var NETMODE2={id:"mpranked2",name:"Ranked 2v2",bots:2,speed:1.0,ramp:1.12,window:0.30,
   mult:1.6,minFlight:0.80,rp:1,ranked:true,teams:true,net:true,
   desc:"You and your partner against a ranked pair."};
 function netIsRanked2(){return !!(MODE&&MODE.id==="mpranked2");}
+// GOD: ranked 1v1 against another player, found by the GOD queue
+var NETMODE_GOD={id:"god1",name:"GOD 1v1",bots:0,speed:1.1,ramp:1.13,window:0.28,
+  mult:1.8,minFlight:0.78,rp:1,ranked:true,pvp:true,net:true,
+  desc:"GOD rank: one on one, against another player."};
 /* How many bots to add to a private room. The host chooses, it rides along in
    the start message, and every client builds the same number from the same
    seed -- so they are identical everywhere and only the host runs their AI. */
@@ -12305,14 +12390,14 @@ function netFill(){return _netBots;}
 function startNetMatch(m){
   riftAbort();
   NET.matchSeq=(NET.matchSeq||0)+1;
-  var ranked2=(m.mode==="ranked2");
+  var ranked2=(m.mode==="ranked2"),god=(m.mode==="god1");
   // a rematch has to run the SAME match back. It used to always send "mp",
   // so pressing PLAY AGAIN after a Ranked 2v2 quietly dropped you into casual.
   NET.lastMode=m.mode||"mp"; NET.lastRf=(m.rf===undefined?0:m.rf);
   NET.lastBots=_netBots=clamp(Math.round(m.bots||0),0,8);
   NET.lastGm=m.gm||"ffa";
-  MODE=copyMode(ranked2?NETMODE2:NETMODE);
-  if(!ranked2){
+  MODE=copyMode(god?NETMODE_GOD:(ranked2?NETMODE2:NETMODE));
+  if(!ranked2&&!god){
     // the host's gamemode choice, applied identically on every client
     var gmDef=netGameById(m.gm||"ffa");
     for(var ok2 in gmDef.over)MODE[ok2]=gmDef.over[ok2];
@@ -12851,7 +12936,7 @@ function netRenderRematch(){
     NET.startingRematch=true;
     netSend({t:"start",mode:NET.lastMode||"mp",rf:NET.lastRf||0,
       gm:NET.lastGm||NETPICK.gm,bots:(NET.lastBots===undefined?NETPICK.bots:NET.lastBots),
-      map:(SAVE.eqMap==="random"?pick(MAPS).id:SAVE.eqMap)});
+      map:netMapPick()});
   }
 }
 function netFinish(won){
@@ -14282,11 +14367,16 @@ function buildLadder(){
   var host=$("ladder");host.innerHTML="";
   var idx=currentRankIndex();
   var f=idx/(RANKS.length-1),tune=rankedTuning(f);
-  $("rankSummary").innerHTML="You are <b style='color:#ffd23f'>"+currentRank().name+
-    "</b> with <b>"+SAVE.rp+" RP</b>. A ranked win is worth <b>50\u2013100 RP</b> depending on how you played; "+
-    "a loss costs <b>26</b> in 1v1 or <b>20</b> in 2v2. Casual modes pay coins but no RP.<br>"+
-    "<b style='color:#ffa8e0'>Opponents are seeded at your rank</b> \u2014 they get sharper every tier, "+
-    "and Omega opponents almost never miss.";
+  var winNow=rpFor(true,0,false),lossNow=-rpFor(false,0,false);
+  $("rankSummary").innerHTML="<b style='color:#ffd23f'>"+SEASON.name+"</b> &middot; You are <b style='color:#ffd23f'>"+currentRank().name+
+    "</b> with <b>"+SAVE.rp+" RP</b>"+(SAVE.s0rp?" <span style='opacity:.6'>(Season 0: "+SAVE.s0rp+" RP)</span>":"")+". "+
+    (rankIsPvp()?"<b style='color:#fff0b0'>GOD is people only:</b> ranked here is one on one against another GOD player. Matches against bots move no RP.":
+    "At your rank a win is worth about <b>"+winNow+"\u2013"+(winNow+10)+" RP</b> and a loss costs <b>"+lossNow+"</b>. The higher you climb, the less a win pays and the more a loss costs. "+
+    "Casual modes pay coins but no RP.<br><b style='color:#ffa8e0'>Opponents are seeded at your rank</b> \u2014 they get sharper every tier, "+
+    "and Omega opponents almost never miss. <b style='color:#fff0b0'>GOD</b> waits at 15,000 RP.");
+  $("rkPlay1").textContent=rankIsPvp()?"FIND A GOD OPPONENT":"RANKED 1v1";
+  $("rkPlay2").style.opacity=rankIsPvp()?".45":"1";
+  var gb=$("godBox");if(gb&&!GODQ.on)gb.style.display="none";
   var pct=Math.round(tune.skill*100);
   $("rankDiff").innerHTML="<span>OPPONENT AT "+currentRank().name.toUpperCase()+"</span>"+
     "<button style='cursor:default'>PARRY RATE ~"+pct+"%</button>"+
@@ -14694,6 +14784,8 @@ function buildSellGrid(){
   });
 }
 /* ---------------- lobby screen ---------------- */
+// the list refreshes itself while you are looking at it
+setInterval(function(){try{if(!$("mp").classList.contains("hide")&&!(NET.status==="lobby"&&NET.ws))pubFetch(false);}catch(e){}},7000);
 function openMPScreen(){
   if(!SAVE.netName)SAVE.netName=playerName();
   $("mpName").value=SAVE.netName;
@@ -14719,10 +14811,23 @@ function renderNetSetup(){
     for(var b=0;b<btns.length;b++)btns[b].addEventListener("click",function(){
       if(!NET.isHost)return;
       NETPICK.gm=this.getAttribute("data-gm");
-      netSend({t:"setup",gm:NETPICK.gm,bots:NETPICK.bots});
+      netSetup();
       renderNetSetup();
     });
   }
+  var mw=$("mpMaps");
+  if(mw){
+    var cur=NETPICK.map||SAVE.eqMap||"sky",mh="";
+    MAPS.concat([{id:"random",name:"Random"}]).forEach(function(M){
+      mh+="<button class='tab"+(M.id===cur?" sel":"")+"' data-map='"+M.id+"'"+(host?"":" disabled style='opacity:.5'")+">"+M.name.toUpperCase()+"</button>";});
+    mw.innerHTML=mh;
+    var mb=mw.querySelectorAll("button");
+    for(var mi=0;mi<mb.length;mi++)mb[mi].addEventListener("click",function(){
+      if(!NET.isHost)return;NETPICK.map=this.getAttribute("data-map");netSetup();renderNetSetup();});
+  }
+  var pv=$("mpPriv");
+  if(pv){pv.textContent=NETPICK.priv?"PRIVATE":"PUBLIC";pv.className="big sm "+(NETPICK.priv?"red":"");pv.disabled=!host;pv.style.opacity=host?"1":".6";
+    $("mpPrivNote").textContent=NETPICK.priv?"Only people with the code can join.":"Anyone can find this room in the list.";}
   var G2=netGameById(NETPICK.gm);
   if($("mpGameDesc"))$("mpGameDesc").textContent=G2.desc+
     (NETPICK.bots?("  Plus "+NETPICK.bots+" bot"+(NETPICK.bots===1?"":"s")+"."):"");
@@ -14731,8 +14836,40 @@ function renderNetSetup(){
   if(up)up.style.display=host?"":"none";
   if(dn)dn.style.display=host?"":"none";
 }
+/* ---- public lobbies: every open room, with a JOIN button ---- */
+var PUB={at:0,busy:false,list:null,err:false};
+function pubFetch(force){
+  if(PUB.busy||!serverBase())return;
+  if(!force&&Date.now()-PUB.at<6000)return;
+  PUB.busy=true;PUB.at=Date.now();
+  try{
+    fetch(serverBase()+"/lobbies").then(function(r){return r.json();}).then(function(j){
+      PUB.busy=false;PUB.err=false;PUB.list=(j&&j.lobbies)||[];pubRender();
+    })["catch"](function(){PUB.busy=false;PUB.err=true;pubRender();});
+  }catch(e){PUB.busy=false;PUB.err=true;pubRender();}
+}
+function pubRender(){
+  var h=$("mpPublic");if(!h)return;
+  if(PUB.err&&!PUB.list){h.innerHTML="<div class='fine'>Could not load the lobby list.</div>";return;}
+  if(!PUB.list){h.innerHTML="<div class='fine'>Looking for lobbies&hellip;</div>";return;}
+  if(!PUB.list.length){h.innerHTML="<div class='fine'>No public lobbies right now. Host one and it shows up here.</div>";return;}
+  h.innerHTML="";
+  PUB.list.forEach(function(l){
+    var row=document.createElement("div");row.className="mppubrow";
+    var nm=document.createElement("b");nm.textContent=(l.host||"Player")+"'s room";
+    var gm=document.createElement("span");gm.textContent=netGameById(l.gm).name.toUpperCase()+" \u00b7 "+(l.map==="random"?"RANDOM":mapById(l.map).name.toUpperCase());
+    var n=document.createElement("span");n.textContent=l.n+"/"+l.max;
+    var b=document.createElement("button");b.className="big alt sm";b.textContent="JOIN";
+    b.addEventListener("click",function(){
+      SAVE.netName=($("mpName").value||"Player").slice(0,14);writeSave();
+      netConnect(l.code,function(){mpSendLoadout(false);});
+    });
+    row.appendChild(nm);row.appendChild(gm);row.appendChild(n);row.appendChild(b);h.appendChild(row);
+  });
+}
 function lobbyRender(){
   var inRoom=(NET.status==="lobby"&&NET.ws);
+  if(!inRoom&&!$("mp").classList.contains("hide"))pubFetch(false);
   var haveServer=!!serverBase();
   $("mpServer").classList.toggle("hide",haveServer&&!inRoom?true:(inRoom?true:false));
   $("mpJoin").classList.toggle("hide",inRoom||!haveServer);
@@ -14800,7 +14937,7 @@ function wireMP(){
   });
   $("mpHost").addEventListener("click",function(){
     SAVE.netName=($("mpName").value||"Player").slice(0,14);writeSave();
-    NETPICK.gm="ffa";NETPICK.bots=0;
+    NETPICK.gm="ffa";NETPICK.bots=0;NETPICK.map=SAVE.eqMap||"sky";NETPICK.priv=false;
     var code=makeRoomCode();
     netConnect(code,function(){mpSendLoadout(false);});
   });
@@ -14826,7 +14963,7 @@ function wireMP(){
     sfx("rank");
     // difficulty comes from the host's rank so both clients agree
     netSend({t:"start",mode:"ranked2",rf:+(currentRankIndex()/(RANKS.length-1)).toFixed(4),
-      map:(SAVE.eqMap==="random"?pick(MAPS).id:SAVE.eqMap)});
+      map:netMapPick()});
   });
   $("mpStart").addEventListener("click",function(){
     if(!NET.isHost)return;
@@ -14835,18 +14972,18 @@ function wireMP(){
     for(var i=0;i<NET.players.length;i++)if(!NET.players[i].ready)allReady=false;
     if(!allReady)return;
     netSend({t:"start",mode:"mp",gm:NETPICK.gm,bots:NETPICK.bots,
-      map:(SAVE.eqMap==="random"?pick(MAPS).id:SAVE.eqMap)});
+      map:netMapPick()});
   });
   $("mpBotsUp").addEventListener("click",function(){
     if(!NET.isHost)return;
     NETPICK.bots=clamp(NETPICK.bots+1,0,8);
-    netSend({t:"setup",gm:NETPICK.gm,bots:NETPICK.bots});
+    netSetup();
     renderNetSetup();
   });
   $("mpBotsDown").addEventListener("click",function(){
     if(!NET.isHost)return;
     NETPICK.bots=clamp(NETPICK.bots-1,0,8);
-    netSend({t:"setup",gm:NETPICK.gm,bots:NETPICK.bots});
+    netSetup();
     renderNetSetup();
   });
   $("mpCopy").addEventListener("click",function(){
@@ -14858,6 +14995,8 @@ function wireMP(){
     }catch(e){}
   });
   $("mpLeave").addEventListener("click",function(){netDisconnect();lobbyRender();});
+  $("mpPriv").addEventListener("click",function(){if(!NET.isHost)return;NETPICK.priv=!NETPICK.priv;netSetup();renderNetSetup();sfx("tick");});
+  $("mpPubRefresh").addEventListener("click",function(){pubFetch(true);});
   $("mpUrlSave").addEventListener("click",function(){
     SAVE.serverUrl=($("mpUrl").value||"").trim();
     writeSave();
@@ -15528,8 +15667,11 @@ function chestShow(wins,tab,res){
     if(REEL.busy)return;chestQty=parseInt(b.getAttribute("data-q"),10)||1;sfx("tick");buildShop();});})(qb[i]);
 })();
 $("rankBack").addEventListener("click",function(){backToVenue();});
-$("rkPlay1").addEventListener("click",function(){startMatch("ranked1");});
-$("rkPlay2").addEventListener("click",function(){startMatch("ranked2");});
+$("rkPlay1").addEventListener("click",function(){if(rankIsPvp())godQueueStart();else startMatch("ranked1");});
+$("rkPlay2").addEventListener("click",function(){
+  if(rankIsPvp()){godSay("GOD is played one on one, against other players. Use FIND A GOD OPPONENT.",false);return;}
+  startMatch("ranked2");
+});
 $("howBack").addEventListener("click",function(){backToVenue();});
 $("updGo").addEventListener("click",function(){
   SAVE.seenVersion=VERSION;writeSave();
@@ -15673,6 +15815,8 @@ $("rAgain").addEventListener("click",function(){
   startMatch(MODE.id);
 });
 $("rMenu").addEventListener("click",function(){
+  // a GOD queue room is only ever that one match: leave it entirely
+  if(NET.queue){netDisconnect();NET.queue=false;clearFighters();clearBalls();enterLobby();return;}
   if(NET.ws&&NET.code){netLeaveMatch();return;}    // back to the room, still connected
   clearFighters();clearBalls();
   enterLobby();

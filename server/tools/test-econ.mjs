@@ -34,6 +34,7 @@ let tok = 0; for (let i = 0; i < 50; i++) { const t = ensure({ econ: { v: 1 } })
 assert.equal(tok, 50, "rnd 0 always pays a token");
 // GOD: pvp only
 let g = ensure({ rp: 0, econ: { v: 1 } }); g.rp = 15500; r = applyAct(g, { k: "match", mode: "ranked1", won: true, rp: 40, coins: 10, secs: 60 }, { now: oct3 }); assert.equal(r.res.rp, 0, "no RP vs bots at GOD");
+r = applyAct(g, { k: "match", mode: "god1", won: true, rp: 40, coins: 10, secs: 60 }, { now: oct3 + 5e6 }); assert.equal(r.res.rp, 40, "GOD 1v1 against a player pays RP");
 // crown
 const sv = { swords: { crown: 1 }, eqSword: "crown" }; assert.ok(crownFix(sv, "a", "b")); assert.ok(!sv.swords.crown); assert.equal(sv.eqSword, "trainer");
 assert.ok(crownFix(sv, "b", "b")); assert.ok(sv.swords.crown); assert.ok(!crownFix(sv, "b", "b"));
