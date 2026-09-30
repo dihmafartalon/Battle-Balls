@@ -224,7 +224,7 @@ function slotMul(a, b, c) {
    has passed. The fixed part of a match (its base and win bonus) needs a match
    long enough to be one. */
 export const MATCH = { base: 300, perSec: 15, win: 300, maxSecs: 1800, bankMax: 5400, fullSecs: 30, minCharge: 10,
-  rpWin: 60, rpLose: -40, rpMinSecs: 15, passMinSecs: 30, passMatchesPerHour: 20 };
+  rpWin: 60, rpLose: -40, rpMinSecs: 0, passMinSecs: 30, passMatchesPerHour: 20 };
 // most a match of `secs` can pay. A win carries its bonus however quick it was
 // (every match draws at least minCharge from the bank, so quick "wins" are bounded)
 export function matchCap(mode, secs, won) {

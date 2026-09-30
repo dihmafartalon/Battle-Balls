@@ -76,3 +76,10 @@ console.log("server tests passed");
   r = applyAct(s, { k: "rodriga" }, { now: sep30 }); assert.ok(r.ok && s.swords.pbfetus, JSON.stringify(r));
   console.log("launch day tests passed");
 }
+// a quick ranked win (Poop bots go down fast) still pays RP
+{
+  const s = ensure({ econ: { v: 1 } });
+  const r = applyAct(s, { k: "match", mode: "ranked1", won: true, rp: 40, coins: 50, secs: 8 }, { now: Date.now() });
+  assert.equal(r.res.rp, 40, "an 8 second ranked win pays: " + JSON.stringify(r.res)); assert.equal(s.rp, 40);
+  console.log("quick ranked win test passed");
+}
