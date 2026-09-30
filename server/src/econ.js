@@ -484,7 +484,10 @@ export function importEcon(s, from, now, flags) {
   s.econ = { v: 1, at: now };
   if (had || !from || typeof from !== "object") return ensure(s);
   const num = (v, hi) => Math.max(0, Math.min(hi, Math.floor(Number(v) || 0)));
-  s.coins = num(from.coins, IMPORT.coins); s.yen = num(from.yen, IMPORT.yen); s.rp = num(from.rp, IMPORT.rp);
+  s.coins = num(from.coins, IMPORT.coins); s.yen = num(from.yen, IMPORT.yen);
+  // RP only comes along from this season: a device still holding last season's does not bring it back
+  s.rp = CAT.season && from.season !== CAT.season.id ? 0 : num(from.rp, IMPORT.rp);
+  if (CAT.season && from.season === CAT.season.id) s.season = CAT.season.id;
   s.freeSpins = num(from.freeSpins, 100);
   let dropped = 0, value = s.coins + s.yen * CAT.yenRate, count = 0;
   for (const t of TABS) {
