@@ -55,3 +55,24 @@ console.log("server tests passed");
   assert.equal(s2.rp, 300, "this season's RP comes along");
   console.log("season import tests passed");
 }
+// rank rewards a game unlocked from last season's RP go; earned ones stay
+{
+  const { rankClean } = await import("../src/econ.js");
+  const s = ensure({ rp: 0, season: 1, econ: { v: 1 }, swords: { divineright: 1, s1meat: 1, meatcleaver: 1, trainer: 1 }, skins: { ascended: 1 }, abils: { divine: 1, jordan: 1 }, eqSword: "divineright", eqSkin: "ascended" });
+  assert.ok(!s.swords.divineright && !s.swords.s1meat && !s.skins.ascended && !s.abils.divine, "GOD and Season 1 rewards above the rank go: " + JSON.stringify(s.swords));
+  assert.ok(s.swords.meatcleaver && s.abils.jordan, "last season's rewards stay");
+  assert.equal(s.eqSword, "trainer"); assert.equal(s.eqSkin, "rookie");
+  assert.equal(rankClean(s), false, "once per account");
+  const g = ensure({ rp: 15500, season: 1, econ: { v: 1 }, swords: { divineright: 1 }, skins: { ascended: 1 } });
+  assert.ok(g.swords.divineright && g.skins.ascended, "a real GOD keeps them");
+  console.log("rank clean tests passed");
+}
+// launch day (Sep 30): the new gear is on Gnorman's shelf and PB Fetus is at Rodriga's
+{
+  const sep30 = Date.UTC(2026, 8, 30, 18);
+  const s = ensure({ yen: 5000, tokens: 1, econ: { v: 1 } });
+  let r = applyAct(s, { k: "limited", tab: "sword", id: "ricky9", day: "2026-09-30" }, { now: sep30 }); assert.ok(r.ok, JSON.stringify(r));
+  r = applyAct(s, { k: "limited", tab: "abil", id: "grey", day: "2026-09-30" }, { now: sep30 }); assert.ok(r.ok, JSON.stringify(r));
+  r = applyAct(s, { k: "rodriga" }, { now: sep30 }); assert.ok(r.ok && s.swords.pbfetus, JSON.stringify(r));
+  console.log("launch day tests passed");
+}

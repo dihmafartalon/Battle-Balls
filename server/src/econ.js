@@ -44,11 +44,31 @@ export function seasonReset(s) {
   s.season = S.id;
   return true;
 }
+/* A game that still saw last season's RP (before the room server reset the
+   stored account) could unlock Season 1 and GOD rank rewards on its own
+   screen. This server never granted them, but to be sure: once per account,
+   any Season 1 or GOD rank reward above the rank the account has really
+   reached this season is taken away, and taken off if it is being worn. */
+export function rankClean(s) {
+  if (!s || !s.econ || typeof s.econ !== "object" || s.econ.rc1) return false;
+  const reach = rankIndex(typeof s.rp === "number" ? s.rp : 0), gone = [];
+  for (let i = reach + 1; i < CAT.ranks.length; i++) for (const w of CAT.ranks[i].rewards) {
+    const tab = w.kind === "sword" ? "sword" : w.kind === "abil" ? "abil" : "skin", it = itemOf(tab, w.id);
+    if (!it || !(it.season === 1 || it.rank === "god")) continue;       // last season's rewards were earned: they stay
+    if (s[BAG[tab]] && s[BAG[tab]][w.id]) { delete s[BAG[tab]][w.id]; gone.push(w.id); }
+    if (s[EQ[tab]] === w.id) s[EQ[tab]] = CAT.items[tab].starter;
+  }
+  s.econ.rc1 = 1;
+  if (gone.length) s.econ.rcGone = gone;
+  return true;
+}
 export function ensure(s) {
   retire(s);
   for (const k of ["coins", "yen", "rp", "freeSpins", "freeSpinsL", "tokens", "s0rp"]) if (typeof s[k] !== "number" || !isFinite(s[k]) || s[k] < 0) s[k] = 0;
   if (!s.login || typeof s.login !== "object" || Array.isArray(s.login)) s.login = { id: "", n: 0, last: "" };
   seasonReset(s);
+  for (const t of TABS) if (!s[BAG[t]] || typeof s[BAG[t]] !== "object" || Array.isArray(s[BAG[t]])) s[BAG[t]] = {};
+  rankClean(s);
   for (const t of TABS) if (!s[BAG[t]] || typeof s[BAG[t]] !== "object" || Array.isArray(s[BAG[t]])) s[BAG[t]] = {};
   if (!s.redeemed || typeof s.redeemed !== "object") s.redeemed = {};
   if (!s.casino || typeof s.casino !== "object") s.casino = { hands: 0, bjWins: 0, spins: 0, upgrades: 0 };
