@@ -8,7 +8,7 @@
    tools/buildsim.cjs) running with no screen: a stand-in for the browser
    below soaks up everything that would draw, play a sound or touch the page.
    ===================================================================== */
-import * as THREE_ from "three";
+import * as THREE_ from "./vendor/three.module.js";   // three.js r128, kept here so a deploy needs no npm install
 import { bootGame } from "./simgame.js";
 
 export const SIM_ID = "srv";                 // the host's player id, as the games see it

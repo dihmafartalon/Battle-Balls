@@ -13,7 +13,6 @@ https://dash.cloudflare.com/sign-up — free plan, no card needed.
 ## 3. Deploy
 Unzip this folder, open a terminal inside it, and run:
 
-    npm install             # fetches three.js: the room runs the game itself (see below)
     npx wrangler login      # opens a browser, click Allow
     npx wrangler deploy
 
