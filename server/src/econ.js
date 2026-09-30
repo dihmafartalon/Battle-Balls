@@ -545,13 +545,13 @@ export const WATCH = {
 };
 export function newStats(now) {
   return { v: 1, first: now, g: 0, w: 0, sk: 0, bsk: 0, rg: 0, rw: 0, rsk: 0, rbsk: 0, bl: 0, pf: 0, secs: 0,
-    ec: { c: 0, y: 0, rp: 0 }, sp: { c: 0, y: 0 }, it: 0, mt: [], d: {}, wf: {} };
+    ec: { c: 0, y: 0, rp: 0 }, sp: { c: 0, y: 0 }, it: 0, mt: [], d: {}, wf: {}, by: { m: {}, s: {}, a: {}, k: {} } };
 }
 // what a save holds, to tell what an act changed
 export function snap(s) {
   const items = [];
   for (const t of TABS) for (const id in (s[BAG[t]] || {})) if (s[BAG[t]][id]) items.push(t + ":" + id);
-  return { c: s.coins | 0, y: s.yen | 0, rp: s.rp | 0, items };
+  return { c: s.coins | 0, y: s.yen | 0, rp: s.rp | 0, items, eq: [String(s.eqSword || ""), String(s.eqAbil || ""), String(s.eqSkin || "")] };
 }
 function dayKey(now) { return new Date(now).toISOString().slice(0, 10); }
 function dayOf(st, now) {
@@ -582,7 +582,15 @@ export function recordAct(st, hist, ledger, kind, a, res, pre, post, now) {
     if (won) { st.w++; day.w++; st.sk++; st.bsk = Math.max(st.bsk, st.sk); } else st.sk = 0;
     if (ranked) { st.rg++; if (won) { st.rw++; st.rsk++; st.rbsk = Math.max(st.rbsk, st.rsk); } else st.rsk = 0; }
     st.mt = st.mt.filter(t => now - t < 3600 * 1000).concat([now]);
-    hist.push({ at: now, m: String(a.mode || "").slice(0, 16), won, secs: Math.round(secs), c: dc, rp: drp, bl, pf });
+    // what they played it with, for win rates by mode, blade, ability and skin
+    const eq = (pre.eq || post.eq || []).map(x => String(x || "").slice(0, 24)), mode = String(a.mode || "").slice(0, 16);
+    if (!st.by) st.by = { m: {}, s: {}, a: {}, k: {} };
+    [["m", mode], ["s", eq[0]], ["a", eq[1]], ["k", eq[2]]].forEach(([k, id]) => {
+      if (!id) return;
+      const row = st.by[k][id] || (st.by[k][id] = [0, 0]);
+      row[0]++; if (won) row[1]++;
+    });
+    hist.push({ at: now, m: mode, won, secs: Math.round(secs), c: dc, rp: drp, bl, pf, sw: eq[0] || "", ab: eq[1] || "", sk: eq[2] || "" });
     while (hist.length > WATCH.histKept) hist.shift();
   }
   if (dc || dy || drp || got.length || lost.length) {

@@ -11315,6 +11315,7 @@ function netNow(){return Date.now()+NET.clockSkew;}
 function netLeads(){return NET.isHost||(!!NET.leader&&NET.leader===NET.you);}
 function netSend(o){
   if(!NET.ws||NET.ws.readyState!==1)return false;
+  if(NET.spec&&o&&o.t!=="ping")return false;
   try{NET.ws.send(JSON.stringify(o));return true;}catch(e){return false;}
 }
 function serverBase(){
@@ -11322,10 +11323,42 @@ function serverBase(){
   if(u&&!/^https?:/i.test(u))u="https://"+u;
   return u.replace(/\/+$/,"");
 }
+/* The admin, watching a room: a link from the admin page carries a room code
+   and a ten-minute ticket. Nothing is sent, nothing is paid, nobody sees you. */
+var SPECQ=(function(){try{var q=new URLSearchParams(location.search),c=q.get("spectate"),t=q.get("st");
+  return c&&t?{code:c.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8),st:t.slice(0,160)}:null;}catch(e){return null;}})();
+function specJoin(){
+  if(!SPECQ)return;
+  // the notes can wait: straight past them into the lobby
+  if(!$("update").classList.contains("hide")){SAVE.seenVersion=VERSION;writeSave();enterLobby();}
+  if(STATE==="boot"){setTimeout(specJoin,500);return;}
+  NET.specTok=SPECQ.st;
+  openMPScreen();
+  netConnect(SPECQ.code);
+  SPECQ=null;
+  try{history.replaceState(null,"",location.pathname);}catch(e){}
+}
+function specTarget(){
+  var i,f;
+  if(NET.specBot){if(NET.specBot.alive&&fighters.indexOf(NET.specBot)>=0)return NET.specBot;NET.specBot=null;}
+  if(NET.specFocus)for(i=0;i<fighters.length;i++){f=fighters[i];if(f.alive&&f.netId===NET.specFocus)return f;}
+  var all=livingFighters(false);
+  if(all.length){NET.specFocus=all[0].netId||"";return all[0];}
+  return null;
+}
+function specNext(){
+  if(!NET.spec)return;
+  var all=livingFighters(false);if(!all.length)return;
+  var cur=specTarget(),i=all.indexOf(cur);
+  var nx=all[(i+1)%all.length];NET.specFocus=nx.netId||"";
+  NET.specBot=nx.netId?null:nx;
+  sfx("tick");
+}
 function wsUrlFor(code){
   var b=serverBase();
   if(!b)return "";
   var ws=b.replace(/^http:/,"ws:").replace(/^https:/,"wss:");
+  if(NET.specTok)return ws+"/room/"+code+"?spectate="+encodeURIComponent(NET.specTok);
   var q=(NET.queue?"?q=1&":"?")+"name="+encodeURIComponent((SAVE.netName||"Player").slice(0,14))+
         "&sword="+encodeURIComponent(SAVE.eqSword)+
         "&skin="+encodeURIComponent(SAVE.eqSkin)+
@@ -11339,7 +11372,9 @@ function netConnect(code,onReady){
     NET.status="error";NET.err="No server URL set in the file.";
     lobbyRender();return;
   }
+  var keepTok=NET.specTok;
   netDisconnect(true);
+  NET.specTok=keepTok;
   NET.code=code;NET.status="connecting";NET.err="";
   lobbyRender();
   var WS=(typeof WebSocket!=="undefined")?WebSocket:(window.WebSocket||null);
@@ -11380,6 +11415,7 @@ function netDisconnect(quiet){
     try{NET.ws.onclose=null;NET.ws.close();}catch(e){}
   }
   NET.ws=null;NET.on=false;NET.players=[];NET.remote={};NET.hist.length=0;
+  NET.spec=false;NET.specTok="";NET.specFocus="";NET.specBot=null;
   if(!quiet){NET.status="idle";NET.code="";}
 }
 function netHandle(m){
@@ -11388,6 +11424,7 @@ function netHandle(m){
     NET.status="error";
     NET.err=m.why==="banned"?("This account is banned"+(m.reason?": "+m.reason:".")):
       m.why==="kicked"?(m.reason||"You were removed from that room."):
+      m.why==="spec"?(m.reason||"That spectate link has expired."):
       "Online play needs a Google account. Sign in on your Profile, then try again.";
     if(m.why==="banned")cloudBanned(m.reason);
     else if(m.why==="kicked")adminNote(NET.err);
@@ -11396,6 +11433,8 @@ function netHandle(m){
   }
   if(m.t==="adminmsg"){adminNote(String(m.text||"").slice(0,400));return;}
   if(m.t==="welcome"){
+    NET.spec=!!m.spec;
+    if(NET.spec){NET.specFocus=m.watch||"";NET.specBot=null;}
     NET.you=m.you;NET.host=m.host||m.you;
     NET.isHost=(NET.host===NET.you);
     // 4.0: the server runs every match itself, so no player is the host. The
@@ -11450,6 +11489,12 @@ function netHandle(m){
     NET.seed=m.seed;
     NET.pendingStart=m;
     startNetMatch(m);
+    return;
+  }
+  if(m.t==="specsync"&&NET.spec){
+    // joined mid-match: whoever is already out goes now, quietly
+    (m.dead||[]).forEach(function(id){for(var i=0;i<fighters.length;i++){var f=fighters[i];
+      if((f.netId&&f.netId===id)||(!f.netId&&("bot"+f.botIndex)===id)){f.alive=false;if(f.mesh)f.mesh.visible=false;}}});
     return;
   }
   if(!NET.on)return;
@@ -11804,7 +11849,13 @@ function startNetMatch(m){
     fighters.push(bf);
     idx++;
   }
-  if(!player){    // spectating: we somehow are not on the roster
+  if(!player&&NET.spec){
+    // the admin watching: a stand-in "you" who is already out and never drawn,
+    // so the camera follows whoever is being watched
+    player=new Fighter({name:"SPECTATOR",isPlayer:true,x:0,z:0,sword:"trainer",ability:"dash",skinDef:skinById("rookie")});
+    scene.remove(player.mesh);player.alive=false;player.isRemote=true;
+    SPEC.on=true;
+  } else if(!player){    // spectating: we somehow are not on the roster
     player=fighters[0];
   }
   // Swarm wants more than one ball, and Sudden Death wants the one ball to
@@ -12273,6 +12324,14 @@ function netRenderRematch(){
 function netFinish(won){
   riftAbort();
   if(STATE==="over")return;
+  if(NET.spec){
+    STATE="over";
+    for(var si=0;si<balls.length;si++){balls[si].active=false;balls[si].mesh.visible=false;}
+    var wn=livingFighters(false)[0];
+    flashWarn(wn?(wn.name.toUpperCase()+" WINS"):"MATCH OVER",2.5,"#8fd8ff");
+    feed("Spectating: waiting for the next match","gold");
+    return;
+  }
   STATE="over";
   NET.rematch=false;NET.startingRematch=false;
   for(var i=0;i<balls.length;i++){balls[i].active=false;balls[i].mesh.visible=false;}
@@ -12563,6 +12622,7 @@ window.addEventListener("keydown",function(e){
   if(e.code==="KeyG"&&player)useAbility(player);
   if(e.code==="KeyT"){if(tauntWheelOpen())closeTauntWheel();else openTauntWheel();}
   if(tauntWheelOpen()&&/^Digit[1-8]$/.test(e.code))doTaunt(TAUNTS[+e.code.slice(5)-1].id);
+  if(e.code==="Tab"&&NET.spec&&(STATE==="playing"||STATE==="countdown")){e.preventDefault();specNext();return;}
   if(e.code==="Escape"&&tauntWheelOpen()){closeTauntWheel();return;}
   if(e.code==="Escape"||e.code==="KeyP")togglePause();
   if(e.code==="ShiftLeft"||e.code==="ShiftRight"){setShiftLock(!shiftLock);e.preventDefault();}
@@ -12753,6 +12813,7 @@ function updateCamera(dt){
    follows whoever killed THEM, so the camera walks the chain to whoever is
    still standing rather than staring at a corpse. */
 function spectateChain(){
+  if(NET.spec)return specTarget();
   var seen={},f=player&&player.killedBy;
   for(var hop=0;hop<8&&f;hop++){
     if(f.alive)return f;
@@ -12765,6 +12826,7 @@ function spectateChain(){
   return all.length?all[0]:null;
 }
 function camFocus(){
+  if(NET.spec){var st0=specTarget();if(st0)return st0;}
   if(player&&player.alive)return player;
   if(MODE.teams){
     var all=livingFighters(false);
@@ -12780,7 +12842,7 @@ var SPEC={on:false,who:"",hid:false};
 function updateSpectate(){
   var el=$("spechud");
   if(!el)return;
-  if(!SPEC.on||STATE!=="playing"){
+  if(!SPEC.on||(STATE!=="playing"&&!(NET.spec&&STATE==="countdown"))){
     el.style.display="none";
     if(SPEC.hid){SPEC.hid=false;$("slots").style.display="";}
     return;
@@ -12789,6 +12851,7 @@ function updateSpectate(){
   var nm=w?w.name:"";
   if(nm!==SPEC.who){SPEC.who=nm;$("specWho").textContent=nm||"NOBODY";}
   el.style.display="block";
+  $("specNext").style.display=NET.spec?"":"none";
   // nothing left to press, so the buttons go rather than sitting there dead
   if(nm&&!SPEC.hid){SPEC.hid=true;$("slots").style.display="none";}
 }
@@ -14382,6 +14445,10 @@ function lobbyRender(){
     : (NET.players.length<2
         ? "Share the code. You need at least one more player."
         : (canStart?"Everyone is ready.":"Waiting for everyone to ready up."));
+  if(NET.spec){
+    $("mpHint").textContent="SPECTATING. Nobody in the room can see you. You'll be taken in when their next match starts.";
+    ["mpReady","mpStart","mpRanked"].forEach(function(id){var e2=$(id);if(e2)e2.style.display="none";});
+  }
 }
 function mpSendLoadout(ready){
   netSend({t:"loadout",name:(SAVE.netName||"Player").slice(0,14),
@@ -15326,6 +15393,8 @@ $("bootStart").addEventListener("click",function(){
   if(AC&&AC.state==="suspended")AC.resume();
   if(!fsSupported())$("mFull").style.display="none";
   wireCasino();wireMP();wireSettings();
+  $("specNext").addEventListener("click",function(e){e.stopPropagation();specNext();});
+  if(SPECQ)setTimeout(specJoin,800);
   applyQuality(QUAL);
   applyFov(SAVE.fov||66);
   runStep(0);
