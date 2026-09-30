@@ -1,17 +1,19 @@
-# Deploys the room server (server/) to Cloudflare -- no computer needed.
-# It runs by itself whenever something in server/ changes on main, and from
-# the Actions tab: "Deploy server" > "Run workflow".
+# Deploys Battle Balls to Cloudflare -- no computer needed:
+#   the room server (server/)  -> the battle-balls-rooms Worker
+#   the game (site/)           -> the battleballs Pages site (battleballs.pages.dev)
+# It runs by itself whenever either changes on main, and from the Actions tab:
+# "Deploy server" > "Run workflow".
 #
 # One-time setup (repo Settings > Secrets and variables > Actions):
-#   CLOUDFLARE_API_TOKEN   a Cloudflare API token made from the
-#                          "Edit Cloudflare Workers" template
+#   CLOUDFLARE_API_TOKEN   a Cloudflare API token made from the "Edit Cloudflare
+#                          Workers" template, with "Cloudflare Pages: Edit" added
 #   CLOUDFLARE_ACCOUNT_ID  your Cloudflare account ID (Workers & Pages page)
 name: Deploy server
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["server/**"]
+    paths: ["server/**", "site/**"]
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -23,9 +25,15 @@ jobs:
       - name: Server tests
         working-directory: server
         run: node tools/test-econ.mjs && node tools/test-dir.mjs
-      - name: Deploy
+      - name: Deploy the server
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: server
+      - name: Deploy the game (battleballs.pages.dev)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy site --project-name=battleballs --branch=main --commit-dirty=true
