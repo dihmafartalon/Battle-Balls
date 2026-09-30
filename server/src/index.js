@@ -851,7 +851,7 @@ export class Vault {
     }
 
     // The Crown belongs to whoever is #1 on the leaderboard right now, and to nobody else
-    if (rec && (body.op === "load" || body.op === "act")) {
+    if (rec && (body.op === "load" || body.op === "act" || body.op === "sync")) {
       const t = await dirCall(this.env, { op: "top1" });
       if (t && typeof t.sub === "string") {
         const sv = JSON.parse(rec.data);
@@ -899,6 +899,14 @@ export class Vault {
         await st.put("opids", seen.slice(-OPS_KEPT));
       }
       for (const f of watchFlags(stats, hist, now)) flags.push(f);
+      // the directory (leaderboard, admin list) hears the new totals now, and
+      // before the save is written: a win that takes you to #1 hands you the
+      // Crown in this same answer, not whenever you next happen to play
+      // ponytail: one directory write per act; batch them if the player count ever makes that object busy
+      const sus = suspicion(stats, hist, (await st.get("flags")) || [], now);
+      await dirCall(this.env, { op: "touch", sub, name: save.netName || "", rp: save.rp | 0, season: save.season | 0, sum: summary(stats, sus) });
+      const top = await dirCall(this.env, { op: "top1" });
+      if (top && typeof top.sub === "string") crownFix(save, sub, top.sub);
       const data = JSON.stringify(save);
       if (data.length > SAVE_MAX_BYTES) return jsonRes({ error: "save too big" }, 413);
       const next = { data, rev: (rec ? rec.rev : 0) + 1, at: now };
@@ -906,10 +914,6 @@ export class Vault {
       await st.put(Object.assign({ save: next, bj, actT: recent, stats, hist, ledger, tickets }, keep));
       let banned = null;
       for (const f of flags) banned = (await this.flagIn(sub, f, now)) || banned;
-      // the directory (leaderboard, admin list) hears the new totals now
-      // ponytail: one directory write per act; batch them if the player count ever makes that object busy
-      const sus = suspicion(stats, hist, (await st.get("flags")) || [], now);
-      dirCall(this.env, { op: "touch", sub, name: save.netName || "", rp: save.rp | 0, season: save.season | 0, sum: summary(stats, sus) });
       return jsonRes({ save, rev: next.rev, at: now, res, ec: 1, banned: banned ? banned.why : undefined, inbox: await this.takeInbox() });
     }
 
