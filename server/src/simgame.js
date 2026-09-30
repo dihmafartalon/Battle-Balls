@@ -116,6 +116,14 @@ var SWORD_ICON={
   chain:"<rect x='18.6' y='3' width='2.8' height='13' fill='{B}'/><circle cx='20' cy='19' r='2' fill='{G}'/><circle cx='20' cy='24' r='2' fill='{G}'/><circle cx='20' cy='29' r='2' fill='{G}'/><rect x='18.8' y='32' width='2.4' height='6' fill='{H}'/>"
 };
 var ABIL_ICON={
+  // a wave curling over, foam on the lip
+  grey:"<path d='M4 32 C8 30 10 24 12 18 C15 9 26 5 32 11 C35 14 34 19 30 19 C27 19 26 16 28 14 C24 13 20 17 19 22 C18 27 22 31 36 32 Z' fill='{C}' opacity='.9'/><path d='M28 14 C30 11 33 13 32 16' stroke='#ffffff' stroke-width='2.2' fill='none' stroke-linecap='round'/><path d='M4 35 L36 35' stroke='{C}' stroke-width='2' opacity='.5'/>",
+  // a revolver's cylinder, one chamber loaded red
+  warts:"<circle cx='20' cy='20' r='14' fill='none' stroke='{C}' stroke-width='3'/><circle cx='20' cy='20' r='3' fill='{C}'/><circle cx='20' cy='11' r='3.4' fill='#ff2a2a'/><circle cx='27.8' cy='15.5' r='3.4' fill='none' stroke='{C}' stroke-width='2'/><circle cx='27.8' cy='24.5' r='3.4' fill='none' stroke='{C}' stroke-width='2'/><circle cx='20' cy='29' r='3.4' fill='none' stroke='{C}' stroke-width='2'/><circle cx='12.2' cy='24.5' r='3.4' fill='none' stroke='{C}' stroke-width='2'/><circle cx='12.2' cy='15.5' r='3.4' fill='none' stroke='{C}' stroke-width='2'/>",
+  // a beam of light falling into a circle on the floor
+  divine:"<path d='M15 3 L25 3 L23 27 L17 27 Z' fill='{C}' opacity='.75'/><ellipse cx='20' cy='30' rx='14' ry='4.5' fill='none' stroke='{C}' stroke-width='2.6'/><path d='M20 23 L20 37 M13 30 L27 30' stroke='#ffffff' stroke-width='2' stroke-linecap='round'/><circle cx='20' cy='6' r='4.5' fill='none' stroke='#ffffff' stroke-width='1.6'/>",
+  // a basketball in flight, taken to the rim
+  jordan:"<circle cx='17' cy='22' r='10' fill='{C}'/><path d='M7 22 L27 22 M17 12 L17 32 M10 15 C14 19 14 25 10 29 M24 15 C20 19 20 25 24 29' stroke='#1a0a04' stroke-width='1.6' fill='none'/><path d='M26 9 L36 9 M29 9 L31 14 M33 9 L31 14' stroke='{C}' stroke-width='2.2' stroke-linecap='round'/><path d='M3 12 L8 14 M2 18 L6 19' stroke='{C}' stroke-width='2' stroke-linecap='round' opacity='.6'/>",
   bloodrift:"<circle cx='20' cy='20' r='13' fill='#12020a' stroke='{C}' stroke-width='2.6'/><path d='M20 7 C16 14 24 18 18 22 C14 25 22 29 20 33' fill='none' stroke='{C}' stroke-width='3' stroke-linecap='round'/><circle cx='20' cy='20' r='17' fill='none' stroke='{C}' stroke-width='1.2' opacity='.5'/>",
   infinity:"<path d='M8 20 C8 13 17 13 20 20 C23 27 32 27 32 20 C32 13 23 13 20 20 C17 27 8 27 8 20 Z' fill='none' stroke='{C}' stroke-width='3.2'/>",
   opi:"<circle cx='20' cy='20' r='6' fill='{C}'/><path d='M8 9 L15 15 M32 9 L25 15 M8 31 L15 25 M32 31 L25 25' stroke='{C}' stroke-width='3' stroke-linecap='round'/><circle cx='20' cy='20' r='11' fill='none' stroke='{C}' stroke-width='1.6' opacity='.55'/>",
@@ -280,9 +288,9 @@ var SWORDS=[
   desc:"Not a sword. A block is a shot: the ball is blown back the way you are aiming with a crack, a muzzle flash and a tracer across the arena."},
  {id:"divineright",name:"Divine Right",price:-1,rank:"god",blade:0xdce6f2,hilt:0xd8b050,glow:0x7ad8ff,shape:"divine",hold:"rhip",swing:"divine",idle:"orbit",
   desc:"The GOD rank's blade. Worn on the right hip and drawn in one stroke: the wings open, the runes light, and every cut sheds feathers of light."},
- {id:"crown",name:"Apex",rarity:"ultra",price:-1,ultra:true,code:true,top1:true,blade:0xfff0c0,hilt:0x0e0c0a,glow:0xffd27a,shape:"apex",hold:"lance",size:.9,swing:"apex",idle:"none",
+ {id:"crown",name:"Apex",rarity:"ultra",price:-1,ultra:true,code:true,top1:true,blade:0xfff0c0,hilt:0x0e0c0a,glow:0xffd27a,shape:"apex",hold:"back",size:.9,swing:"apex",idle:"none",
   desc:"RANKED EXCLUSIVE. Only ever held by the #1 on the global leaderboard, and taken back the moment they are not. \"There is only one.\""},
- {id:"pbfetus",name:"PB Fetus",rarity:"mythic",price:-1,event:"rodriga",blade:0xe8a8a0,hilt:0xd88888,glow:0xc8101c,shape:"fetus",hold:"dangle",swing:"fetus",idle:"none",
+ {id:"pbfetus",name:"PB Fetus",rarity:"ultra",price:-1,ultra:true,event:"rodriga",blade:0xe8a8a0,hilt:0xd88888,glow:0xc8101c,shape:"fetus",hold:"dangle",swing:"fetus",idle:"none",
   desc:"Not a sword. Swung on its own cord; it cries, it drips, and it screams when it gets a kill. \"Please stop asking where it came from.\" October's item at Rodriga's shack, for a Rodriga token."},
  // Season 1 ranked path: a different weapon at every step
  {id:"s1wood",name:"Season 1 Driftwood Glaive",season:1,price:-1,rank:"wood",blade:0xc89a5a,hilt:0x4a2c14,glow:0x9aff6a,shape:"s1glaive",hold:"glaive",swing:"slash",idle:"drift",
@@ -381,7 +389,7 @@ var ABILITIES=[
   desc:"A wall of water rises in front of you and rolls away where you are aiming. Everyone it reaches is knocked back and off their feet, and if it catches the ball it hurls it on ahead, faster."},
  {id:"warts",name:"Dylan's Warts",rarity:"mythic",price:16000,yen:345,cd:1.8,color:0xffc040,
   desc:"Spin the chamber. No cooldown: spin again the moment it stops. Survive and keep a buff for the rest of the round: faster feet or harder returns. Every spin after that is riskier (1 in 6, then 5, 4, 3, 2). Hit BUST and you are out. Stop whenever you like."},
- {id:"divine",name:"Divine Judgment",rarity:"rank",price:-1,rank:"god",cd:34,color:0xfff0b0,
+ {id:"divine",name:"Divine Judgment",rarity:"rank",price:-1,rank:"god",cd:28,color:0xfff0b0,
   desc:"The GOD rank's ability. Cast while the ball is going for someone: a circle of light opens under them, the ball stops dead, a beam falls on them and the ball is thrown straight down onto them at tremendous speed. Parry it and it is over."},
  {id:"opi",name:"Opi's Wrath",rarity:"mythic",price:22000,yen:465,cd:26,color:0xff3a6e,
   desc:"Starts a four second timer: a ball that comes close to you before it runs out is pinned in the air in front of you. Until the timer ends, every press hits it again and makes it faster, with the count over the ball. Then it fires wherever you are looking. You cannot parry anything else while you hold it."}
@@ -2278,7 +2286,7 @@ function signCanvas(text,sub,col){
 function vLabel(text,sub,col,x,y,z,scale){
   var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(signCanvas(text,sub,col),1,1),
     transparent:true,depthWrite:false,fog:false}));
-  var w=11*(scale||1);
+  var w=6.6*(scale||1);             // was 11: the floating signs filled half the screen
   m.scale.set(w,w*0.25,1);
   m.position.set(x,y,z);
   m.userData.billboard=true;
@@ -2597,7 +2605,7 @@ function buildLobby(){
   venue.add(disp);
   SHOWCASE={mesh:disp,y0:2.9,fx:fxFor(eq),acc:0};
   vAnim(vBeam(1.4,4.5,0,6.6,0,eq.glow,.06,[0,0,0]),"pulse",{lo:.03,hi:.08,sp:1.6});
-  vLabel(eq.name.toUpperCase(),"YOUR EQUIPPED BLADE",eq.glow,0,7.4,0,1.4);
+  vLabel(eq.name.toUpperCase(),"YOUR EQUIPPED BLADE",eq.glow,0,6.4,0,1.2);
   for(i=0;i<3;i++){
     var mo3=vGlow(.36,.36,.36,0,2.9,0,eq.glow);
     vAnim(mo3,"orbit",{r:1.9,y0:2.9,amp:.42,sp:.8,ph:(i/3)*TAU});
@@ -3157,6 +3165,7 @@ function updateSlashes(dt){
   if(HW_DEC.pool.length||HW_DEC.beams.length||HW_DEC.tears.length)hwDecalsTick(dt);
   if(HW_DEC.spikes)iceSpikesTick(dt);
   if(HW_DEC.skulls)wendigoSkullsTick(dt);
+  if(HW_APP.length)hwApparitionsTick(dt);
   for(i=0;i<SLASH.pool.length;i++){
     var r=SLASH.pool[i];
     if(r.t<0)continue;
@@ -4366,7 +4375,7 @@ Fighter.prototype.setSword=function(id){
   var hold=this.swordDef.hold;
   this.sword=buildSword(this.swordDef);
   // a hip-slung blade hangs off the BODY, not the arm, so it stays put
-  ((hold==="float"||hold==="hip"||hold==="rhip")?this.mesh:this.arms[1]).add(this.sword);
+  ((hold==="float"||hold==="hip"||hold==="rhip"||hold==="back")?this.mesh:this.arms[1]).add(this.sword);
   if(this.groundRing&&this.groundRing.parent)this.groundRing.parent.remove(this.groundRing);
   if(this.groundRing)disposeTree(this.groundRing);
   this.groundRing=this.sword.userData.fxRing||null;
@@ -4725,6 +4734,11 @@ Fighter.prototype.idleWeapon=function(dt,t){
                            mb.cz+Math.sin(ang)*rad);
     }
   }
+};
+/* The skin's own life: its ring, trail, halo and signature tick. It runs every
+   frame, swinging or not -- inside idleWeapon it stopped for every swing, and
+   Ascended dropped to the floor each time you blocked. */
+Fighter.prototype.skinTick=function(dt,t){
   if(this.groundRing){
     this.groundRing.rotation.z=t*0.8;
     this.groundRing.material.opacity=.14+Math.sin(t*3.1)*.07;
@@ -4969,6 +4983,7 @@ Fighter.prototype.update=function(dt,t){
     this.restSword();
     this.idleWeapon(dt,t);
   }
+  this.skinTick(dt,t);
   if(this.tauntT>0)this.tauntT=Math.max(0,this.tauntT-dt);
   var locked=isTargeted(this);
   if(locked){
@@ -5539,10 +5554,13 @@ function botBlock(f,b,dt){
       var eff=clamp(f.skill-(b.mult-1)*0.13*Math.pow(1-f.skill,0.75)-pressure()*0.5-
         (f.cursedT>0?0.35:0)-(f.blindT>0?0.5:0),0.04,0.998);
       if(anticipated)eff=clamp(1-(0.02+(1-f.skill)*0.06)-(f.blindT>0?0.4:0),0.05,0.99);
+      // Divine Judgment: seen coming the whole way down, but hard to time
+      var judged=!!b.judged&&b.target===f;
+      if(judged)eff=clamp(eff*0.62,0.05,0.9);
       b.misread=false;
       if(Math.random()<eff){b.pressLead=BOTBLOCK.lead+gauss()*sd;}
       else {b.misread=true;b.pressLead=Math.random()<0.55?BLOCK.active+rr(0.12,0.65):-1;}   // too early, or frozen
-      b.readLeft=anticipated?0:f.react*rr(0.85,1.2)*(f.cursedT>0?1.3:1);
+      b.readLeft=(anticipated||judged)?0:f.react*rr(0.85,1.2)*(f.cursedT>0?1.3:1);
     }
     b.readLeft=Math.max(0,(b.readLeft||0)-dt);
     // a misread that meant to press early but only got round to it once the ball
@@ -5826,7 +5844,7 @@ function resetBall(b,delay){
   b.respawn=delay===undefined?1.15:delay;
   b.pos.set(0,7,0);
   // a new ball starts a new rally: back to full reaction time for everyone
-  b.mult=1;
+  b.mult=1;b.judged=0;
   b.speed=BALL_BASE*MODE.speed;
   b.flightSpeed=b.speed;
   b.slow=0;b.freeze=0;
@@ -5852,7 +5870,10 @@ function deflect(b,by,perfect,timed){
   if(by.charges>0){perfect=true;by.charges--;}
   if(by.furyNext){perfect=true;by.furyNext=false;b.mult+=0.30;}
   if(by.rageT>0)b.mult+=0.06;
-  if(by.warts&&by.warts.pow)b.mult+=0.08*by.warts.pow;      // Dylan's Warts: harder returns
+  if(by.warts&&by.warts.pow)b.mult+=0.22*by.warts.pow;      // Dylan's Warts: harder returns
+  // Divine Judgment: parry it and it is over. The slam's speed does not come
+  // back up at whoever called it down.
+  if(b.judged){b.mult=Math.max(1,b.mult-b.judged);b.judged=0;}
   var gained=quick?1:Math.round((perfect?10:5)*MODE.mult);
   by.deflects++;
   if(perfect)by.perfects++;
@@ -7802,18 +7823,7 @@ function sigAnimate(f,p,arm,la,sw,h,bx,by,bz){
     f.legs[1].rotation.x=k(p,[[0,0],[.44,.3],[.6,-.5],[1,0]]);
     f.legs[0].rotation.x=k(p,[[0,0],[.44,-.2],[.6,.35],[1,0]]);
     tw=k(p,[[0,0],[.16,.45],[.44,-.3],[.6,-.6],[1,0]]);
-  } else if(style==="apex"){
-    // wind up: the spear drawn back high over the shoulder; the slash: one
-    // long golden sweep across the front; recover to rest
-    arm.rotation.x=k(p,[[0,ra0],[.26,-2.75],[.34,-2.8],[.52,-.55],[.66,-.7],[1,ra0]]);
-    arm.rotation.z=k(p,[[0,rz],[.26,.7],[.34,.72],[.52,-.55],[.66,-.45],[1,rz]]);
-    E=k(p,[[0,eRest],[.26,-1.25],[.34,-1.35],[.52,1.5],[.66,1.4],[1,eRest]]);
-    sw.rotation.z=k(p,[[0,s2],[.26,s2+.45],[.52,s2-.7],[.66,s2-.6],[1,s2]]);
-    arm.position.z=bz+k(p,[[0,0],[.26,-.1],[.52,.3],[.66,.25],[1,0]]);
-    f.legs[1].rotation.x=k(p,[[0,0],[.26,.25],[.52,-.55],[.7,-.45],[1,0]]);
-    f.legs[0].rotation.x=k(p,[[0,0],[.26,-.2],[.52,.45],[.7,.35],[1,0]]);
-    tw=k(p,[[0,0],[.26,.75],[.34,.8],[.52,-.85],[.66,-.75],[1,0]]);
-  } else if(style==="riftslash"||style==="wendigo"||style==="divine"){
+  } else if(style==="riftslash"||style==="wendigo"||style==="divine"||style==="apex"){
     /* The sling's own draw and cut, made fluid: the draw, the cut and the
        return home overlap, each easing in and out (smootherstep), so the blade
        is never stopped and never snaps -- it comes off the back, goes through,
@@ -7882,7 +7892,7 @@ function sigBeat(f,S,b,i){
   if(st==="gunshot"){
     gunBlast(f,!!b.fin,col);
   } else if(st==="fetus"){
-    fetusSplash(f,tip,!!b.fin);
+    fetusSplash(f,tip,!!b.fin,!!b.fin);
   } else if(st==="apex"){
     apexStrike(f,tip);
   } else if(st==="divine"){
@@ -8006,6 +8016,7 @@ function sigSwingSfx(d){
       noiseHit(.09,.55,5600);tone(170,45,.18,"square",.32);noiseHit(.3,.2,800);tone(1200,300,.06,"sawtooth",.08);
       setTimeout(function(){tone(3400+i*300,2800,.05,"triangle",.05);},160);
       setTimeout(function(){tone(2900,2500,.04,"triangle",.04);},240);},gd*w);});
+    setTimeout(function(){tone(3400,1200,.45,"sine",.05);tone(1318,1318,.6,"sine",.05);},gd*.52);   // the ricochet and a ring
     setTimeout(function(){tone(900,420,.18,"triangle",.04);},gd*.72);
   } else if(st==="apex"){
     // steel drawn, a rising shing, the strike rings like a struck bell over a low boom
@@ -8104,6 +8115,15 @@ function hwDecalTex(kind){
       x.moveTo(128+sd*40,62);x.lineTo(128+sd*62,54);x.lineTo(128+sd*74,36);   // tine
       x.moveTo(128+sd*45,44);x.lineTo(128+sd*34,26);                           // tine
       x.moveTo(128+sd*62,54);x.lineTo(128+sd*80,62);x.stroke();}
+  } else if(kind==="bloodsplat"){
+    x.beginPath();for(i=0;i<=40;i++){var ba=i/40*TAU,br=70+((i*53)%23)*2.2+(i%5===0?40:0);
+      if(i===0)x.moveTo(128+Math.cos(ba)*br*.9,128+Math.sin(ba)*br*.9);else x.lineTo(128+Math.cos(ba)*br*.9,128+Math.sin(ba)*br*.9);}x.fill();
+    for(i=0;i<14;i++){var da=i*2.3,dr=100+(i%4)*6;x.beginPath();x.arc(128+Math.cos(da)*dr,128+Math.sin(da)*dr,4+(i%3)*3,0,TAU);x.fill();}
+  } else if(kind==="chamber"){
+    x.lineWidth=7;x.beginPath();x.arc(128,128,116,0,TAU);x.stroke();
+    x.lineWidth=4;for(i=0;i<6;i++){var ca=i/6*TAU;x.beginPath();x.arc(128+Math.cos(ca)*66,128+Math.sin(ca)*66,26,0,TAU);x.stroke();}
+    x.beginPath();x.arc(128,128,14,0,TAU);x.fill();
+    x.lineWidth=2.5;for(i=0;i<36;i++){var ta=i/36*TAU;x.beginPath();x.moveTo(128+Math.cos(ta)*104,128+Math.sin(ta)*104);x.lineTo(128+Math.cos(ta)*(i%3?98:92),128+Math.sin(ta)*(i%3?98:92));x.stroke();}
   } else if(kind==="streak"){
     c=cvs(256,64);x=c.getContext("2d");
     var gr=x.createLinearGradient(0,0,0,64);
@@ -8265,6 +8285,71 @@ function wendigoSkullsTick(dt){
     if(camera.quaternion)r.mesh.quaternion.copy(camera.quaternion);     // always faces you
     // it flickers as it comes, holds, then goes
     r.mesh.material.opacity=inn*Math.pow(1-u,1.3)*(0.85+0.15*Math.sin(r.t*60));
+    r.mesh.visible=true;}
+}
+/* ---- apparitions: a big face that looks out over a signature swing, like
+   the Wendigo's skull. PB Fetus and Ricky's .9 have their own. ---- */
+var HW_APP=[];
+function fetusFaceTex(){
+  if(HW_DEC.tex.fetusface)return HW_DEC.tex.fetusface;
+  var c=cvs(512,512),x=c.getContext("2d"),sd;
+  x.shadowColor="#ff1020";x.shadowBlur=40;
+  var g=x.createRadialGradient(236,220,30,256,256,210);g.addColorStop(0,"#ffd0c8");g.addColorStop(.7,"#e87a78");g.addColorStop(1,"#6a0610");
+  x.fillStyle=g;x.beginPath();x.arc(256,250,196,0,TAU);x.fill();
+  x.shadowBlur=0;x.strokeStyle="rgba(160,10,30,.7)";x.lineWidth=5;
+  [[150,120,190,170],[360,110,330,170],[120,300,170,280],[390,300,340,270],[256,70,250,130]].forEach(function(v){x.beginPath();x.moveTo(v[0],v[1]);x.quadraticCurveTo((v[0]+v[2])/2+14,(v[1]+v[3])/2,v[2],v[3]);x.stroke();});
+  for(sd=-1;sd<=1;sd+=2){
+    x.fillStyle="#7a0010";x.beginPath();x.ellipse(256+sd*78,238,58,64,0,0,TAU);x.fill();
+    x.fillStyle="#0a0204";x.beginPath();x.ellipse(256+sd*78,238,48,54,0,0,TAU);x.fill();
+    x.fillStyle="#ffffff";x.beginPath();x.arc(256+sd*78-14,222,11,0,TAU);x.fill();
+    // tears of blood running off the chin
+    x.fillStyle="#c8101c";x.beginPath();x.moveTo(256+sd*78-10,290);x.lineTo(256+sd*78+10,290);x.lineTo(256+sd*80+6,470);x.quadraticCurveTo(256+sd*80,500,256+sd*80-6,470);x.closePath();x.fill();
+  }
+  x.fillStyle="#3a0408";x.beginPath();x.ellipse(256,352,46,34,0,0,TAU);x.fill();
+  x.fillStyle="#8a1020";x.beginPath();x.ellipse(256,366,26,14,0,0,TAU);x.fill();
+  return (HW_DEC.tex.fetusface=mkTex(c));
+}
+function rickyTex(){
+  if(HW_DEC.tex.ricky)return HW_DEC.tex.ricky;
+  var c=cvs(512,512),x=c.getContext("2d"),i;
+  x.shadowColor="#ffc040";x.shadowBlur=34;
+  var g=x.createRadialGradient(220,210,20,256,256,210);g.addColorStop(0,"#fff4c8");g.addColorStop(.6,"#e8b840");g.addColorStop(1,"#7a5210");
+  x.fillStyle=g;x.beginPath();
+  for(i=0;i<6;i++){var a=i/6*TAU-Math.PI/2,a2=a+TAU/12;
+    x.arc(256,256,200,a-.32,a+.32);x.lineTo(256+Math.cos(a2)*176,256+Math.sin(a2)*176);}
+  x.closePath();x.fill();
+  x.shadowBlur=0;
+  for(i=0;i<6;i++){var b=i/6*TAU-Math.PI/2,cx=256+Math.cos(b)*118,cy=256+Math.sin(b)*118;
+    x.fillStyle="#1a1206";x.beginPath();x.arc(cx,cy,44,0,TAU);x.fill();
+    var bg=x.createRadialGradient(cx-10,cy-10,4,cx,cy,34);bg.addColorStop(0,"#fff8d8");bg.addColorStop(1,"#c89020");
+    x.fillStyle=bg;x.beginPath();x.arc(cx,cy,30,0,TAU);x.fill();
+    x.fillStyle="#7a5210";x.beginPath();x.arc(cx,cy,9,0,TAU);x.fill();}
+  x.fillStyle="#1a1206";x.beginPath();x.arc(256,256,30,0,TAU);x.fill();
+  x.strokeStyle="#fff4c8";x.lineWidth=6;x.beginPath();x.arc(256,256,212,0,TAU);x.stroke();
+  return (HW_DEC.tex.ricky=mkTex(c));
+}
+function hwApparition(x,y,z,tex,size,life,spin){
+  var r=null;
+  for(var i=0;i<HW_APP.length;i++)if(HW_APP[i].t<0){r=HW_APP[i];break;}
+  if(!r){
+    if(HW_APP.length>=4)return;
+    var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({transparent:true,depthWrite:false,
+      side:THREE.DoubleSide,blending:THREE.AdditiveBlending,toneMapped:false}));
+    m.frustumCulled=false;m.visible=false;m.renderOrder=6;scene.add(m);
+    r={mesh:m,t:-1};HW_APP.push(r);
+  }
+  r.mesh.material.map=tex;r.mesh.material.needsUpdate=true;
+  r.t=0;r.x=x;r.y=y;r.z=z;r.size=size||4.5;r.life=life||1;r.spin=spin||0;
+}
+function hwApparitionsTick(dt){
+  for(var i=0;i<HW_APP.length;i++){var r=HW_APP[i];if(r.t<0)continue;
+    r.t+=dt;var u=r.t/r.life;
+    if(u>=1){r.t=-1;r.mesh.visible=false;continue;}
+    var inn=Math.min(1,u/.12),sz=r.size*(.7+.5*(1-Math.pow(1-u,3)));
+    r.mesh.scale.set(sz,sz,1);r.mesh.position.set(r.x,r.y+u*1.0,r.z);
+    if(camera.quaternion)r.mesh.quaternion.copy(camera.quaternion);
+    if(r.spin)r.mesh.rotateZ(r.t*r.spin);
+    r.mesh.material.opacity=inn*Math.pow(1-u,1.2)*(0.85+0.15*Math.sin(r.t*50));
     r.mesh.visible=true;}
 }
 // a spear of ice bursting out of the floor, holding, then sinking back
@@ -9091,9 +9176,9 @@ SIG_SWING.gunshot={dur:.66,col:0xffb040,beats:[
   {w:.27,st:{span:1.5,tilt:1.35,r:1.2,w:.35,hot:1},col:0xffd070},
   {w:.49,st:{span:2.4,tilt:1.3,r:1.35,w:.45,hot:1},col:0xffc040,fin:true}]};
 // PB Fetus: whirled round on its cord, then slammed down
-SIG_SWING.fetus={dur:.7,col:0xc8101c,beats:[
-  {w:.30,st:{span:6.28,tilt:.3,r:1.35,w:1.1,hot:1},col:0xff2a3a},
-  {w:.58,st:{span:3.2,tilt:1.35,r:1.8,w:1.3,hot:1},col:0xc8101c,fin:true}]};
+SIG_SWING.fetus={dur:.74,col:0xc8101c,beats:[
+  {w:.30,st:{span:6.28,tilt:.3,r:2.5,w:1.9,hot:1},col:0xff2a3a},
+  {w:.60,st:{span:4.6,tilt:1.3,r:3.0,w:2.2,hot:1},col:0xc8101c,fin:true}]};
 SLASH_STYLE.fetus=SIG_SWING.fetus.beats[1].st;SWEEP.fetus=SWEEP.overhead;
 // APEX: drawn back over the shoulder, one golden crescent, a starburst on the strike
 SIG_SWING.apex={dur:.62,col:0xffd27a,beats:[
@@ -9109,6 +9194,9 @@ HOLD.rhip={sp:[0.64,2.07,1.02],sr:[-1.875,Math.PI/2,-0.1],ra:[-0.24,0,0.12],la:n
 HOLD.glaive={sp:[0,-1.95,0.02],sr:[0.1,0,-0.22],ra:[-0.35,0,0.14],la:null};  // same easy carry, gripped further up the shaft
 // reverse grip: the blade runs back from the fist and trails behind the leg
 HOLD.rgrip={sp:[0,-1.22,.02],sr:[-1.62,0,0.08],ra:[-0.26,0,0.16],la:null};
+// slung across the back, point up over the left shoulder, like the Dev blade
+// is carried: drawn off the back in one stroke
+HOLD.back={sp:[0.62,.55,-0.62],sr:[-0.12,0,0.5],ra:[-0.24,0,0.12],la:null};
 HOLD.lance={sp:[0,-1.64,0.02],sr:[0.1,0,-0.24],ra:[-0.35,0,0.14],la:null};
 FXD.gunfx={rate:10,c1:0xffb040,c2:0x6a6a70,vy:[.2,1.2],sp:.2,g:-1.2,sz:.34,life:.5,along:1.0,sheath:0};
 FXD.nullfx={rate:36,c1:0x00ffe0,c2:0x001a18,vy:[-.4,1.2],sp:.6,g:0,sz:.44,life:.3,along:1.0,sheath:.5,arc:true,motes:3};
@@ -9266,6 +9354,12 @@ SIG_SHAPE.fetus=function(g,seg,B,H,G){
     var ft=new THREE.Mesh(GEO.sphLo,flesh2);ft.scale.set(.14,.12,.18);ft.position.set(sd*.18,2.31,-.2);dg.add(ft);
   }
   var drips=new THREE.Group();drips.userData.aura=true;dg.add(drips);g.userData.drips=drips;
+  // ULTRA: an unholy halo of thorns turning over its head
+  var halo=new THREE.Group();halo.position.y=.3;halo.userData.aura=true;dg.add(halo);g.userData.fetusHalo=halo;
+  var thornM=new THREE.MeshBasicMaterial({color:0xff2a3a});
+  var hr0=new THREE.Mesh(new THREE.TorusGeometry(.62,.05,6,28),thornM);hr0.rotation.x=Math.PI/2;halo.add(hr0);
+  for(i=0;i<10;i++){var ta=i/10*TAU,th=new THREE.Mesh(GEO.cone,thornM);th.scale.set(.06,.26,.06);
+    th.position.set(Math.cos(ta)*.62,-.1,Math.sin(ta)*.62);th.rotation.x=Math.PI;halo.add(th);}
   // a sick red glow round it, so it reads from across the arena
   var aura=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:glowTex(),color:0xff2030,transparent:true,opacity:.45,blending:THREE.AdditiveBlending,depthWrite:false}));
   aura.scale.setScalar(2.6);aura.position.y=1.3;aura.userData.aura=true;aura.userData.bill=true;dg.add(aura);g.userData.fetusAura=aura;
@@ -9304,6 +9398,7 @@ function v4SwordIdle(f,sw,t,dt){
   }
   var fa=sw.userData.fetusAura;
   if(fa&&camera){fa.lookAt(camera.position);fa.material.opacity=.35+.15*Math.sin(t*3+f.phase);}
+  if(sw.userData.fetusHalo)sw.userData.fetusHalo.rotation.y=t*1.4;
   var fr=sw.userData.frags;
   if(fr)for(var i=0;i<fr.children.length;i++){var m=fr.children[i],b=m.userData.base;
     m.position.set(b[0]+Math.sin(t*1.3+i)*.06,b[1]+Math.sin(t*1.7+i*1.3)*.12,b[2]);m.rotation.y=t*2+i;}
@@ -9324,7 +9419,7 @@ HOLD.pistol={sp:[0,-1.22,.06],sr:[2.56,0,-0.06],ra:[-0.2,0,0.12],la:null};      
 HOLD.dangle={sp:[0,-1.28,0.04],sr:[Math.PI+0.85,0,0],ra:[-0.85,0,0.2],la:null};     // held out in front by its cord, hanging
 FXD.divinefx={rate:40,c1:0xcff2ff,c2:0x6ac8ff,vy:[.4,1.8],sp:.5,g:-.6,sz:.62,life:1.2,along:1.0,sheath:.55,motes:6,ring:0x7ae8ff};
 FXD.apexfx={rate:30,c1:0xffe8a0,c2:0xfff8e0,vy:[.2,1.4],sp:.5,g:-.8,sz:.5,life:1.0,along:1.0,sheath:.4,motes:4,ring:0xe8c060};
-FXD.fetusfx={rate:14,c1:0xc8101c,c2:0x5a0008,vy:[-1.2,-.2],sp:.3,g:6,sz:.4,life:.7,along:.4,sheath:0};
+FXD.fetusfx={rate:24,c1:0xff2030,c2:0x5a0008,vy:[-1.2,.4],sp:.4,g:5,sz:.5,life:.9,along:.6,sheath:.25,motes:5,ring:0xc8101c};   // ULTRA
 Object.assign(SWORD_FX,{crown:"apexfx",pbfetus:"fetusfx",divineright:"divinefx"});
 // the fetus's sounds: a wet swing, a distorted cry now and then, a scream on a kill
 function fetusSfx(kind){
@@ -9354,16 +9449,45 @@ function gunBlast(f,big,col){
   ringBurst(tip.x,tip.y,tip.z,QUAL>1?20:10,big?9:6,0xffe0a0,1.1,.3);
   for(var k=0;k<(QUAL>1?8:4);k++)spark(tip.x+fx*.4,tip.y,tip.z+fz*.4,fx*hr(1,3)+hr(-.5,.5),hr(1,2.4),fz*hr(1,3)+hr(-.5,.5),.55,.55,.6,hr(.6,1),hr(.8,1.4),-.6);
   spawnSlash(f,big?{span:2.6,tilt:1.25,r:1.4,w:.5,hot:1}:{span:1.6,tilt:1.3,r:1.25,w:.35,hot:1},col||0xffc040,big);
-  if(big){slashRing(tip.x,tip.y,tip.z,0xffd070,0,Math.PI/2);if(f===player)shakeCam(.14);}
+  if(big){
+    slashRing(tip.x,tip.y,tip.z,0xffd070,0,Math.PI/2);
+    // the signature: a spectral gold cylinder spins up behind you, a ring of gold
+    // round your body, six pillars of light where the chambers land, brass raining
+    var X=f.pos.x,Y=f.y,Z=f.pos.z;
+    hwApparition(X-fx*.8,Y+4.6,Z-fz*.8,rickyTex(),4.4,1.0,3.5);
+    spawnSlash(f,{span:6.28,tilt:.12,r:2.0,w:1.1,hot:1},0xffc040,true);
+    hwDecal(X,Y+.07,Z,"chamber",0xffc040,9,1.3,1.4,f.yaw);
+    for(var c6=0;c6<6;c6++){var pa=f.yaw+c6/6*TAU;hwBeam(X+Math.sin(pa)*3,Y,Z+Math.cos(pa)*3,0xffd070,.45,.45);}
+    for(var br=0;br<(QUAL>1?26:10);br++)spark(X+hr(-3,3),Y+hr(4,6),Z+hr(-3,3),hr(-1,1),hr(-2,0),hr(-1,1),1,.78,.3,hr(.25,.4),hr(.9,1.4),-10);
+    ringBurst(X,Y+.4,Z,QUAL>1?30:14,12,0xffd070,1.3,.5);
+    if(f===player)shakeCam(.2);
+  }
   else if(f===player)shakeCam(.09);
 }
 /* PB Fetus: a spray of blood off the whirl, and on the slam a splash on the
    floor, a red ring, drops everywhere and a cry */
-function fetusSplash(f,tip,slam){
+function fetusSplash(f,tip,slam,big){      // big: the swing's own slam (the ULTRA part), not a kill
   var n=QUAL>1?(slam?46:26):(slam?20:12),X=tip.x,Y=tip.y,Z=tip.z;
   for(var i=0;i<n;i++){var a=Math.random()*TAU,sp=hr(2,slam?9:6);
     spark(X,Y,Z,Math.cos(a)*sp,hr(1,slam?7:4),Math.sin(a)*sp,hr(.6,.9),0,hr(0,.08),hr(.3,.6),hr(.5,1),12);}
   burst(X,Y,Z,slam?24:12,slam?10:6,0xc8101c,1.3,.4,-8);
+  if(!slam&&f.pos){
+    // the whirl: a spiral of blood thrown off all the way round, and a second, tilted ring
+    spawnSlash(f,{span:6.28,tilt:-.35,r:2.1,w:1.2,hot:1},0x8a0010,true);
+    for(var q=0;q<(QUAL>1?36:14);q++){var qa=q/36*TAU*2,qr=1.2+q*.06;
+      spark(f.pos.x+Math.cos(qa)*qr,f.y+1.4+q*.04,f.pos.z+Math.sin(qa)*qr,Math.cos(qa)*5,hr(1,3),Math.sin(qa)*5,.85,.02,.08,hr(.35,.6),hr(.5,.9),9);}
+  }
+  if(big&&f.pos){
+    // ULTRA: it looks out over you, and the floor goes red
+    var ax=f.pos.x-Math.sin(f.yaw)*.4,az=f.pos.z-Math.cos(f.yaw)*.4;
+    hwApparition(ax,f.y+5.2,az,fetusFaceTex(),5.2,1.1,0);
+    hwDecal(f.pos.x+Math.sin(f.yaw)*2.2,f.y+.07,f.pos.z+Math.cos(f.yaw)*2.2,"bloodsplat",0xc8101c,9,1.8,0,f.yaw);
+    hwBeam(f.pos.x+Math.sin(f.yaw)*2.2,f.y,f.pos.z+Math.cos(f.yaw)*2.2,0xff2030,1.6,.5);
+    for(var gk=0;gk<12;gk++){var ga=f.yaw+gk/12*TAU,grr=hr(2.4,3.2),gx2=f.pos.x+Math.sin(ga)*grr,gz2=f.pos.z+Math.cos(ga)*grr;
+      for(var gh=0;gh<(QUAL>1?6:3);gh++)spark(gx2,f.y+.1,gz2,hr(-.4,.4),hr(7,12),hr(-.4,.4),hr(.6,.9),0,.05,hr(.4,.7),hr(.6,1),14);}
+    try{tone(180,90,.5,"sawtooth",.08);tone(760,1100,.35,"sawtooth",.05);}catch(e){}
+    if(f===player)shakeCam(.24);
+  }
   if(slam){
     var gx=f.pos.x+Math.sin(f.yaw)*2.2,gz=f.pos.z+Math.cos(f.yaw)*2.2;
     slashRing(gx,f.y+.08,gz,0xc8101c,0,0);slashRing(gx,f.y+.08,gz,0xff3a4a,.08,0);
@@ -9693,8 +9817,10 @@ var SIG_TICK4={
     // stand still for a moment and you rise a few studs off the floor
     // you never quite touch the floor: a little off it on the move, higher
     // once you stand still for a moment
-    var sp=Math.hypot(f.vel.x,f.vel.z),moving=sp>0.8||!f.grounded||f.swingT>0;
-    s.still=moving?0:s.still+dt;
+    // a swing is not moving: it used to count as one, so every block dropped you
+    // out of the air and put you back up a second later
+    var sp=Math.hypot(f.vel.x,f.vel.z),moving=sp>0.8||!f.grounded;
+    if(f.swingT>0){}else s.still=moving?0:s.still+dt;
     var want=s.still>0.7?1.6:(f.grounded?.55:0);
     s.hover+= (want-s.hover)*Math.min(1,dt*(want>s.hover?1.1:6));
     var bob=s.hover>.05?Math.sin(t*1.6+f.phase)*.12*s.hover/1.6:0;
@@ -10125,7 +10251,7 @@ function wartsApply(f,res){
   if(res==="bust"){wartsChamber(f,res,function(){wartsBust(f);});return;}
   wartsChamber(f,res);
   W.n++;
-  if(res==="spd"){W.spd++;f.bloodlust=Math.min(0.9,(f.bloodlust||0)+0.12);}
+  if(res==="spd"){W.spd++;f.bloodlust=Math.min(0.9,(f.bloodlust||0)+0.28);}
   else if(res==="cd")W.cd++;
   else if(res==="pow")W.pow++;
   if(f.isPlayer)feed("Dylan's Warts: "+W.n+" survived. Next spin is 1 in "+Math.max(2,6-W.n),"gold");
@@ -10147,7 +10273,7 @@ function wartsBust(f){
    Cast while the ball is going for someone. You raise your free hand: a circle
    of light opens under them, the ball stops dead, a beam falls on them, and the
    ball is driven down onto them at tremendous speed. Parry it and it is over. */
-var JUDGE={hold:1.05,beamAt:0.55,boost:1.7};
+var JUDGE={hold:1.05,beamAt:0.55,boost:2.0};
 function divineCast(f){
   var b=null;
   for(var i=0;i<balls.length;i++){var c=balls[i];if(c.active&&c.target&&c.target!==f&&c.target.alive&&hostileTo(f,c.target)&&!(c.held>0)){b=c;break;}}
@@ -10156,7 +10282,9 @@ function divineCast(f){
   f.raiseT=JUDGE.hold+.4;
   b.freeze=JUDGE.hold+.1;
   if(tgt.isPlayer)flashWarn("JUDGMENT",1.1,"#fff0b0");
-  tgt.anticipate=b;tgt.anticipateLeft=JUDGE.hold+1.5;
+  // no free read for a bot under judgment: it sees the circle like anyone else
+  // and has to time the drop (with that read it parried nearly every one)
+  if(tgt.anticipate===b)tgt.anticipate=null;
   // the circle under them
   var ring=new THREE.Group();scene.add(ring);
   var rm=new THREE.MeshBasicMaterial({color:0xfff0b0,transparent:true,opacity:.9,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false});
@@ -10180,7 +10308,7 @@ function divineCast(f){
       thrown=true;
       // straight down onto them, at tremendous speed (the host decides the ball)
       if(!(NET.on&&!NET.isHost)&&b.active&&tgt.alive){
-        b.freeze=0;b.lastHit=f;b.target=tgt;b.mult+=JUDGE.boost;
+        b.freeze=0;b.lastHit=f;b.target=tgt;b.mult+=JUDGE.boost;b.judged=JUDGE.boost;
         b.pos.set(tgt.pos.x,Math.max(b.pos.y,tgt.y+9),tgt.pos.z);
         setupFlight(b);
         if(NET.on&&NET.isHost)netBroadcastBall();
@@ -10908,11 +11036,16 @@ function updateBot(f,dt){
   if(STATE==="countdown")return;          // free to move, nothing to block or cast at yet
   if(f.abilCd<=0&&f.stun<=0&&f.frozen<=0){
     var a=abilById(f.ability);
-    if(!a.passive){
+    // a bot on Dylan's Warts pockets two buffs and stops, like a sane player
+    if(!a.passive&&!(a.id==="warts"&&f.warts&&f.warts.n>=(f.skill>.85?2:1))){
       var want=false;
       if(targeted&&t<1.5)want=Math.random()<0.4+(f.skill*0.5);
       else if(d>arenaEdgeFor(f)*0.9)want=(a.id==="dash");
       else if(Math.random()<dt*0.9)want=true;
+      // Divine Judgment only works on a ball going for somebody else: call it then
+      if(a.id==="divine"){want=false;
+        for(var jb=0;jb<balls.length;jb++){var jB=balls[jb];
+          if(jB.active&&jB.target&&jB.target!==f&&jB.target.alive&&hostileTo(f,jB.target)&&Math.random()<dt*1.5){want=true;break;}}}
       if(want)useAbility(f);
     }
   }
@@ -11422,7 +11555,7 @@ function startMatch(modeId){
   var count=MODE.swarm?2:1;
   for(i=0;i<count;i++){
     var bb=new Ball();
-    bb.speed=BALL_BASE*MODE.speed;bb.mult=1;
+    bb.speed=BALL_BASE*MODE.speed;bb.mult=1;bb.judged=0;
     balls.push(bb);
   }
   if(MODE.halloween)trickStart();
