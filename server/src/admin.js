@@ -51,7 +51,7 @@ export async function handleAdmin(request, env, H) {
     const [v, d] = await Promise.all([vault({ op: "adm_get" }), H.dirCall(env, { op: "get", sub })]);
     return H.jsonRes(Object.assign({ acct: d && d.acct }, v));
   }
-  if (b.op === "edit") return H.jsonRes(await vault({ op: "adm_edit", edits: b.edits }));
+  if (b.op === "edit") return H.jsonRes(await vault({ op: "adm_edit", edits: b.edits, note: b.note, silent: !!b.silent }));
   // kick / message: every room they were in lately is asked; only the one they are in has them
   if (b.op === "kick" || b.op === "msg") {
     const text = String(b.text || "").trim().slice(0, 500);
@@ -258,6 +258,13 @@ function draw(sub,j){
     R.appendChild(el("div",{class:"tbl"},[el("table",{},[el("tr",{},["When","From","Coins","Yen","RP","Items"].map(function(h){return el("th",{text:h});}))].concat(lg.map(function(x){
       var it=(x.got||[]).map(function(k){return "+"+itemName(k);}).concat((x.lost||[]).map(function(k){return "\\u2212"+itemName(k);})).join(", ");
       return el("tr",{},[el("td",{text:when(x.at)}),el("td",{text:KIND[x.k]||x.k}),el("td",{},[signed(x.dc)]),el("td",{},[signed(x.dy)]),el("td",{},[signed(x.drp)]),el("td",{style:"white-space:normal",text:it})]);})))]));}
+  // gifts: what you give below pops up in their game, with this note
+  R.appendChild(el("h3",{text:"Gift pop-up"}));
+  var gNote=el("input",{type:"text",maxlength:"300",placeholder:"Optional note, e.g. GG on the tournament!",style:"width:100%;max-width:520px"});
+  var gPop=el("input",{type:"checkbox"});gPop.checked=true;
+  R.appendChild(el("div",{class:"row"},[gNote]));
+  R.appendChild(el("label",{class:"mute",style:"display:inline-flex;gap:6px;align-items:center;margin-top:6px"},[gPop,el("span",{text:"Show them a gift pop-up for items, coins, yen and spins given"})]));
+  var giftOpts=function(){return {note:gNote.value,silent:!gPop.checked};};
   // money
   R.appendChild(el("h3",{text:"Coins, yen, RP (edit)"}));
   var g2=el("div",{class:"grid"}),inputs={};
@@ -265,7 +272,7 @@ function draw(sub,j){
     var i=el("input",{type:"number",min:"0",value:String(s[k[0]]|0)});inputs[k[0]]=i;g2.appendChild(el("label",{class:"card"},[el("span",{class:"mute",text:k[1]}),i]));});
   R.appendChild(g2);
   R.appendChild(el("p",{},[el("button",{text:"Save these",on:function(){var ed=[];for(var k in inputs)ed.push({k:"set",key:k,v:Math.max(0,parseInt(inputs[k].value,10)||0)});
-    api("edit",{sub:sub,edits:ed}).then(function(r){say(r.ok?"Saved":"Could not save",!r.ok);open(sub);});}})]));
+    api("edit",Object.assign({sub:sub,edits:ed},giftOpts())).then(function(r){say(r.ok?"Saved":"Could not save",!r.ok);open(sub);});}})]));
   // items
   [["sword","swords","Blades"],["abil","abils","Abilities"],["skin","skins","Skins"]].forEach(function(t){
     var bag=s[t[1]]||{},ids=Object.keys(bag).filter(function(id){return bag[id];});
@@ -274,7 +281,7 @@ function draw(sub,j){
       always(t[0],id)?null:el("button",{class:"bad",title:"Remove",text:"\\u00d7",on:function(){api("edit",{sub:sub,edits:[{k:"del",tab:t[0],id:id}]}).then(function(){say("Removed "+nameOf(t[0],id));open(sub);});}})]);})));
     var sel=el("select",{},(CAT[t[0]]||[]).filter(function(x){return !bag[x.id];}).map(function(x){return el("option",{value:x.id,text:x.n+" ("+x.r+")"});}));
     R.appendChild(el("div",{class:"row",style:"margin-top:8px"},[sel,el("button",{text:"Give",on:function(){if(!sel.value)return;
-      api("edit",{sub:sub,edits:[{k:"add",tab:t[0],id:sel.value}]}).then(function(){say("Gave "+nameOf(t[0],sel.value));open(sub);});}})]));});
+      api("edit",Object.assign({sub:sub,edits:[{k:"add",tab:t[0],id:sel.value}]},giftOpts())).then(function(){say("Gave "+nameOf(t[0],sel.value));open(sub);});}})]));});
   // flags
   var fl=(j.flags||[]).slice().reverse();
   R.appendChild(el("h3",{text:"Anticheat and history ("+fl.length+")"}));

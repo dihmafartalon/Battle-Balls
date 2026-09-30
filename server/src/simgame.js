@@ -1005,7 +1005,9 @@ function adminInbox(list){
   var seen=CLOUD.msgSeen||(CLOUD.msgSeen={});
   for(var i=0;i<list.length;i++){
     var m=list[i];
-    if(!m||!m.text||seen[m.id])continue;
+    if(!m||seen[m.id])continue;
+    if(m.gift){seen[m.id]=1;giftQueue(m.gift,String(m.text||"").slice(0,300));continue;}
+    if(!m.text)continue;
     seen[m.id]=1;adminNote(String(m.text).slice(0,400));
   }
 }
@@ -1024,6 +1026,45 @@ function adminNote(text){
   card.appendChild(h);card.appendChild(p);card.appendChild(b);d.appendChild(card);
   try{document.body.appendChild(d);}catch(e){}
   try{if(window.__DBG)window.__DBG.lastNote=text;}catch(e){}
+}
+/* A gift from the dev: what arrived, and the note if there is one. It waits for
+   the end of a match -- it never lands on top of a round. */
+var GIFTQ=[];
+// a moment later: the save that carries the gift is applied first
+function giftQueue(g,note){GIFTQ.push({g:g,note:note});setTimeout(giftNext,900);}
+function giftNext(){
+  if(!GIFTQ.length||document.querySelector(".giftpop"))return;
+  if(cloudInMatch()){setTimeout(giftNext,2000);return;}
+  var q=GIFTQ.shift(),g=q.g||{},items=(g.items||[]).filter(function(x){var dd=x&&shopData(x.tab);return dd&&findId(dd.list,x.id)&&dd.own[x.id];});
+  if(!items.length&&!(g.coins>0||g.yen>0||g.spins>0)){giftNext();return;}
+  var d=document.createElement("div");d.className="giftpop";
+  var card=document.createElement("div");card.className="gpcard";
+  var html="<div class='gpribbon'>GIFT FROM THE DEV</div>";
+  if(items.length){
+    var first=findId(shopData(items[0].tab).list,items[0].id);
+    card.style.setProperty("--gc",tierColor(first));
+    html+="<div class='gpitems'>"+items.slice(0,6).map(function(x){var dd=shopData(x.tab),it=findId(dd.list,x.id);
+      return "<div class='gpit'><div class='dicon' style='box-shadow:inset 0 0 0 4px "+tierColor(it)+",0 5px 0 #0b1942'>"+dd.icon(it)+"</div>"+
+        "<div class='dname'>"+it.name+"</div><span class='dpill r-"+itemTier(it)+"'>"+({sword:"BLADE",abil:"ABILITY",skin:"SKIN"}[x.tab])+" &middot; "+tierLabel(it)+"</span></div>";}).join("")+"</div>";
+  }
+  var cash=[];
+  if(g.coins>0)cash.push("+"+(g.coins|0).toLocaleString()+" COINS");
+  if(g.yen>0)cash.push("+"+(g.yen|0).toLocaleString()+" YEN");
+  if(g.spins>0)cash.push("+"+(g.spins|0)+" FREE SPIN"+(g.spins>1?"S":""));
+  if(cash.length)html+="<div class='gpcash'>"+cash.join(" &middot; ")+"</div>";
+  if(q.note)html+="<div class='gpnote'></div>";
+  html+="<div class='gpbtns'>"+(items.length===1?"<button class='big gold' data-a='eq'>EQUIP IT</button>":"")+"<button class='big' data-a='ok'>NICE</button></div>";
+  card.innerHTML=html;
+  if(q.note)card.querySelector(".gpnote").textContent="\u201c"+q.note+"\u201d";
+  d.appendChild(card);document.body.appendChild(d);
+  try{sfx("coin");setTimeout(function(){sfx("perfect");},180);}catch(e){}
+  var close=function(){if(d.parentNode)d.parentNode.removeChild(d);setTimeout(giftNext,250);};
+  card.querySelector("[data-a=ok]").addEventListener("click",close);
+  var eb=card.querySelector("[data-a=eq]");
+  if(eb)eb.addEventListener("click",function(){var x=items[0],dd=shopData(x.tab);
+    if(dd.own[x.id]){SAVE[dd.eq]=x.id;writeSave();try{updateChips();updateLobbyBar();reskinLobbyPlayer();if(NET.ws&&NET.status==="lobby")mpSendLoadout();}catch(e){}}
+    close();});
+  try{if(window.__DBG)window.__DBG.lastGift=q;}catch(e){}
 }
 /* Banned: say so once, plainly, and sign this device out of the account.
    Playing offline on this device still works; the account does not. */
