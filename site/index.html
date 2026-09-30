@@ -270,7 +270,7 @@ input[type=range]{accent-color:#3dbb22;cursor:pointer}
 /* touch: the prompt moves up out of the way of the thumb buttons, and the
    ability bar sits small under the speed readout */
 #ui.touchui #zonePrompt{bottom:auto;top:24%}
-#ui.touchui #slots{bottom:auto;top:66px;transform:translateX(-50%) scale(.7);transform-origin:50% 0}
+#ui.touchui #slots{bottom:10px;top:auto;left:10px;transform:scale(.62);transform-origin:0 100%;pointer-events:none}
 #zonePrompt b{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 6px;
   background:#fff;color:var(--nv);border:3px solid var(--nv);border-radius:9px;font-weight:700;font-size:18px;text-shadow:none;
   box-shadow:0 3px 0 var(--nv)}
@@ -1885,8 +1885,6 @@ var ABILITIES=[
   desc:"Leave a double behind. The ball can lock onto it instead of you, and it parries like you do: it takes three hits to kill, and it never sends the ball at you."},
  {id:"bloodlust",name:"Bloodlust",rarity:"epic",price:4600,yen:70,cd:0,color:0x9e1b32,passive:true,
   desc:"Passive. Every elimination you cause makes you permanently faster this round."},
- {id:"endless",name:"Endless",rarity:"legendary",price:8600,yen:150,cd:24,color:0x00ffe0,
-  desc:"For 4 seconds you parry everything automatically, and nothing can stun, freeze or pull you."},
  {id:"throw",name:"Blade Toss",rarity:"rare",price:1500,yen:30,cd:13,color:0xffc04a,no1v1:true,
   desc:"Hurl your blade at whoever you face. Staggers them where they stand."},
  {id:"reflex",name:"Reflex",rarity:"rare",price:2700,yen:30,cd:12,color:0x6bffb0,
@@ -2173,7 +2171,7 @@ function swordById(id){return byId(SWORDS,id);}
 /* Taken out of the game: whoever owned one gets its price back in coins. The
    server does the same to its copy (econ.js RETIRED) -- for a signed-in
    player its coins are the ones that count. */
-var RETIRED_ABILS={flicker:7200};
+var RETIRED_ABILS={flicker:7200,endless:8600};
 function retireItems(sv){
   for(var rid in RETIRED_ABILS)if(sv.abils&&sv.abils[rid]){
     delete sv.abils[rid];sv.coins=(sv.coins||0)+RETIRED_ABILS[rid];
@@ -6039,6 +6037,9 @@ Fighter.prototype.update=function(dt,t){
   if(!this.alive){
     if(this.shell&&this.shell.visible)this.shell.visible=false;   // however it died
     if(this.hbox&&this.hbox.visible)this.hbox.visible=false;
+    if(this.armRing&&this.armRing.visible)this.armRing.visible=false;
+    if(this.chronoFx&&this.chronoFx.visible)this.chronoFx.visible=false;
+    this.blockT=0;this.blockVis=0;this.blockShow=0;this.blockFlash=0;
     this.vy-=26*dt;this.y+=this.vy*dt;
     g.position.set(this.pos.x,this.y,this.pos.z);
     g.rotation.z+=dt*4;g.rotation.x+=dt*2.6;
@@ -6633,6 +6634,16 @@ function ballHitboxDebug(b){
 function dropShell(f){
   if(f.shell){scene.remove(f.shell);if(f.shell.material.dispose)f.shell.material.dispose();f.shell=null;}
   if(f.hbox){scene.remove(f.hbox);if(f.hbox.material.dispose)f.hbox.material.dispose();f.hbox=null;}
+  if(f.armRing){scene.remove(f.armRing);f.armRing=null;}
+  if(f.chronoFx){scene.remove(f.chronoFx);f.chronoFx=null;}
+}
+// a fighter leaving the scene takes everything drawn around it along: its block
+// shell used to stay hanging in the air where it had been
+function removeFighter(f){
+  dropShell(f);
+  scene.remove(f.mesh);
+  var i=fighters.indexOf(f);
+  if(i>=0)fighters.splice(i,1);
 }
 
 /* ---- THE CURVE ----
@@ -6805,6 +6816,7 @@ function botBlock(f,b,dt){
     if(f.blockT<=0&&b.readLeft<=0&&b.pressLead>=0&&t<=b.pressLead&&botPress(f))b.pressLead=-1;
     return;
   }
+  if(botWatchHeld(f,sd))return;
   // not coming at us: is it on its way to somebody close enough to send it
   // straight back? If we sent it to them, we expect it back; if somebody else
   // did, a sharp bot still sees the danger -- a sharper one more often
@@ -6829,7 +6841,34 @@ function botBlock(f,b,dt){
     }
   }
 }
-
+/* Opi's Wrath pinned over a bot used to be a free kill: the ball fired from
+   point blank the instant the timer ran out, faster than any bot could read it.
+   Bots now watch the timer the way you do. Whoever the holder is facing braces
+   for the release and presses just before it fires, so a pinned ball is a
+   fight, not an execution. Sharper bots time it better. */
+function botWatchHeld(f,sd){
+  for(var i=0;i<balls.length;i++){
+    var c=balls[i],hb=c.heldBy;
+    if(!c.active||!(c.held>0)||!c.wrath||!hb||hb===f||!hb.alive||!hostileTo(f,hb))continue;
+    if(dist2(hb.pos.x,hb.pos.z,f.pos.x,f.pos.z)>30*30)continue;
+    var aim=hb.isPlayer?camYaw:(hb.aimYaw!==null&&hb.aimYaw!==undefined?hb.aimYaw:hb.yaw);
+    if(aimPick(c,hb,aim)!==f)continue;
+    var key=c.launchN*131+i;
+    if(f._heldKey!==key){
+      f._heldKey=key;
+      f._heldOn=Math.random()<0.6+0.38*f.skill;            // they can see the clock
+      f._heldLead=0.12+Math.abs(gauss())*sd*2;
+    }
+    if(!f._heldOn)continue;
+    f.anticipate=c;f.anticipateLeft=Math.max(f.anticipateLeft,c.held+0.8);
+    // when it will actually reach us: the rest of the hold, then the flight
+    var gap=Math.max(0,Math.sqrt(dist2(hb.pos.x,hb.pos.z,f.pos.x,f.pos.z))-2*(HB.r+BALL_R));
+    var fly=gap/Math.max(4,BALL_BASE*c.mult*(MODE.speed||1));
+    if(c.held+fly<=f._heldLead&&f.blockT<=0)botPress(f);
+    return true;
+  }
+  return false;
+}
 function netIdOf(f){return f?(f.netId||(f.isBot?("bot"+f.botIndex):null)):null;}
 function setupFlight(b,x,y,z,aimYaw,keepSpeed){
   /* A ball that is already in the air is NEVER relocated. Callers used to pass
@@ -9644,6 +9683,9 @@ function useAbility(f,remoteCast){
   if(a.passive||f.abilCd>0||!f.alive||f.stun>0||f.frozen>0)return;
   if(lastTwoBan(a)&&!remoteCast){if(f.isPlayer)flashWarn(a.name.toUpperCase()+" IS OFF \u2014 LAST TWO",0.9,"#ff6b6b");return;}
   f.abilCd=a.cd;
+  // Jordan was a free win one on one (ranked 1v1 above all): it comes round far
+  // less often when there is only one person to bring it down on
+  if(a.id==="jordan"&&oneOnOne(f))f.abilCd=a.cd*1.6;
   var fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),i,o,b,all;
   if(a.id==="dash"){
     f.vel.x+=fx*74;f.vel.z+=fz*74;          // long burst
@@ -10007,10 +10049,21 @@ function useAbility(f,remoteCast){
    11. BOT AI
    ============================================================ */
 /* The landing half of Jordan Nuh Tribute. Fires when the hang time runs out. */
+// only one opponent left standing (a 1v1 mode, or the last two of anything)
+function oneOnOne(f){
+  var n=0,all=livingFighters(false);
+  for(var i=0;i<all.length;i++)if(all[i]!==f&&!all[i].decoy&&hostileTo(f,all[i]))n++;
+  return n<=1;
+}
 function jordanSlam(f){
   if(!f.alive)return;
   f.vy=Math.min(f.vy,-40);                       // come down hard
   var all=livingFighters(false),i,o;
+  /* One on one it was a guaranteed kill: the only opponent stunned, cursed and
+     then handed a +1.0 ball from point blank. With nobody else in the arena it
+     is a throw and a faster ball now, not a stun-lock, and the target gets a
+     clean read of it. */
+  var duel=oneOnOne(f);
   for(i=0;i<all.length;i++){
     o=all[i];
     if(!hostileTo(f,o))continue;
@@ -10021,13 +10074,14 @@ function jordanSlam(f){
        one a good player can live through. */
     if(dist2(o.pos.x,o.pos.z,f.pos.x,f.pos.z)>900)continue;   // radius 30
     var ang=Math.atan2(o.pos.x-f.pos.x,o.pos.z-f.pos.z);
-    o.vel.x+=Math.sin(ang)*44;o.vel.z+=Math.cos(ang)*44;
-    o.vy=16;o.grounded=false;
+    o.vel.x+=Math.sin(ang)*(duel?26:44);o.vel.z+=Math.cos(ang)*(duel?26:44);
+    o.vy=duel?10:16;o.grounded=false;
+    if(duel)continue;
     o.stun=1.4;                                  // the grace rule still caps this
     o.cursedT=Math.max(o.cursedT,4);              // and they parry worse afterwards
   }
   // you land with a perfect parry banked and a wider window to use it
-  f.charges=Math.max(f.charges,1);
+  if(!duel)f.charges=Math.max(f.charges,1);
   f.windowMul=Math.max(f.windowMul,1.6);f.windowT=Math.max(f.windowT,4.5);
   ringBurst(f.pos.x,0.3,f.pos.z,80,42,0xff2a4a,2.3,1.25);
   ringBurst(f.pos.x,0.5,f.pos.z,46,26,0xffd23f,1.7,1.0);
@@ -10044,8 +10098,10 @@ function jordanSlam(f){
       if(d>bd){bd=d;best=o;}
     }
     if(best){
-      b.freeze=0;b.lastHit=f;b.mult+=1.0;
+      b.freeze=0;b.lastHit=f;b.mult+=0.4;
       b.target=best;
+      // everyone saw it coming down: whoever it is thrown at is ready for it
+      best.anticipate=b;best.anticipateLeft=3;
       /* The ball really does leave WITH you. It used to set off from wherever
          the rise had frozen it -- often right on top of the very player it was
          then thrown at, who got it the instant they landed: unblockable. */
@@ -10093,6 +10149,7 @@ function updateBot(f,dt){
   else if(Math.abs(f.vel.x)+Math.abs(f.vel.z)>0.6)
     f.yaw=dampAng(f.yaw,Math.atan2(f.vel.x,f.vel.z),8,dt);
   if(f.grounded&&Math.random()<0.22*dt&&f.stun<=0){f.vy=16;f.grounded=false;f.jumps=1;}
+  if(STATE==="countdown")return;          // free to move, nothing to block or cast at yet
   if(f.abilCd<=0&&f.stun<=0&&f.frozen<=0){
     var a=abilById(f.ability);
     if(!a.passive){
@@ -13019,8 +13076,8 @@ function lobbyRender(){
   $("mpJoin").classList.toggle("hide",inRoom||!haveServer);
   $("mpRoom").classList.toggle("hide",!inRoom);
   var who=$("mpWho");
-  if(who)who.innerHTML=haveServer?("<br><span style='opacity:.5'>server: "+serverBase()+
-    " &middot; <b id='mpChangeUrl' style='cursor:pointer;color:#9be9ff'>change</b></span>"):"";
+  // the server's address is never shown: it carries the owner's name
+  if(who)who.innerHTML="";
   var st=$("mpStatus");
   if(!serverBase())
     st.innerHTML="<span style='color:#ffb9ad'>No server URL set.</span> "+
@@ -13187,9 +13244,7 @@ function openPicker(tab,from){
 function reskinLobbyPlayer(){
   if(STATE!=="venue"||!player)return;
   var x=player.pos.x,z=player.pos.z,yaw=player.yaw;
-  scene.remove(player.mesh);
-  var i=fighters.indexOf(player);
-  if(i>=0)fighters.splice(i,1);
+  removeFighter(player);
   spawnVenuePlayer(x,z);
   player.yaw=yaw;
 }
@@ -13418,7 +13473,8 @@ function frame(ts){
     for(var i=0;i<fighters.length;i++){
       var f=fighters[i];
       if(f.isRemote)netUpdateRemote(f,dt);
-      else if(!f.isPlayer&&(STATE==="playing"||STATE==="over"))updateBot(f,worldDt);
+      // bots walk about during the countdown too, like you can
+      else if(!f.isPlayer)updateBot(f,worldDt);
       f.update(f.isPlayer?dt:worldDt,gameT);
     }
     riftTick(worldDt,gameT);
@@ -13426,7 +13482,7 @@ function frame(ts){
     // sweep dead decoys out
     for(i=fighters.length-1;i>=0;i--)
       if(fighters[i].decoy&&!fighters[i].alive&&fighters[i].mesh.scale.x<0.05){
-        scene.remove(fighters[i].mesh);fighters.splice(i,1);
+        removeFighter(fighters[i]);
       }
     if(STATE==="playing"){
       updateCats(worldDt,gameT);

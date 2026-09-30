@@ -20,7 +20,7 @@ const int = (v, lo, hi) => (typeof v === "number" && isFinite(v) && Math.floor(v
 
 /* ---- the shape of a save's economy ---- */
 /* Taken out of the game: its price back in coins, once (it is gone after). */
-export const RETIRED = { abil: { flicker: 7200 } };
+export const RETIRED = { abil: { flicker: 7200, endless: 8600 } };
 export function retire(s) {
   let changed = false;
   for (const id in RETIRED.abil) if (s.abils && s.abils[id]) {
