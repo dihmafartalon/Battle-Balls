@@ -13,7 +13,7 @@
 import { CAT } from "./catalog.js";
 import { ECON_KEYS, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdict, retire, RETIRED, newStats, snap, recordAct, watchFlags, suspicion, summary, seasonReset, rankClean } from "./econ.js";
 const RETIRED_RE = new RegExp('"(' + Object.keys(RETIRED.abil).join("|") + ')"');
-import { adminPage, handleAdmin, ADMIN_TRIES, ADMIN_WINDOW_MS } from "./admin.js";
+import { adminPage, handleAdmin, ADMIN_TRIES, ADMIN_WINDOW_MS, specCheck } from "./admin.js";
 import { SimHost, SIM_ID } from "./sim.js";
 
 const MAX_PLAYERS = 6;
@@ -275,7 +275,7 @@ export class Room {
     for (const ws of this.ctx.getWebSockets()) {
       if (ws === leaving) continue;                   // closing: it is not in the room any more
       const a = ws.deserializeAttachment();
-      if (a) out.push(a);
+      if (a && !a.spec) out.push(a);
     }
     return out;
   }
@@ -313,10 +313,12 @@ export class Room {
     if (new URL(request.url).hostname === "room-admin") return this.adminOp(await request.json());
     if (request.headers.get("Upgrade") !== "websocket")
       return new Response("expected websocket upgrade", { status: 426 });
-    if (this.ctx.getWebSockets().length >= MAX_PLAYERS)
+    const url = new URL(request.url);
+    // the admin, watching: not a player, not on the roster, cannot send a thing
+    if (url.searchParams.get("spectate")) return this.spectator(url);
+    if (this.roster().length >= MAX_PLAYERS)
       return new Response("room full", { status: 403 });
 
-    const url = new URL(request.url);
     // online play needs a Google account, so a ban sticks. The session token
     // is checked with that account's own Vault; a refusal is told over the
     // socket so the game can say why, then the socket is closed
@@ -369,6 +371,32 @@ export class Room {
     return new Response(null, { status: 101, webSocket: client });
   }
 
+  async spectator(url) {
+    const code = normaliseCode((url.pathname.match(/\/room\/([A-Za-z0-9]{1,8})$/) || [])[1] || "");
+    const ok = await specCheck(this.env && this.env.ADMIN_KEY, code, url.searchParams.get("spectate"));
+    const pair = new WebSocketPair(), client = pair[0], server = pair[1];
+    if (!ok) {
+      server.accept();
+      server.send(JSON.stringify({ t: "denied", why: "spec", reason: "That spectate link has expired. Make a new one from the admin page." }));
+      server.close(4005, "spec");
+      return new Response(null, { status: 101, webSocket: client });
+    }
+    this.ctx.acceptWebSocket(server);
+    const me = { spec: true, id: "spec" + crypto.randomUUID().slice(0, 6), joinedAt: Date.now() };
+    server.serializeAttachment(me);
+    const players = this.roster(), target = ok.watch ? players.find(p => p.sub === ok.watch) : null;
+    server.send(JSON.stringify({ t: "welcome", you: me.id, spec: 1, watch: target ? target.id : "", host: SIM_ID, leader: this.hostId(), srv: 1, max: MAX_PLAYERS, now: Date.now() }));
+    server.send(JSON.stringify(buildRoster(players)));
+    // a match already running: the same start everyone got, and who is already out
+    if (this.sim && this.sim.running && this.startMsg) {
+      server.send(JSON.stringify(this.startMsg));
+      let dead = [];
+      try { dead = (this.sim.state().fighters || []).filter(f => !f.alive).map(f => f.netId || ("bot" + f.botIndex)); } catch (e) {}
+      server.send(JSON.stringify({ t: "specsync", dead }));
+    }
+    return new Response(null, { status: 101, webSocket: client });
+  }
+
   async webSocketMessage(ws, raw) {
     // drop anything oversized before we even parse it
     const size = typeof raw === "string" ? raw.length : (raw && raw.byteLength) || 0;
@@ -382,6 +410,10 @@ export class Room {
     try { msg = JSON.parse(raw); } catch (e) { return; }
     const me = ws.deserializeAttachment();
     if (!me) return;
+    if (me.spec) {                                    // a spectator only ever asks the time
+      if (msg.t === "ping") try { ws.send(JSON.stringify({ t: "pong", c: msg.c, s: Date.now() })); } catch (e) {}
+      return;
+    }
 
     const d = routeMessage(msg, me.id, this.hostId());
     if (d.action === "drop") return;
@@ -464,6 +496,7 @@ export class Room {
       players: players.map(x => ({ id: x.id, sub: x.sub })) };
     this.casts = new WeakMap();                       // a new match: cooldowns start over
     this.broadcast(p);
+    this.startMsg = p;
     this.sim.start(p, buildRoster(players));
     this.announce({ playing: true });
   }

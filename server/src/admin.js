@@ -15,6 +15,22 @@ function same(a, b) {                           // compare without leaking where
   return d === 0;
 }
 
+/* Spectating: a ticket for one room, good for ten minutes, signed with the
+   admin password so the password itself never goes into a link. */
+export const SPEC_MS = 10 * 60 * 1000;
+export async function specSig(key, code, exp, watch) {
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(String(key)), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", k, new TextEncoder().encode("spec|" + code + "|" + exp + "|" + watch));
+  return [...new Uint8Array(sig)].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 40);
+}
+export async function specCheck(key, code, tok) {
+  const m = /^(\d{10,15})\.([A-Za-z0-9_-]{0,64})\.([0-9a-f]{40})$/.exec(String(tok || ""));
+  if (!m || !key || Number(m[1]) < Date.now()) return null;
+  const want = await specSig(key, code, m[1], m[2]);
+  return same(want, m[3]) ? { watch: m[2] } : null;
+}
+export const GAME_URL = "https://battleballs.pages.dev/";
+
 export async function handleAdmin(request, env, H) {
   if (request.method !== "POST") return H.jsonRes({ error: "POST only" }, 405);
   if (!env.ADMIN_KEY) return H.jsonRes({ error: "The admin password is not set on the server." }, 503);
@@ -40,7 +56,7 @@ export async function handleAdmin(request, env, H) {
     // f: everyone always has it (a starter or a free item), so there is nothing to take away
     for (const t of ["sword", "abil", "skin"]) out[t] = CAT.items[t].list.map(it => ({ id: it.id, n: it.n, r: it.r,
       f: it.free || it.id === CAT.items[t].starter ? 1 : 0 }));
-    return H.jsonRes({ items: out });
+    return H.jsonRes({ items: out, ranks: CAT.ranks.map(r => ({ id: r.id, rp: r.rp })), season: CAT.season || null });
   }
   if (b.op === "list") return H.jsonRes((await H.dirCall(env, { op: "list", q: b.q, only: b.only, sort: b.sort })) || { list: [], total: 0, nodir: true });
   if (b.op === "overview") return H.jsonRes((await H.dirCall(env, { op: "overview" })) || { nodir: true });
@@ -67,6 +83,23 @@ export async function handleAdmin(request, env, H) {
     }
     if (b.op === "msg") await vault({ op: "adm_msg", text, live: reached > 0 });
     return H.jsonRes({ ok: true, reached });
+  }
+  // spectate: the room they are in right now (or a room code from the rooms list)
+  if (b.op === "spectate") {
+    let code = typeof b.code === "string" ? b.code.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8) : "";
+    if (!code && sub && env.ROOMS) {
+      const d = await H.dirCall(env, { op: "get", sub });
+      for (const c of ((d && d.acct && d.acct.rooms) || []).slice(0, 4)) {
+        try {
+          const r = await env.ROOMS.get(env.ROOMS.idFromName(c)).fetch("https://room-admin/", { method: "POST", body: JSON.stringify({ op: "has", sub }) });
+          if (((await r.json()).reached | 0) > 0) { code = c; break; }
+        } catch (e) {}
+      }
+    }
+    if (!code) return H.jsonRes({ error: "They are not in an online room right now. Matches against bots run on their own device and can't be watched." }, 404);
+    const exp = String(Date.now() + SPEC_MS), watch = sub || "";
+    const st = exp + "." + watch + "." + (await specSig(env.ADMIN_KEY, code, exp, watch));
+    return H.jsonRes({ ok: true, code, url: GAME_URL + "?spectate=" + encodeURIComponent(code) + "&st=" + encodeURIComponent(st) });
   }
   if (b.op === "ban") return H.jsonRes(await vault({ op: "adm_ban", why: b.why }));
   if (b.op === "unban") return H.jsonRes(await vault({ op: "adm_unban" }));
@@ -120,7 +153,7 @@ svg.bars{width:100%;height:70px;display:block}
 <span class="grow"></span><span id="msg"></span></header>
 <main id="main"><section id="left"></section><section id="right"><p class="mute">Pick a player.</p></section></main></div>
 <script>
-var KEY="",CAT=null,CUR=null,VIEW="overview";
+var KEY="",CAT=null,RANKS=[],CUR=null,VIEW="overview";
 function el(t,a,kids){var e=document.createElement(t);if(a)for(var k in a){if(k==="text")e.textContent=a[k];else if(k==="on")e.addEventListener("click",a[k]);else e.setAttribute(k,a[k]);}
   (kids||[]).forEach(function(c){if(c!==null&&c!==undefined&&c!==false)e.appendChild(typeof c==="string"||typeof c==="number"?document.createTextNode(String(c)):c);});return e;}
 function ago(t){if(!t)return "never";var s=(Date.now()-t)/1000;if(s<90)return "just now";if(s<5400)return Math.round(s/60)+" min ago";if(s<129600)return Math.round(s/3600)+" h ago";return Math.round(s/86400)+" days ago";}
@@ -134,7 +167,7 @@ function api(op,body){body=Object.assign({key:KEY,op:op},body||{});
 function scorePill(sc){sc=sc|0;return el("span",{class:"score "+(sc>=50?"s2":(sc>=20?"s1":"s0")),title:"Suspicion score",text:String(sc)});}
 function login(){KEY=document.getElementById("pw").value;api("catalog").then(function(j){
   if(j._s!==200){document.getElementById("lmsg").textContent=j.error||"Could not sign in.";return;}
-  CAT=j.items;document.getElementById("login").hidden=true;document.getElementById("app").hidden=false;go("overview");});}
+  CAT=j.items;RANKS=j.ranks||[];document.getElementById("login").hidden=true;document.getElementById("app").hidden=false;go("overview");});}
 document.getElementById("go").onclick=login;document.getElementById("pw").onkeydown=function(e){if(e.key==="Enter")login();};
 ["O","P","F","R"].forEach(function(k){document.getElementById("t"+k).onclick=function(){go({O:"overview",P:"players",F:"flags",R:"rooms"}[k]);};});
 function go(v){VIEW=v;["O","P","F","R"].forEach(function(k){document.getElementById("t"+k).className={O:"overview",P:"players",F:"flags",R:"rooms"}[k]===v?"on":"";});
@@ -184,9 +217,22 @@ function flagsView(){var L=document.getElementById("left");L.innerHTML="";
     (j.feed||[]).forEach(function(f){L.appendChild(feedItem(f));});});}
 function rooms(){var L=document.getElementById("left");L.innerHTML="";
   api("rooms").then(function(j){L.appendChild(el("p",{class:"mute",text:"Recent rooms, newest first. Click a name to open that player."}));
-    (j.rooms||[]).forEach(function(r){L.appendChild(el("div",{class:"card",style:"margin:8px 0"},[el("b",{text:"Room "+r.code}),el("span",{class:"mute",text:"  "+ago(r.at)}),
+    (j.rooms||[]).forEach(function(r){L.appendChild(el("div",{class:"card",style:"margin:8px 0"},[el("b",{text:"Room "+r.code}),el("span",{class:"mute",text:"  "+ago(r.at)+"  "}),el("button",{class:"good",text:"\u25b6 Watch",on:function(){spectate({code:r.code});}}),
       el("div",{class:"chips",style:"margin-top:6px"},r.players.map(function(p){return el("button",{text:p.name||p.sub,on:function(){open(p.sub);}});}))]));});});}
 function nameOf(tab,id){var l=CAT[tab]||[];for(var i=0;i<l.length;i++)if(l[i].id===id)return l[i].n;return id;}
+function rarOf(tab,id){var l=CAT[tab]||[];for(var i=0;i<l.length;i++)if(l[i].id===id)return l[i].r;return "";}
+function rankOf(rp){var i=0;for(var k=0;k<RANKS.length;k++)if((rp|0)>=RANKS[k].rp)i=k;var r=RANKS[i]||{id:"?",rp:0},n=RANKS[i+1];
+  return {name:r.id.charAt(0).toUpperCase()+r.id.slice(1),idx:i,next:n?n.id.charAt(0).toUpperCase()+n.id.slice(1):"",need:n?n.rp-(rp|0):0,frac:n?((rp|0)-r.rp)/Math.max(1,n.rp-r.rp):1};}
+function spectate(o){var w=window.open("","_blank");api("spectate",o).then(function(r){
+  if(!r.ok){if(w)w.close();say(r.error||"Could not spectate",true);return;}
+  if(w)w.location.href=r.url;else location.href=r.url;say("Opened room "+r.code+" (link good for 10 minutes)");});}
+/* a win-rate table: one row per mode or item, most played first */
+function rateTable(title,rows,label){
+  var list=Object.keys(rows||{}).map(function(k){return {k:k,g:rows[k][0]|0,w:rows[k][1]|0};}).filter(function(x){return x.g>0;}).sort(function(a,b){return b.g-a.g;});
+  if(!list.length)return null;
+  return el("div",{},[el("h4",{text:title,style:"margin:10px 0 4px"}),el("div",{class:"tbl"},[el("table",{},[el("tr",{},[label,"Games","Wins","Win rate",""].map(function(h){return el("th",{text:h});}))].concat(list.map(function(x){
+    var r=x.w/x.g,bar=el("div",{class:"meter",style:"width:110px;margin:0"});var bi=el("i");bi.style.width=Math.round(r*100)+"%";bi.style.background=r>=.6?"var(--good)":(r>=.4?"var(--acc)":"var(--bad)");bar.appendChild(bi);
+    return el("tr",{},[el("td",{text:x.n||x.k}),el("td",{text:num(x.g)}),el("td",{text:num(x.w)}),el("td",{text:pct(x.w,x.g)}),el("td",{},[bar])]);})))])]);}
 function always(tab,id){var l=CAT[tab]||[];for(var i=0;i<l.length;i++)if(l[i].id===id)return !!l[i].f;return false;}
 function itemName(k){var p=k.split(":");return nameOf(p[0],p[1]);}
 function open(sub){CUR=sub;if(VIEW==="overview")go("players");api("get",{sub:sub}).then(function(j){if(j._s!==200){say(j.error||"Could not load",true);return;}draw(sub,j);});}
@@ -196,6 +242,15 @@ function draw(sub,j){
   var s=j.save||{},a=j.acct||{},ban=j.ban,st=j.stats,hist=j.hist||[],sus=j.sus||{score:0,why:[]};
   R.appendChild(el("h2",{},[(a.name||s.netName||"(no name yet)")].concat(ban?[el("span",{class:"tag bad",text:"BANNED"})]:[])));
   R.appendChild(el("p",{class:"mute",text:"Account "+sub+" \\u00b7 first seen "+ago(a.first)+" \\u00b7 last seen "+ago(a.last)+(a.rooms&&a.rooms.length?" \\u00b7 rooms "+a.rooms.slice(0,5).join(", "):"")}));
+  // right now: what they have on, where they are on the ladder, and a way to watch
+  var rk=rankOf(s.rp|0),ld=[["Blade","sword",s.eqSword],["Ability","abil",s.eqAbil],["Skin","skin",s.eqSkin]];
+  var rbar=el("div",{class:"meter"});var rbi=el("i");rbi.style.width=Math.round(rk.frac*100)+"%";rbi.style.background="var(--acc)";rbar.appendChild(rbi);
+  R.appendChild(el("div",{class:"box"},[el("div",{class:"grid"},ld.map(function(x){return el("div",{class:"card"},[el("div",{class:"mute",text:x[0]}),
+      el("div",{class:"v",text:x[2]?nameOf(x[1],x[2]):"-"}),el("div",{class:"mute",text:x[2]?rarOf(x[1],x[2]):""})]);}).concat([
+      el("div",{class:"card"},[el("div",{class:"mute",text:"Rank"}),el("div",{class:"v",text:rk.name+" \u00b7 "+num(s.rp)+" RP"}),
+        el("div",{class:"mute",text:rk.next?(num(rk.need)+" RP to "+rk.next):"Top rank"}),rbar])])),
+    el("div",{class:"row",style:"margin-top:10px"},[el("button",{class:"good",text:"\u25b6 Spectate",on:function(){spectate({sub:sub});}}),
+      el("span",{class:"mute",text:"Opens the game watching their online room. Matches against bots run on their own device and can't be watched."})])]));
   // suspicion
   var sc=sus.score|0,col=sc>=50?"var(--bad)":(sc>=20?"var(--warn)":"var(--good)");
   R.appendChild(el("div",{class:"box"},[el("div",{class:"row"},[el("b",{text:"Suspicion "+sc+" / 100"}),el("span",{class:"mute",text:sc>=50?"look closely":(sc>=20?"worth a look":"looks normal")})]),
@@ -230,6 +285,17 @@ function draw(sub,j){
      ["Coins earned",num(st.ec.c)],["Yen earned",num(st.ec.y)],["RP earned",num(st.ec.rp)],["Coins spent",num(st.sp.c)],["Yen spent",num(st.sp.y)],["Items gained",num(st.it)]]
       .forEach(function(c){g.appendChild(el("div",{class:"card"},[el("div",{class:"mute",text:c[0]}),el("div",{class:"v "+(c[2]||""),text:c[1]})]));});
     R.appendChild(g);
+    // win rates: all time (since this update) by mode and by what they had on
+    if(st.by){R.appendChild(el("h3",{text:"Win rates"}));
+      var MN={classic:"Classic",gauntlet:"Gauntlet",duel:"1v1 Duel",pro:"1v1 Pro",chaos:"1v1 Chaos",swarm:"Swarm",trick:"Trick or Treat",ranked1:"Ranked 1v1",ranked2:"Ranked 2v2",mp:"Online casual",mpranked2:"Online ranked 2v2",god1:"GOD 1v1"};
+      var tbl=function(t,rows,tab,lab){var tb=rateTable(t,rows,lab);if(!tb)return;
+        tb.querySelectorAll("tr").forEach(function(tr,i){if(!i)return;var td=tr.firstChild;td.textContent=tab?nameOf(tab,td.textContent):(MN[td.textContent]||td.textContent);});R.appendChild(tb);};
+      var rk2=0,rw2=0,ck=0,cw=0,wk=0,ww=0;hist.forEach(function(h){var rd=/ranked|god/.test(h.m);if(rd){rk2++;if(h.won)rw2++;}else{ck++;if(h.won)cw++;}if(Date.now()-h.at<7*864e5){wk++;if(h.won)ww++;}});
+      var g3=el("div",{class:"grid"});
+      [["Ranked (last "+hist.length+")",pct(rw2,rk2)+" of "+rk2],["Casual (last "+hist.length+")",pct(cw,ck)+" of "+ck],["Last 7 days",pct(ww,wk)+" of "+wk]]
+        .forEach(function(c){g3.appendChild(el("div",{class:"card"},[el("div",{class:"mute",text:c[0]}),el("div",{class:"v",text:c[1]})]));});
+      R.appendChild(g3);
+      tbl("By mode",st.by.m,null,"Mode");tbl("By blade",st.by.s,"sword","Blade");tbl("By ability",st.by.a,"abil","Ability");tbl("By skin",st.by.k,"skin","Skin");}
     // perfect % per match, oldest to newest
     if(hist.length){R.appendChild(el("h3",{text:"Perfect % per match (last "+hist.length+")"}));
       var W=600,Hh=70,bw=W/Math.max(hist.length,20),ns="http://www.w3.org/2000/svg",svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox","0 0 "+W+" "+Hh);svg.setAttribute("class","bars");svg.setAttribute("preserveAspectRatio","none");
@@ -247,9 +313,9 @@ function draw(sub,j){
   }
   // matches
   if(hist.length){R.appendChild(el("h3",{text:"Match history"}));
-    R.appendChild(el("div",{class:"tbl"},[el("table",{},[el("tr",{},["When","Mode","Result","Length","Blocks","Perfect","Coins","RP"].map(function(h){return el("th",{text:h});}))].concat(hist.slice().reverse().map(function(h){
+    R.appendChild(el("div",{class:"tbl"},[el("table",{},[el("tr",{},["When","Mode","Result","Loadout","Length","Blocks","Perfect","Coins","RP"].map(function(h){return el("th",{text:h});}))].concat(hist.slice().reverse().map(function(h){
       var hot=h.bl>=5&&h.pf/h.bl>=0.8;
-      return el("tr",{class:(hot?"hot ":"")+(h.won?"won":"")},[el("td",{text:when(h.at)}),el("td",{text:h.m}),el("td",{text:h.won?"Won":"Lost"}),el("td",{text:h.secs+"s"}),
+      return el("tr",{class:(hot?"hot ":"")+(h.won?"won":"")},[el("td",{text:when(h.at)}),el("td",{text:h.m}),el("td",{text:h.won?"Won":"Lost"}),el("td",{style:"white-space:normal",text:h.sw?[nameOf("sword",h.sw),nameOf("abil",h.ab),nameOf("skin",h.sk)].join(" \u00b7 "):"-"}),el("td",{text:h.secs+"s"}),
         el("td",{text:num(h.bl)}),el("td",{text:pct(h.pf,h.bl)}),el("td",{},[signed(h.c)]),el("td",{},[signed(h.rp)])]);})))]));}
   // ledger
   var lg=(j.ledger||[]).slice().reverse();
