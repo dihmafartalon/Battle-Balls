@@ -423,8 +423,7 @@ const CODES = {
   "pocketchange": "coins5000",
   "santiballs": "stdslash",
   "666": "bloodrift",
-  "finnballs": "cruz",
-  "wendigo0925bm": "wendigo"     // unreleased: owner's test copy. Delete at launch.
+  "finnballs": "cruz"
 };
 // guessing is slow: this many tries a minute from any one address
 export const REDEEM_TRIES = 8;
@@ -673,7 +672,7 @@ export class Vault {
       const stats = (await st.get("stats")) || newStats(now), hist = (await st.get("hist")) || [], ledger = (await st.get("ledger")) || [];
       recordAct(stats, hist, ledger, "admin", {}, null, pre, snap(save), now);
       await st.put(Object.assign({ save: next, stats, ledger }, keep));
-      dirCall(this.env, { op: "touch", sub, name: save.netName || "", rp: save.rp | 0 });
+      dirCall(this.env, { op: "touch", sub, name: save.netName || "", rp: save.rp | 0, season: save.season | 0 });
       const flags = (await st.get("flags")) || [];
       flags.push({ at: now, kind: "admin", sev: "note", detail: "admin edit: " + done.join(" ").slice(0, 300) });
       await st.put("flags", flags.slice(-50));
@@ -712,10 +711,18 @@ export class Vault {
     const dirAt = (await st.get("dirAt")) || 0;
     if (now - dirAt > DIR_TOUCH_MS) {
       await st.put("dirAt", now);
-      let nm = "", rp; try { const sv = rec ? JSON.parse(rec.data) : {}; nm = sv.netName || ""; rp = sv.rp | 0; } catch (e) {}
-      dirCall(this.env, { op: "touch", sub, name: nm, rp });
+      let nm = "", rp, season; try { const sv = rec ? JSON.parse(rec.data) : {}; nm = sv.netName || ""; rp = sv.rp | 0; season = sv.season | 0; } catch (e) {}
+      dirCall(this.env, { op: "touch", sub, name: nm, rp, season });
     }
 
+    // The Crown belongs to whoever is #1 on the leaderboard right now, and to nobody else
+    if (rec && (body.op === "load" || body.op === "act")) {
+      const t = await dirCall(this.env, { op: "top1" });
+      if (t && typeof t.sub === "string") {
+        const sv = JSON.parse(rec.data);
+        if (crownFix(sv, sub, t.sub)) { rec = { data: JSON.stringify(sv), rev: rec.rev + 1, at: now }; await st.put("save", rec); }
+      }
+    }
     if (body.op === "redeem") {
       // a signed-in account guessing codes: its own limit, wherever it connects from
       const tries = ((await st.get("rtries")) || []).filter(t => now - t < REDEEM_WINDOW_MS);
@@ -766,7 +773,7 @@ export class Vault {
       // the directory (leaderboard, admin list) hears the new totals now
       // ponytail: one directory write per act; batch them if the player count ever makes that object busy
       const sus = suspicion(stats, hist, (await st.get("flags")) || [], now);
-      dirCall(this.env, { op: "touch", sub, name: save.netName || "", rp: save.rp | 0, sum: summary(stats, sus) });
+      dirCall(this.env, { op: "touch", sub, name: save.netName || "", rp: save.rp | 0, season: save.season | 0, sum: summary(stats, sus) });
       return jsonRes({ save, rev: next.rev, at: now, res, ec: 1, banned: banned ? banned.why : undefined, inbox: await this.takeInbox() });
     }
 
@@ -849,6 +856,20 @@ export class Vault {
 }
 
 export const DIR_TOUCH_MS = 5 * 60 * 1000;
+/* The Crown: held by the account at #1, taken back from anyone who is not.
+   Returns whether the save changed. */
+export function crownFix(save, sub, top1) {
+  if (!save || typeof save !== "object") return false;
+  if (!save.swords || typeof save.swords !== "object") save.swords = {};
+  const mine = !!sub && sub === top1, has = !!save.swords.crown;
+  if (mine && !has) { save.swords.crown = 1; return true; }
+  if (!mine && has) {
+    delete save.swords.crown;
+    if (save.eqSword === "crown") save.eqSword = CAT.items.sword.starter;
+    return true;
+  }
+  return false;
+}
 export const ACTS_PER_10S = 40;
 /* What an edited game tried to write. Items nobody can have, or a pile of
    coins out of nowhere, is a ban; the rest is a flag to look at. */
@@ -972,7 +993,7 @@ export default {
    told apart by the name they play under and the rooms they were in. */
 export const KICK_MS = 10 * 60 * 1000;          // a kicked player is kept out of that room this long
 export const DIR_ROOMS_KEPT = 60, DIR_ROOMS_PER_ACCOUNT = 12, DIR_FEED_KEPT = 200;
-export const SERVER_VERSION = "2026-09-26";
+export const SERVER_VERSION = "2026-10-01";
 export const LB_SIZE = 10, LB_CACHE_MS = 30 * 1000;
 export class Directory {
   constructor(state, env) { this.state = state; this.env = env; }
@@ -991,6 +1012,7 @@ export class Directory {
       a.last = now;
       if (typeof b.name === "string" && b.name) a.name = b.name.slice(0, 14);
       if (b.sum && typeof b.sum === "object") a.sum = b.sum;
+      if (typeof b.season === "number" && a.season !== b.season) { a.season = b.season; this.top = null; }
       if (typeof b.rp === "number" && isFinite(b.rp) && b.rp >= 0) { const rp = Math.floor(b.rp); if (a.rp !== rp) { this.top = null; a.rp = rp; a.rpAt = now; } }
       if (b.op === "flag") {
         a.flags = (a.flags | 0) + 1; a.lastFlag = b.flag || null; if (b.ban) { a.ban = b.ban; this.top = null; }
@@ -1019,12 +1041,19 @@ export class Directory {
     if (b.op === "top") {
       if (!this.top || now - this.top.at > LB_CACHE_MS) {
         const all = [];   // ponytail: reads every account; keep a sorted "top" key instead if accounts reach the tens of thousands
-        for (const [, a] of await st.list({ prefix: "a:" })) if (!a.ban && a.rp > 0) all.push({ sub: a.sub, name: a.name || "Player", rp: a.rp, at: a.rpAt || 0 });
+        const season = CAT.season ? CAT.season.id : 0;
+        // this season only: an account that has not played since the reset still has last season's RP
+        for (const [, a] of await st.list({ prefix: "a:" })) if (!a.ban && a.rp > 0 && (a.season | 0) === season) all.push({ sub: a.sub, name: a.name || "Player", rp: a.rp, at: a.rpAt || 0 });
         all.sort((x, y) => y.rp - x.rp || x.at - y.at);
         this.top = { at: now, all };
       }
       const all = this.top.all, i = sub ? all.findIndex(x => x.sub === sub) : -1;
       return jsonRes({ top: all.slice(0, LB_SIZE), me: i >= 0 ? { pos: i + 1, rp: all[i].rp } : null, total: all.length });
+    }
+    if (b.op === "top1") {
+      if (!this.top || now - this.top.at > LB_CACHE_MS) await this.handle({ op: "top" });
+      const t = this.top && this.top.all[0];
+      return jsonRes({ sub: t ? t.sub : "", name: t ? t.name : "" });
     }
     if (b.op === "rooms") return jsonRes({ rooms: (await st.get("rooms")) || [] });
     if (b.op === "list") {
