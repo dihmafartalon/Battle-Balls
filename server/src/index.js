@@ -1260,7 +1260,7 @@ const SERVER_VERSION = "2026-10-01b";
 const LB_SIZE = 10, LB_CACHE_MS = 30 * 1000, OWNERS_CACHE_MS = 3 * 60 * 1000;
 const LOBBY_TTL_MS = 90 * 1000, QUEUE_TTL_MS = 8 * 1000;
 // switched off until the admin page says otherwise
-const DEFAULT_ABIL_OFF = ["guardian"];
+const DEFAULT_ABIL_OFF = [];
 export class Directory {
   constructor(state, env) { this.state = state; this.env = env; }
   async fetch(request) {
