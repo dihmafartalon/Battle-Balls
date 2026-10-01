@@ -62,6 +62,9 @@ export async function handleAdmin(request, env, H) {
   if (b.op === "overview") return H.jsonRes((await H.dirCall(env, { op: "overview" })) || { nodir: true });
   if (b.op === "feed") return H.jsonRes((await H.dirCall(env, { op: "feed" })) || { feed: [] });
   if (b.op === "rooms") return H.jsonRes((await H.dirCall(env, { op: "rooms" })) || { rooms: [] });
+  // the ability kill switches
+  if (b.op === "abiloff") return H.jsonRes((await H.dirCall(env, { op: "abiloff" })) || { off: [] });
+  if (b.op === "setabiloff") return H.jsonRes((await H.dirCall(env, { op: "setabiloff", off: b.off })) || { error: "directory not set up" });
   if (!sub) return H.jsonRes({ error: "no player" }, 400);
   if (b.op === "get") {
     const [v, d] = await Promise.all([vault({ op: "adm_get" }), H.dirCall(env, { op: "get", sub })]);
@@ -149,7 +152,7 @@ svg.bars{width:100%;height:70px;display:block}
 </style></head><body>
 <div id="login"><h1>Battle Balls Admin</h1><p class="mute">Enter the admin password.</p>
 <input id="pw" type="password" autocomplete="current-password"><button id="go">Sign in</button><p id="lmsg" class="err"></p></div>
-<div id="app" hidden><header><h1>Battle Balls Admin</h1><div class="tabs"><button id="tO" class="on">Overview</button><button id="tP">Players</button><button id="tF">Flags</button><button id="tR">Rooms</button></div>
+<div id="app" hidden><header><h1>Battle Balls Admin</h1><div class="tabs"><button id="tO" class="on">Overview</button><button id="tP">Players</button><button id="tF">Flags</button><button id="tR">Rooms</button><button id="tA">Abilities</button></div>
 <span class="grow"></span><span id="msg"></span></header>
 <main id="main"><section id="left"></section><section id="right"><p class="mute">Pick a player.</p></section></main></div>
 <script>
@@ -169,9 +172,25 @@ function login(){KEY=document.getElementById("pw").value;api("catalog").then(fun
   if(j._s!==200){document.getElementById("lmsg").textContent=j.error||"Could not sign in.";return;}
   CAT=j.items;RANKS=j.ranks||[];document.getElementById("login").hidden=true;document.getElementById("app").hidden=false;go("overview");});}
 document.getElementById("go").onclick=login;document.getElementById("pw").onkeydown=function(e){if(e.key==="Enter")login();};
-["O","P","F","R"].forEach(function(k){document.getElementById("t"+k).onclick=function(){go({O:"overview",P:"players",F:"flags",R:"rooms"}[k]);};});
-function go(v){VIEW=v;["O","P","F","R"].forEach(function(k){document.getElementById("t"+k).className={O:"overview",P:"players",F:"flags",R:"rooms"}[k]===v?"on":"";});
-  document.getElementById("main").className=v==="overview"?"wide":"";({overview:overview,players:players,flags:flagsView,rooms:rooms})[v]();}
+["O","P","F","R","A"].forEach(function(k){document.getElementById("t"+k).onclick=function(){go({O:"overview",P:"players",F:"flags",R:"rooms",A:"abils"}[k]);};});
+function go(v){VIEW=v;["O","P","F","R","A"].forEach(function(k){document.getElementById("t"+k).className={O:"overview",P:"players",F:"flags",R:"rooms",A:"abils"}[k]===v?"on":"";});
+  document.getElementById("main").className=(v==="overview"||v==="abils")?"wide":"";({overview:overview,players:players,flags:flagsView,rooms:rooms,abils:abilsView})[v]();}
+/* ---- kill switches: one per ability ---- */
+function abilsView(){var L=document.getElementById("left");L.innerHTML="";
+  api("abiloff").then(function(j){var off={};(j.off||[]).forEach(function(id){off[id]=1;});
+    L.appendChild(el("h2",{text:"Ability kill switches"}));
+    L.appendChild(el("p",{class:"mute",text:"Switch an ability off and it plays as Dash for everyone: in new online matches straight away, and in offline games within about a minute. It also stops dropping from chests. Anyone who owns it keeps it, and it comes back the moment you switch it on."}));
+    var nOff=Object.keys(off).length;
+    L.appendChild(el("p",{},[el("b",{text:nOff?nOff+" switched off":"Everything is on"})]));
+    var g=el("div",{class:"grid"});
+    (CAT.abil||[]).forEach(function(a){if(a.f&&a.id==="dash")return;
+      var isOff=!!off[a.id];
+      var btn=el("button",{class:isOff?"bad":"good",text:isOff?"OFF \u2014 turn on":"ON \u2014 turn off",on:function(){
+        var next=Object.keys(off).filter(function(k){return k!==a.id;});if(!isOff)next.push(a.id);
+        if(!isOff&&!confirm("Switch off "+a.n+"? It plays as Dash for everyone until you switch it back on."))return;
+        api("setabiloff",{off:next}).then(function(r){if(!r.ok){say(r.error||"Could not save",true);return;}say(a.n+(isOff?" is back on":" is switched off"));abilsView();});}});
+      g.appendChild(el("div",{class:"card",style:isOff?"border-color:var(--bad)":""},[el("div",{class:"v",style:"font-size:16px",text:a.n}),el("div",{class:"mute",text:a.r}),el("div",{style:"margin-top:8px"},[btn])]));});
+    L.appendChild(g);});}
 function playerRow(a,extra){var sm=a.sum||{},tags=[];
   if(a.ban)tags.push(el("span",{class:"tag bad",text:"BANNED"}));else if(a.flags)tags.push(el("span",{class:"tag warn",text:a.flags+" flag"+(a.flags>1?"s":"")}));
   var line=[sm.g!==undefined?num(sm.g)+" games":null,sm.g?pct(sm.w,sm.g)+" wins":null,sm.pr!==null&&sm.pr!==undefined?sm.pr+"% perfect":null,sm.sk?"streak "+sm.sk:null,(a.rp|0)+" RP","seen "+ago(a.last)].filter(Boolean).join(" \\u00b7 ");

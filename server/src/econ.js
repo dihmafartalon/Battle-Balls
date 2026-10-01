@@ -124,9 +124,14 @@ function passAddXp(s, n) {
 /* ---- chests ---- */
 const RO = CAT.rarorder;
 function gradeAllows(g, r) { const m = (CAT.grades[g] || CAT.grades.normal).min; return RO.indexOf(r) <= RO.indexOf(m); }
+/* Abilities switched off from the admin page: never from a chest while off.
+   The Vault sets this from the directory before each act. */
+export const ABIL_OFF = new Set();
+export function setAbilOff(list) { ABIL_OFF.clear(); for (const id of (Array.isArray(list) ? list : [])) ABIL_OFF.add(String(id)); }
 export function chestPool(tab) {
   const d = CAT.items[tab];
-  return d.list.filter(it => !(it.rank || it.r === "rank" || it.ultra || it.pass || it.id === d.starter || it.free || it.event ||
+  return d.list.filter(it => !(it.rank || it.r === "rank" || it.ultra || it.pass || it.id === d.starter || it.free || it.event || it.off ||
+    (tab === "abil" && ABIL_OFF.has(it.id)) ||
     !(CAT.rarity[it.r] > 0)));
 }
 function chestTiers(tab, grade) {

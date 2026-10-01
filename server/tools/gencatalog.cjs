@@ -67,6 +67,7 @@ function entry(it, tab) {
   if (it.pass) e.pass = it.pass;
   if (it.rank) e.rank = it.rank;
   if (it.free) e.free = 1;
+  if (it.off) e.off = 1;                   // switched off for now: never from a chest
   if (it.event) e.event = it.event;        // only from its own shop, event or token: never chests or the Limited shelf
   if (it.season !== undefined) e.season = it.season;
   if (tab === "abil") { e.cd = it.cd; if (it.passive) e.passive = 1; }
