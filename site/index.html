@@ -2133,7 +2133,7 @@ var SKINS=[
   desc:"Full helm with a slit visor, heavy pauldrons and a mirror finish."},
  {id:"seraph",name:"Seraph",price:0,yen:290,rarity:"mythic",style:"seraph",body:0xfff4d0,limb:0xd8c090,skin:0xfffaf0,glow:0xffd23f,
   desc:"A halo hangs above the head and light-wings unfold from the back."},
- {id:"dripkid",name:"Drip Kid",price:0,yen:330,rarity:"mythic",style:"dripkid",body:0x121214,limb:0x121214,skin:0xf2c9a0,glow:0x000000,
+ {id:"cucci",name:"Cucci",price:-1,yen:330,rarity:"unreleased",style:"cucci",body:0x121214,limb:0x121214,skin:0xf2c9a0,glow:0x000000,
   desc:"Big head, bigger eyes, a black CUCCI tee and skinny jeans. Unbothered. Blinks slowly at whoever is about to lose."},
  {id:"wraith",name:"Wraith",price:0,yen:330,rarity:"mythic",style:"wraith",body:0x181422,limb:0x0a0810,skin:0x9a3aff,glow:0xb14aff,
   desc:"Curved horns, a ragged shroud and two violet embers where eyes should be."},
@@ -11300,11 +11300,11 @@ SIG_SKIN.blackcat=function(f,g,sk,box,glowM,darkM,bodyM){
 // ASCENDED: black, split by cracks of white-gold light; a halo turning behind the
 // head; eyes of white light; rising motes; and standing still it lifts off the floor
 // the lid: the top of a sphere, down to just above the middle, and a thin band at its edge
-var DRIP_LID={half:new THREE.SphereGeometry(.5,20,10,0,Math.PI*2,0,Math.PI*.42),
+var DRIP_LID={cap:new THREE.SphereGeometry(.5,22,10,0,Math.PI*2,0,Math.PI*.4),half:new THREE.SphereGeometry(.5,20,10,0,Math.PI*2,0,Math.PI*.42),
   edge:new THREE.SphereGeometry(.506,20,2,0,Math.PI*2,Math.PI*.405,Math.PI*.04)};
-/* DRIP KID: a big round cartoon head with huge half-lidded eyes and a smirk,
+/* CUCCI: a big round cartoon head with huge half-lidded eyes and a smirk,
    a black tee with a white emblem, skinny blue jeans and white sneakers. */
-SIG_SKIN.dripkid=function(f,g,sk,box,glowM,darkM,bodyM){
+SIG_SKIN.cucci=function(f,g,sk,box,glowM,darkM,bodyM){
   var sd,skin=new THREE.MeshLambertMaterial({color:0xf2c9a0});
   var jeans=new THREE.MeshLambertMaterial({color:0x4a7fd8}),shoe=new THREE.MeshLambertMaterial({color:0xf4f4f6});
   var white=new THREE.MeshBasicMaterial({color:0xffffff}),ink=new THREE.MeshBasicMaterial({color:0x101010});
@@ -11322,7 +11322,8 @@ SIG_SKIN.dripkid=function(f,g,sk,box,glowM,darkM,bodyM){
   var head=new THREE.Mesh(GEO.sph,skin);head.scale.set(1.25,1.12,1.12);hd.add(head);
   box(.3,.3,.3,0,2.62,0,skin);                                       // neck
   for(sd=-1;sd<=1;sd+=2){var ear=new THREE.Mesh(GEO.sphLo,skin);ear.scale.set(.16,.26,.16);ear.position.set(sd*.62,-.02,0);hd.add(ear);}
-  var tuft=new THREE.Mesh(GEO.sphLo,hair);tuft.scale.set(.72,.2,.66);tuft.position.set(0,.5,.02);tuft.rotation.x=-.15;hd.add(tuft);
+  var cap=new THREE.Mesh(DRIP_LID.cap,hair);cap.scale.set(1.3,1.18,1.18);cap.rotation.x=-.2;hd.add(cap);
+  for(var fi=-2;fi<=2;fi++){var fr=new THREE.Mesh(GEO.sphLo,hair);fr.scale.set(.24,.15,.16);fr.position.set(fi*.14,.4-Math.abs(fi)*.03,.37-Math.abs(fi)*.04);fr.rotation.x=.6;hd.add(fr);}
   // the eyes: huge, white, ringed, pupils off to the side; heavy lids for the look
   var lids=[];
   for(sd=-1;sd<=1;sd+=2){
@@ -11350,7 +11351,7 @@ SIG_SKIN.dripkid=function(f,g,sk,box,glowM,darkM,bodyM){
   x.beginPath();x.moveTo(84,44);x.lineTo(84,84);x.moveTo(84,44);x.bezierCurveTo(52,44,52,84,84,84);x.stroke();
   var em=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(c),transparent:true,depthWrite:false}));
   em.scale.set(.6,.45,1);em.position.set(0,2.2,.365);g.add(em);
-  f.sig={kind:"dripkid",lids:lids,hd:hd};
+  f.sig={kind:"cucci",lids:lids,hd:hd};
 };
 SIG_SKIN.ascended=function(f,g,sk,box,glowM,darkM,bodyM){
   var i,sd,crack=new THREE.MeshBasicMaterial({color:0xfff0c0}),eye=new THREE.MeshBasicMaterial({color:0xffffff});
@@ -11567,7 +11568,7 @@ SIG_SKIN.butcher=function(f,g,sk,box,glowM,darkM,bodyM){
 };
 // the per-frame life of the 4.0 skins
 var SIG_TICK4={
-  dripkid:function(f,s,dt,t){
+  cucci:function(f,s,dt,t){
     // a slow, unbothered blink now and then, and the head bobs a touch
     var bl=(t*.9+f.phase)%4.2<.14;
     for(var i=0;i<s.lids.length;i++){var L=s.lids[i];L.visible=!bl;L.userData.lash.visible=!bl;L.userData.shut.visible=bl;}
@@ -11835,7 +11836,7 @@ Object.assign(SKIN_FX,{
   s1meatskin:{c:0xff2a4a,rate:8,vy:[-.3,.5],g:2,sz:.4,life:.7,r:.6}
 });
 Object.assign(SIG_SKIN_ICON,{
-  dripkid:"<circle cx='20' cy='13' r='10' fill='#f2c9a0' stroke='#0b1942' stroke-width='1.6'/><path d='M14 4.5q6-3 12 0' stroke='#14100c' stroke-width='2.4' fill='none'/>"+
+  cucci:"<circle cx='20' cy='13' r='10' fill='#f2c9a0' stroke='#0b1942' stroke-width='1.6'/><path d='M14 4.5q6-3 12 0' stroke='#14100c' stroke-width='2.4' fill='none'/>"+
     "<circle cx='16' cy='12' r='3.6' fill='#fff' stroke='#101010' stroke-width='1'/><circle cx='24' cy='12' r='3.6' fill='#fff' stroke='#101010' stroke-width='1'/>"+
     "<rect x='12' y='8.2' width='16' height='3.6' fill='#f2c9a0'/><circle cx='17.4' cy='12.6' r='1' fill='#101010'/><circle cx='25.4' cy='12.6' r='1' fill='#101010'/>"+
     "<path d='M17 18q3 1.4 6-.6' stroke='#101010' stroke-width='1.2' fill='none'/>"+
