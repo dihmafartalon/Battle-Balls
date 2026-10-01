@@ -82,6 +82,13 @@ export function ensure(s) {
   rankGrant(s);
   return s;
 }
+// the ULTRA items a save holds, as "tab:id": the directory counts owners from these
+export function ultrasOf(s) {
+  const out = [];
+  if (!s || typeof s !== "object") return out;
+  for (const t of TABS) for (const it of CAT.items[t].list) if (it.ultra && it.id !== "crown" && s[BAG[t]] && s[BAG[t]][it.id]) out.push(t + ":" + it.id);   // Apex: always one player, not counted
+  return out;
+}
 function own(s, tab, id) { return !!s[BAG[tab]][id]; }
 function give(s, tab, id) { s[BAG[tab]][id] = 1; }
 

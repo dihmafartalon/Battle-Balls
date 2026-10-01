@@ -11,7 +11,7 @@
    ===================================================================== */
 
 import { CAT } from "./catalog.js";
-import { ECON_KEYS, setAbilOff, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdict, retire, RETIRED, newStats, snap, recordAct, watchFlags, suspicion, summary, seasonReset, rankClean } from "./econ.js";
+import { ECON_KEYS, setAbilOff, ultrasOf, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdict, retire, RETIRED, newStats, snap, recordAct, watchFlags, suspicion, summary, seasonReset, rankClean } from "./econ.js";
 const RETIRED_RE = new RegExp('"(' + Object.keys(RETIRED.abil).join("|") + ')"');
 import { adminPage, handleAdmin, ADMIN_TRIES, ADMIN_WINDOW_MS, specCheck } from "./admin.js";
 import { SimHost, SIM_ID } from "./sim.js";
@@ -805,7 +805,7 @@ export class Vault {
       if (reset || cleaned) {
         rec = { data: JSON.stringify(sv), rev: rec.rev + 1, at: now }; await st.put("save", rec);
         const who = (await st.get("sub")) || body.sub || "";
-        if (who) dirCall(this.env, { op: "touch", sub: who, name: sv.netName || "", rp: sv.rp | 0, season: sv.season | 0 });
+        if (who) dirCall(this.env, { op: "touch", sub: who, name: sv.netName || "", rp: sv.rp | 0, season: sv.season | 0, ul: ultrasOf(sv) });
       }
     }
     // ec: this server owns the economy, so a game knows to ask rather than write
@@ -845,6 +845,12 @@ export class Vault {
     if (body.op === "flag") {                        // a room caught something
       const b = await this.flagIn(sub, body.flag, now);
       return jsonRes({ ok: true, banned: !!b, why: b ? b.why : "" });
+    }
+    // the recount: tell the directory exactly which ULTRAs this account holds
+    if (body.op === "adm_ultras") {
+      const ul = rec ? ultrasOf(JSON.parse(rec.data)) : [];
+      await dirCall(this.env, { op: "touch", sub, ul });
+      return jsonRes({ ok: true, ul });
     }
     if (body.op === "adm_get") {
       const stats = (await st.get("stats")) || null, hist = (await st.get("hist")) || [], flags = (await st.get("flags")) || [];
@@ -899,7 +905,7 @@ export class Vault {
         put.inbox = ((await st.get("inbox")) || []).concat([{ id: randomHex(6), at: now, text: note, gift: gift.items.length ? gift : Object.assign(gift, { items: [] }) }]).slice(-20);
       }
       await st.put(Object.assign(put, keep));
-      dirCall(this.env, { op: "touch", sub, name: save.netName || "", rp: save.rp | 0, season: save.season | 0 });
+      dirCall(this.env, { op: "touch", sub, name: save.netName || "", rp: save.rp | 0, season: save.season | 0, ul: ultrasOf(save) });
       const flags = (await st.get("flags")) || [];
       flags.push({ at: now, kind: "admin", sev: "note", detail: "admin edit: " + done.join(" ").slice(0, 300) });
       await st.put("flags", flags.slice(-50));
@@ -938,8 +944,8 @@ export class Vault {
     const dirAt = (await st.get("dirAt")) || 0;
     if (now - dirAt > DIR_TOUCH_MS) {
       await st.put("dirAt", now);
-      let nm = "", rp, season; try { const sv = rec ? JSON.parse(rec.data) : {}; nm = sv.netName || ""; rp = sv.rp | 0; season = sv.season | 0; } catch (e) {}
-      dirCall(this.env, { op: "touch", sub, name: nm, rp, season });
+      let nm = "", rp, season, ul; try { const sv = rec ? JSON.parse(rec.data) : {}; nm = sv.netName || ""; rp = sv.rp | 0; season = sv.season | 0; ul = ultrasOf(sv); } catch (e) {}
+      dirCall(this.env, { op: "touch", sub, name: nm, rp, season, ul });
     }
 
     // The Crown belongs to whoever is #1 on the leaderboard right now, and to nobody else
@@ -998,7 +1004,7 @@ export class Vault {
       // Crown in this same answer, not whenever you next happen to play
       // ponytail: one directory write per act; batch them if the player count ever makes that object busy
       const sus = suspicion(stats, hist, (await st.get("flags")) || [], now);
-      await dirCall(this.env, { op: "touch", sub, name: save.netName || "", rp: save.rp | 0, season: save.season | 0, sum: summary(stats, sus) });
+      await dirCall(this.env, { op: "touch", sub, name: save.netName || "", rp: save.rp | 0, season: save.season | 0, sum: summary(stats, sus), ul: ultrasOf(save) });
       const top = await dirCall(this.env, { op: "top1" });
       if (top && typeof top.sub === "string") crownFix(save, sub, top.sub);
       const data = JSON.stringify(save);
@@ -1221,6 +1227,8 @@ export default {
     if (url.pathname === "/lobbies") return jsonRes((await dirCall(env, { op: "lobbies" })) || { lobbies: [] });
     // which abilities are switched off right now: every game asks
     if (url.pathname === "/flags") return jsonRes((await dirCall(env, { op: "abiloff" })) || { off: [] });
+    // how many players own each ULTRA
+    if (url.pathname === "/owners") return jsonRes((await dirCall(env, { op: "owners" })) || { owners: {} });
     if (url.pathname === "/queue") return handleQueue(request, env);
     if (url.pathname === "/admin") return new Response(adminPage(), { headers: { "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store", "X-Frame-Options": "DENY", "Referrer-Policy": "no-referrer" } });
@@ -1249,7 +1257,7 @@ export default {
 const KICK_MS = 10 * 60 * 1000;          // a kicked player is kept out of that room this long
 const DIR_ROOMS_KEPT = 60, DIR_ROOMS_PER_ACCOUNT = 12, DIR_FEED_KEPT = 200;
 const SERVER_VERSION = "2026-10-01b";
-const LB_SIZE = 10, LB_CACHE_MS = 30 * 1000;
+const LB_SIZE = 10, LB_CACHE_MS = 30 * 1000, OWNERS_CACHE_MS = 3 * 60 * 1000;
 const LOBBY_TTL_MS = 90 * 1000, QUEUE_TTL_MS = 8 * 1000;
 // switched off until the admin page says otherwise
 const DEFAULT_ABIL_OFF = ["guardian"];
@@ -1281,6 +1289,10 @@ export class Directory {
       a.last = now;
       if (typeof b.name === "string" && b.name) a.name = b.name.slice(0, 14);
       if (b.sum && typeof b.sum === "object") a.sum = b.sum;
+      if (Array.isArray(b.ul)) {
+        const ul = b.ul.filter(x => typeof x === "string" && x.length < 40).slice(0, 20).sort();
+        if (JSON.stringify(ul) !== JSON.stringify(a.ul || [])) { a.ul = ul; this.owners = null; }
+      }
       if (typeof b.season === "number" && a.season !== b.season) { a.season = b.season; this.top = null; }
       if (typeof b.rp === "number" && isFinite(b.rp) && b.rp >= 0) { const rp = Math.floor(b.rp); if (a.rp !== rp) { this.top = null; a.rp = rp; a.rpAt = now; } }
       if (b.op === "flag") {
@@ -1305,6 +1317,17 @@ export class Directory {
       return jsonRes({ ok: true });
     }
     if (b.op === "get") return jsonRes({ acct: sub ? await st.get("a:" + sub) || null : null });
+    // how many accounts own each ULTRA, worked out at most every few minutes
+    if (b.op === "owners") {
+      if (!this.owners || now - this.owners.at > OWNERS_CACHE_MS) {
+        const n = {};
+        for (const [, a] of await st.list({ prefix: "a:" })) if (!a.ban) for (const k of (a.ul || [])) n[k] = (n[k] | 0) + 1;
+        this.owners = { at: now, n };
+      }
+      return jsonRes({ owners: this.owners.n, at: this.owners.at });
+    }
+    // every account, for the admin's recount
+    if (b.op === "subs") { const out = []; for (const [, a] of await st.list({ prefix: "a:" })) out.push(a.sub); return jsonRes({ subs: out }); }
     // the RP leaderboard: everyone not banned, most RP first (first to get there wins a tie).
     // Worked out at most every LB_CACHE_MS, so a crowd opening it costs one read
     if (b.op === "top") {

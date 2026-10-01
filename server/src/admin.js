@@ -64,6 +64,16 @@ export async function handleAdmin(request, env, H) {
   if (b.op === "overview") return H.jsonRes((await H.dirCall(env, { op: "overview" })) || { nodir: true });
   if (b.op === "feed") return H.jsonRes((await H.dirCall(env, { op: "feed" })) || { feed: [] });
   if (b.op === "rooms") return H.jsonRes((await H.dirCall(env, { op: "rooms" })) || { rooms: [] });
+  // recount who owns each ULTRA, straight from every account's save
+  if (b.op === "recount") {
+    const d = await H.dirCall(env, { op: "subs" }), subs = (d && d.subs) || [];
+    let done = 0;
+    for (let i = 0; i < subs.length; i += 10) {
+      await Promise.all(subs.slice(i, i + 10).map(s => H.toVault(env, s, { sub: s, op: "adm_ultras" }).then(() => done++).catch(() => {})));
+    }
+    const o = await H.dirCall(env, { op: "owners" });
+    return H.jsonRes({ ok: true, accounts: subs.length, done, owners: (o && o.owners) || {} });
+  }
   // the ability kill switches
   if (b.op === "abiloff") return H.jsonRes((await H.dirCall(env, { op: "abiloff" })) || { off: [] });
   if (b.op === "setabiloff") return H.jsonRes((await H.dirCall(env, { op: "setabiloff", off: b.off })) || { error: "directory not set up" });
@@ -217,6 +227,17 @@ function overview(){var L=document.getElementById("left");L.innerHTML="";L.appen
     [["Online now",j.online,"good"],["Played today",j.day],["This week",j.week],["New today",j.newDay],["All players",j.total],["Games played",j.games],["Flagged",j.flagged,j.flagged?"warn":""],["Banned",j.banned,j.banned?"bad":""]]
       .forEach(function(c){g.appendChild(el("div",{class:"card"},[el("div",{class:"mute",text:c[0]}),el("div",{class:"v "+(c[2]||""),text:num(c[1])})]));});
     L.appendChild(g);
+    // who owns the ULTRAs: counted as people play; the recount reads every save once
+    var ub=el("div",{class:"box"});L.appendChild(ub);
+    var udraw=function(o,note){ub.innerHTML="";ub.appendChild(el("b",{text:"ULTRA owners"}));
+      var ug=el("div",{class:"grid",style:"margin-top:8px"});
+      ["sword","abil","skin"].forEach(function(t){(CAT[t]||[]).filter(function(x){return x.r==="ultra"&&x.id!=="crown";}).forEach(function(x){
+        ug.appendChild(el("div",{class:"card"},[el("div",{class:"mute",text:x.n}),el("div",{class:"v",text:num((o||{})[t+":"+x.id]|0)})]));});});
+      ub.appendChild(ug);
+      ub.appendChild(el("div",{class:"row",style:"margin-top:8px"},[el("button",{text:"Recount from every save",on:function(){this.disabled=true;say("Recounting\u2026");
+        api("recount").then(function(r){if(!r.ok){say(r.error||"Could not recount",true);return;}say("Recounted "+r.done+" of "+r.accounts+" accounts");udraw(r.owners,"");});}}),
+        el("span",{class:"mute",text:note||"Counts fill in as players log in. Recount once to get exact numbers now."})]));};
+    fetch("/owners").then(function(r){return r.json();}).then(function(o){udraw(o.owners);}).catch(function(){udraw({});});
     var cols=el("div",{class:"cols"});
     var a=el("div"),b=el("div");cols.appendChild(a);cols.appendChild(b);L.appendChild(cols);
     a.appendChild(el("h3",{text:"Worth a look"}));
