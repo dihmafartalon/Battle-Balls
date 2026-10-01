@@ -2958,7 +2958,7 @@ function buildCasino(){
   vBox(9,2.2,2.4,14,1.1,-8,0x3a2a10);
   vGlow(9.2,.3,2.6,14,2.3,-8,0x6bffb0);
   addObstacle(14,-8,3.4,null);
-  vLabel("EXCHANGE","COINS TO YEN AND BACK",0x6bffb0,14,8.5,-8,1.5);
+  vLabel("EXCHANGE","YEN TO COINS, SELL GEAR",0x6bffb0,14,8.5,-8,1.5);
   vPad(14,-3.5,0x6bffb0,"EXCHANGE","CONVERT CURRENCY \u00b7 SELL GEAR",function(){openCasino("ex");});
 
   // off the spawn axis: its sign post used to stand exactly where the camera rests
@@ -13711,9 +13711,10 @@ var RODRIGA={chance:1e-4,
 var LOGIN_CAL={id:"oct26",name:"OCTOBER LOGIN CALENDAR",
   from:Date.UTC(2026,9,1,7,0,0),to:Date.UTC(2026,10,1,7,0,0),
   rewards:[
-   {c:250},{y:30},{s:1},{c:350},{y:45},{c:400},{s:2},{c:500},{y:60},{L:1},
-   {c:600},{y:75},{s:2},{c:750},{y:90},{c:900},{s:3},{c:1000},{y:110},{L:1},
-   {c:1200},{y:130},{s:3},{c:1500},{y:150},{c:1800},{s:4},{c:2200},{y:190},{L:1,c:5000}]};
+   // yen is the bought currency now: three yen days, the rest pay coins
+   {c:250},{c:300},{s:1},{c:350},{c:450},{c:400},{s:2},{c:500},{y:60},{L:1},
+   {c:600},{c:750},{s:2},{c:750},{c:900},{c:900},{s:3},{c:1000},{y:110},{L:1},
+   {c:1200},{c:1300},{s:3},{c:1500},{c:1500},{c:1800},{s:4},{c:2200},{y:190},{L:1,c:5000}]};
 // the ranked season. A new id resets everybody's RP to zero (rewards are kept)
 var SEASON={id:1,name:"SEASON 1"};
 var LIM_MARKUP=2.5;
@@ -14379,7 +14380,7 @@ var LIM_KIND={sword:"BLADE",abil:"ABILITY",skin:"SKIN"};
 var GNOME_HELLO=["Psst. Rare stuff, today only.","Everything here leaves when the clock runs out.",
   "Finest goods in the lobby. Only goods in the lobby, but still.","Yen only, friend. Coins are for the chests."];
 var GNOME_THANKS=["Pleasure doing business!","Wear it well.","Good eye. That one was going fast."];
-var GNOME_BROKE=["Come back with more yen, friend.","The casino turns coins into yen. Sometimes.","Not quite enough. I don't do discounts."];
+var GNOME_BROKE=["Come back with more yen, friend.","Yen comes from the battle pass and the login calendar.","Not quite enough. I don't do discounts."];
 function gnomeSay(t){$("limSay").textContent=t;}
 function openLimited(){
   gnomeSay(pick(GNOME_HELLO));
@@ -14392,7 +14393,7 @@ function renderLimDetail(e){
   var html=detailHead(it,d,e.tab,LIM_KIND[e.tab])+"<div class='dprice ol1'>"+cost.toLocaleString()+" YEN</div>";
   if(own)html+="<button class='big ghost' disabled>YOU OWN THIS</button>";
   else html+="<button class='big pink"+(rich?"":" off")+"' id='ldBuy'>BUY</button>"+
-    (rich?"":"<div class='dnote'>You need "+(cost-SAVE.yen).toLocaleString()+" more yen. The casino has an exchange, and buys gear.</div>");
+    (rich?"":"<div class='dnote'>You need "+(cost-SAVE.yen).toLocaleString()+" more yen. It comes from the battle pass and the login calendar.</div>");
   box.innerHTML=html;
   var b=box.querySelector("#ldBuy");
   if(!b||own)return;
@@ -14669,8 +14670,11 @@ var SUITS=[{s:"\u2660",r:false},{s:"\u2665",r:true},{s:"\u2666",r:true},{s:"\u26
 var RANKS_C=["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
 // `stake` is what you actually put in when the cards came out. Settlement pays
 // against that, never against `bet`, which the chip buttons can still move.
-var BJ={shoe:[],you:[],dealer:[],bet:25,stake:0,inHand:false,doubled:false};
-var SLOT={bet:25,stake:0,spinning:false,reels:["?","?","?"]};
+/* The casino plays for coins. Yen is the currency you can buy, so it never goes
+   on a table: what you pay for is only ever spent on things you pick. */
+var CAS_BET=[30,15000];
+var BJ={shoe:[],you:[],dealer:[],bet:75,stake:0,inHand:false,doubled:false};
+var SLOT={bet:75,stake:0,spinning:false,reels:["?","?","?"]};
 // tuned to about 95% return (3.5: up from 91%): three-of-a-kind carries the
 // paytable, and only the top two symbols pay anything worthwhile on a pair
 var SYMS=[
@@ -14731,7 +14735,7 @@ function bjSettle(result,payMul,note){
   BJ.inHand=false;
   var stake=(BJ.stake||BJ.bet)*(BJ.doubled?2:1);
   var gain=Math.round(stake*payMul);
-  if(gain>0)addYen(gain);
+  if(gain>0)addCoins(gain);
   SAVE.casino.hands++;
   if(payMul>0)SAVE.casino.bjWins++;
   writeSave();
@@ -14741,7 +14745,7 @@ function bjShow(result,payMul,gain,stake,note){
   refreshCoins();renderBJ(true);
   var col=payMul>0?"#6bffb0":(payMul===0?"#ffd23f":"#ff6b6b");
   $("bjMsg").innerHTML="<b style='color:"+col+"'>"+result+"</b> "+
-    (payMul>0?("+"+gain.toLocaleString()+" yen"):(payMul===0?"stake returned":"-"+stake.toLocaleString()+" yen"))+
+    (payMul>0?("+"+gain.toLocaleString()+" coins"):(payMul===0?"stake returned":"-"+stake.toLocaleString()+" coins"))+
     (note?(" <span style='opacity:.6'>"+note+"</span>"):"");
   sfx(payMul>0?"rank":"whiff");
 }
@@ -14768,8 +14772,8 @@ function bjServer(m){
 function bjDeal(){
   if(econOn()){bjServer("deal");return;}
   if(BJ.inHand)return;
-  if(SAVE.yen<BJ.bet){$("bjMsg").innerHTML="<b style='color:#ffb9ad'>Not enough yen.</b>";return;}
-  addYen(-BJ.bet);
+  if(SAVE.coins<BJ.bet){$("bjMsg").innerHTML="<b style='color:#ffb9ad'>Not enough coins.</b>";return;}
+  addCoins(-BJ.bet);
   BJ.stake=BJ.bet;                      // locked in for this hand
   BJ.you=[];BJ.dealer=[];BJ.doubled=false;BJ.inHand=true;
   BJ.you.push(drawCard());BJ.dealer.push(drawCard());
@@ -14803,8 +14807,8 @@ function bjDouble(){
   if(econOn()){if(BJ.inHand&&BJ.you.length===2&&!BJ.doubled)bjServer("double");return;}
   if(!BJ.inHand||BJ.you.length!==2||BJ.doubled)return;
   var extra=BJ.stake||BJ.bet;           // match the ORIGINAL stake, not the display
-  if(SAVE.yen<extra){$("bjMsg").innerHTML="<b style='color:#ffb9ad'>Not enough yen to double.</b>";return;}
-  addYen(-extra);BJ.doubled=true;
+  if(SAVE.coins<extra){$("bjMsg").innerHTML="<b style='color:#ffb9ad'>Not enough coins to double.</b>";return;}
+  addCoins(-extra);BJ.doubled=true;
   BJ.you.push(drawCard());
   renderBJ(false);
   if(handValue(BJ.you)>21){bjSettle("BUST",-1,"doubled and busted");return;}
@@ -14838,7 +14842,7 @@ function buildPaytable(){
 }
 function slotSpin(){
   if(SLOT.spinning)return;
-  if(SAVE.yen<SLOT.bet){$("slotMsg").innerHTML="<b style='color:#ffb9ad'>Not enough yen.</b>";return;}
+  if(SAVE.coins<SLOT.bet){$("slotMsg").innerHTML="<b style='color:#ffb9ad'>Not enough coins.</b>";return;}
   SLOT.stake=SLOT.bet;                  // locked in for this spin
   SLOT.spinning=true;
   $("slotMsg").innerHTML="<span style='opacity:.6'>Spinning\u2026</span>";
@@ -14855,7 +14859,7 @@ function slotSpin(){
     });
     return;
   }
-  addYen(-SLOT.bet);
+  addCoins(-SLOT.bet);
   slotLand(spin,[rollSym(),rollSym(),rollSym()],null);
 }
 // stop the reels one by one on `finals`; win is the server's, or null to work it out here
@@ -14872,16 +14876,16 @@ function slotLand(spin,finals,serverWin){
         var local=serverWin===null||serverWin===undefined;
         var win=local?Math.round(staked*res.mul):serverWin;
         SLOT.spinning=false;if(local)SAVE.casino.spins++;
-        if(win>0){if(local)addYen(win);sfx(res.mul>=20?"rank":"coin");
-          $("slotMsg").innerHTML="<b style='color:#6bffb0'>"+res.txt+"</b> +"+win.toLocaleString()+" yen";}
+        if(win>0){if(local)addCoins(win);sfx(res.mul>=20?"rank":"coin");
+          $("slotMsg").innerHTML="<b style='color:#6bffb0'>"+res.txt+"</b> +"+win.toLocaleString()+" coins";}
         else {sfx("whiff");
-          $("slotMsg").innerHTML="<b style='color:#ffb9ad'>"+res.txt+"</b> -"+staked.toLocaleString()+" yen";}
+          $("slotMsg").innerHTML="<b style='color:#ffb9ad'>"+res.txt+"</b> -"+staked.toLocaleString()+" coins";}
         writeSave();refreshCoins();
       },420);},380);},900);
 }
 var UPCHAIN=["common","rare","epic","legendary","mythic"];
 var UPODDS={common:0.50,rare:0.36,epic:0.23,legendary:0.11};
-var UPFEE={common:45,rare:100,epic:220,legendary:555};
+var UPFEE={common:135,rare:300,epic:660,legendary:1665};   // coins
 function upgradableItems(){
   var out=[],tabs=["sword","abil","skin"];
   for(var t=0;t<tabs.length;t++){
@@ -14889,7 +14893,7 @@ function upgradableItems(){
     for(var i=0;i<d.list.length;i++){
       var it=d.list[i];
       if(!d.own[it.id])continue;
-      // free items are re-granted on every load: selling one would print yen
+      // free items are re-granted on every load: selling one would print coins
       if(it.id===d.starter||it.free||it.rank||it.rarity==="rank"||it.ultra||it.pass)continue;
       if(SAVE[d.eq]===it.id)continue;
       if(UPCHAIN.indexOf(it.rarity)<0||it.rarity==="mythic")continue;
@@ -14922,7 +14926,7 @@ function updateUpOdds(){
   if(!p){$("upOdds").textContent="";return;}
   var next=UPCHAIN[UPCHAIN.indexOf(p.it.rarity)+1];
   $("upOdds").innerHTML="Fee <b style='color:#ffb3ec'>"+UPFEE[p.it.rarity].toLocaleString()+
-    " yen</b> &middot; <b style='color:#6bffb0'>"+Math.round(UPODDS[p.it.rarity]*100)+
+    " coins</b> &middot; <b style='color:#6bffb0'>"+Math.round(UPODDS[p.it.rarity]*100)+
     "%</b> to become a random <b style='color:"+hexStr(RARITY[next].c)+"'>"+RARITY[next].n+
     "</b> &middot; <b style='color:#ffb9ad'>"+Math.round((1-UPODDS[p.it.rarity])*100)+
     "%</b> to lose it";
@@ -14931,7 +14935,7 @@ function doUpgrade(){
   var p=currentUpPick();
   if(!p){$("upMsg").innerHTML="<b style='color:#ffb9ad'>Pick something first.</b>";return;}
   var fee=UPFEE[p.it.rarity];
-  if(SAVE.yen<fee){$("upMsg").innerHTML="<b style='color:#ffb9ad'>Not enough yen.</b>";return;}
+  if(SAVE.coins<fee){$("upMsg").innerHTML="<b style='color:#ffb9ad'>Not enough coins.</b>";return;}
   if(econOn()){
     if(doUpgrade.busy)return;doUpgrade.busy=true;
     econAct([{k:"upgrade",tab:p.tab,id:p.it.id}],function(err,rs){
@@ -14945,7 +14949,7 @@ function doUpgrade(){
     });
     return;
   }
-  addYen(-fee);
+  addCoins(-fee);
   var nextR=UPCHAIN[UPCHAIN.indexOf(p.it.rarity)+1];
   delete p.d.own[p.it.id];                      // the input is consumed either way
   SAVE.casino.upgrades++;
@@ -14963,7 +14967,7 @@ function doUpgrade(){
       sfx("rank");
     } else {
       p.d.own[p.it.id]=1;
-      addYen(fee);                    // nothing to upgrade into: give the fee back
+      addCoins(fee);                    // nothing to upgrade into: give the fee back
       $("upMsg").innerHTML="<b style='color:#ffd23f'>Nothing higher exists. Item and fee returned.</b>";
     }
   } else {
@@ -14979,7 +14983,7 @@ function sellableItems(){
     for(var i=0;i<d.list.length;i++){
       var it=d.list[i];
       if(!d.own[it.id])continue;
-      // free items are re-granted on every load: selling one would print yen
+      // free items are re-granted on every load: selling one would print coins
       if(it.id===d.starter||it.free||it.rank||it.rarity==="rank"||it.ultra||it.pass)continue;
       if(SAVE[d.eq]===it.id)continue;
       out.push({tab:tabs[t],it:it,d:d});
@@ -14996,12 +15000,12 @@ function buildSellGrid(){
     return;
   }
   list.forEach(function(e){
-    var val=itemValue(e.it);
-    var el=itemTile(e.it,e.d,{price:"SELL "+val.toLocaleString()+" \u00a5"});
-    el.title="Sell "+e.it.name+" for "+val.toLocaleString()+" yen";
+    var val=itemValue(e.it)*YEN_RATE;     // paid in coins: yen only comes in, it never comes out
+    var el=itemTile(e.it,e.d,{price:"SELL "+val.toLocaleString()+" coins"});
+    el.title="Sell "+e.it.name+" for "+val.toLocaleString()+" coins";
     function sold(){
       $("exMsg").innerHTML="<span style='color:#b8ff8f'>Sold "+e.it.name+"</span> for "+
-        val.toLocaleString()+" yen.";
+        val.toLocaleString()+" coins.";
       sfx("coin");refreshCoins();
       buildSellGrid();buildUpgrader();updateChips();
     }
@@ -15016,7 +15020,7 @@ function buildSellGrid(){
         return;
       }
       delete e.d.own[e.it.id];
-      addYen(val);writeSave();
+      addCoins(val);writeSave();
       sold();
     });
     host.appendChild(el);
@@ -15334,7 +15338,7 @@ function wireCasino(){
     if(!v)return;
     b.addEventListener("click",function(){
       if(BJ.inHand)return;              // the stake is locked once the cards are out
-      BJ.bet=clamp(BJ.bet+v,10,5000);renderBJ(!BJ.inHand);
+      BJ.bet=clamp(BJ.bet+v,CAS_BET[0],CAS_BET[1]);renderBJ(!BJ.inHand);
     });
   })(chips[i]);
   var schips=$("panel-slots").querySelectorAll("button");
@@ -15343,26 +15347,14 @@ function wireCasino(){
     if(!v)return;
     b.addEventListener("click",function(){
       if(SLOT.spinning)return;          // no raising while the reels are running
-      SLOT.bet=clamp(SLOT.bet+v,10,5000);
+      SLOT.bet=clamp(SLOT.bet+v,CAS_BET[0],CAS_BET[1]);
       $("slBet").textContent=SLOT.bet.toLocaleString();
     });
   })(schips[i]);
   var ex=$("panel-ex").querySelectorAll("button");
   for(i=0;i<ex.length;i++)(function(b){
-    var c2y=parseInt(b.getAttribute("data-c2y"),10);
     var y2c=parseInt(b.getAttribute("data-y2c"),10);
-    if(c2y){
-      b.addEventListener("click",function(){
-        if(SAVE.coins<c2y){$("exMsg").innerHTML="<b style='color:#ffb9ad'>Not enough coins.</b>";return;}
-        if(econOn()){econAct([{k:"exchange",c2y:c2y}],function(err,rs){var r0=rs&&rs[0];
-          if(err||!r0||!r0.ok){$("exMsg").innerHTML="<b style='color:#ffb9ad'>"+((r0&&r0.why)||econErr(err))+"</b>";return;}
-          $("exMsg").innerHTML="<b style='color:#6bffb0'>+"+r0.res.yen.toLocaleString()+" yen</b>";sfx("coin");refreshCoins();});return;}
-        var gotY=Math.floor(c2y/YEN_RATE);
-        SAVE.coins-=gotY*YEN_RATE;addYen(gotY);writeSave();refreshCoins();
-        $("exMsg").innerHTML="<b style='color:#6bffb0'>+"+gotY.toLocaleString()+" yen</b>";
-        sfx("coin");
-      });
-    } else if(y2c){
+    if(y2c){
       b.addEventListener("click",function(){
         if(SAVE.yen<y2c){$("exMsg").innerHTML="<b style='color:#ffb9ad'>Not enough yen.</b>";return;}
         if(econOn()){econAct([{k:"exchange",y2c:y2c}],function(err,rs){var r0=rs&&rs[0];
