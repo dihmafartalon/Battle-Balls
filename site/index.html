@@ -2134,7 +2134,7 @@ var SKINS=[
  {id:"seraph",name:"Seraph",price:0,yen:290,rarity:"mythic",style:"seraph",body:0xfff4d0,limb:0xd8c090,skin:0xfffaf0,glow:0xffd23f,
   desc:"A halo hangs above the head and light-wings unfold from the back."},
  {id:"dripkid",name:"Drip Kid",price:0,yen:330,rarity:"mythic",style:"dripkid",body:0x121214,limb:0x121214,skin:0xf2c9a0,glow:0x000000,
-  desc:"Big head, bigger eyes, a black designer tee and skinny jeans. Unbothered. Blinks slowly at whoever is about to lose."},
+  desc:"Big head, bigger eyes, a black CUCCI tee and skinny jeans. Unbothered. Blinks slowly at whoever is about to lose."},
  {id:"wraith",name:"Wraith",price:0,yen:330,rarity:"mythic",style:"wraith",body:0x181422,limb:0x0a0810,skin:0x9a3aff,glow:0xb14aff,
   desc:"Curved horns, a ragged shroud and two violet embers where eyes should be."},
  // ranked path rewards
@@ -11299,6 +11299,9 @@ SIG_SKIN.blackcat=function(f,g,sk,box,glowM,darkM,bodyM){
 };
 // ASCENDED: black, split by cracks of white-gold light; a halo turning behind the
 // head; eyes of white light; rising motes; and standing still it lifts off the floor
+// the lid: the top of a sphere, down to just above the middle, and a thin band at its edge
+var DRIP_LID={half:new THREE.SphereGeometry(.5,20,10,0,Math.PI*2,0,Math.PI*.42),
+  edge:new THREE.SphereGeometry(.506,20,2,0,Math.PI*2,Math.PI*.405,Math.PI*.04)};
 /* DRIP KID: a big round cartoon head with huge half-lidded eyes and a smirk,
    a black tee with a white emblem, skinny blue jeans and white sneakers. */
 SIG_SKIN.dripkid=function(f,g,sk,box,glowM,darkM,bodyM){
@@ -11327,9 +11330,12 @@ SIG_SKIN.dripkid=function(f,g,sk,box,glowM,darkM,bodyM){
     var rim=new THREE.Mesh(GEO.sph,ink);rim.scale.set(.45,.45,.14);ew.add(rim);
     var eye=new THREE.Mesh(GEO.sph,white);eye.scale.set(.41,.41,.15);eye.position.z=.014;ew.add(eye);
     var pup=new THREE.Mesh(GEO.sphLo,ink);pup.scale.set(.075,.075,.03);pup.position.set(sd*.03+.08,-.04,.09);ew.add(pup);
-    // the heavy lid: a skin cap over the top half of the eye, a dark line at its edge
-    var lid=new THREE.Mesh(GEO.box,skin);lid.scale.set(.42,.2,.035);lid.position.set(0,.11,.06);ew.add(lid);
-    var lash=new THREE.Mesh(GEO.box,ink);lash.scale.set(.42,.025,.04);lash.position.set(0,.01,.064);ew.add(lash);
+    // the heavy lid: a curved cap of skin over the top of the eyeball, a dark
+    // line along its edge; a full one swaps in for the blink
+    var lid=new THREE.Mesh(DRIP_LID.half,skin);lid.scale.set(.44,.44,.17);lid.position.z=.014;ew.add(lid);
+    var shut=new THREE.Mesh(GEO.sph,skin);shut.scale.set(.44,.44,.17);shut.position.z=.014;shut.visible=false;ew.add(shut);
+    var lash=new THREE.Mesh(DRIP_LID.edge,ink);lash.scale.set(.44,.44,.17);lash.position.z=.014;ew.add(lash);
+    lid.userData.shut=shut;lid.userData.lash=lash;
     lids.push(lid);
   }
   // the smirk: three short strokes, rising to one side
@@ -11337,10 +11343,13 @@ SIG_SKIN.dripkid=function(f,g,sk,box,glowM,darkM,bodyM){
   var nose=new THREE.Mesh(GEO.sphLo,skin);nose.scale.set(.07,.06,.06);nose.position.set(.03,-.14,.56);hd.add(nose);
   // the tee's emblem: white, on the chest
   var c=cvs(128,96),x=c.getContext("2d");
-  x.fillStyle="#fff";x.font="bold 30px Georgia, serif";x.textAlign="center";x.fillText("DRIP",64,30);
-  x.beginPath();x.moveTo(64,38);x.bezierCurveTo(56,52,48,62,48,72);x.arc(64,72,16,Math.PI,0,true);x.bezierCurveTo(80,62,72,52,64,38);x.fill();   // a drop
+  x.fillStyle="#fff";x.font="27px Georgia, 'Times New Roman', serif";x.textAlign="center";x.fillText("CUCCI",64,28);
+  // two Ds, back to back and overlapping: a parody of a certain logo
+  x.strokeStyle="#fff";x.lineWidth=5;
+  x.beginPath();x.moveTo(44,44);x.lineTo(44,84);x.moveTo(44,44);x.bezierCurveTo(76,44,76,84,44,84);x.stroke();
+  x.beginPath();x.moveTo(84,44);x.lineTo(84,84);x.moveTo(84,44);x.bezierCurveTo(52,44,52,84,84,84);x.stroke();
   var em=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(c),transparent:true,depthWrite:false}));
-  em.scale.set(.56,.42,1);em.position.set(0,2.2,.365);g.add(em);
+  em.scale.set(.6,.45,1);em.position.set(0,2.2,.365);g.add(em);
   f.sig={kind:"dripkid",lids:lids,hd:hd};
 };
 SIG_SKIN.ascended=function(f,g,sk,box,glowM,darkM,bodyM){
@@ -11561,7 +11570,7 @@ var SIG_TICK4={
   dripkid:function(f,s,dt,t){
     // a slow, unbothered blink now and then, and the head bobs a touch
     var bl=(t*.9+f.phase)%4.2<.14;
-    for(var i=0;i<s.lids.length;i++){s.lids[i].scale.y=bl?.42:.2;s.lids[i].position.y=bl?.0:.11;}
+    for(var i=0;i<s.lids.length;i++){var L=s.lids[i];L.visible=!bl;L.userData.lash.visible=!bl;L.userData.shut.visible=bl;}
     s.hd.rotation.z=Math.sin(t*1.1+f.phase)*.04;
   },
   blackcat:function(f,s,dt,t){
@@ -11830,7 +11839,7 @@ Object.assign(SIG_SKIN_ICON,{
     "<circle cx='16' cy='12' r='3.6' fill='#fff' stroke='#101010' stroke-width='1'/><circle cx='24' cy='12' r='3.6' fill='#fff' stroke='#101010' stroke-width='1'/>"+
     "<rect x='12' y='8.2' width='16' height='3.6' fill='#f2c9a0'/><circle cx='17.4' cy='12.6' r='1' fill='#101010'/><circle cx='25.4' cy='12.6' r='1' fill='#101010'/>"+
     "<path d='M17 18q3 1.4 6-.6' stroke='#101010' stroke-width='1.2' fill='none'/>"+
-    "<rect x='12' y='23' width='16' height='10' rx='2' fill='#121214' stroke='#0b1942' stroke-width='1.6'/><text x='20' y='29.6' font-size='4.2' text-anchor='middle' fill='#fff' font-family='Georgia'>DRIP</text>"+
+    "<rect x='12' y='23' width='16' height='10' rx='2' fill='#121214' stroke='#0b1942' stroke-width='1.6'/><text x='20' y='28' font-size='3.6' text-anchor='middle' fill='#fff' font-family='Georgia'>CUCCI</text><path d='M18.6 29v3.4q3 0 3-1.7t-3-1.7M21.4 29v3.4q-3 0-3-1.7t3-1.7' stroke='#fff' stroke-width='.6' fill='none'/>"+
     "<rect x='14' y='33' width='5' height='6' fill='#4a7fd8' stroke='#0b1942' stroke-width='1'/><rect x='21' y='33' width='5' height='6' fill='#4a7fd8' stroke='#0b1942' stroke-width='1'/>",
   blackcat:"<path d='M11 16l2-11 6 7h2l6-7 2 11z' fill='#16141a' stroke='#0b1942' stroke-width='1.6'/><rect x='11' y='13' width='18' height='14' rx='4' fill='#16141a' stroke='#0b1942' stroke-width='1.6'/>"+
     "<path d='M14.5 19h3M22.5 19h3' stroke='#ffd23f' stroke-width='2.6' stroke-linecap='round'/><path d='M8 22h6M8 25h6M26 22h6M26 25h6' stroke='#e8e8f0' stroke-width='.9'/>"+
