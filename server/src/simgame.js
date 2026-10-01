@@ -11514,6 +11514,7 @@ function oneOnOne(f){
   for(var i=0;i<all.length;i++)if(all[i]!==f&&!all[i].decoy&&hostileTo(f,all[i]))n++;
   return n<=1;
 }
+var JORDAN_MIN_READ=1.1;      // seconds the one it is thrown at always gets
 function jordanSlam(f){
   if(!f.alive)return;
   f.vy=Math.min(f.vy,-40);                       // come down hard
@@ -11572,6 +11573,24 @@ function jordanSlam(f){
          from the slam: in bot-vs-bot 1v1s the victim died within a second of
          landing nine times in ten. Whoever it is thrown at is back on their
          feet with a fair moment to read it; everyone else stays down. */
+      /* Landing right on top of them sent it from point blank: 0.6s to react,
+         knocked into the air for most of it, which online is no time at all.
+         Too close and it starts further back along the line instead, so the
+         one it is thrown at always gets a real look at it. */
+      if(tti(b)<JORDAN_MIN_READ){
+        var jx=f.pos.x-best.pos.x,jz=f.pos.z-best.pos.z,jl=Math.hypot(jx,jz);
+        if(jl<0.5){jx=-best.pos.x;jz=-best.pos.z;jl=Math.hypot(jx,jz);}   // on their head: come from the middle
+        if(jl<0.5){jx=1;jz=0;jl=1;}
+        jx/=jl;jz/=jl;
+        var jr=arenaEdgeFor(best)*0.92;
+        for(var jk=1;jk<=12&&tti(b)<JORDAN_MIN_READ;jk++){
+          var sx=best.pos.x+jx*jk*4,sz=best.pos.z+jz*jk*4,sr=Math.hypot(sx,sz);
+          if(sr>jr){sx*=jr/sr;sz*=jr/sr;}
+          b.mesh.visible=false;
+          setupFlight(b,sx,2.6,sz,Math.atan2(best.pos.x-sx,best.pos.z-sz));
+          b.mesh.visible=true;
+        }
+      }
       var fair=Math.max(0,tti(b)-0.55);
       if(best.stun>fair)best.stun=fair;
       best.cursedT=0;
