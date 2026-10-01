@@ -415,6 +415,19 @@ function applyAbilOff(list){
   ABIL_OFF={};for(var i=0;i<list.length;i++)ABIL_OFF[String(list[i])]=1;
   try{window.localStorage.setItem("bb_abiloff",JSON.stringify(list));}catch(e){}
 }
+/* How many players own each ULTRA: the server counts it, the game asks now and then */
+var ULTRA_OWNERS={};
+function fetchOwners(){
+  var b=typeof serverBase==="function"?serverBase():"";
+  if(!b||typeof fetch!=="function")return;
+  fetch(b+"/owners").then(function(r){return r.json();}).then(function(j){if(j&&j.owners&&typeof j.owners==="object")ULTRA_OWNERS=j.owners;}).catch(function(){});
+}
+function ownersLine(it,tab){
+  if(!it||!it.ultra||it.top1)return "";      // Apex is always exactly one player
+  var n=ULTRA_OWNERS[tab+":"+it.id];
+  if(typeof n!=="number")return "";
+  return "<div class='owners'>OWNED BY <b>"+n.toLocaleString()+"</b> PLAYER"+(n===1?"":"S")+"</div>";
+}
 function fetchAbilOff(){
   var b=typeof serverBase==="function"?serverBase():"";
   if(!b||typeof fetch!=="function")return;
@@ -13996,7 +14009,7 @@ function rankFor(tab,id){
 function detailHead(it,d,tab,kind){
   return "<div class='dicon' style='box-shadow:inset 0 0 0 4px "+tierColor(it)+",0 5px 0 #0b1942'>"+d.icon(it)+"</div>"+
     "<div class='dname'>"+it.name+"</div>"+
-    "<div><span class='dpill r-"+itemTier(it)+"'>"+(kind?kind+" \u00b7 ":"")+tierLabel(it)+"</span></div>"+
+    "<div><span class='dpill r-"+itemTier(it)+"'>"+(kind?kind+" \u00b7 ":"")+tierLabel(it)+"</span></div>"+ownersLine(it,tab)+
     "<div class='ddesc'>"+it.desc+"</div>"+
     "<div class='dtags'>"+itemFacts(it,tab).map(function(x){return "<span>"+x+"</span>";}).join("")+"</div>";
 }
@@ -14203,7 +14216,7 @@ function openPreview(it){
   var tab="sword",d=shopData(tab);
   $("pvName").textContent=it.name;
   $("pvPill").innerHTML="<span class='dpill r-"+itemTier(it)+"'>"+tierLabel(it)+"</span>"+
-    (d.own[it.id]?"":"<span class='pvlock'>LOCKED</span>");
+    (d.own[it.id]?"":"<span class='pvlock'>LOCKED</span>")+ownersLine(it,tab);
   $("pvDesc").textContent=it.desc||"";
   $("pvTags").innerHTML=itemFacts(it,tab).map(function(x){return "<span>"+x+"</span>";}).join("");
   // the blade itself, built exactly as it is in a match
@@ -16036,6 +16049,7 @@ $("bootStart").addEventListener("click",function(){
   if(!fsSupported())$("mFull").style.display="none";
   wireCasino();wireMP();wireSettings();
   fetchAbilOff();setInterval(fetchAbilOff,60000);
+  fetchOwners();setInterval(fetchOwners,180000);
   $("specNext").addEventListener("click",function(e){e.stopPropagation();specNext();});
   if(SPECQ)setTimeout(specJoin,800);
   applyQuality(QUAL);

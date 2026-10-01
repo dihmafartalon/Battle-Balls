@@ -190,6 +190,7 @@ input[type=range]{accent-color:#3dbb22;cursor:pointer}
 .inv{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:14px;min-height:0}
 .inv .well{overflow-y:auto;max-height:min(58vh,560px)}
 .detail{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:14px 14px 16px}
+.detail>*{flex-shrink:0}      /* a long description scrolls the panel instead of squashing into the tags */
 .dicon{width:128px;height:128px;border-radius:50%;border:4px solid var(--nv);display:flex;align-items:center;justify-content:center;
   background:radial-gradient(70% 70% at 50% 35%,#4f95ff,#1a3f9a);box-shadow:inset 0 0 0 3px rgba(255,255,255,.2),0 5px 0 var(--nv)}
 .dicon svg{width:74px;height:74px;filter:drop-shadow(0 3px 0 rgba(8,16,48,.6))}
@@ -198,6 +199,9 @@ input[type=range]{accent-color:#3dbb22;cursor:pointer}
   background:var(--nv);color:var(--rc)}
 .ddesc{font-size:13.5px;line-height:1.45;color:#eaf3ff;min-height:40px}
 .dtags{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.owners{font-size:12px;font-weight:700;letter-spacing:.08em;color:#ffb3c0;margin-top:4px;text-shadow:0 2px 0 rgba(11,25,66,.8)}
+.owners b{color:#fff;font-size:14px}
+.pvtop .owners{font-size:15px;margin-top:8px}.pvtop .owners b{font-size:18px}
 .emslots{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%}
 .emslot{position:relative;height:50px;border-radius:12px;border:3px solid var(--nv);background:#14204a;color:#fff;cursor:pointer;font-family:inherit}
 .emslot b{font-size:22px}.emslot i{position:absolute;right:5px;bottom:2px;font-style:normal;font-size:9px;opacity:.6}
@@ -2021,6 +2025,19 @@ function applyAbilOff(list){
   if(!Array.isArray(list))return;
   ABIL_OFF={};for(var i=0;i<list.length;i++)ABIL_OFF[String(list[i])]=1;
   try{window.localStorage.setItem("bb_abiloff",JSON.stringify(list));}catch(e){}
+}
+/* How many players own each ULTRA: the server counts it, the game asks now and then */
+var ULTRA_OWNERS={};
+function fetchOwners(){
+  var b=typeof serverBase==="function"?serverBase():"";
+  if(!b||typeof fetch!=="function")return;
+  fetch(b+"/owners").then(function(r){return r.json();}).then(function(j){if(j&&j.owners&&typeof j.owners==="object")ULTRA_OWNERS=j.owners;}).catch(function(){});
+}
+function ownersLine(it,tab){
+  if(!it||!it.ultra||it.top1)return "";      // Apex is always exactly one player
+  var n=ULTRA_OWNERS[tab+":"+it.id];
+  if(typeof n!=="number")return "";
+  return "<div class='owners'>OWNED BY <b>"+n.toLocaleString()+"</b> PLAYER"+(n===1?"":"S")+"</div>";
 }
 function fetchAbilOff(){
   var b=typeof serverBase==="function"?serverBase():"";
@@ -15603,7 +15620,7 @@ function rankFor(tab,id){
 function detailHead(it,d,tab,kind){
   return "<div class='dicon' style='box-shadow:inset 0 0 0 4px "+tierColor(it)+",0 5px 0 #0b1942'>"+d.icon(it)+"</div>"+
     "<div class='dname'>"+it.name+"</div>"+
-    "<div><span class='dpill r-"+itemTier(it)+"'>"+(kind?kind+" \u00b7 ":"")+tierLabel(it)+"</span></div>"+
+    "<div><span class='dpill r-"+itemTier(it)+"'>"+(kind?kind+" \u00b7 ":"")+tierLabel(it)+"</span></div>"+ownersLine(it,tab)+
     "<div class='ddesc'>"+it.desc+"</div>"+
     "<div class='dtags'>"+itemFacts(it,tab).map(function(x){return "<span>"+x+"</span>";}).join("")+"</div>";
 }
@@ -15810,7 +15827,7 @@ function openPreview(it){
   var tab="sword",d=shopData(tab);
   $("pvName").textContent=it.name;
   $("pvPill").innerHTML="<span class='dpill r-"+itemTier(it)+"'>"+tierLabel(it)+"</span>"+
-    (d.own[it.id]?"":"<span class='pvlock'>LOCKED</span>");
+    (d.own[it.id]?"":"<span class='pvlock'>LOCKED</span>")+ownersLine(it,tab);
   $("pvDesc").textContent=it.desc||"";
   $("pvTags").innerHTML=itemFacts(it,tab).map(function(x){return "<span>"+x+"</span>";}).join("");
   // the blade itself, built exactly as it is in a match
@@ -17643,6 +17660,7 @@ $("bootStart").addEventListener("click",function(){
   if(!fsSupported())$("mFull").style.display="none";
   wireCasino();wireMP();wireSettings();
   fetchAbilOff();setInterval(fetchAbilOff,60000);
+  fetchOwners();setInterval(fetchOwners,180000);
   $("specNext").addEventListener("click",function(e){e.stopPropagation();specNext();});
   if(SPECQ)setTimeout(specJoin,800);
   applyQuality(QUAL);
