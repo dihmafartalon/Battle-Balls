@@ -2000,9 +2000,25 @@ function isDuel(){
   if(!MODE||MODE.teams)return false;
   return MODE.net?!!MODE.duelNet:MODE.bots===1;
 }
+/* Kill switches: abilities the admin page has switched off play as Dash. The
+   list comes from the server at start and every minute; an online match
+   brings its own in the start message, so every copy of it agrees. Guardian
+   is off until the server says otherwise. */
+var ABIL_OFF={guardian:1};
+(function(){try{var c=JSON.parse(window.localStorage.getItem("bb_abiloff")||"null");if(Array.isArray(c)){ABIL_OFF={};c.forEach(function(id){ABIL_OFF[id]=1;});}}catch(e){}})();
+function applyAbilOff(list){
+  if(!Array.isArray(list))return;
+  ABIL_OFF={};for(var i=0;i<list.length;i++)ABIL_OFF[String(list[i])]=1;
+  try{window.localStorage.setItem("bb_abiloff",JSON.stringify(list));}catch(e){}
+}
+function fetchAbilOff(){
+  var b=typeof serverBase==="function"?serverBase():"";
+  if(!b||typeof fetch!=="function")return;
+  fetch(b+"/flags").then(function(r){return r.json();}).then(function(j){if(j&&Array.isArray(j.off))applyAbilOff(j.off);}).catch(function(){});
+}
 function abilityAllowed(id){
   var a=abilById(id);
-  if(a.notReady)return false;
+  if(a.notReady||ABIL_OFF[a.id])return false;      // switched off from the admin page: plays as Dash
   if(a.hides&&isDuel())return false;
   if(!a.no1v1)return true;
   // These sit out of 1v1 because they are a guaranteed kill with one opponent.
@@ -13359,6 +13375,7 @@ var _netBots=0;
 function netFill(){return _netBots;}
 function startNetMatch(m){
   riftAbort();
+  if(Array.isArray(m.off))applyAbilOff(m.off);          // the room's kill switches, the same for everyone
   NET.matchSeq=(NET.matchSeq||0)+1;
   var ranked2=(m.mode==="ranked2"),god=(m.mode==="god1");
   // a rematch has to run the SAME match back. It used to always send "mp",
@@ -13412,7 +13429,7 @@ function startNetMatch(m){
       skinDef:skinById(p.skin||"rookie")});
     f.netId=p.id;
     f.isRemote=!mine;
-    f.guardian=(p.abil==="guardian");
+    f.guardian=(f.ability==="guardian");
     if(mine)player=f;
     else NET.remote[p.id]=f;
     fighters.push(f);
@@ -14758,6 +14775,7 @@ function chestPool(tab){
   for(var i=0;i<d.list.length;i++){
     var it=d.list[i];
     if(it.rank||it.rarity==="rank"||it.ultra||it.pass)continue;   // ranked rewards, ULTRAs and pass items are never in a chest
+    if(tab==="abil"&&ABIL_OFF[it.id])continue;                       // nor an ability switched off
     if(it.id===d.starter||it.free)continue;          // free-for-all items are not prizes
     // nor event items, nor anything whose rarity is never rolled (the Black Cat)
     if(it.event||!((RARITY[it.rarity||"common"]||{}).w>0))continue;
@@ -15001,7 +15019,7 @@ function itemTile(it,d,o){
 function itemFacts(it,tab){
   var t=[];
   if(tab==="sword"){var HN={rhip:"HIP DRAW",pistol:"SIDEARM",dangle:"ON A CORD"};t.push(it.swing.toUpperCase()+" SWING");t.push(HN[it.hold]||(it.hold.toUpperCase()+" GRIP"));}
-  if(tab==="abil"){t.push(it.ultra?"ONE USE PER GAME":it.passive?"PASSIVE":(it.cd+"s COOLDOWN"));if(it.notReady)t.push("COMING IN A LATER UPDATE");if(it.no1v1||it.hides)t.push("NOT IN 1v1");}
+  if(tab==="abil"){t.push(it.ultra?"ONE USE PER GAME":it.passive?"PASSIVE":(it.cd+"s COOLDOWN"));if(it.notReady)t.push("COMING IN A LATER UPDATE");if(ABIL_OFF[it.id])t.push("TEMPORARILY DISABLED: PLAYS AS DASH");if(it.no1v1||it.hides)t.push("NOT IN 1v1");}
   if(itemValue(it))t.push("WORTH "+itemValue(it).toLocaleString()+" YEN");
   return t;
 }
@@ -16991,6 +17009,7 @@ $("bootStart").addEventListener("click",function(){
   if(AC&&AC.state==="suspended")AC.resume();
   if(!fsSupported())$("mFull").style.display="none";
   wireCasino();wireMP();wireSettings();
+  fetchAbilOff();setInterval(fetchAbilOff,60000);
   $("specNext").addEventListener("click",function(e){e.stopPropagation();specNext();});
   if(SPECQ)setTimeout(specJoin,800);
   applyQuality(QUAL);

@@ -11,7 +11,7 @@
    ===================================================================== */
 
 import { CAT } from "./catalog.js";
-import { ECON_KEYS, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdict, retire, RETIRED, newStats, snap, recordAct, watchFlags, suspicion, summary, seasonReset, rankClean } from "./econ.js";
+import { ECON_KEYS, setAbilOff, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdict, retire, RETIRED, newStats, snap, recordAct, watchFlags, suspicion, summary, seasonReset, rankClean } from "./econ.js";
 const RETIRED_RE = new RegExp('"(' + Object.keys(RETIRED.abil).join("|") + ')"');
 import { adminPage, handleAdmin, ADMIN_TRIES, ADMIN_WINDOW_MS, specCheck } from "./admin.js";
 import { SimHost, SIM_ID } from "./sim.js";
@@ -495,6 +495,7 @@ export class Room {
       mode: p.mode === "ranked2" ? "mpranked2" : (p.mode === "god1" ? "god1" : "mp"),
       players: players.map(x => ({ id: x.id, sub: x.sub })) };
     this.casts = new WeakMap();                       // a new match: cooldowns start over
+    try { const fl = await dirCall(this.env, { op: "abiloff" }); p.off = (fl && Array.isArray(fl.off)) ? fl.off : []; } catch (e) { p.off = []; }
     this.broadcast(p);
     this.startMsg = p;
     this.sim.start(p, buildRoster(players));
@@ -936,6 +937,8 @@ export class Vault {
         for (const a of (Array.isArray(body.acts) ? body.acts : []).slice(0, 5)) {
           // an act sent again after its answer was lost is not paid twice
           if (a && typeof a.id === "string" && a.id.length <= 32 && seen.indexOf(a.id) >= 0) { res.push({ ok: true, dup: true }); continue; }
+          // the kill switches, asked again at most once a minute
+          if (a && a.k === "chest" && !(now - (this.offAt || 0) < 60000)) { const fl = await dirCall(this.env, { op: "abiloff" }); setAbilOff(fl ? fl.off : ["guardian"]); this.offAt = now; }
           const pre = snap(save), r = applyAct(save, a, { now, rnd: Math.random, bj, flags, tickets });
           res.push(r);
           recordAct(stats, hist, ledger, a && typeof a.k === "string" ? a.k.slice(0, 12) : "?", a || {}, r, pre, snap(save), now);
@@ -1170,6 +1173,8 @@ export default {
     if (url.pathname === "/redeem") return handleRedeem(request, env);
     if (url.pathname === "/leaderboard") return handleLeaderboard(request, env);
     if (url.pathname === "/lobbies") return jsonRes((await dirCall(env, { op: "lobbies" })) || { lobbies: [] });
+    // which abilities are switched off right now: every game asks
+    if (url.pathname === "/flags") return jsonRes((await dirCall(env, { op: "abiloff" })) || { off: [] });
     if (url.pathname === "/queue") return handleQueue(request, env);
     if (url.pathname === "/admin") return new Response(adminPage(), { headers: { "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store", "X-Frame-Options": "DENY", "Referrer-Policy": "no-referrer" } });
@@ -1197,6 +1202,8 @@ const DIR_ROOMS_KEPT = 60, DIR_ROOMS_PER_ACCOUNT = 12, DIR_FEED_KEPT = 200;
 const SERVER_VERSION = "2026-10-01b";
 const LB_SIZE = 10, LB_CACHE_MS = 30 * 1000;
 const LOBBY_TTL_MS = 90 * 1000, QUEUE_TTL_MS = 8 * 1000;
+// switched off until the admin page says otherwise
+const DEFAULT_ABIL_OFF = ["guardian"];
 export class Directory {
   constructor(state, env) { this.state = state; this.env = env; }
   async fetch(request) {
@@ -1208,6 +1215,17 @@ export class Directory {
   async handle(b) {
     const st = this.state.storage, now = Date.now();
     const sub = typeof b.sub === "string" ? b.sub.slice(0, 64) : "";
+    // the ability kill switches (the admin page flips them; games and rooms read them)
+    if (b.op === "abiloff") {
+      const off = await st.get("abilOff");
+      return jsonRes({ off: Array.isArray(off) ? off : DEFAULT_ABIL_OFF });
+    }
+    if (b.op === "setabiloff") {
+      const ids = new Set(CAT.items.abil.list.map(x => x.id));
+      const off = [...new Set((Array.isArray(b.off) ? b.off : []).map(String))].filter(id => ids.has(id) && id !== CAT.items.abil.starter);
+      await st.put("abilOff", off);
+      return jsonRes({ ok: true, off });
+    }
     if (b.op === "touch" || b.op === "room" || b.op === "flag" || b.op === "ban") {
       if (!sub) return jsonRes({ error: "no account" }, 400);
       const a = await this.acct(sub);
