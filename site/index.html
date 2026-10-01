@@ -9677,6 +9677,7 @@ function sigSwingSfx(d){
     // the portal gun: a wobbling zorp, a whoosh through, a hum as it closes
     var pd=SIG_SWING.gunshot.dur*1000;
     setTimeout(function(){tone(220,880,.22,"sine",.12);tone(330,1320,.2,"triangle",.05);noiseHit(.25,.18,1800);
+      noiseHit(.5,.4,500);tone(90,38,.55,"sine",.3);
       setTimeout(function(){tone(900,180,.35,"sine",.08);},120);},pd*.3);
     setTimeout(function(){tone(120,90,.6,"sine",.08);},pd*.5);
   } else if(st==="gunshot"){
@@ -11204,29 +11205,79 @@ function fetusSfx(kind){
 var GUN_PAL={gold:{flash:0xffc040,ring:0xffe0a0,slash:0xffd070,spark:[1,.9,.6],tr:[1,.85,.4]},
   portal:{flash:0x7aff4a,ring:0xb8ffa0,slash:0x6bff3a,spark:[.55,1,.45],tr:[.45,1,.35]}};
 function gunPal(f){return f&&f.swordDef&&f.swordDef.portal?GUN_PAL.portal:GUN_PAL.gold;}
-// a portal at the muzzle: a swirl disc facing along the shot, opening, spinning, closing
+// a portal: a swirl disc standing across the shot, opening, spinning, closing
 var GUN_PORTALS=[];
-function gunPortal(tip,fx,fz,size){
+function gunPortal(x,y,z,fx,fz,size,life){
   var r=null;
   for(var i=0;i<GUN_PORTALS.length;i++)if(!GUN_PORTALS[i].on){r=GUN_PORTALS[i];break;}
   if(!r){
-    if(GUN_PORTALS.length>=3)r=GUN_PORTALS[0];
-    else{var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:portalTex(),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+    if(GUN_PORTALS.length>=4)r=GUN_PORTALS[0];
+    else{var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:portalTex(),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
       m.renderOrder=6;scene.add(m);r={mesh:m};GUN_PORTALS.push(r);}
   }
-  r.on=true;r.t=0;r.size=size;r.mesh.visible=true;
-  r.mesh.position.set(tip.x+fx*.35,tip.y,tip.z+fz*.35);
+  r.on=true;r.t=0;r.size=size;r.life=life||.42;r.mesh.visible=true;
+  r.mesh.position.set(x,y,z);
   r.mesh.rotation.set(0,Math.atan2(fx,fz),0);
   if(!r.ticking){r.ticking=true;V4FX.push({tick:function(dt){
-    r.t+=dt;var L=.42,k=r.t/L;
+    r.t+=dt;var k=r.t/r.life;
     if(k>=1){r.on=false;r.mesh.visible=false;r.ticking=false;return false;}
-    // pops open fast, holds, then pinches shut
-    var open=k<.18?k/.18:(k>.7?Math.max(0,1-(k-.7)/.3):1);
+    // tears open fast with a little overshoot, holds, then pinches shut
+    var open=k<.16?Math.sin(k/.16*Math.PI*.6)/Math.sin(Math.PI*.6)*1.08:(k>.72?Math.max(0,1-(k-.72)/.28):1);
     r.mesh.scale.set(r.size*open,r.size*open*1.12,1);
-    r.mesh.rotateZ(dt*9);
-    r.mesh.material.opacity=.95*(k>.7?open:1);
+    r.mesh.rotateZ(dt*7);
+    r.mesh.material.opacity=.95*(k>.72?open:1);
     return true;
   },done:function(){r.on=false;r.mesh.visible=false;r.ticking=false;}});}
+}
+/* The portal gun's shot: a green explosion at the muzzle, shockwaves rippling
+   out along the shot and across the floor, and a big portal tearing open
+   downrange where it is aimed. */
+var GUN_WAVES=[];
+function gunWave(){
+  for(var i=0;i<GUN_WAVES.length;i++)if(!GUN_WAVES[i].on)return GUN_WAVES[i];
+  if(GUN_WAVES.length>=10)return GUN_WAVES[0];
+  var m=new THREE.Mesh(new THREE.TorusGeometry(1,.12,8,44),new THREE.MeshBasicMaterial({color:0x7aff4a,transparent:true,depthWrite:false,fog:false,toneMapped:false}));
+  m.renderOrder=6;scene.add(m);var w={mesh:m};GUN_WAVES.push(w);return w;
+}
+function gunWaveRun(w,tick){
+  w.on=true;w.t=0;w.mesh.visible=true;
+  V4FX.push({tick:function(dt){w.t+=dt;if(tick(w,dt)===false){w.on=false;w.mesh.visible=false;return false;}return true;},
+    done:function(){w.on=false;w.mesh.visible=false;}});
+}
+var GUN_CORE=null;
+function portalShot(f,tip,fx,fz,big){
+  var X=tip.x,Y=tip.y,Z=tip.z,yaw=Math.atan2(fx,fz),near=f===player||!player||dist2(f.pos.x,f.pos.z,player.pos.x,player.pos.z)<60*60;
+  // the explosion: a white-green core that swells and fades, sparks and green smoke
+  burst(X,Y,Z,QUAL>1?60:24,big?22:16,0xb8ff90,2.0,.35,-2);
+  burst(X,Y,Z,QUAL>1?30:12,10,0xffffff,1.6,.18,0);
+  for(var k=0;k<(QUAL>1?22:8);k++){var a=Math.random()*TAU,e=Math.random()*Math.PI-Math.PI/2;
+    spark(X,Y,Z,Math.cos(a)*Math.cos(e)*hr(2,6),Math.sin(e)*hr(1,4)+1,Math.sin(a)*Math.cos(e)*hr(2,6),.25,.75,.2,hr(.8,1.3),hr(.6,1.1),-.5);}
+  if(!near)return;
+  if(!GUN_CORE){GUN_CORE={mesh:new THREE.Mesh(GEO.sph,new THREE.MeshBasicMaterial({color:0x8aff5a,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}))};
+    GUN_CORE.mesh.renderOrder=7;scene.add(GUN_CORE.mesh);}
+  var C=GUN_CORE;C.mesh.position.set(X+fx*.4,Y,Z+fz*.4);C.mesh.visible=true;C.t=0;
+  if(!C.run){C.run=true;V4FX.push({tick:function(dt){C.t+=dt;var q=C.t/.32;
+    if(q>=1){C.mesh.visible=false;C.run=false;return false;}
+    C.mesh.scale.setScalar(.4+q*(big?3.2:2.4));C.mesh.material.opacity=.9*(1-q)*(1-q);return true;},
+    done:function(){C.mesh.visible=false;C.run=false;}});}
+  // three shockwaves along the shot, one after another
+  for(var n=0;n<3;n++)(function(n){setTimeout(function(){
+    var w=gunWave();w.mesh.rotation.set(0,yaw,0);w.mesh.material.color.setHex(n%2?0xb8ff90:0x5cff2a);
+    gunWaveRun(w,function(w,dt){var q=w.t/.55;if(q>=1)return false;
+      var d=1+q*(6+n*1.5);w.mesh.position.set(X+fx*d,Y,Z+fz*d);
+      w.mesh.scale.setScalar(.5+q*(2.6+n*.6));w.mesh.material.opacity=.85*(1-q);});
+  },n*70);})(n);
+  // and one rolling out across the floor
+  var gw=gunWave();gw.mesh.rotation.set(Math.PI/2,0,0);gw.mesh.material.color.setHex(0x7aff4a);
+  gunWaveRun(gw,function(w,dt){var q=w.t/.6;if(q>=1)return false;
+    w.mesh.position.set(f.pos.x,f.y+.12,f.pos.z);w.mesh.scale.setScalar(.8+q*(big?8:6));w.mesh.material.opacity=.7*(1-q);});
+  // the big portal, downrange where it is aimed
+  var D=big?9:8;
+  gunPortal(X+fx*D,Y+.6,Z+fz*D,fx,fz,big?6:5,.95);
+  setTimeout(function(){ringBurst(X+fx*D,Y+.6,Z+fz*D,QUAL>1?36:14,10,0x7aff4a,1.6,.6);
+    for(var m2=0;m2<(QUAL>1?30:10);m2++){var pa=Math.random()*TAU,pr=hr(.5,2.6);
+      spark(X+fx*D+fz*Math.cos(pa)*pr,Y+.6+Math.sin(pa)*pr,Z+fz*D-fx*Math.cos(pa)*pr,-fx*hr(1,3),hr(-.5,1),-fz*hr(1,3),.5,1,.4,hr(.3,.55),hr(.6,1),0);}},90);
+  if(f===player)shakeCam(big?.26:.16);
 }
 function gunBlast(f,big,col){
   var tip=f.swordTip(),yaw=f.isPlayer?camYaw:(f.aimYaw!=null?f.aimYaw:f.yaw),fx=Math.sin(yaw),fz=Math.cos(yaw),rx=fz,rz=-fx;
@@ -11241,12 +11292,7 @@ function gunBlast(f,big,col){
   for(var k=0;k<(QUAL>1?8:4);k++)spark(tip.x+fx*.4,tip.y,tip.z+fz*.4,fx*hr(1,3)+hr(-.5,.5),hr(1,2.4),fz*hr(1,3)+hr(-.5,.5),.55,.55,.6,hr(.6,1),hr(.8,1.4),-.6);
   spawnSlash(f,big?{span:2.6,tilt:1.25,r:1.4,w:.5,hot:1}:{span:1.6,tilt:1.3,r:1.25,w:.35,hot:1},col||0xffc040,big);
   if(portal){
-    // the portal gun: a green portal swirls open right at the muzzle, facing the
-    // shot, and snaps shut a moment later; motes spill out of it
-    gunPortal(tip,fx,fz,big?2.6:1.9);
-    for(var pm=0;pm<(QUAL>1?(big?24:12):8);pm++){var pa2=Math.random()*TAU,pr=hr(.2,big?1.2:.8);
-      spark(tip.x+rx*Math.cos(pa2)*pr+fx*.3,tip.y+Math.sin(pa2)*pr,tip.z+rz*Math.cos(pa2)*pr+fz*.3,fx*hr(2,5),hr(-.5,1.5),fz*hr(2,5),.5,1,.4,hr(.25,.45),hr(.4,.8),0);}
-    if(big&&f===player)shakeCam(.14);
+    portalShot(f,tip,fx,fz,big);
   } else if(big){
     slashRing(tip.x,tip.y,tip.z,0xffd070,0,Math.PI/2);
     // the signature: a spectral gold cylinder spins up behind you, a ring of gold
