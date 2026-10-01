@@ -286,6 +286,8 @@ var SWORDS=[
  // ---- 4.0 ----
  {id:"ricky9",name:"Ricky's .9",rarity:"mythic",price:16500,yen:345,blade:0x141418,hilt:0x1c1c22,glow:0xffb040,shape:"pistol",hold:"pistol",size:.64,swing:"gunshot",idle:"none",
   desc:"Not a sword. A block is a shot: the ball is blown back the way you are aiming with a crack, a muzzle flash and a tracer across the arena."},
+ {id:"portalgun",name:"Portal Gun",rarity:"unreleased",price:-1,yen:345,portal:true,blade:0xe4e8ec,hilt:0x2a2e34,glow:0x6bff3a,shape:"portalgun",hold:"pistol",size:.64,swing:"gunshot",idle:"none",
+  desc:"Grey, chunky and humming, with a tube of something green sloshing on top. A block is a shot: the ball goes back through a portal of green light."},
  {id:"divineright",name:"Divine Right",price:-1,rank:"god",blade:0xdce6f2,hilt:0xd8b050,glow:0x7ad8ff,shape:"divine",hold:"rhip",swing:"divine",idle:"orbit",
   desc:"The GOD rank's blade. Worn on the right hip and drawn in one stroke: the wings open, the runes light, and every cut sheds feathers of light."},
  {id:"crown",name:"Apex",rarity:"ultra",price:-1,ultra:true,code:true,top1:true,blade:0xfff0c0,hilt:0x0e0c0a,glow:0xffd27a,shape:"apex",hold:"back",size:.9,swing:"apex",idle:"none",
@@ -535,6 +537,10 @@ var SKINS=[
   desc:"Full helm with a slit visor, heavy pauldrons and a mirror finish."},
  {id:"seraph",name:"Seraph",price:0,yen:290,rarity:"mythic",style:"seraph",body:0xfff4d0,limb:0xd8c090,skin:0xfffaf0,glow:0xffd23f,
   desc:"A halo hangs above the head and light-wings unfold from the back."},
+ {id:"plone",name:"Plone",price:-1,yen:330,rarity:"unreleased",style:"plone",body:0x121214,limb:0x121214,skin:0xd9d6cc,glow:0x000000,
+  desc:"Spiky blue hair, one long eyebrow and eyes that have seen everything. A black PLONE tee. Burps mid-sentence."},
+ {id:"cucci",name:"Cucci",price:-1,yen:330,rarity:"unreleased",style:"cucci",body:0x121214,limb:0x121214,skin:0xf2c9a0,glow:0x000000,
+  desc:"Big head, bigger eyes, a black CUCCI tee and skinny jeans. Unbothered. Blinks slowly at whoever is about to lose."},
  {id:"wraith",name:"Wraith",price:0,yen:330,rarity:"mythic",style:"wraith",body:0x181422,limb:0x0a0810,skin:0x9a3aff,glow:0xb14aff,
   desc:"Curved horns, a ragged shroud and two violet embers where eyes should be."},
  // ranked path rewards
@@ -8069,6 +8075,12 @@ function sigSwingSfx(d){
     noiseHit(.2,.16,900);tone(260,520,.25,"triangle",.08);
     setTimeout(function(){noiseHit(.5,.34,650);tone(110,40,.5,"sawtooth",.26);tone(700,240,.4,"square",.07);},60);
     setTimeout(function(){noiseHit(.35,.18,3600);},180);
+  } else if(st==="gunshot"&&d.portal){
+    // the portal gun: a wobbling zorp, a whoosh through, a hum as it closes
+    var pd=SIG_SWING.gunshot.dur*1000;
+    setTimeout(function(){tone(220,880,.22,"sine",.12);tone(330,1320,.2,"triangle",.05);noiseHit(.25,.18,1800);
+      setTimeout(function(){tone(900,180,.35,"sine",.08);},120);},pd*.3);
+    setTimeout(function(){tone(120,90,.6,"sine",.08);},pd*.5);
   } else if(st==="gunshot"){
     // the twirl's whirr, then two cracks of a nine, brass on the floor, the twirl home
     var gd=SIG_SWING.gunshot.dur*1000;
@@ -8180,6 +8192,11 @@ function hwDecalTex(kind){
     x.beginPath();for(i=0;i<=40;i++){var ba=i/40*TAU,br=70+((i*53)%23)*2.2+(i%5===0?40:0);
       if(i===0)x.moveTo(128+Math.cos(ba)*br*.9,128+Math.sin(ba)*br*.9);else x.lineTo(128+Math.cos(ba)*br*.9,128+Math.sin(ba)*br*.9);}x.fill();
     for(i=0;i<14;i++){var da=i*2.3,dr=100+(i%4)*6;x.beginPath();x.arc(128+Math.cos(da)*dr,128+Math.sin(da)*dr,4+(i%3)*3,0,TAU);x.fill();}
+  } else if(kind==="portal"){
+    // a swirl of arms curling into the middle, inside a ring
+    x.lineWidth=6;x.beginPath();x.arc(128,128,116,0,TAU);x.stroke();
+    for(var pi2=0;pi2<5;pi2++){x.lineWidth=5;x.beginPath();
+      for(var pt=0;pt<=1;pt+=.03){var pa3=pi2/5*TAU+pt*4,pr2=108*(1-pt);var qx=128+Math.cos(pa3)*pr2,qy=128+Math.sin(pa3)*pr2;if(pt===0)x.moveTo(qx,qy);else x.lineTo(qx,qy);}x.stroke();}
   } else if(kind==="apex"){
     // a sunburst round a crown: the #1's mark
     x.lineWidth=6;x.beginPath();x.arc(128,128,116,0,TAU);x.stroke();
@@ -8412,6 +8429,17 @@ function apexTex(){
   x.strokeStyle="#fff4c8";x.lineWidth=5;x.beginPath();x.arc(256,256,238,0,TAU);x.stroke();
   x.fillStyle="#fff8dc";x.font="bold 64px sans-serif";x.textAlign="center";x.fillText("#1",256,340);
   return (HW_DEC.tex.apex=mkTex(c));
+}
+function portalTex(){
+  if(HW_DEC.tex.portal)return HW_DEC.tex.portal;
+  var c=cvs(512,512),x=c.getContext("2d"),i;
+  var g=x.createRadialGradient(256,256,10,256,256,240);g.addColorStop(0,"#f0ffe0");g.addColorStop(.35,"#8aff5a");g.addColorStop(.75,"#1e9a1a");g.addColorStop(1,"rgba(10,60,10,0)");
+  x.fillStyle=g;x.beginPath();x.arc(256,256,240,0,TAU);x.fill();
+  // the swirl: arms curling in to the middle
+  x.lineCap="round";
+  for(i=0;i<6;i++){x.strokeStyle=i%2?"rgba(220,255,200,.75)":"rgba(40,140,30,.8)";x.lineWidth=14-i;x.beginPath();
+    for(var t=0;t<=1;t+=.02){var a=i/6*TAU+t*4.2,r=220*(1-t);var px=256+Math.cos(a)*r,py=256+Math.sin(a)*r;if(t===0)x.moveTo(px,py);else x.lineTo(px,py);}x.stroke();}
+  return (HW_DEC.tex.portal=mkTex(c));
 }
 function hwApparition(x,y,z,tex,size,life,spin){
   var r=null;
@@ -8654,6 +8682,11 @@ var SIG_SKIN_ICON={
 };
 
 /* ---- wiring into the tables the rest of the game reads ---- */
+SWORD_ICON.portalgun="<path d='M15 25l-2 11h6l1-10z' fill='{H}' stroke='#0b1942' stroke-width='1.6'/>"+
+  "<rect x='14' y='8' width='12' height='19' rx='4' fill='{B}' stroke='#0b1942' stroke-width='1.6'/>"+
+  "<rect x='24' y='10' width='5' height='14' rx='2.4' fill='#7aff4a' stroke='#0b1942' stroke-width='1.3' opacity='.95'/>"+
+  "<rect x='14' y='13' width='12' height='1.6' fill='#9aa2ac'/><rect x='14' y='19' width='12' height='1.6' fill='#9aa2ac'/>"+
+  "<ellipse cx='20' cy='6' rx='5.5' ry='3.2' fill='#7aff4a' stroke='#0b1942' stroke-width='1.4'/><ellipse cx='20' cy='6' rx='2.4' ry='1.3' fill='#e8ffd8'/>";
 SWORD_ICON.chef="<path d='M17 23h6l1 13h-8z' fill='{H}' stroke='#0b1942' stroke-width='1.6'/><circle cx='20' cy='27' r='1.2' fill='#d8a83a'/><circle cx='20' cy='32' r='1.2' fill='#d8a83a'/>"+
   "<rect x='16' y='21' width='8' height='3' fill='#d8a83a' stroke='#0b1942' stroke-width='1.2'/>"+
   "<path d='M17 21V9C17 6 19 3 22 2c3 4 4 10 4 14v5z' fill='{B}' stroke='#0b1942' stroke-width='1.6'/><path d='M25.5 20V15c0-4-1-8-3-12' stroke='{G}' stroke-width='1.6' fill='none'/>";
@@ -9281,9 +9314,10 @@ HOLD.rgrip={sp:[0,-1.22,.02],sr:[-1.62,0,0.08],ra:[-0.26,0,0.16],la:null};
 // is carried: drawn off the back in one stroke
 HOLD.back={sp:[0.62,.55,-0.62],sr:[-0.12,0,0.5],ra:[-0.24,0,0.12],la:null};
 HOLD.lance={sp:[0,-1.64,0.02],sr:[0.1,0,-0.24],ra:[-0.35,0,0.14],la:null};
+FXD.portalfx={rate:14,c1:0x7aff4a,c2:0x1e8a1a,vy:[.2,1.4],sp:.3,g:-.6,sz:.38,life:.7,along:1.0,sheath:0,motes:3,ring:0x6bff3a};
 FXD.gunfx={rate:10,c1:0xffb040,c2:0x6a6a70,vy:[.2,1.2],sp:.2,g:-1.2,sz:.34,life:.5,along:1.0,sheath:0};
 FXD.nullfx={rate:36,c1:0x00ffe0,c2:0x001a18,vy:[-.4,1.2],sp:.6,g:0,sz:.44,life:.3,along:1.0,sheath:.5,arc:true,motes:3};
-Object.assign(SWORD_FX,{ricky9:"gunfx",
+Object.assign(SWORD_FX,{ricky9:"gunfx",portalgun:"portalfx",
   s1wood:"toxic",s1iron:"magma",s1ruby:"prismfx",s1omega:"nullfx",s1meat:"blood"});
 /* ============================================================
    4.0 -- built from the reference sheets
@@ -9325,6 +9359,34 @@ SIG_SHAPE.pistol=function(g,seg,B,H,G){
   return 2.8;
 };
 
+// THE PORTAL GUN -- a chunky grey-and-white body, a glass tube of green fluid
+// along the top, a round green emitter at the front and a dark grip
+SIG_SHAPE.portalgun=function(g,seg,B,H,G){
+  var i,grey=v4Phong(0xd8dce2,90),dark=v4Phong(0x2a2e34,50),mid=v4Phong(0x9aa2ac,70);
+  var green=new THREE.MeshBasicMaterial({color:0x4cff1a}),glass=new THREE.MeshPhongMaterial({color:0xc8ffd0,transparent:true,opacity:.22,shininess:140});
+  function bx(m,w,h,d,x,y,z,rx){var o=new THREE.Mesh(GEO.box,m);o.scale.set(w,h,d);o.position.set(x,y,z);if(rx)o.rotation.x=rx;g.add(o);return o;}
+  // the grip and its trigger
+  bx(dark,.28,.36,.6,0,-.08,.14,.22);
+  for(i=0;i<3;i++)bx(mid,.29,.03,.5,0,-.16+i*.1,.14,.22);
+  bx(dark,.06,.06,.16,0,.2,.02,.3);
+  // the body: short and fat, white over grey, banded
+  var body=seg(.56,1.5,.58,.8,-.38,grey);body.userData.core=true;
+  bx(mid,.58,.18,.6,0,.02,-.38);bx(mid,.6,.14,.62,0,1.5,-.38);
+  for(i=0;i<2;i++)bx(dark,.59,.05,.61,0,.5+i*.5,-.38);
+  // a dial on the side
+  var dial=new THREE.Mesh(GEO.cyl8,v4Phong(0xd8a83a,120,0x3a2600,.4));dial.scale.set(.18,.07,.18);dial.rotation.z=Math.PI/2;dial.position.set(.31,.62,-.38);g.add(dial);
+  // the tube of green fluid along the top, in its brackets
+  var tube=new THREE.Mesh(GEO.cyl,glass);tube.scale.set(.34,1.15,.34);tube.position.set(0,.8,-.8);g.add(tube);
+  var fluid=new THREE.Mesh(GEO.cyl,green);fluid.scale.set(.27,1.05,.27);fluid.position.set(0,.8,-.8);g.add(fluid);
+  for(i=0;i<2;i++){bx(mid,.4,.12,.4,0,.22+i*1.16,-.8);bx(mid,.12,.12,.26,0,.22+i*1.16,-.62);}
+  // the emitter: a collar and a big glowing green bulb
+  var col=new THREE.Mesh(GEO.cyl,mid);col.scale.set(.62,.2,.62);col.position.set(0,1.64,-.38);g.add(col);
+  var bulb=new THREE.Mesh(GEO.sph,green);bulb.scale.set(.56,.4,.56);bulb.position.set(0,1.82,-.38);g.add(bulb);
+  var hot=new THREE.Mesh(GEO.sphLo,v4Add(0x6bff3a,.6));hot.scale.setScalar(.42);hot.position.set(0,1.9,-.38);hot.userData.aura=true;g.add(hot);
+  g.userData.pulse=hot;g.userData.flareMul=.12;
+  B.emissiveIntensity=.05;
+  return 2.0;
+};
 // DIVINE RIGHT -- a silver-blue blade with a rune channel lit cyan, barbed
 // flanges near the guard, a gold guard spreading into two great glowing
 // wings, a star-orb at the heart, a gold-wound grip and an orb pommel
@@ -9540,17 +9602,54 @@ function fetusSfx(kind){
 /* Ricky's .9, each shot: the tracer, a white-gold muzzle flash with four
    points, a shockwave ring, smoke, a spent case, and a gold arc that follows
    the recoil. The second shot is bigger. */
+// the gun's colours: Ricky's .9 is gold and brass, the portal gun is green
+var GUN_PAL={gold:{flash:0xffc040,ring:0xffe0a0,slash:0xffd070,spark:[1,.9,.6],tr:[1,.85,.4]},
+  portal:{flash:0x7aff4a,ring:0xb8ffa0,slash:0x6bff3a,spark:[.55,1,.45],tr:[.45,1,.35]}};
+function gunPal(f){return f&&f.swordDef&&f.swordDef.portal?GUN_PAL.portal:GUN_PAL.gold;}
+// a portal at the muzzle: a swirl disc facing along the shot, opening, spinning, closing
+var GUN_PORTALS=[];
+function gunPortal(tip,fx,fz,size){
+  var r=null;
+  for(var i=0;i<GUN_PORTALS.length;i++)if(!GUN_PORTALS[i].on){r=GUN_PORTALS[i];break;}
+  if(!r){
+    if(GUN_PORTALS.length>=3)r=GUN_PORTALS[0];
+    else{var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:portalTex(),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+      m.renderOrder=6;scene.add(m);r={mesh:m};GUN_PORTALS.push(r);}
+  }
+  r.on=true;r.t=0;r.size=size;r.mesh.visible=true;
+  r.mesh.position.set(tip.x+fx*.35,tip.y,tip.z+fz*.35);
+  r.mesh.rotation.set(0,Math.atan2(fx,fz),0);
+  if(!r.ticking){r.ticking=true;V4FX.push({tick:function(dt){
+    r.t+=dt;var L=.42,k=r.t/L;
+    if(k>=1){r.on=false;r.mesh.visible=false;r.ticking=false;return false;}
+    // pops open fast, holds, then pinches shut
+    var open=k<.18?k/.18:(k>.7?Math.max(0,1-(k-.7)/.3):1);
+    r.mesh.scale.set(r.size*open,r.size*open*1.12,1);
+    r.mesh.rotateZ(dt*9);
+    r.mesh.material.opacity=.95*(k>.7?open:1);
+    return true;
+  },done:function(){r.on=false;r.mesh.visible=false;r.ticking=false;}});}
+}
 function gunBlast(f,big,col){
   var tip=f.swordTip(),yaw=f.isPlayer?camYaw:(f.aimYaw!=null?f.aimYaw:f.yaw),fx=Math.sin(yaw),fz=Math.cos(yaw),rx=fz,rz=-fx;
+  var P=gunPal(f),portal=P===GUN_PAL.portal;
+  if(portal)col=P.flash;
   gunTracer(f);
   burst(tip.x,tip.y,tip.z,QUAL>1?(big?34:22):12,big?16:12,0xffffff,big?1.8:1.4,.12,0);
-  burst(tip.x,tip.y,tip.z,QUAL>1?20:10,10,0xffc040,1.4,.2,0);
+  burst(tip.x,tip.y,tip.z,QUAL>1?20:10,10,P.flash,1.4,.2,0);
   for(var s=0;s<4;s++){var a=s*Math.PI/2+.4,ux=Math.cos(a)*rx,uy=Math.sin(a),uz=Math.cos(a)*rz;
-    for(var j=1;j<=5;j++)spark(tip.x+ux*j*.18,tip.y+uy*j*.18,tip.z+uz*j*.18,0,0,0,1,.9,.6,.55-j*.07,.12,0);}
-  ringBurst(tip.x,tip.y,tip.z,QUAL>1?20:10,big?9:6,0xffe0a0,1.1,.3);
+    for(var j=1;j<=5;j++)spark(tip.x+ux*j*.18,tip.y+uy*j*.18,tip.z+uz*j*.18,0,0,0,P.spark[0],P.spark[1],P.spark[2],.55-j*.07,.12,0);}
+  ringBurst(tip.x,tip.y,tip.z,QUAL>1?20:10,big?9:6,P.ring,1.1,.3);
   for(var k=0;k<(QUAL>1?8:4);k++)spark(tip.x+fx*.4,tip.y,tip.z+fz*.4,fx*hr(1,3)+hr(-.5,.5),hr(1,2.4),fz*hr(1,3)+hr(-.5,.5),.55,.55,.6,hr(.6,1),hr(.8,1.4),-.6);
   spawnSlash(f,big?{span:2.6,tilt:1.25,r:1.4,w:.5,hot:1}:{span:1.6,tilt:1.3,r:1.25,w:.35,hot:1},col||0xffc040,big);
-  if(big){
+  if(portal){
+    // the portal gun: a green portal swirls open right at the muzzle, facing the
+    // shot, and snaps shut a moment later; motes spill out of it
+    gunPortal(tip,fx,fz,big?2.6:1.9);
+    for(var pm=0;pm<(QUAL>1?(big?24:12):8);pm++){var pa2=Math.random()*TAU,pr=hr(.2,big?1.2:.8);
+      spark(tip.x+rx*Math.cos(pa2)*pr+fx*.3,tip.y+Math.sin(pa2)*pr,tip.z+rz*Math.cos(pa2)*pr+fz*.3,fx*hr(2,5),hr(-.5,1.5),fz*hr(2,5),.5,1,.4,hr(.25,.45),hr(.4,.8),0);}
+    if(big&&f===player)shakeCam(.14);
+  } else if(big){
     slashRing(tip.x,tip.y,tip.z,0xffd070,0,Math.PI/2);
     // the signature: a spectral gold cylinder spins up behind you, a ring of gold
     // round your body, six pillars of light where the chambers land, brass raining
@@ -9654,8 +9753,9 @@ function gunTracer(f,tx,ty,tz){
   var tip=f.swordTip(),yaw=f.isPlayer?camYaw:(f.aimYaw!=null?f.aimYaw:f.yaw);
   if(tx===undefined){tx=tip.x+Math.sin(yaw)*40;ty=tip.y;tz=tip.z+Math.cos(yaw)*40;}
   var dx=tx-tip.x,dy=ty-tip.y,dz=tz-tip.z,L=Math.sqrt(dx*dx+dy*dy+dz*dz)||1,n=Math.min(40,Math.ceil(L/1.2));
-  for(var i=0;i<n;i++){var k=i/n;spark(tip.x+dx*k,tip.y+dy*k,tip.z+dz*k,0,0,0,1,.85-k*.3,.4,.5-k*.2,.14+k*.05,0);}
-  burst(tip.x,tip.y,tip.z,QUAL>1?16:8,10,0xffe0a0,1.4,.14,0);
+  var P=gunPal(f);
+  for(var i=0;i<n;i++){var k=i/n;spark(tip.x+dx*k,tip.y+dy*k,tip.z+dz*k,0,0,0,P.tr[0],P.tr[1]-k*.3,P.tr[2],.5-k*.2,.14+k*.05,0);}
+  burst(tip.x,tip.y,tip.z,QUAL>1?16:8,10,P.ring,1.4,.14,0);
   ringBurst(tip.x,tip.y,tip.z,10,3,0x9a9aa4,.9,.5);
   spark(tip.x,tip.y,tip.z,Math.cos(yaw)*4,5,-Math.sin(yaw)*4,.9,.75,.3,.3,.6,-12);
 }
@@ -9699,6 +9799,113 @@ SIG_SKIN.blackcat=function(f,g,sk,box,glowM,darkM,bodyM){
 };
 // ASCENDED: black, split by cracks of white-gold light; a halo turning behind the
 // head; eyes of white light; rising motes; and standing still it lifts off the floor
+// the lid: the top of a sphere, down to just above the middle, and a thin band at its edge
+var DRIP_LID={cap:new THREE.SphereGeometry(.5,22,10,0,Math.PI*2,0,Math.PI*.4),half:new THREE.SphereGeometry(.5,20,10,0,Math.PI*2,0,Math.PI*.42),
+  edge:new THREE.SphereGeometry(.506,20,2,0,Math.PI*2,Math.PI*.405,Math.PI*.04)};
+/* CUCCI: a big round cartoon head with huge half-lidded eyes and a smirk,
+   a black tee with a white emblem, skinny blue jeans and white sneakers. */
+SIG_SKIN.cucci=function(f,g,sk,box,glowM,darkM,bodyM){
+  var sd,skin=new THREE.MeshLambertMaterial({color:0xf2c9a0});
+  var jeans=new THREE.MeshLambertMaterial({color:0x4a7fd8}),shoe=new THREE.MeshLambertMaterial({color:0xf4f4f6});
+  var white=new THREE.MeshBasicMaterial({color:0xffffff}),ink=new THREE.MeshBasicMaterial({color:0x101010});
+  var hair=new THREE.MeshLambertMaterial({color:0x14100c});
+  // the stock head goes; the trim the tee would not have goes black
+  (f.headParts||[]).forEach(function(m){m.visible=false;});
+  f.mLimb.color.setHex(0x121214);
+  // arms: short black sleeves, bare from the elbow down
+  f.arms.forEach(function(a){a.children.forEach(function(c,ix){if(ix>0)c.material=skin;});});
+  // legs: skinny jeans, white sneakers
+  f.legs.forEach(function(l){l.children.forEach(function(c){c.material=c.position.y<-1.25?shoe:jeans;});
+    var sole=new THREE.Mesh(GEO.box,shoe);sole.scale.set(.38,.08,.58);sole.position.set(0,-1.36,.12);l.add(sole);});
+  // the head: big and round, with ears
+  var hd=new THREE.Group();hd.position.set(0,3.2,0);g.add(hd);
+  var head=new THREE.Mesh(GEO.sph,skin);head.scale.set(1.25,1.12,1.12);hd.add(head);
+  box(.3,.3,.3,0,2.62,0,skin);                                       // neck
+  for(sd=-1;sd<=1;sd+=2){var ear=new THREE.Mesh(GEO.sphLo,skin);ear.scale.set(.16,.26,.16);ear.position.set(sd*.62,-.02,0);hd.add(ear);}
+  var cap=new THREE.Mesh(DRIP_LID.cap,hair);cap.scale.set(1.3,1.18,1.18);cap.rotation.x=-.2;hd.add(cap);
+  for(var fi=-2;fi<=2;fi++){var fr=new THREE.Mesh(GEO.sphLo,hair);fr.scale.set(.24,.15,.16);fr.position.set(fi*.14,.4-Math.abs(fi)*.03,.37-Math.abs(fi)*.04);fr.rotation.x=.6;hd.add(fr);}
+  // the eyes: huge, white, ringed, pupils off to the side; heavy lids for the look
+  var lids=[];
+  for(sd=-1;sd<=1;sd+=2){
+    var ew=new THREE.Group();ew.position.set(sd*.23,.1,.47);hd.add(ew);
+    var rim=new THREE.Mesh(GEO.sph,ink);rim.scale.set(.45,.45,.14);ew.add(rim);
+    var eye=new THREE.Mesh(GEO.sph,white);eye.scale.set(.41,.41,.15);eye.position.z=.014;ew.add(eye);
+    var pup=new THREE.Mesh(GEO.sphLo,ink);pup.scale.set(.075,.075,.03);pup.position.set(sd*.03+.08,-.04,.09);ew.add(pup);
+    // the heavy lid: a curved cap of skin over the top of the eyeball, a dark
+    // line along its edge; a full one swaps in for the blink
+    var lid=new THREE.Mesh(DRIP_LID.half,skin);lid.scale.set(.44,.44,.17);lid.position.z=.014;ew.add(lid);
+    var shut=new THREE.Mesh(GEO.sph,skin);shut.scale.set(.44,.44,.17);shut.position.z=.014;shut.visible=false;ew.add(shut);
+    var lash=new THREE.Mesh(DRIP_LID.edge,ink);lash.scale.set(.44,.44,.17);lash.position.z=.014;ew.add(lash);
+    lid.userData.shut=shut;lid.userData.lash=lash;
+    lids.push(lid);
+  }
+  // the smirk: three short strokes, rising to one side
+  [[-.12,-.31,-.1],[0,-.33,0],[.13,-.3,.32]].forEach(function(q){var m=new THREE.Mesh(GEO.box,ink);m.scale.set(.15,.025,.03);m.position.set(q[0],q[1],.55);m.rotation.z=q[2];hd.add(m);});
+  var nose=new THREE.Mesh(GEO.sphLo,skin);nose.scale.set(.07,.06,.06);nose.position.set(.03,-.14,.56);hd.add(nose);
+  // the tee's emblem: white, on the chest
+  var c=cvs(128,96),x=c.getContext("2d");
+  x.fillStyle="#fff";x.font="27px Georgia, 'Times New Roman', serif";x.textAlign="center";x.fillText("CUCCI",64,28);
+  // two Ds, back to back and overlapping: a parody of a certain logo
+  x.strokeStyle="#fff";x.lineWidth=5;
+  x.beginPath();x.moveTo(44,44);x.lineTo(44,84);x.moveTo(44,44);x.bezierCurveTo(76,44,76,84,44,84);x.stroke();
+  x.beginPath();x.moveTo(84,44);x.lineTo(84,84);x.moveTo(84,44);x.bezierCurveTo(52,44,52,84,84,84);x.stroke();
+  var em=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(c),transparent:true,depthWrite:false}));
+  em.scale.set(.6,.45,1);em.position.set(0,2.2,.365);g.add(em);
+  f.sig={kind:"cucci",lids:lids,hd:hd};
+};
+/* PLONE: a long pale head, spiky light-blue hair swept up and back, one wavy
+   eyebrow, droopy eyes with bags under them; a black tee with PLONE across it
+   (the P orange), brown slacks and shoes. */
+SIG_SKIN.plone=function(f,g,sk,box,glowM,darkM,bodyM){
+  var sd,i,skin=new THREE.MeshLambertMaterial({color:0xd9d6cc}),pants=new THREE.MeshLambertMaterial({color:0x7a5a3a});
+  var shoe=new THREE.MeshLambertMaterial({color:0x3a2616}),hairM=new THREE.MeshLambertMaterial({color:0x6fd2f4,emissive:0x0a3a4a,emissiveIntensity:.5});
+  var white=new THREE.MeshBasicMaterial({color:0xffffff}),ink=new THREE.MeshBasicMaterial({color:0x101010}),brow=new THREE.MeshLambertMaterial({color:0x6fb8d8,emissive:0x0a3040,emissiveIntensity:.4});
+  var line=new THREE.MeshBasicMaterial({color:0x8a8478});
+  (f.headParts||[]).forEach(function(m){m.visible=false;});
+  f.mLimb.color.setHex(0x121214);
+  f.arms.forEach(function(a){a.children.forEach(function(c,ix){if(ix>0)c.material=skin;});});
+  f.legs.forEach(function(l){l.children.forEach(function(c){c.material=c.position.y<-1.25?shoe:pants;});});
+  // the head: long, a little narrow, with a chin
+  var hd=new THREE.Group();hd.position.set(0,3.32,0);g.add(hd);
+  var head=new THREE.Mesh(GEO.sph,skin);head.scale.set(1.08,1.4,1.06);hd.add(head);
+  box(.3,.3,.3,0,2.62,0,skin);
+  for(sd=-1;sd<=1;sd+=2){var ear=new THREE.Mesh(GEO.sphLo,skin);ear.scale.set(.15,.28,.15);ear.position.set(sd*.54,-.05,0);hd.add(ear);}
+  // the hair: a short blue cap over the back of the crown, spikes swept up and back round it
+  var cap=new THREE.Mesh(DRIP_LID.cap,hairM);cap.scale.set(1.14,1.46,1.12);cap.rotation.x=-.55;hd.add(cap);
+  // spikes in rows from the hairline back, each fanned out and swept up and back
+  var rows=[[.62,-.05,5,.5,.36,-.35],[.5,-.3,6,.62,.4,-.85],[.24,-.45,6,.7,.38,-1.3],[-.06,-.48,5,.66,.34,-1.75]];
+  rows.forEach(function(rw){for(var k=0;k<rw[2];k++){
+    var u=rw[2]>1?k/(rw[2]-1)-.5:0,sx=u*rw[3]*1.6;
+    var sp=new THREE.Mesh(GEO.cone,hairM);sp.scale.set(.32,(rw[4]+(k%2)*.12)*1.45,.24);
+    sp.position.set(sx,rw[0]-Math.abs(u)*.2,rw[1]+Math.abs(u)*.12);
+    sp.rotation.x=rw[5];sp.rotation.z=-u*1.6;hd.add(sp);}});
+  // the eyes: white, ringed, pupils dead centre, lids half down; bags under them
+  var lids=[];
+  for(sd=-1;sd<=1;sd+=2){
+    var ew=new THREE.Group();ew.position.set(sd*.2,.12,.45);hd.add(ew);
+    var rim=new THREE.Mesh(GEO.sph,ink);rim.scale.set(.36,.36,.12);ew.add(rim);
+    var eye=new THREE.Mesh(GEO.sph,white);eye.scale.set(.33,.33,.13);eye.position.z=.012;ew.add(eye);
+    var pup=new THREE.Mesh(GEO.sphLo,ink);pup.scale.set(.05,.05,.03);pup.position.set(0,-.04,.075);ew.add(pup);
+    var lid=new THREE.Mesh(DRIP_LID.half,skin);lid.scale.set(.355,.355,.145);lid.position.z=.012;ew.add(lid);
+    var shut=new THREE.Mesh(GEO.sph,skin);shut.scale.set(.355,.355,.145);shut.position.z=.012;shut.visible=false;ew.add(shut);
+    var lash=new THREE.Mesh(DRIP_LID.edge,ink);lash.scale.set(.355,.355,.145);lash.position.z=.012;ew.add(lash);
+    lid.userData.shut=shut;lid.userData.lash=lash;lids.push(lid);
+    for(i=0;i<2;i++){var bag=new THREE.Mesh(GEO.box,line);bag.scale.set(.2-i*.05,.018,.02);bag.position.set(sd*.2,-.1-i*.06,.5);bag.rotation.z=sd*.12;hd.add(bag);}
+  }
+  // the unibrow: one long wavy bar
+  [[-.36,.36,.25],[-.18,.33,-.08],[0,.35,0],[.18,.33,.08],[.36,.36,-.25]].forEach(function(q){var b=new THREE.Mesh(GEO.box,brow);b.scale.set(.2,.055,.05);b.position.set(q[0],q[1],.49);b.rotation.z=q[2];hd.add(b);});
+  // nose and a flat, knowing smile
+  var nose=new THREE.Mesh(GEO.sphLo,skin);nose.scale.set(.09,.1,.09);nose.position.set(0,-.12,.55);hd.add(nose);
+  [[-.15,-.41,-.12],[0,-.43,0],[.15,-.41,.12]].forEach(function(q){var m=new THREE.Mesh(GEO.box,ink);m.scale.set(.17,.025,.03);m.position.set(q[0],q[1],.5);m.rotation.z=q[2];hd.add(m);});
+  // the tee: PLONE across the chest, the P orange
+  var c=cvs(256,96),x=c.getContext("2d");
+  x.font="bold 76px Georgia, 'Times New Roman', serif";x.textBaseline="middle";x.textAlign="left";
+  var wP=x.measureText("P").width,wR=x.measureText("LONE").width,x0=(256-wP-wR)/2;
+  x.fillStyle="#e8862a";x.fillText("P",x0,52);x.fillStyle="#ffffff";x.fillText("LONE",x0+wP,52);
+  var em=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(c),transparent:true,depthWrite:false}));
+  em.scale.set(.9,.34,1);em.position.set(0,2.2,.365);g.add(em);
+  f.sig={kind:"plone",lids:lids,hd:hd};
+};
 SIG_SKIN.ascended=function(f,g,sk,box,glowM,darkM,bodyM){
   var i,sd,crack=new THREE.MeshBasicMaterial({color:0xfff0c0}),eye=new THREE.MeshBasicMaterial({color:0xffffff});
   var cloth=new THREE.MeshLambertMaterial({color:0x0c0a10}),cloth2=new THREE.MeshLambertMaterial({color:0x16121c});
@@ -9914,6 +10121,18 @@ SIG_SKIN.butcher=function(f,g,sk,box,glowM,darkM,bodyM){
 };
 // the per-frame life of the 4.0 skins
 var SIG_TICK4={
+  plone:function(f,s,dt,t){
+    // a slow, tired blink, and the head sways like he has had a drink or two
+    var bl=(t*.8+f.phase+1.7)%5<.16;
+    for(var i=0;i<s.lids.length;i++){var L=s.lids[i];L.visible=!bl;L.userData.lash.visible=!bl;L.userData.shut.visible=bl;}
+    s.hd.rotation.z=Math.sin(t*.8+f.phase)*.06;
+  },
+  cucci:function(f,s,dt,t){
+    // a slow, unbothered blink now and then, and the head bobs a touch
+    var bl=(t*.9+f.phase)%4.2<.14;
+    for(var i=0;i<s.lids.length;i++){var L=s.lids[i];L.visible=!bl;L.userData.lash.visible=!bl;L.userData.shut.visible=bl;}
+    s.hd.rotation.z=Math.sin(t*1.1+f.phase)*.04;
+  },
   blackcat:function(f,s,dt,t){
     var sp=Math.hypot(f.vel.x,f.vel.z);
     for(var i=0;i<s.tail.length;i++){s.tail[i].rotation.z=Math.sin(t*(2+sp*.08)+i*.6+f.phase)*.22;s.tail[i].rotation.x=.12+Math.sin(t*1.3+i)*.05;}
@@ -10176,6 +10395,18 @@ Object.assign(SKIN_FX,{
   s1meatskin:{c:0xff2a4a,rate:8,vy:[-.3,.5],g:2,sz:.4,life:.7,r:.6}
 });
 Object.assign(SIG_SKIN_ICON,{
+  plone:"<ellipse cx='20' cy='13' rx='8.5' ry='10.5' fill='#d9d6cc' stroke='#0b1942' stroke-width='1.6'/><path d='M12 9l-3-6 5 3 1-5 3 4 3-4 2 4 3-3v6' fill='#a6dcec' stroke='#0b1942' stroke-width='1.2'/>"+
+    "<path d='M13 9q3.5-1.6 7 0t7 0' stroke='#8fc6d8' stroke-width='1.6' fill='none'/>"+
+    "<circle cx='16.5' cy='12.5' r='3' fill='#fff' stroke='#101010' stroke-width='.9'/><circle cx='23.5' cy='12.5' r='3' fill='#fff' stroke='#101010' stroke-width='.9'/>"+
+    "<rect x='13' y='9.4' width='14' height='3' fill='#d9d6cc'/><circle cx='16.5' cy='13.4' r='.8' fill='#101010'/><circle cx='23.5' cy='13.4' r='.8' fill='#101010'/>"+
+    "<path d='M17 19.5h6' stroke='#101010' stroke-width='1.1'/>"+
+    "<rect x='10' y='24' width='20' height='12' rx='2' fill='#121214' stroke='#0b1942' stroke-width='1.6'/><text x='20' y='32' font-size='5.2' text-anchor='middle' font-weight='bold' font-family='Georgia'><tspan fill='#e8862a'>P</tspan><tspan fill='#fff'>LONE</tspan></text>",
+  cucci:"<circle cx='20' cy='13' r='10' fill='#f2c9a0' stroke='#0b1942' stroke-width='1.6'/><path d='M14 4.5q6-3 12 0' stroke='#14100c' stroke-width='2.4' fill='none'/>"+
+    "<circle cx='16' cy='12' r='3.6' fill='#fff' stroke='#101010' stroke-width='1'/><circle cx='24' cy='12' r='3.6' fill='#fff' stroke='#101010' stroke-width='1'/>"+
+    "<rect x='12' y='8.2' width='16' height='3.6' fill='#f2c9a0'/><circle cx='17.4' cy='12.6' r='1' fill='#101010'/><circle cx='25.4' cy='12.6' r='1' fill='#101010'/>"+
+    "<path d='M17 18q3 1.4 6-.6' stroke='#101010' stroke-width='1.2' fill='none'/>"+
+    "<rect x='12' y='23' width='16' height='10' rx='2' fill='#121214' stroke='#0b1942' stroke-width='1.6'/><text x='20' y='28' font-size='3.6' text-anchor='middle' fill='#fff' font-family='Georgia'>CUCCI</text><path d='M18.6 29v3.4q3 0 3-1.7t-3-1.7M21.4 29v3.4q-3 0-3-1.7t3-1.7' stroke='#fff' stroke-width='.6' fill='none'/>"+
+    "<rect x='14' y='33' width='5' height='6' fill='#4a7fd8' stroke='#0b1942' stroke-width='1'/><rect x='21' y='33' width='5' height='6' fill='#4a7fd8' stroke='#0b1942' stroke-width='1'/>",
   blackcat:"<path d='M11 16l2-11 6 7h2l6-7 2 11z' fill='#16141a' stroke='#0b1942' stroke-width='1.6'/><rect x='11' y='13' width='18' height='14' rx='4' fill='#16141a' stroke='#0b1942' stroke-width='1.6'/>"+
     "<path d='M14.5 19h3M22.5 19h3' stroke='#ffd23f' stroke-width='2.6' stroke-linecap='round'/><path d='M8 22h6M8 25h6M26 22h6M26 25h6' stroke='#e8e8f0' stroke-width='.9'/>"+
     "<rect x='12' y='27' width='16' height='11' rx='2' fill='#141218' stroke='#0b1942' stroke-width='1.6'/><rect x='12' y='27' width='16' height='2.4' fill='#c8142a'/><circle cx='20' cy='30.5' r='1.6' fill='#ffd23f'/>",
@@ -13758,7 +13989,7 @@ function pvLoop(now){
     if(u.spinY)u.spinY.rotation.y=PV.t*1.6;
     if(u.pulse2)u.pulse2.material.opacity=.18+.2*(.5+.5*Math.sin(PV.t*3.1));
     if(u.spin)u.spin.rotation.z=PV.t*2.2;
-    if(u.pulse)u.pulse.scale.setScalar(1+Math.sin(PV.t*2.2)*.12);
+    if(u.pulse){var pb=u.pulse.userData.pvBase||(u.pulse.userData.pvBase=u.pulse.scale.x);u.pulse.scale.setScalar(pb*(1+Math.sin(PV.t*2.2)*.12));}
     if(u.crackMat)u.crackMat.opacity=.5+.5*(.5+.5*Math.sin(PV.t*2.24));}
   var cv=$("pvCanvas");
   if(cv.width!==Math.round(cv.clientWidth*PV.r.getPixelRatio()))pvResize();
