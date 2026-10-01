@@ -198,6 +198,10 @@ input[type=range]{accent-color:#3dbb22;cursor:pointer}
   background:var(--nv);color:var(--rc)}
 .ddesc{font-size:13.5px;line-height:1.45;color:#eaf3ff;min-height:40px}
 .dtags{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.emslots{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%}
+.emslot{position:relative;height:50px;border-radius:12px;border:3px solid var(--nv);background:#14204a;color:#fff;cursor:pointer;font-family:inherit}
+.emslot b{font-size:22px}.emslot i{position:absolute;right:5px;bottom:2px;font-style:normal;font-size:9px;opacity:.6}
+.emslot.on{background:linear-gradient(180deg,var(--y1),#ffb81a)}
 /* the dev's gift */
 .giftpop{position:fixed;inset:0;z-index:210;display:flex;align-items:center;justify-content:center;padding:16px;
   background:radial-gradient(70% 60% at 50% 45%,rgba(255,210,63,.18),rgba(6,8,20,.86) 70%);animation:gpfade .25s ease-out}
@@ -636,6 +640,10 @@ details.move[open] summary::before{transform:rotate(90deg)}
 .evtgrid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px;align-items:start}
 @media (max-width:640px){.evtgrid{grid-template-columns:1fr}}
 .evtpic{display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px;text-align:center}
+.evtpic.portal{background:radial-gradient(90% 70% at 50% 40%,#1e5a1a 0%,#081a0a 70%)}
+.packitems{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%}
+.packitems .pi{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:12px;background:rgba(0,0,0,.25)}
+.packitems .pi svg{width:62px;height:62px}.packitems .pi b{font-size:13px}.packitems .pi .own{font-size:10px;color:#b8ff8f;font-weight:700}
 .evtpic.wendigo{background:radial-gradient(90% 70% at 50% 40%,#1e4a6e 0%,#0a1828 70%)}
 .evtpic.rod{background:linear-gradient(180deg,#4a7a2a,#1e2e10)}
 .evtpic svg{width:150px;height:150px;filter:drop-shadow(0 4px 0 rgba(8,16,48,.6))}
@@ -949,7 +957,7 @@ button.chip:active{transform:translateY(2px)}
     <div class="money cloud hide" id="vCloud"><b><span class="lg">SIGN IN TO SAVE</span><span class="sm">SIGN IN</span></b></div>
   </div>
   <div id="zonePrompt"><b id="zoneKey">F</b><span id="zoneLabel"></span></div>
-  <div id="tauntWheel" class="hide"><div class="twc">TAUNT<span>T to close</span></div></div>
+  <div id="tauntWheel" class="hide"><div class="twc">EMOTE<span>let go to send</span></div></div>
   <div id="lobbyBar">
     <button class="lbtn" id="lbPass"><span class="lbi"><svg viewBox='0 0 40 40'><path d='M20 9c1-4 4-6 7-6' stroke='#2e6a1a' stroke-width='3' fill='none' stroke-linecap='round'/><ellipse cx='13' cy='23' rx='9' ry='12' fill='#e8650c' stroke='#0b1942' stroke-width='2.4'/><ellipse cx='27' cy='23' rx='9' ry='12' fill='#e8650c' stroke='#0b1942' stroke-width='2.4'/><ellipse cx='20' cy='23' rx='9' ry='13' fill='#ff8a1e' stroke='#0b1942' stroke-width='2.4'/><path d='M12 19l4 4h-5zM28 19l-4 4h5z' fill='#ffe25a'/><path d='M11 28c3 3 6 4 9 4s6-1 9-4l-2 1-2-2-2 2-3-2-3 2-2-2-2 2z' fill='#ffe25a'/></svg></span><span class="lbl">PASS</span><span class="lbw">HALLOWEEN<br>PASS</span><span class="lbn" id="lbPassLv">0</span></button>
     <button class="lbtn" id="lbLogin"><span class="lbi"><svg viewBox='0 0 40 40'><rect x='5' y='8' width='30' height='27' rx='4' fill='#fff' stroke='#0b1942' stroke-width='2.6'/><rect x='5' y='8' width='30' height='8' rx='3' fill='#ff5a3a' stroke='#0b1942' stroke-width='2.6'/><path d='M12 5v7M28 5v7' stroke='#0b1942' stroke-width='3' stroke-linecap='round'/><path d='M13 25l5 4 9-9' stroke='#35a81d' stroke-width='3.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg></span><span class="lbl">LOGIN</span><span class="lbw">DAILY<br>REWARDS</span><span class="lbn" id="lbLoginN">0</span></button>
@@ -1226,6 +1234,7 @@ button.chip:active{transform:translateY(2px)}
         <button class="tab" data-p="abil">ABILITIES</button>
         <button class="tab" data-p="sword">BLADES</button>
         <button class="tab" data-p="skin">SKINS</button>
+        <button class="tab" data-p="emote">EMOTES</button>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <span class="sub ol1" id="pickSub"></span>
@@ -1884,7 +1893,7 @@ var SWORDS=[
  // ---- 4.0 ----
  {id:"ricky9",name:"Ricky's .9",rarity:"mythic",price:16500,yen:345,blade:0x141418,hilt:0x1c1c22,glow:0xffb040,shape:"pistol",hold:"pistol",size:.64,swing:"gunshot",idle:"none",
   desc:"Not a sword. A block is a shot: the ball is blown back the way you are aiming with a crack, a muzzle flash and a tracer across the arena."},
- {id:"portalgun",name:"Portal Gun",rarity:"unreleased",price:-1,yen:345,portal:true,blade:0xe4e8ec,hilt:0x2a2e34,glow:0x6bff3a,shape:"portalgun",hold:"pistol",size:.64,swing:"gunshot",idle:"none",
+ {id:"portalgun",name:"Portal Gun",rarity:"mythic",event:"pack",price:-1,yen:345,portal:true,blade:0xe4e8ec,hilt:0x2a2e34,glow:0x6bff3a,shape:"portalgun",hold:"pistol",size:.64,swing:"gunshot",idle:"none",
   desc:"Grey, chunky and humming, with a tube of something green sloshing on top. A block is a shot: the ball goes back through a portal of green light."},
  {id:"divineright",name:"Divine Right",price:-1,rank:"god",blade:0xdce6f2,hilt:0xd8b050,glow:0x7ad8ff,shape:"divine",hold:"rhip",swing:"divine",idle:"orbit",
   desc:"The GOD rank's blade. Worn on the right hip and drawn in one stroke: the wings open, the runes light, and every cut sheds feathers of light."},
@@ -2135,9 +2144,9 @@ var SKINS=[
   desc:"Full helm with a slit visor, heavy pauldrons and a mirror finish."},
  {id:"seraph",name:"Seraph",price:0,yen:290,rarity:"mythic",style:"seraph",body:0xfff4d0,limb:0xd8c090,skin:0xfffaf0,glow:0xffd23f,
   desc:"A halo hangs above the head and light-wings unfold from the back."},
- {id:"plone",name:"Plone",price:-1,yen:330,rarity:"unreleased",style:"plone",body:0x121214,limb:0x121214,skin:0xd9d6cc,glow:0x000000,
+ {id:"plone",name:"Plone",price:-1,yen:330,rarity:"mythic",event:"pack",style:"plone",body:0x121214,limb:0x121214,skin:0xd9d6cc,glow:0x000000,
   desc:"Spiky blue hair, one long eyebrow and eyes that have seen everything. A black PLONE tee. Burps mid-sentence."},
- {id:"cucci",name:"Cucci",price:-1,yen:330,rarity:"unreleased",style:"cucci",body:0x121214,limb:0x121214,skin:0xf2c9a0,glow:0x000000,
+ {id:"cucci",name:"Cucci",price:-1,yen:330,rarity:"mythic",event:"pack",style:"cucci",body:0x121214,limb:0x121214,skin:0xf2c9a0,glow:0x000000,
   desc:"Big head, bigger eyes, a black CUCCI tee and skinny jeans. Unbothered. Blinks slowly at whoever is about to lose."},
  {id:"wraith",name:"Wraith",price:0,yen:330,rarity:"mythic",style:"wraith",body:0x181422,limb:0x0a0810,skin:0x9a3aff,glow:0xb14aff,
   desc:"Curved horns, a ragged shroud and two violet embers where eyes should be."},
@@ -2329,7 +2338,7 @@ function defaultSave(){
     musicVol:0.45,sfxVol:0.75,musicUrl:"",musicOn:true,showFps:false,nameTags:true,feedOn:true,showHitbox:false,
     yen:0,yenV:2,t:0,seenVersion:"",casino:{hands:0,bjWins:0,spins:0,upgrades:0},netName:"",serverUrl:"",rangeBest:0,
     freeSpins:0,pass:{id:"",xp:0,got:0},
-    freeSpinsL:0,tokens:0,login:{id:"",n:0,last:""},season:0,s0rp:0,passHr:[]};
+    freeSpinsL:0,tokens:0,login:{id:"",n:0,last:""},season:0,s0rp:0,passHr:[],emotes:{},eqEmotes:[]};
 }
 // the settings a wipe keeps: how the game looks and feels, not what you own
 var KEEP_ON_WIPE=["fov","qual","sens","shiftLock","mouseLock","invertY","camDist",
@@ -2540,7 +2549,7 @@ function cloudId(){return Math.random().toString(36).slice(2,10)+Date.now().toSt
    the server's. Signed out, or against an older server, they stay on this
    device the way they always did. */
 var ECON_KEYS=["coins","yen","rp","swords","abils","skins","pass","freeSpins","redeemed","casino","econ",
-  "freeSpinsL","tokens","login","season","s0rp"];
+  "freeSpinsL","tokens","login","season","s0rp","emotes"];
 function econOn(){return cloudOn()&&!!CLOUD.ec&&!CLOUD.legacy;}
 function econStrip(o){if(!o||!econOn())return o;var c={},k;for(k in o)if(ECON_KEYS.indexOf(k)<0)c[k]=o[k];return c;}
 function econSnap(){var o={},i,k;for(i=0;i<ECON_KEYS.length;i++){k=ECON_KEYS[i];if(SAVE[k]!==undefined)o[k]=JSON.parse(JSON.stringify(SAVE[k]));}return o;}
@@ -3157,6 +3166,7 @@ function decodeProfile(code){
 var QUAL=1,SENS=1;
 var canvas=$("game");
 var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:false,powerPreference:"high-performance"});
+(function(){var rr=renderer.render.bind(renderer);renderer.render=function(sc,cam){if(!FRAME_SKIPDRAW)rr(sc,cam);};})();
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
 renderer.setSize(window.innerWidth,window.innerHeight,false);
 renderer.shadowMap.enabled=true;
@@ -4229,6 +4239,7 @@ function buildLobby(){
     function(){enterCasino();});
   buildStall(0,-27);
   buildWendigoShrine(-13,-27);
+  buildPackStand(13,-27);
   buildLbBoard(-29,0);
   buildRange(22,0);
   buildRodrigaShack(0,31);
@@ -4622,7 +4633,7 @@ function updateVenue(dt,t){
     }
   }
   updateVenueFX(dt,t);
-  rangeTick(dt,t);shrineTick(dt,t);rodrigaTick(dt,t);
+  rangeTick(dt,t);shrineTick(dt,t);packTick(dt,t);rodrigaTick(dt,t);
   $("vCoins").textContent=SAVE.coins.toLocaleString();
   $("vYen").textContent=SAVE.yen.toLocaleString();
 }
@@ -6712,12 +6723,34 @@ var TAUNTS=[
   {id:"yawn", e:"\ud83e\udd71",txt:"BORING...",   col:"#9fb4cc"}
 ];
 var TAUNT_DUR=2.2,TAUNT_GAP=2;
+var TAUNT_BASE=TAUNTS.map(function(t){return t.id;});      // the eight everyone has
+// the pack's emote: a portal opens behind you, a peace sign, and you lean back into it
+TAUNTS.push({id:"portal",e:"\u270c\ufe0f",txt:"PEACE OUT",col:"#6bff3a",pack:"interdim",fx:"portal",rarity:"mythic",
+  desc:"A green portal tears open behind you. Throw up the peace sign and lean back like you're about to dip. From the Interdimensional Pack."});
+function emoteOwned(id){return TAUNT_BASE.indexOf(id)>=0||!!(SAVE.emotes&&SAVE.emotes[id]);}
+// what is in your wheel: the eight you equipped (anything not yours drops back to a default)
+function wheelEmotes(){
+  var eq=Array.isArray(SAVE.eqEmotes)?SAVE.eqEmotes:[],out=[],seen={};
+  for(var i=0;i<8;i++){var id=eq[i];
+    if(!id||seen[id]||!tauntById(id)||!emoteOwned(id)){id=null;for(var j=0;j<TAUNT_BASE.length;j++)if(!seen[TAUNT_BASE[j]]&&eq.indexOf(TAUNT_BASE[j])<0){id=TAUNT_BASE[j];break;}}
+    if(!id)for(var j2=0;j2<TAUNT_BASE.length;j2++)if(!seen[TAUNT_BASE[j2]]){id=TAUNT_BASE[j2];break;}
+    if(id){seen[id]=1;out.push(tauntById(id));}}
+  return out;
+}
 function tauntById(id){for(var i=0;i<TAUNTS.length;i++)if(TAUNTS[i].id===id)return TAUNTS[i];return null;}
 Fighter.prototype.taunt=function(id){
   var tk=tauntById(id);
   if(!tk||!this.alive)return false;
   this.tauntK=tk.id;this.tauntT=TAUNT_DUR;
   this.say(tk.e+" "+tk.txt,tk.col,TAUNT_DUR);
+  if(tk.fx==="portal"&&this.mesh&&QUAL>=0){
+    // the portal stands just behind you, facing the way you face
+    var by=Math.sin(this.yaw),bz=Math.cos(this.yaw),me=this;
+    gunPortal(this.pos.x-by*1.4,this.y+2.4,this.pos.z-bz*1.4,by,bz,5.6,TAUNT_DUR-.1);
+    try{tone(220,880,.3,"sine",.08);setTimeout(function(){tone(900,180,.4,"sine",.05);},TAUNT_DUR*1000-500);}catch(e){}
+    for(var pk=0;pk<(QUAL>1?24:10);pk++){var pa=Math.random()*TAU,pr=hr(.3,1.8);
+      spark(this.pos.x-by*1.3+bz*Math.cos(pa)*pr,this.y+1.9+Math.sin(pa)*pr,this.pos.z-bz*1.3-by*Math.cos(pa)*pr,by*hr(.5,2),hr(-.3,.8),bz*hr(.5,2),.5,1,.4,hr(.25,.45),hr(.6,1.1),0);}
+  }
   return true;
 };
 // the moves: arms[1] is the right (blade) arm, arms[0] the left
@@ -6731,11 +6764,16 @@ Fighter.prototype.tauntPose=function(dt){
   else if(k==="dance"){s=Math.sin(a*9);set(R,0,1.4+s*1.2);set(L,0,-1.4+s*1.2);g.rotation.z=s*0.14;}
   else if(k==="point"){set(R,-1.6,0.1);set(L,0,-0.2);}
   else if(k==="clap"){s=Math.sin(a*18);set(R,-1.35,-0.35-s*0.3);set(L,-1.35,0.35+s*0.3);}
+  else if(k==="portal"){
+    // the peace sign up by the face, the other hand on the hip, leaning back with a bounce
+    s=Math.min(1,a/0.3);set(R,-2.5*s,0.5*s);set(L,0,-0.6*s);
+    g.rotation.x=-0.22*s+Math.sin(a*10)*0.03;g.position.y+=Math.abs(Math.sin(a*5))*0.12*s;}
   else if(k==="yawn"){s=Math.min(1,a/0.6);set(R,0,2.9*s);set(L,0,-2.9*s);g.rotation.x=-0.12*s;}
 };
 var tauntNext=0;
 function doTaunt(id){
   if(!player||!player.alive)return false;
+  if(!emoteOwned(id))return false;
   if(STATE!=="venue"&&STATE!=="playing"&&STATE!=="countdown"&&STATE!=="over")return false;
   if(gameT<tauntNext)return false;
   if(!player.taunt(id))return false;
@@ -6747,24 +6785,54 @@ function doTaunt(id){
 }
 function buildTauntWheel(){
   var w=$("tauntWheel");
-  if(w.querySelectorAll&&w.querySelectorAll("button").length)return;
-  TAUNTS.forEach(function(tk,i){
-    var ang=i/TAUNTS.length*Math.PI*2-Math.PI/2,b=document.createElement("button");
+  // rebuilt each time: what is in it is whatever you have equipped
+  [].slice.call(w.querySelectorAll("button")).forEach(function(b){w.removeChild(b);});
+  var L=wheelEmotes();
+  L.forEach(function(tk,i){
+    var ang=i/L.length*Math.PI*2-Math.PI/2,b=document.createElement("button");
     b.style.left=(170+Math.cos(ang)*118)+"px";b.style.top=(170+Math.sin(ang)*118)+"px";
     b.innerHTML="<b>"+tk.e+"</b>"+tk.txt+"<i>"+(i+1)+"</i>";
     b.addEventListener("click",function(e){if(e&&e.stopPropagation)e.stopPropagation();doTaunt(tk.id);});
     w.appendChild(b);
   });
 }
-var TAUNT_OPEN=false;
+/* Hold T (or hold the TAUNT button) to open the wheel, point at an emote and
+   let go to send it. Letting go in the middle sends nothing. With the mouse
+   captured, its movement aims the wheel instead of turning the camera. */
+var TAUNT_OPEN=false,TAUNT_AIM={x:0,y:0,sel:-1,sx:0,sy:0};
 function tauntWheelOpen(){return TAUNT_OPEN;}
-function openTauntWheel(){
+function openTauntWheel(touch){
   if(!player||STATE==="menu"||STATE==="boot")return;
   buildTauntWheel();$("tauntWheel").classList.remove("hide");TAUNT_OPEN=true;
-  // the wheel needs the cursor
-  try{if(document.pointerLockElement&&document.exitPointerLock)document.exitPointerLock();}catch(e){}
+  TAUNT_AIM.x=0;TAUNT_AIM.y=0;wheelPick(-1);
 }
-function closeTauntWheel(){$("tauntWheel").classList.add("hide");TAUNT_OPEN=false;}
+function closeTauntWheel(){$("tauntWheel").classList.add("hide");TAUNT_OPEN=false;wheelPick(-1);}
+function releaseTauntWheel(){
+  var L=wheelEmotes(),k=TAUNT_AIM.sel;
+  closeTauntWheel();
+  if(k>=0&&L[k])doTaunt(L[k].id);
+}
+function wheelPick(k){
+  TAUNT_AIM.sel=k;
+  var bs=$("tauntWheel").querySelectorAll("button");
+  for(var i=0;i<bs.length;i++)bs[i].classList.toggle("hot",i===k);
+}
+function wheelAimAt(dx,dy){
+  var n=wheelEmotes().length,d=Math.sqrt(dx*dx+dy*dy);
+  if(d<34||!n){wheelPick(-1);return;}
+  var a=Math.atan2(dy,dx)+Math.PI/2;if(a<0)a+=Math.PI*2;
+  wheelPick(Math.round(a/(Math.PI*2/n))%n);
+}
+function wheelAim(e){
+  if(document.pointerLockElement===canvas){
+    // the cursor is captured: its movement steers a pointer inside the wheel
+    TAUNT_AIM.x=clamp(TAUNT_AIM.x+(e.movementX||0),-150,150);TAUNT_AIM.y=clamp(TAUNT_AIM.y+(e.movementY||0),-150,150);
+    wheelAimAt(TAUNT_AIM.x,TAUNT_AIM.y);
+  } else {
+    var r=$("tauntWheel").getBoundingClientRect();
+    wheelAimAt(e.clientX-(r.left+r.width/2),e.clientY-(r.top+r.height/2));
+  }
+}
 /* A speech bubble over a fighter's head, seen by everyone: taunts, and the
    big ability callouts (RIPOSTE!) so you can tell what just happened. */
 Fighter.prototype.say=function(text,col,dur){
@@ -10485,6 +10553,105 @@ function openWendigo(){
 }
 
 /* ============================================================
+   THE PACK STAND
+   To the right of Gnorman: a booth with a portal swirling behind it and the
+   Portal Gun turning over the counter. Open as long as the Wendigo shrine.
+   ============================================================ */
+var PACKSTAND=null;
+function packItems(P){return P.items.map(function(q){
+  if(q[0]==="emote"){var tk=tauntById(q[1]);return {tab:"emote",id:q[1],name:tk.txt,own:emoteOwned(q[1]),
+    icon:"<svg viewBox='0 0 40 40' width='34' height='34'><circle cx='20' cy='20' r='17' fill='#163a12' stroke='#0b1942' stroke-width='2'/><text x='20' y='27' font-size='18' text-anchor='middle'>"+tk.e+"</text></svg>"};}
+  var d=shopData(q[0]),it=findId(d.list,q[1]);return {tab:q[0],id:q[1],name:it.name,own:!!d.own[q[1]],icon:d.icon(it)};});}
+function packSignDraw(){
+  if(!PACKSTAND)return;
+  var P=PACKS.interdim,now=Date.now(),g=PACKSTAND.sign.c.getContext("2d"),W=1024,H=PACKSTAND.sign.c.height;
+  g.clearRect(0,0,W,H);
+  g.fillStyle="rgba(6,18,8,.9)";if(g.roundRect){g.beginPath();g.roundRect(8,8,W-16,H-16,40);g.fill();}else g.fillRect(8,8,W-16,H-16);
+  g.strokeStyle="#6bff3a";g.lineWidth=10;if(g.roundRect){g.beginPath();g.roundRect(8,8,W-16,H-16,40);g.stroke();}
+  g.textAlign="center";g.lineJoin="round";
+  g.font="bold 86px Fredoka, Trebuchet MS, Arial";g.lineWidth=14;g.strokeStyle="#041004";
+  g.strokeText("INTERDIMENSIONAL PACK",W/2,116);g.fillStyle="#e8ffe0";g.fillText("INTERDIMENSIONAL PACK",W/2,116);
+  g.font="bold 64px Fredoka, Trebuchet MS, Arial";
+  var line=P.yen.toLocaleString()+" YEN  ·  4 MYTHICS";
+  g.strokeText(line,W/2,206);g.fillStyle="#ffd23f";g.fillText(line,W/2,206);
+  g.font="600 50px Fredoka, Trebuchet MS, Arial";
+  var t=now<P.from?"OPENS IN "+evtLeft(P.from-now):"ONE WEEK ONLY · GONE IN "+evtLeft(P.to-now);
+  g.lineWidth=10;g.strokeText(t,W/2,286);g.fillStyle="#9aff7a";g.fillText(t,W/2,286);
+  PACKSTAND.sign.tex.needsUpdate=true;
+}
+function buildPackStand(x,z){
+  PACKSTAND=null;
+  var P=PACKS.interdim;
+  if(Date.now()>=P.to)return;                      // gone with the shrine
+  var st=new THREE.Group();st.position.set(x,0,z);st.rotation.y=Math.atan2(-x,-z);venue.add(st);
+  var METAL=0x2a2e34,TRIM=0x9aa2ac,GRN=0x6bff3a,sd;
+  // a low platform and a counter
+  gPart(st,GEO.cyl8,0x1c2024,5.4,.4,5.4,0,.2,0);
+  gPart(st,GEO.box,METAL,4.2,1.3,1.4,0,.95,.9);
+  gPart(st,GEO.box,TRIM,4.4,.14,1.6,0,1.66,.9);
+  gPart(st,GEO.box,0x4cff1a,3.6,.08,.08,0,1.2,1.62);              // a green strip along the front
+  // two posts holding a ring, and the portal swirling inside it
+  for(sd=-1;sd<=1;sd+=2){gPart(st,GEO.box,METAL,.4,4.6,.4,sd*2.3,2.3,-1.1);gPart(st,GEO.cyl8,TRIM,.6,.3,.6,sd*2.3,4.7,-1.1);}
+  var ringM=new THREE.Mesh(new THREE.TorusGeometry(2.1,.18,8,40),new THREE.MeshLambertMaterial({color:TRIM}));
+  ringM.position.set(0,3.1,-1.15);st.add(ringM);
+  var por=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:portalTex(),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
+  por.scale.set(4.1,4.1,1);por.position.set(0,3.1,-1.15);st.add(por);
+  // the Portal Gun turning over the counter
+  var gun=buildSword(swordById("portalgun"));gun.position.set(0,2.6,.9);gun.scale.setScalar(.9);st.add(gun);
+  var sign=evtBillboard(7.6,7.6*320/1024,x+(-x/Math.hypot(x,z))*3.2,1.2,z+(-z/Math.hypot(x,z))*3.2);
+  PACKSTAND={x:x,z:z,gun:gun,portal:por,sign:sign,t:0};
+  packSignDraw();
+  addObstacle(x,z,2.9,null);
+  var fx=x-(x/Math.hypot(x,z))*5.6,fz=z-(z/Math.hypot(x,z))*5.6;
+  var zr=vRing(2.6,.13,fx,.32,fz,GRN,.85);
+  ZONES.push({x:fx,z:fz,r:3.2,label:"PACK STAND",action:function(){openPackStand();},ring:zr,col:GRN});
+}
+function packTick(dt,t){
+  if(!PACKSTAND||venueKind!=="lobby")return;
+  var g=PACKSTAND.gun;g.rotation.y=t*.9;g.position.y=2.6+Math.sin(t*1.5)*.18;
+  PACKSTAND.portal.rotation.z=-t*1.1;
+  PACKSTAND.t+=dt;if(PACKSTAND.t>20){PACKSTAND.t=0;packSignDraw();}
+  if(QUAL>0&&Math.random()<dt*12){var a=Math.random()*TAU,r=rr(.4,1.9);
+    spark(PACKSTAND.x+Math.cos(a)*r*.6,3.1+Math.sin(a)*r,PACKSTAND.z+Math.sin(a)*r*.3,rr(-.2,.2),rr(-.3,.6),rr(-.2,.2),.5,1,.4,rr(.25,.5),rr(.6,1.1),0);}
+}
+function openPackStand(){
+  var P=PACKS.interdim,now=Date.now(),L=packItems(P),allOwn=L.every(function(q){return q.own;});
+  var h="<div class='evtgrid'><div class='well evtpic portal'><div class='packitems'>"+
+    L.map(function(q){return "<div class='pi'>"+q.icon.replace("width='34' height='34'","width='62' height='62'")+"<b>"+q.name+"</b>"+(q.own?"<span class='own'>OWNED</span>":"")+"</div>";}).join("")+
+    "</div></div><div class='well'><div class='dname'>INTERDIMENSIONAL PACK</div>"+
+    "<div><span class='dpill r-mythic'>PACK · 4 MYTHICS</span></div>"+
+    "<div class='ddesc'>"+P.desc+"</div>"+
+    "<div class='dprice ol1'>"+P.yen.toLocaleString()+" YEN</div>";
+  if(allOwn)h+="<button class='big ghost' disabled>YOU OWN ALL OF IT</button>";
+  else if(now<P.from)h+="<button class='big ghost' disabled>OPENS IN "+evtLeft(P.from-now).toUpperCase()+"</button>";
+  else if(now>=P.to)h+="<button class='big ghost' disabled>GONE FOREVER</button>";
+  else h+="<button class='big"+(SAVE.yen>=P.yen?"":" off")+"' id='evtBuy'>BUY FOR "+P.yen.toLocaleString()+" YEN</button>"+
+    "<div class='dnote'>On sale until the stand closes in "+evtLeft(P.to-now)+", the same time as the Wendigo shrine. After that, never again.</div>";
+  h+="<div class='dnote'>You have <b>"+SAVE.yen.toLocaleString()+"</b> yen.</div></div></div>";
+  evtShow("THE PACK STAND","",h);
+  var b=$("evtBuy");
+  if(b)b.addEventListener("click",function(){
+    if(SAVE.yen<P.yen){evtSay("Not enough yen: you need "+(P.yen-SAVE.yen).toLocaleString()+" more.");sfx("tick");return;}
+    function done(ok,why){
+      if(!ok){evtSay(why);sfx("tick");return;}
+      sfx("rank");writeSave();refreshCoins();updateChips();updateLobbyBar();
+      openPackStand();evtSay("The Interdimensional Pack is yours. Equip it all in your inventory.",true);
+    }
+    if(econOn()){
+      if(b.disabled)return;b.disabled=true;
+      econAct([{k:"pack",pack:"interdim"}],function(err,rs){var r0=rs&&rs[0];b.disabled=false;
+        done(!err&&r0&&r0.ok,(r0&&r0.why)||econErr(err));});
+      return;
+    }
+    if(!evtOpen(P)){done(false,"The stand is closed.");return;}
+    if(allOwn){done(false,"You already own all of it.");return;}
+    SAVE.yen-=P.yen;SAVE.emotes=SAVE.emotes||{};
+    P.items.forEach(function(q){if(q[0]==="emote")SAVE.emotes[q[1]]=1;else shopData(q[0]).own[q[1]]=1;});
+    done(true);
+  });
+}
+
+/* ============================================================
    RODRIGA
    A very large ogre witch in a crooked shack behind where you come in. She
    sells one thing a month, and only for a Rodriga token -- which drops once in
@@ -13857,7 +14024,9 @@ function startNetMatch(m){
 
   camYaw=Math.PI;camPitch=-0.14;camDist=prefCamDist();
   camLook.set(player.pos.x,player.y+2.6,player.pos.z);
-  STATE="countdown";countdown=3.2;gameT=0;
+  // the server started counting when it sent this: end the countdown when it does
+  var cdLate=(typeof m.at==="number")?clamp((netNow()-m.at)/1000,0,2.6):0;
+  STATE="countdown";countdown=3.2-cdLate;gameT=0;
   showScreen(null);$("ui").classList.add("on");
   $("ui").classList.remove("venuemode");
   $("lobbyBar").classList.remove("on");
@@ -14610,8 +14779,8 @@ window.addEventListener("keydown",function(e){
   if(e.code==="Space"){tryJump();e.preventDefault();}
   if(e.code==="KeyF"){if(STATE==="venue"){if(!rangeSwing())interact();}else tryParry();}
   if(e.code==="KeyG"&&player)useAbility(player);
-  if(e.code==="KeyT"){if(tauntWheelOpen())closeTauntWheel();else openTauntWheel();}
-  if(tauntWheelOpen()&&/^Digit[1-8]$/.test(e.code))doTaunt(TAUNTS[+e.code.slice(5)-1].id);
+  if(e.code==="KeyT"&&!tauntWheelOpen())openTauntWheel();      // held: let go of T to send
+  if(tauntWheelOpen()&&/^Digit[1-8]$/.test(e.code)){var we=wheelEmotes()[+e.code.slice(5)-1];if(we)doTaunt(we.id);}
   if(e.code==="Tab"&&NET.spec&&(STATE==="playing"||STATE==="countdown")){e.preventDefault();specNext();return;}
   if(e.code==="Escape"&&tauntWheelOpen()){closeTauntWheel();return;}
   if(e.code==="Escape"||e.code==="KeyP")togglePause();
@@ -14622,6 +14791,7 @@ window.addEventListener("keydown",function(e){
 window.addEventListener("keyup",function(e){
   if(typingInField(e))return;
   keys[e.code]=false;
+  if(e.code==="KeyT"&&tauntWheelOpen())releaseTauntWheel();
 });
 window.addEventListener("blur",function(){keys={};});
 var dragging=false,rightLook=false;
@@ -14689,6 +14859,7 @@ function refreshCursor(){
   canvas.style.cursor=(look&&!pointerLocked())?"none":"";
 }
 window.addEventListener("mousemove",function(e){
+  if(tauntWheelOpen()){wheelAim(e);return;}
   if(document.pointerLockElement===canvas||dragging){
     lookD.x+=e.movementX||0;lookD.y+=e.movementY||0;
   }
@@ -14753,7 +14924,14 @@ bindTouch("tParry",function(){if(STATE==="venue"){if(!rangeSwing())interact();}e
 bindTouch("tJump",tryJump);
 bindTouch("tAbil",function(){if(player)useAbility(player);});
 bindTouch("tLock",function(){setShiftLock(!shiftLock);});
-bindTouch("tTaunt",function(){if(tauntWheelOpen())closeTauntWheel();else openTauntWheel();});
+(function(){var el=$("tTaunt");
+  function pt(e){var t=e.changedTouches?e.changedTouches[0]:e;return {x:t.clientX,y:t.clientY};}
+  function down(e){e.preventDefault();e.stopPropagation();el.classList.add("down");openTauntWheel(true);var p=pt(e);TAUNT_AIM.sx=p.x;TAUNT_AIM.sy=p.y;}
+  function move(e){if(!tauntWheelOpen())return;e.preventDefault();var p=pt(e);wheelAimAt(p.x-TAUNT_AIM.sx,p.y-TAUNT_AIM.sy);}
+  function up(e){e.preventDefault();e.stopPropagation();el.classList.remove("down");if(tauntWheelOpen())releaseTauntWheel();}
+  el.addEventListener("touchstart",down,{passive:false});el.addEventListener("touchmove",move,{passive:false});
+  el.addEventListener("touchend",up,{passive:false});el.addEventListener("touchcancel",up,{passive:false});
+  el.addEventListener("mousedown",down);window.addEventListener("mouseup",function(e){if(el.classList.contains("down"))up(e);});})();
 function setTouch(on){touchMode=on;$("touch").classList.toggle("on",on);$("ui").classList.toggle("touchui",!!on);hudC.zone=null;}
 
 /* ============================================================
@@ -15018,6 +15196,15 @@ var EVENT_SHOPS={
   wendigo:{name:"THE WENDIGO SHRINE",tab:"sword",id:"wendigo",yen:2000,
     from:Date.UTC(2026,9,1,7,0,0),to:Date.UTC(2026,9,8,7,0,0)}
 };
+/* ---- PACKS: several items for one price, only from the pack ---- */
+var PACKS={
+  interdim:{name:"INTERDIMENSIONAL PACK",yen:1500,col:"#6bff3a",
+    items:[["skin","cucci"],["skin","plone"],["sword","portalgun"],["emote","portal"]],
+    desc:"Cucci and Plone (skins), the Portal Gun (blade) and the Peace Out emote. Only in this pack, and only for one week.",
+    // the stand opens and closes with the Wendigo shrine
+    from:EVENT_SHOPS.wendigo.from,to:EVENT_SHOPS.wendigo.to}
+};
+
 // Rodriga: one item a month, for a Rodriga token. A token is a one in ten million
 // drop from any match, of any kind
 var RODRIGA={chance:1e-7,
@@ -15430,9 +15617,11 @@ function chestSvg(tab){
 }
 /* ---- the inventory: every item, locked ones too, and a panel that explains it ---- */
 function renderPicker(fresh){
-  var tab=pickTab,d=shopData(tab);
+  var tab=pickTab;
   var tabs=$("pickTabs").querySelectorAll("button");
   for(var i=0;i<tabs.length;i++)tabs[i].classList.toggle("sel",tabs[i].getAttribute("data-p")===tab);
+  if(tab==="emote"){renderEmotePicker();return;}
+  var d=shopData(tab);
   // secret code items stay secret until you have them, and pass items you
   // never got go once the season is over
   // everything is listed, owned or not: what you do not have shows locked
@@ -15479,6 +15668,9 @@ function renderPickDetail(it){
   else if(it.event==="wendigo"){var EW=EVENT_SHOPS.wendigo,nw=Date.now();
     btn=nw>=EW.to?"<button class='big ghost' disabled>GONE FOREVER</button><div class='dnote'>It was only at the Wendigo shrine for one week.</div>":
       "<button class='big' id='pdAct'>WENDIGO SHRINE &middot; "+EW.yen.toLocaleString()+" YEN</button><div class='dnote'>"+(nw<EW.from?"The shrine beside Gnorman opens in "+evtLeft(EW.from-nw)+".":"At the shrine beside Gnorman for "+evtLeft(EW.to-nw)+" more.")+"</div>";}
+  else if(it.event==="pack"){var PK=PACKS.interdim,pn=Date.now();
+    btn=pn>=PK.to?"<button class='big ghost' disabled>GONE FOREVER</button><div class='dnote'>It was only in the Interdimensional Pack.</div>":
+      "<button class='big' id='pdAct'>PACK STAND &middot; "+PK.yen.toLocaleString()+" YEN</button><div class='dnote'>Only in the Interdimensional Pack, at the stand beside Gnorman. "+(pn<PK.from?"Opens in "+evtLeft(PK.from-pn)+".":"Gone in "+evtLeft(PK.to-pn)+".")+"</div>";}
   else if(it.event==="rodriga")
     btn="<button class='big' id='pdAct'>RODRIGA'S SHACK &middot; 1 TOKEN</button><div class='dnote'>Rodriga sells it for a Rodriga token, behind where you come into the lobby.</div>";
   else if(it.season===0)
@@ -15512,9 +15704,49 @@ function renderPickDetail(it){
     if(it.pass){openPass();return;}
     if(it.event==="wendigo"){openWendigo();return;}
     if(it.event==="rodriga"){openRodriga();return;}
+    if(it.event==="pack"){openPackStand();return;}
     if(it.rarity==="halloween"){openLimited();return;}
     shopTab=tab;buildShop();refreshCoins();showScreen("shop");
   });
+}
+/* ---- EMOTES: every emote, and the eight in your wheel ---- */
+var EMOTE_SEL=null;
+function emoteIcon(tk){return "<svg viewBox='0 0 40 40' width='34' height='34'><circle cx='20' cy='20' r='17' fill='"+(tk.fx?"#163a12":"#14204a")+"' stroke='#0b1942' stroke-width='2'/><text x='20' y='27' font-size='18' text-anchor='middle'>"+tk.e+"</text></svg>";}
+function renderEmotePicker(){
+  var host=$("pickGrid"),wheel=wheelEmotes().map(function(t){return t.id;});
+  var list=TAUNTS.slice().sort(function(a,b){return (emoteOwned(b.id)?1:0)-(emoteOwned(a.id)?1:0);});
+  $("pickSub").textContent=list.filter(function(t){return emoteOwned(t.id);}).length+" / "+list.length+" OWNED";
+  if(!EMOTE_SEL||!tauntById(EMOTE_SEL))EMOTE_SEL=list[0].id;
+  host.innerHTML="";
+  var d={icon:emoteIcon};
+  list.forEach(function(tk){
+    var it={id:tk.id,name:tk.txt,rarity:tk.rarity||"common"};
+    var el=itemTile(it,d,{eq:wheel.indexOf(tk.id)>=0,lock:!emoteOwned(tk.id),sel:tk.id===EMOTE_SEL});
+    el.querySelector(".ti").innerHTML=emoteIcon(tk);
+    el.addEventListener("click",function(){EMOTE_SEL=tk.id;sfx("tick");renderEmotePicker();});
+    host.appendChild(el);
+  });
+  renderEmoteDetail();
+}
+function renderEmoteDetail(){
+  var box=$("pickDetail"),tk=tauntById(EMOTE_SEL),own=emoteOwned(tk.id),wheel=wheelEmotes();
+  var h="<div class='dicon' style='box-shadow:inset 0 0 0 4px "+(tk.rarity?tierColor({rarity:tk.rarity}):"#9aa3ad")+",0 5px 0 #0b1942'>"+emoteIcon(tk).replace("width='34' height='34'","width='74' height='74'")+"</div>"+
+    "<div class='dname'>"+tk.txt+"</div><div><span class='dpill r-"+(tk.rarity||"common")+"'>EMOTE &middot; "+(tk.rarity?(RARITY[tk.rarity]||RARITY.common).n:"DEFAULT")+"</span></div>"+
+    "<div class='ddesc'>"+(tk.desc||"One of the eight every fighter has.")+"</div>";
+  if(own){
+    h+="<div class='dnote' style='margin-top:6px'>Your wheel: tap a slot to put <b>"+tk.txt+"</b> there.</div><div class='emslots'>";
+    for(var i=0;i<8;i++){var w=wheel[i];h+="<button class='emslot"+(w&&w.id===tk.id?" on":"")+"' data-i='"+i+"'><b>"+(w?w.e:"")+"</b><i>"+(i+1)+"</i></button>";}
+    h+="</div><div class='dnote'>Hold <b>T</b> (or the TAUNT button) in a match, point, and let go.</div>";
+  } else if(tk.pack){
+    var PK=PACKS[tk.pack],pn=Date.now();
+    h+=pn>=PK.to?"<button class='big ghost' disabled>GONE FOREVER</button>":"<button class='big' id='pdAct'>PACK STAND &middot; "+PK.yen.toLocaleString()+" YEN</button><div class='dnote'>Only in the Interdimensional Pack.</div>";
+  }
+  box.innerHTML=h;
+  [].forEach.call(box.querySelectorAll(".emslot"),function(b){b.addEventListener("click",function(){
+    var i=+b.getAttribute("data-i"),cur=wheelEmotes().map(function(t){return t.id;}),was=cur.indexOf(tk.id);
+    if(was>=0)cur[was]=cur[i];          // already in the wheel: the two swap places
+    cur[i]=tk.id;SAVE.eqEmotes=cur;writeSave();sfx("coin");renderEmotePicker();});});
+  var act=box.querySelector("#pdAct");if(act)act.addEventListener("click",function(){openPackStand();});
 }
 function equipFromPicker(it){
   var d=shopData(pickTab);
@@ -16684,6 +16916,7 @@ function wireCasino(){
   $("mpAbil").addEventListener("click",function(){openPicker("abil","mp");});
   $("mpBlade").addEventListener("click",function(){openPicker("sword","mp");});
   $("pickShop").addEventListener("click",function(){
+    if(pickTab==="emote"){openPackStand();return;}       // emotes come from packs for now
     shopTab=(pickTab==="sword")?"sword":pickTab;
     buildShop();refreshCoins();showScreen("shop");
   });
@@ -16731,11 +16964,28 @@ function updateHUD(dt){
    18. MAIN LOOP
    ============================================================ */
 var last=0,frames=0,fpsAcc=0;
+/* Online, the game keeps real time whatever the frame rate. A step is never
+   longer than 0.034s, so on a slow device (a phone at 20fps during an ULTRA)
+   the game used to run in slow motion while the server ran at full speed: the
+   countdown ended late, the first ball arrived before you could block, and the
+   ball crawled then jumped. Now a slow frame is played as several short steps
+   and drawn once. Offline nothing changes. */
+var FRAME_SKIPDRAW=false;
 function frame(ts){
   window.requestAnimationFrame(frame);
   if(!last)last=ts;
-  var dt=Math.min((ts-last)/1000,0.034);
+  var raw=Math.max(0,(ts-last)/1000);
   last=ts;
+  if(raw>0.034&&NET.on&&(STATE==="countdown"||STATE==="playing")&&!paused){
+    var span=Math.min(raw,0.25),n=Math.min(8,Math.ceil(span/0.034)),h=span/n;
+    FRAME_SKIPDRAW=true;
+    try{for(var fi=0;fi<n-1;fi++)frameStep(h);}finally{FRAME_SKIPDRAW=false;}
+    frameStep(h);
+    return;
+  }
+  frameStep(Math.min(raw,0.034));
+}
+function frameStep(dt){
   if(STATE==="boot"||paused)return;
   FRAME_N++;
   // The big centre banner ("3", "GO", "ELIMINATED") used to expire inside
@@ -16781,6 +17031,7 @@ function frame(ts){
   }
   if(STATE==="venue"){
     updateVenue(dt,gameT);
+    if(V4FX.length)v4Tick(dt);            // a lobby emote's portal
     updateParticles(dt);
     updateCamera(dt);
     renderer.render(scene,camera);

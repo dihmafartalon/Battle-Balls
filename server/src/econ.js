@@ -9,7 +9,7 @@
 import { CAT } from "./catalog.js";
 
 export const ECON_KEYS = ["coins", "yen", "rp", "swords", "abils", "skins", "pass", "freeSpins", "redeemed", "casino", "econ",
-  "freeSpinsL", "tokens", "login", "season", "s0rp"];
+  "freeSpinsL", "tokens", "login", "season", "s0rp", "emotes"];
 const BAG = { sword: "swords", abil: "abils", skin: "skins" };
 const EQ = { sword: "eqSword", abil: "eqAbil", skin: "eqSkin" };
 const TABS = ["sword", "abil", "skin"];
@@ -71,6 +71,7 @@ export function ensure(s) {
   rankClean(s);
   for (const t of TABS) if (!s[BAG[t]] || typeof s[BAG[t]] !== "object" || Array.isArray(s[BAG[t]])) s[BAG[t]] = {};
   if (!s.redeemed || typeof s.redeemed !== "object") s.redeemed = {};
+  if (!s.emotes || typeof s.emotes !== "object" || Array.isArray(s.emotes)) s.emotes = {};
   if (!s.casino || typeof s.casino !== "object") s.casino = { hands: 0, bjWins: 0, spins: 0, upgrades: 0 };
   // the starters and anything free: everyone has them
   for (const t of TABS) {
@@ -325,6 +326,17 @@ export function applyAct(s, a, ctx) {
     if (s.yen < E.yen) return { ok: false, why: "Not enough yen." };
     s.yen -= E.yen; give(s, E.tab, it.id); s[EQ[E.tab]] = it.id;
     return { ok: true, res: { cost: E.yen } };
+  }
+  /* ---- packs: everything in it, for one price, while you are missing any of it ---- */
+  if (a.k === "pack") {
+    const P = CAT.packs && typeof a.pack === "string" && Object.prototype.hasOwnProperty.call(CAT.packs, a.pack) ? CAT.packs[a.pack] : null;
+    if (!P || (P.from && now < P.from) || (P.to && now >= P.to)) return { ok: false, why: "That pack is not for sale." };
+    const has = ([t, id]) => t === "emote" ? !!s.emotes[id] : own(s, t, id);
+    if (P.items.every(has)) return { ok: false, why: "You already own everything in it." };
+    if (s.yen < P.yen) return { ok: false, why: "Not enough yen." };
+    s.yen -= P.yen;
+    for (const [t, id] of P.items) { if (t === "emote") s.emotes[id] = 1; else if (itemOf(t, id)) give(s, t, id); }
+    return { ok: true, res: { cost: P.yen } };
   }
   /* ---- Rodriga: a Rodriga token buys this month's item ---- */
   if (a.k === "rodriga") {

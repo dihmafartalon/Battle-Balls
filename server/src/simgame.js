@@ -1559,6 +1559,7 @@ function decodeProfile(code){
 var QUAL=1,SENS=1;
 var canvas=$("game");
 var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:false,powerPreference:"high-performance"});
+(function(){var rr=renderer.render.bind(renderer);renderer.render=function(sc,cam){if(!FRAME_SKIPDRAW)rr(sc,cam);};})();
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
 renderer.setSize(window.innerWidth,window.innerHeight,false);
 renderer.shadowMap.enabled=true;
@@ -12259,7 +12260,9 @@ function startNetMatch(m){
 
   camYaw=Math.PI;camPitch=-0.14;camDist=prefCamDist();
   camLook.set(player.pos.x,player.y+2.6,player.pos.z);
-  STATE="countdown";countdown=3.2;gameT=0;
+  // the server started counting when it sent this: end the countdown when it does
+  var cdLate=(typeof m.at==="number")?clamp((netNow()-m.at)/1000,0,2.6):0;
+  STATE="countdown";countdown=3.2-cdLate;gameT=0;
   showScreen(null);$("ui").classList.add("on");
   $("ui").classList.remove("venuemode");
   $("lobbyBar").classList.remove("on");
@@ -15133,11 +15136,28 @@ function updateHUD(dt){
    18. MAIN LOOP
    ============================================================ */
 var last=0,frames=0,fpsAcc=0;
+/* Online, the game keeps real time whatever the frame rate. A step is never
+   longer than 0.034s, so on a slow device (a phone at 20fps during an ULTRA)
+   the game used to run in slow motion while the server ran at full speed: the
+   countdown ended late, the first ball arrived before you could block, and the
+   ball crawled then jumped. Now a slow frame is played as several short steps
+   and drawn once. Offline nothing changes. */
+var FRAME_SKIPDRAW=false;
 function frame(ts){
   window.requestAnimationFrame(frame);
   if(!last)last=ts;
-  var dt=Math.min((ts-last)/1000,0.034);
+  var raw=Math.max(0,(ts-last)/1000);
   last=ts;
+  if(raw>0.034&&NET.on&&(STATE==="countdown"||STATE==="playing")&&!paused){
+    var span=Math.min(raw,0.25),n=Math.min(8,Math.ceil(span/0.034)),h=span/n;
+    FRAME_SKIPDRAW=true;
+    try{for(var fi=0;fi<n-1;fi++)frameStep(h);}finally{FRAME_SKIPDRAW=false;}
+    frameStep(h);
+    return;
+  }
+  frameStep(Math.min(raw,0.034));
+}
+function frameStep(dt){
   if(STATE==="boot"||paused)return;
   FRAME_N++;
   // The big centre banner ("3", "GO", "ELIMINATED") used to expire inside
