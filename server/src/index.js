@@ -72,7 +72,9 @@ const SIM_OUT = { ball:1, botstate:1, hit:1, ability:1, spawn:1, parryok:1, swin
 
 // A public game is a public endpoint. Without these, one script can hold a
 // socket open and flood the room, and every relayed byte is billed to you.
-const MAX_MSG_BYTES = 8 * 1024;   // a ball snapshot is a few hundred bytes
+const MAX_MSG_BYTES = 8 * 1024;
+// what a streaming game may send on to its watchers
+const LIVE_MSG = { livestart: 1, liveover: 1, state: 1, ball: 1, botstate: 1, hit: 1, swing: 1 };   // a ball snapshot is a few hundred bytes
 // A host legitimately sends ~60/s (state + ball + bots at 20Hz each) plus a
 // burst on every deflect, so this sits well clear of real play while still
 // stopping a flood, which runs to thousands a second.
@@ -241,6 +243,7 @@ export class Room {
   /* The admin page, through the Worker: kick a player out of this room, or
      show them a message right now. Answers with how many sockets it reached. */
   adminOp(b) {
+    if (b.op === "live") return jsonRes({ live: this.liveSrc() });
     let n = 0;
     for (const ws of this.ctx.getWebSockets()) {
       const a = ws.deserializeAttachment();
@@ -314,6 +317,8 @@ export class Room {
     if (request.headers.get("Upgrade") !== "websocket")
       return new Response("expected websocket upgrade", { status: 426 });
     const url = new URL(request.url);
+    const live = (url.pathname.match(/^\/live\/([A-Za-z0-9_-]{1,64})$/) || [])[1];
+    if (live) return this.liveSocket(url, live);
     // the admin, watching: not a player, not on the roster, cannot send a thing
     if (url.searchParams.get("spectate")) return this.spectator(url);
     if (this.roster().length >= MAX_PLAYERS)
@@ -371,6 +376,37 @@ export class Room {
     return new Response(null, { status: 101, webSocket: client });
   }
 
+  /* A live room ("live:<account>"): the player's own game is the source and
+     only streams while somebody watches; spectators get whatever it sends. */
+  liveCount() { let n = 0; for (const w of this.ctx.getWebSockets()) { const a = w.deserializeAttachment(); if (a && a.spec && !a.src) n++; } return n; }
+  liveTell(leaving) {
+    let n = 0;
+    for (const w of this.ctx.getWebSockets()) { if (w === leaving) continue; const a = w.deserializeAttachment(); if (a && a.spec && !a.src) n++; }
+    for (const w of this.ctx.getWebSockets()) { if (w === leaving) continue; const a = w.deserializeAttachment(); if (a && a.src) try { w.send(JSON.stringify({ t: "watchers", n })); } catch (e) {} }
+  }
+  async liveSocket(url, sub) {
+    const pair = new WebSocketPair(), client = pair[0], server = pair[1];
+    const no = (why, reason) => { server.accept(); server.send(JSON.stringify({ t: "denied", why, reason })); server.close(4005, why); return new Response(null, { status: 101, webSocket: client }); };
+    if (url.searchParams.get("src") === "1") {
+      const who = await this.identify(url.searchParams.get("tok"));
+      if (!who.ok || who.sub !== sub) return no("signin", "");
+      // one source at a time: a newer game takes over from an older tab
+      for (const w of this.ctx.getWebSockets()) { const a = w.deserializeAttachment(); if (a && a.src) try { w.close(4006, "replaced"); } catch (e) {} }
+      this.ctx.acceptWebSocket(server);
+      server.serializeAttachment({ spec: true, src: true, sub, id: "src" });
+      server.send(JSON.stringify({ t: "watchers", n: this.liveCount() }));
+      return new Response(null, { status: 101, webSocket: client });
+    }
+    const ok = await specCheck(this.env && this.env.ADMIN_KEY, "live:" + sub, url.searchParams.get("spectate"));
+    if (!ok) return no("spec", "That spectate link has expired. Make a new one from the admin page.");
+    this.ctx.acceptWebSocket(server);
+    server.serializeAttachment({ spec: true, id: "spec" + crypto.randomUUID().slice(0, 6) });
+    server.send(JSON.stringify({ t: "welcome", spec: 1, live: 1, you: "spec", watch: "p", srv: 1, now: Date.now() }));
+    this.liveTell();
+    return new Response(null, { status: 101, webSocket: client });
+  }
+  liveSrc() { for (const w of this.ctx.getWebSockets()) { const a = w.deserializeAttachment(); if (a && a.src) return true; } return false; }
+
   async spectator(url) {
     const code = normaliseCode((url.pathname.match(/\/room\/([A-Za-z0-9]{1,8})$/) || [])[1] || "");
     const ok = await specCheck(this.env && this.env.ADMIN_KEY, code, url.searchParams.get("spectate"));
@@ -410,6 +446,10 @@ export class Room {
     try { msg = JSON.parse(raw); } catch (e) { return; }
     const me = ws.deserializeAttachment();
     if (!me) return;
+    if (me.src) {                                     // the streaming game: on to whoever watches
+      if (LIVE_MSG[msg.t]) { const text = JSON.stringify(msg); for (const w of this.ctx.getWebSockets()) { if (w === ws) continue; try { w.send(text); } catch (e) {} } }
+      return;
+    }
     if (me.spec) {                                    // a spectator only ever asks the time
       if (msg.t === "ping") try { ws.send(JSON.stringify({ t: "pong", c: msg.c, s: Date.now() })); } catch (e) {}
       return;
@@ -469,6 +509,8 @@ export class Room {
   async webSocketClose(ws) { this.left(ws); }
   async webSocketError(ws) { this.left(ws); }
   left(ws) {
+    const a = ws.deserializeAttachment();
+    if (a && a.spec) { this.liveTell(ws); return; }   // a watcher or a stream: nothing else to tidy
     this.pushRoster(ws);
     if (!this.roster(ws).length) { if (this.sim) this.sim.stop(); this.match = null; this.qStarted = false; }
   }
@@ -1183,6 +1225,9 @@ export default {
       return new Response(JSON.stringify({ code: makeCode() }),
         { headers: Object.assign({ "Content-Type":"application/json" }, cors()) });
 
+    // a solo ranked match, streamed from the player's own game while the admin watches
+    const lv = url.pathname.match(/^\/live\/([A-Za-z0-9_-]{1,64})$/);
+    if (lv) return env.ROOMS.get(env.ROOMS.idFromName("live:" + lv[1])).fetch(request);
     const m = url.pathname.match(/^\/room\/([A-Za-z0-9]{1,8})$/);
     if (!m) return new Response("not found", { status: 404, headers: cors() });
     const code = normaliseCode(m[1]);
