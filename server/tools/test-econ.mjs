@@ -83,3 +83,14 @@ console.log("server tests passed");
   assert.equal(r.res.rp, 40, "an 8 second ranked win pays: " + JSON.stringify(r.res)); assert.equal(s.rp, 40);
   console.log("quick ranked win test passed");
 }
+// the casino plays for coins and coins never buy yen
+{ const s = ensure({ coins: 10000, yen: 1000 }); s.swords = s.swords || {}; s.swords.katana = 1; s.swords.fang=1; s.swords.frost=1;
+let r = applyAct(s, { k: "exchange", c2y: 300 }, {}); assert.equal(r.ok, false); assert.equal(s.yen, 1000);
+r = applyAct(s, { k: "exchange", y2c: 100 }, {}); assert.ok(r.ok); assert.equal(s.yen, 900); assert.equal(s.coins, 10300);
+r = applyAct(s, { k: "slots", bet: 300 }, {}); assert.ok(r.ok, JSON.stringify(r)); assert.equal(s.yen, 900); assert.equal(s.coins, 10300 - 300 + r.res.win);
+const c0 = s.coins; r = applyAct(s, { k: "sell", tab: "sword", id: "fang" }, {}); assert.ok(r.ok, JSON.stringify(r)); assert.equal(s.coins, c0 + 45); assert.equal(s.yen, 900);
+const ctx = { bj: {} }; r = applyAct(s, { k: "bj", m: "deal", bet: 600 }, ctx); assert.ok(r.ok, JSON.stringify(r)); assert.equal(s.yen, 900);
+while (ctx.bj.inHand) applyAct(s, { k: "bj", m: "stand" }, ctx);
+const c1 = s.coins; r = applyAct(s, { k: "upgrade", tab: "sword", id: "frost" }, {}); assert.ok(r.ok, JSON.stringify(r)); assert.equal(s.yen, 900); assert.ok(s.coins === c1 - 300 || s.coins === c1, s.coins + " " + c1);
+const poor = ensure({ coins: 10, yen: 5000 }); r = applyAct(poor, { k: "slots", bet: 300 }, {}); assert.equal(r.ok, false); assert.equal(poor.yen, 5000);
+console.log("currency split tests passed"); }

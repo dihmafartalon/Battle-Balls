@@ -201,7 +201,7 @@ function bjView(bj, extra) {
 function bjSettle(s, bj, result, mul) {
   bj.inHand = false;
   const stake = bj.stake * (bj.doubled ? 2 : 1), gain = Math.round(stake * mul);
-  if (gain > 0) s.yen += gain;
+  if (gain > 0) s.coins += gain;
   s.casino.hands = (s.casino.hands | 0) + 1;
   if (mul > 0) s.casino.bjWins = (s.casino.bjWins | 0) + 1;
   return bjView(bj, { result, mul, gain, stakeAll: stake, yv: handValue(bj.you), dv: handValue(bj.dealer) });
@@ -215,6 +215,9 @@ function bjStand(s, bj, rnd) {
   return bjSettle(s, bj, "PUSH", 1);
 }
 
+/* The casino plays for coins. Yen is the currency people can buy, so it is
+   never staked: what is paid for is only spent on things you pick. */
+export const CAS_BET = [30, 15000];
 /* ---- slots ---- */
 function rollSym(rnd) {
   let tot = 0; for (const x of CAT.syms) tot += x.w;
@@ -382,22 +385,24 @@ export function applyAct(s, a, ctx) {
   if (a.k === "sell") {
     const it = tab && itemOf(tab, a.id);
     if (!tradable(tab, it)) return { ok: false, why: "That cannot be sold." };
-    delete s[BAG[tab]][it.id]; s.yen += it.v;
-    return { ok: true, res: { yen: it.v } };
+    // paid in coins: yen is the bought currency, it only ever comes in
+    const got = it.v * CAT.yenRate;
+    delete s[BAG[tab]][it.id]; s.coins += got;
+    return { ok: true, res: { coins: got } };
   }
   if (a.k === "upgrade") {
     const it = tab && itemOf(tab, a.id), U = CAT.up;
     if (!tradable(tab, it) || U.chain.indexOf(it.r) < 0 || it.r === "mythic") return { ok: false, why: "That cannot be upgraded." };
     const fee = U.fee[it.r];
-    if (s.yen < fee) return { ok: false, why: "Not enough yen." };
-    s.yen -= fee; delete s[BAG[tab]][it.id];
+    if (s.coins < fee) return { ok: false, why: "Not enough coins." };
+    s.coins -= fee; delete s[BAG[tab]][it.id];
     s.casino.upgrades = (s.casino.upgrades | 0) + 1;
     if (rnd() < U.odds[it.r]) {
       const nextR = U.chain[U.chain.indexOf(it.r) + 1];
       const tier = chestPool(tab).filter(x => x.r === nextR), fresh = tier.filter(x => !own(s, tab, x.id)), pool = fresh.length ? fresh : tier;
       const won = pool.length ? pool[Math.floor(rnd() * pool.length)] : null;
       if (won) { give(s, tab, won.id); return { ok: true, res: { won: won.id, r: nextR } }; }
-      give(s, tab, it.id); s.yen += fee;
+      give(s, tab, it.id); s.coins += fee;
       return { ok: true, res: { returned: true } };
     }
     return { ok: true, res: { lost: true } };
@@ -405,20 +410,20 @@ export function applyAct(s, a, ctx) {
 
   if (a.k === "exchange") {
     const c2y = int(a.c2y, 1, 1e8), y2c = int(a.y2c, 1, 1e8);
-    if (c2y) { if (s.coins < c2y) return { ok: false, why: "Not enough coins." };
-      const y = Math.floor(c2y / CAT.yenRate); s.coins -= y * CAT.yenRate; s.yen += y; return { ok: true, res: { yen: y } }; }
+    // one way only: coins no longer buy yen
+    if (c2y) return { ok: false, why: "Coins cannot buy yen any more." };
     if (y2c) { if (s.yen < y2c) return { ok: false, why: "Not enough yen." };
       s.yen -= y2c; s.coins += y2c * CAT.yenRate; return { ok: true, res: { coins: y2c * CAT.yenRate } }; }
     return { ok: false, why: "bad amount" };
   }
 
   if (a.k === "slots") {
-    const bet = int(a.bet, 10, 5000);
+    const bet = int(a.bet, CAS_BET[0], CAS_BET[1]);
     if (!bet) return { ok: false, why: "bad bet" };
-    if (s.yen < bet) return { ok: false, why: "Not enough yen." };
-    s.yen -= bet;
+    if (s.coins < bet) return { ok: false, why: "Not enough coins." };
+    s.coins -= bet;
     const r = [rollSym(rnd), rollSym(rnd), rollSym(rnd)], mul = slotMul(r[0], r[1], r[2]), win = Math.round(bet * mul);
-    s.yen += win; s.casino.spins = (s.casino.spins | 0) + 1;
+    s.coins += win; s.casino.spins = (s.casino.spins | 0) + 1;
     return { ok: true, res: { syms: r, mul, win, bet } };
   }
 
@@ -426,10 +431,10 @@ export function applyAct(s, a, ctx) {
     const bj = ctx.bj;
     if (a.m === "deal") {
       if (bj.inHand) return { ok: true, res: bjView(bj) };        // a hand is already out: show it again
-      const bet = int(a.bet, 10, 5000);
+      const bet = int(a.bet, CAS_BET[0], CAS_BET[1]);
       if (!bet) return { ok: false, why: "bad bet" };
-      if (s.yen < bet) return { ok: false, why: "Not enough yen." };
-      s.yen -= bet; bj.stake = bet; bj.you = []; bj.dealer = []; bj.doubled = false; bj.inHand = true;
+      if (s.coins < bet) return { ok: false, why: "Not enough coins." };
+      s.coins -= bet; bj.stake = bet; bj.you = []; bj.dealer = []; bj.doubled = false; bj.inHand = true;
       bj.you.push(draw(bj, rnd)); bj.dealer.push(draw(bj, rnd)); bj.you.push(draw(bj, rnd)); bj.dealer.push(draw(bj, rnd));
       if (isBJ(bj.you)) return { ok: true, res: isBJ(bj.dealer) ? bjSettle(s, bj, "PUSH", 1) : bjSettle(s, bj, "BLACKJACK", 2.75) };
       if (isBJ(bj.dealer)) return { ok: true, res: bjSettle(s, bj, "DEALER BLACKJACK", -1) };
@@ -443,8 +448,8 @@ export function applyAct(s, a, ctx) {
     if (a.m === "stand") return { ok: true, res: bjStand(s, bj, rnd) };
     if (a.m === "double") {
       if (bj.you.length !== 2 || bj.doubled) return { ok: false, why: "You can only double on two cards." };
-      if (s.yen < bj.stake) return { ok: false, why: "Not enough yen to double." };
-      s.yen -= bj.stake; bj.doubled = true; bj.you.push(draw(bj, rnd));
+      if (s.coins < bj.stake) return { ok: false, why: "Not enough coins to double." };
+      s.coins -= bj.stake; bj.doubled = true; bj.you.push(draw(bj, rnd));
       return { ok: true, res: handValue(bj.you) > 21 ? bjSettle(s, bj, "BUST", -1) : bjStand(s, bj, rnd) };
     }
     return { ok: false, why: "bad move" };
