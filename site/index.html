@@ -10677,7 +10677,7 @@ function openPackStand(){
    RODRIGA
    A very large ogre witch in a crooked shack behind where you come in. She
    sells one thing a month, and only for a Rodriga token -- which drops once in
-   ten million matches, of any kind.
+   ten thousand matches, of any kind.
    ============================================================ */
 function rodrigaMonth(ms){return new Date(ms||Date.now()).toISOString().slice(0,7);}
 function rodrigaOffer(){
@@ -10830,7 +10830,7 @@ function openRodriga(){
   var off=rodrigaOffer(),tok=SAVE.tokens|0;
   var h="<div class='evtgrid'><div class='well evtpic rod'>"+RODRIGA_SVG+"<div class='bubble'>"+pick(RODRIGA_SAY)+"</div>"+
     "<ul class='gnomerules'><li>Paid with <b>Rodriga tokens</b> only</li><li>One item, and it changes every month</li>"+
-    "<li>A token drops <b>1 in 10,000,000</b> matches, any mode</li></ul>"+
+    "<li>A token drops <b>1 in 10,000</b> matches, any mode</li></ul>"+
     "<div class='rodtok'>"+TOKEN_SVG+"<b>"+tok+"</b><span>TOKEN"+(tok===1?"":"S")+"</span></div></div><div class='well'>";
   if(!off)h+="<div class='dname'>NOTHING THIS MONTH</div><div class='ddesc'>Rodriga's cauldron is empty. Come back next month.</div>";
   else{
@@ -10845,7 +10845,7 @@ function openRodriga(){
   evtShow("RODRIGA'S SHACK","hw",h);
   var b=$("evtBuy");
   if(b)b.addEventListener("click",function(){
-    if((SAVE.tokens|0)<1){evtSay("You need a Rodriga token. They drop from matches, once in ten million.");sfx("tick");return;}
+    if((SAVE.tokens|0)<1){evtSay("You need a Rodriga token. They drop from matches, once in ten thousand.");sfx("tick");return;}
     function done(ok,why){
       if(!ok){evtSay(why);sfx("tick");return;}
       sfx("rank");var d2=shopData(off.tab);SAVE[d2.eq]=off.it.id;writeSave();refreshCoins();updateChips();updateLobbyBar();
@@ -10874,7 +10874,7 @@ function rodrigaTokenFx(){
   var d=document.createElement("div");
   d.className="rodfx";
   d.innerHTML="<div class='rodrays'></div><div class='rodcoin'>"+TOKEN_SVG+"</div>"+
-    "<div class='rodtxt ol1'>RODRIGA TOKEN!</div><div class='rodsub ol1'>ONE IN TEN MILLION. RODRIGA WILL SEE YOU NOW.</div>"+
+    "<div class='rodtxt ol1'>RODRIGA TOKEN!</div><div class='rodsub ol1'>ONE IN TEN THOUSAND. RODRIGA WILL SEE YOU NOW.</div>"+
     "<button class='big' id='rodOk'>CLAIM IT</button>";
   document.body.appendChild(d);
   // the cackle, a gong and a rising shimmer
@@ -15227,9 +15227,9 @@ var PACKS={
     from:EVENT_SHOPS.wendigo.from,to:EVENT_SHOPS.wendigo.to}
 };
 
-// Rodriga: one item a month, for a Rodriga token. A token is a one in ten million
+// Rodriga: one item a month, for a Rodriga token. A token is a one in ten thousand
 // drop from any match, of any kind
-var RODRIGA={chance:1e-7,
+var RODRIGA={chance:1e-4,
   // PB Fetus from launch day (the last day of September) through October
   months:{"2026-09":{tab:"sword",id:"pbfetus"},"2026-10":{tab:"sword",id:"pbfetus"}}};
 // the login calendar: thirty days, claimed in order, one a day. Missing a day never

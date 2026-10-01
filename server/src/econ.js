@@ -505,7 +505,7 @@ export function applyAct(s, a, ctx) {
       e.pm.push(now);
       pass = passAddXp(s, a.won ? P.xpWin : P.xpGame);
     }
-    // one in ten million: a Rodriga token, in any match that really was a match
+    // one in ten thousand: a Rodriga token, in any match that really was a match
     let token = false;
     if (CAT.rodriga && real && rnd() < CAT.rodriga.chance) { s.tokens = (s.tokens | 0) + 1; token = true; }
     // the blocks this game timed for itself
