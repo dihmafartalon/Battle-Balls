@@ -3941,6 +3941,7 @@ function Fighter(o){
 
   var sk=o.skinDef||{body:0x35e8ff,limb:0x2a2f45,skin:0xf0c89a,glow:0x000000};
   this.skinId=sk.id||"";     // so a venue figure can tell when its skin changed
+  this.skinSrc=sk;           // a live stream describes this fighter from it
   var g=new THREE.Group();
   this.mBody=new THREE.MeshLambertMaterial({color:sk.body,emissive:sk.glow,emissiveIntensity:.25});
   this.mLimb=new THREE.MeshLambertMaterial({color:sk.limb});
@@ -4472,6 +4473,7 @@ Fighter.prototype.restSword=function(){
   }
 };
 Fighter.prototype.swing=function(){
+  if(LIVE.n&&!NET.on&&this.netId)liveSend({t:"swing",from:this.netId});
   // Weight you can read. A heavy blade takes its time getting there, a light
   // one is quicker, and nothing is so fast that it happens before you see it.
   /* Weight you can read. The style sets the shape of the swing and the weapon's
@@ -4839,6 +4841,7 @@ Fighter.prototype.eliminate=function(){
     return;
   }
   this.alive=false;
+  if(LIVE.n&&!NET.on&&this.netId)liveSend({t:"hit",w:this.netId,by:(this.killedBy&&this.killedBy.netId)||null});
   // Ascended: on elimination the whole figure flashes pure white, then goes
   if(this.sig&&this.sig.kind==="ascended"){
     var wm=new THREE.MeshBasicMaterial({color:0xffffff});
@@ -11341,18 +11344,97 @@ function serverBase(){
 }
 /* The admin, watching a room: a link from the admin page carries a room code
    and a ten-minute ticket. Nothing is sent, nothing is paid, nobody sees you. */
-var SPECQ=(function(){try{var q=new URLSearchParams(location.search),c=q.get("spectate"),t=q.get("st");
+var SPECQ=(function(){try{var q=new URLSearchParams(location.search),c=q.get("spectate"),w=q.get("watch"),t=q.get("st");
+  if(w&&t)return {code:"LIVE",watch:w.replace(/[^A-Za-z0-9_-]/g,"").slice(0,64),st:t.slice(0,200)};
   return c&&t?{code:c.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8),st:t.slice(0,160)}:null;}catch(e){return null;}})();
 function specJoin(){
   if(!SPECQ)return;
   // the notes can wait: straight past them into the lobby
   if(!$("update").classList.contains("hide")){SAVE.seenVersion=VERSION;writeSave();enterLobby();}
   if(STATE==="boot"){setTimeout(specJoin,500);return;}
-  NET.specTok=SPECQ.st;
+  NET.specTok=SPECQ.st;NET.specWatch=SPECQ.watch||"";
   openMPScreen();
   netConnect(SPECQ.code);
   SPECQ=null;
   try{history.replaceState(null,"",location.pathname);}catch(e){}
+}
+/* ---- LIVE: a solo ranked match streamed to the admin ----
+   On a ranked match the game opens a quiet connection to /live/<account>.
+   The server tells it how many are watching; with nobody watching it sends
+   nothing. With somebody, it sends the match in the same messages an online
+   host does, and the spectator's game plays them back as an online guest. */
+var LIVE={ws:null,n:0,acc:0};
+function liveOpen(){
+  if(LIVE.ws||!cloudOn()||!serverBase()||typeof WebSocket==="undefined")return;
+  var sub=String(CLOUD.tok||"").split(".")[0];if(!sub)return;
+  var ws;
+  try{ws=new WebSocket(serverBase().replace(/^http/,"ws")+"/live/"+encodeURIComponent(sub)+"?src=1&tok="+encodeURIComponent(CLOUD.tok));}catch(e){return;}
+  LIVE.ws=ws;
+  ws.onmessage=function(ev){var m;try{m=JSON.parse(ev.data);}catch(e){return;}
+    if(m.t==="watchers"){var was=LIVE.n;LIVE.n=m.n|0;if(LIVE.n>0&&!was&&liveOn())liveStart();}};
+  ws.onclose=function(){if(LIVE.ws===ws){LIVE.ws=null;LIVE.n=0;}};
+  ws.onerror=function(){};
+}
+function liveOn(){return !NET.on&&MODE&&MODE.ranked&&(STATE==="countdown"||STATE==="playing");}
+function liveSend(o){if(LIVE.ws&&LIVE.ws.readyState===1&&LIVE.n>0)try{LIVE.ws.send(JSON.stringify(o));}catch(e){}}
+// every fighter gets the id an online match would give it
+function liveIds(){var k=0;for(var i=0;i<fighters.length;i++){var f=fighters[i];if(f===player)f.netId="p";else if(!f.decoy)f.netId="bot"+(k++);}}
+function liveStart(){
+  liveIds();
+  liveSend({t:"livestart",mode:MODE.id,map:CURMAP.id,rf:RANKF||0,cd:STATE==="countdown"?+countdown.toFixed(2):0,
+    f:fighters.filter(function(f){return f.netId;}).map(function(f){var sk=f.skinSrc||{};
+      return {id:f.netId,name:f===player?(SAVE.netName||"Player"):f.name,sword:f.swordDef.id,abil:f.ability,team:f.team,
+        skin:f===player?SAVE.eqSkin:null,sd:f===player?null:{body:sk.body,limb:sk.limb,skin:sk.skin,glow:sk.glow||0},
+        x:+f.pos.x.toFixed(2),z:+f.pos.z.toFixed(2),a:f.alive?1:0};})});
+}
+function liveTick(dt){
+  if(!liveOn())return;
+  LIVE.acc+=dt;if(LIVE.acc<0.05)return;LIVE.acc=0;
+  if(player&&player.alive)liveSend({t:"state",from:"p",x:+player.pos.x.toFixed(2),z:+player.pos.z.toFixed(2),
+    y:+player.y.toFixed(2),r:+player.yaw.toFixed(2),vx:+player.vel.x.toFixed(2),vz:+player.vel.z.toFixed(2)});
+  liveSend(netBallMsg());
+  var out=[];
+  for(var i=0;i<fighters.length;i++){var f=fighters[i];if(f===player||!f.netId)continue;
+    out.push({i:parseInt(f.netId.slice(3),10),x:+f.pos.x.toFixed(2),y:+f.y.toFixed(2),z:+f.pos.z.toFixed(2),r:+f.yaw.toFixed(2),a:f.alive?1:0});}
+  if(out.length)liveSend({t:"botstate",b:out});
+}
+// the watcher's side: build what the stream describes, then play it back as a guest
+function liveBuild(m){
+  riftAbort();
+  NET.matchSeq=(NET.matchSeq||0)+1;
+  MODE=copyMode(modeById(m.mode||"ranked1"));
+  RANKF=0;if(MODE.ranked){MODE._tune=rankedTuning(clamp(m.rf||0,0,1));RANKF=m.rf||0;}
+  NET.on=true;NET.isHost=false;NET.status="playing";NET.hist.length=0;NET.remote={};
+  buildArena(mapById(m.map||"sky"));
+  venueKind=null;
+  if(showcase){scene.remove(showcase.mesh);showcase=null;}
+  clearFighters();clearBalls();
+  venue.visible=false;arena.visible=true;
+  slowmoT=0;run={coins:0,at:Date.now()};hudC={};stopSpectating();
+  paused=false;$("pause").classList.add("hide");
+  (m.f||[]).forEach(function(d){
+    var f=new Fighter({name:String(d.name||"Player").slice(0,14),isPlayer:false,team:d.team,x:d.x||0,z:d.z||0,
+      sword:d.sword||"trainer",ability:d.abil||"dash",skinDef:d.skin?skinById(d.skin):(d.sd||null)});
+    f.isRemote=true;f.netId=d.id;
+    if(String(d.id).indexOf("bot")===0){f.isBot=true;f.botIndex=parseInt(String(d.id).slice(3),10);f.netId=null;}
+    NET.remote[d.id]=f;
+    if(!d.a){f.alive=false;f.mesh.visible=false;}
+    fighters.push(f);
+  });
+  var nBalls=MODE.swarm?3:1;
+  for(var bi=0;bi<nBalls;bi++){var bb=new Ball();bb.mult=1;bb.speed=clamp(BALL_BASE*MODE.speed,4,BALL_SPEED_MAX);balls.push(bb);}
+  player=new Fighter({name:"SPECTATOR",isPlayer:true,x:0,z:0,sword:"trainer",ability:"dash",skinDef:skinById("rookie")});
+  scene.remove(player.mesh);player.alive=false;player.isRemote=true;
+  SPEC.on=true;NET.specFocus="p";NET.specBot=null;
+  camYaw=Math.PI;camPitch=-0.14;camDist=prefCamDist();
+  var fo=specTarget()||fighters[0];if(fo)camLook.set(fo.pos.x,fo.y+2.6,fo.pos.z);
+  STATE="countdown";countdown=Math.max(0.05,+m.cd||0);gameT=0;
+  showScreen(null);$("ui").classList.add("on");
+  $("ui").classList.remove("venuemode");$("lobbyBar").classList.remove("on");$("venueHud").classList.remove("on");
+  $("rankhud").style.display="flex";$("rankhudIcon").innerHTML="";
+  $("rankhudName").textContent="WATCHING \u00b7 "+String(MODE.name||"RANKED").toUpperCase();
+  _aliveShown=-1;setAlive();
+  feed("Watching a ranked match live","good");
 }
 function specTarget(){
   var i,f;
@@ -11374,6 +11456,7 @@ function wsUrlFor(code){
   var b=serverBase();
   if(!b)return "";
   var ws=b.replace(/^http:/,"ws:").replace(/^https:/,"wss:");
+  if(NET.specTok&&NET.specWatch)return ws+"/live/"+encodeURIComponent(NET.specWatch)+"?spectate="+encodeURIComponent(NET.specTok);
   if(NET.specTok)return ws+"/room/"+code+"?spectate="+encodeURIComponent(NET.specTok);
   var q=(NET.queue?"?q=1&":"?")+"name="+encodeURIComponent((SAVE.netName||"Player").slice(0,14))+
         "&sword="+encodeURIComponent(SAVE.eqSword)+
@@ -11388,9 +11471,9 @@ function netConnect(code,onReady){
     NET.status="error";NET.err="No server URL set in the file.";
     lobbyRender();return;
   }
-  var keepTok=NET.specTok;
+  var keepTok=NET.specTok,keepW=NET.specWatch;
   netDisconnect(true);
-  NET.specTok=keepTok;
+  NET.specTok=keepTok;NET.specWatch=keepW;
   NET.code=code;NET.status="connecting";NET.err="";
   lobbyRender();
   var WS=(typeof WebSocket!=="undefined")?WebSocket:(window.WebSocket||null);
@@ -11431,7 +11514,7 @@ function netDisconnect(quiet){
     try{NET.ws.onclose=null;NET.ws.close();}catch(e){}
   }
   NET.ws=null;NET.on=false;NET.players=[];NET.remote={};NET.hist.length=0;
-  NET.spec=false;NET.specTok="";NET.specFocus="";NET.specBot=null;
+  NET.spec=false;NET.live=false;NET.specTok="";NET.specWatch="";NET.specFocus="";NET.specBot=null;
   if(!quiet){NET.status="idle";NET.code="";}
 }
 function netHandle(m){
@@ -11449,7 +11532,7 @@ function netHandle(m){
   }
   if(m.t==="adminmsg"){adminNote(String(m.text||"").slice(0,400));return;}
   if(m.t==="welcome"){
-    NET.spec=!!m.spec;
+    NET.spec=!!m.spec;NET.live=!!m.live;
     if(NET.spec){NET.specFocus=m.watch||"";NET.specBot=null;}
     NET.you=m.you;NET.host=m.host||m.you;
     NET.isHost=(NET.host===NET.you);
@@ -11505,6 +11588,15 @@ function netHandle(m){
     NET.seed=m.seed;
     NET.pendingStart=m;
     startNetMatch(m);
+    return;
+  }
+  if(m.t==="livestart"&&NET.spec&&NET.live){liveBuild(m);return;}
+  if(m.t==="liveover"&&NET.spec&&NET.live){
+    if(STATE==="countdown"||STATE==="playing"){STATE="over";
+      for(var lo=0;lo<balls.length;lo++){balls[lo].active=false;balls[lo].mesh.visible=false;}
+      var lw=fighterByNetId(m.w)||NET.remote[m.w];
+      flashWarn(m.won?"THEY WON":"THEY LOST",2.5,m.won?"#6bffb0":"#ff6b6b");
+      feed((lw?lw.name+" won. ":"")+"Waiting for their next ranked match","gold");}
     return;
   }
   if(m.t==="specsync"&&NET.spec){
@@ -11728,6 +11820,8 @@ function startMatch(modeId){
   _aliveShown=-1;
   updateSlotIcons();setAlive();
   if(banned)feed(abilById(SAVE.eqAbil).name+" is disabled in 1v1 \u2014 using Dash","ko");
+  // a solo ranked match can be watched from the admin page: the game streams it only while someone does
+  if(MODE.ranked){liveOpen();liveIds();if(LIVE.n)liveStart();}
 }
 /* ---------------- networked matches ----------------
    The host's browser is authoritative: it runs the ball, the bots, hit
@@ -12091,6 +12185,9 @@ function netResolvePending(){
 }
 function netBroadcastBall(){
   if(!NET.isHost||!NET.on)return;
+  netSend(netBallMsg());
+}
+function netBallMsg(){
   var bs=[],i;
   for(i=0;i<balls.length;i++){
     var b=balls[i];
@@ -12117,7 +12214,7 @@ function netBroadcastBall(){
     bots.push({i:f.botIndex,x:+f.pos.x.toFixed(2),z:+f.pos.z.toFixed(2),
       y:+f.y.toFixed(2),r:+f.yaw.toFixed(2),d:f.alive?0:1,bk:f.blockT>0?1:0});
   }
-  netSend({t:"ball",b:bs,n:bots,gt:+gameT.toFixed(2),c:netNow()});
+  return {t:"ball",b:bs,n:bots,gt:+gameT.toFixed(2),c:netNow()};
 }
 function fighterByNetId(id){
   if(id===null||id===undefined)return null;
@@ -12460,6 +12557,7 @@ function endRound(){
   STATE="over";
   for(var i=0;i<balls.length;i++){balls[i].active=false;balls[i].mesh.visible=false;}
   var won=MODE.teams?(teamAlive(0)>0):(player&&player.alive);
+  if(LIVE.n){var lw=livingFighters(false)[0];liveSend({t:"liveover",w:lw?lw.netId:null,won:!!won});}
   SAVE.games++;
   var passRes=passAward(!!won);
   var rpGain=0,bonus=0;
@@ -14464,7 +14562,8 @@ function lobbyRender(){
         ? "Share the code. You need at least one more player."
         : (canStart?"Everyone is ready.":"Waiting for everyone to ready up."));
   if(NET.spec){
-    $("mpHint").textContent="SPECTATING. Nobody in the room can see you. You'll be taken in when their next match starts.";
+    $("mpHint").textContent=NET.live?"WATCHING THEIR RANKED MATCHES. Nobody can see you. You'll be taken in when their next ranked match starts (or straight away if one is on).":
+      "SPECTATING. Nobody in the room can see you. You'll be taken in when their next match starts.";
     ["mpReady","mpStart","mpRanked"].forEach(function(id){var e2=$(id);if(e2)e2.style.display="none";});
   }
 }
@@ -14824,6 +14923,7 @@ function frame(ts){
     }
     riftTick(worldDt,gameT);
     if(NET.on)netTick(dt);
+    else if(LIVE.n)liveTick(dt);
     // sweep dead decoys out
     for(i=fighters.length-1;i>=0;i--)
       if(fighters[i].decoy&&!fighters[i].alive&&fighters[i].mesh.scale.x<0.05){

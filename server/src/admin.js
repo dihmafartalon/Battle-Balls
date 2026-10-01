@@ -99,7 +99,18 @@ export async function handleAdmin(request, env, H) {
         } catch (e) {}
       }
     }
-    if (!code) return H.jsonRes({ error: "They are not in an online room right now. Matches against bots run on their own device and can't be watched." }, 404);
+    if (!code && sub && env.ROOMS) {
+      // not in a room: is their game streaming a solo ranked match (or ready to)?
+      try {
+        const r = await env.ROOMS.get(env.ROOMS.idFromName("live:" + sub)).fetch("https://room-admin/", { method: "POST", body: JSON.stringify({ op: "live" }) });
+        if ((await r.json()).live) {
+          const exp = String(Date.now() + SPEC_MS);
+          const st = exp + "." + sub + "." + (await specSig(env.ADMIN_KEY, "live:" + sub, exp, sub));
+          return H.jsonRes({ ok: true, code: "ranked", url: GAME_URL + "?watch=" + encodeURIComponent(sub) + "&st=" + encodeURIComponent(st) });
+        }
+      } catch (e) {}
+    }
+    if (!code) return H.jsonRes({ error: "They are not in an online room or a ranked match right now. Casual matches against bots run on their own device and can't be watched." }, 404);
     const exp = String(Date.now() + SPEC_MS), watch = sub || "";
     const st = exp + "." + watch + "." + (await specSig(env.ADMIN_KEY, code, exp, watch));
     return H.jsonRes({ ok: true, code, url: GAME_URL + "?spectate=" + encodeURIComponent(code) + "&st=" + encodeURIComponent(st) });
@@ -269,7 +280,7 @@ function draw(sub,j){
       el("div",{class:"card"},[el("div",{class:"mute",text:"Rank"}),el("div",{class:"v",text:rk.name+" \u00b7 "+num(s.rp)+" RP"}),
         el("div",{class:"mute",text:rk.next?(num(rk.need)+" RP to "+rk.next):"Top rank"}),rbar])])),
     el("div",{class:"row",style:"margin-top:10px"},[el("button",{class:"good",text:"\u25b6 Spectate",on:function(){spectate({sub:sub});}}),
-      el("span",{class:"mute",text:"Opens the game watching their online room. Matches against bots run on their own device and can't be watched."})])]));
+      el("span",{class:"mute",text:"Opens the game watching their online room, or their solo ranked match. Casual matches against bots can't be watched."})])]));
   // suspicion
   var sc=sus.score|0,col=sc>=50?"var(--bad)":(sc>=20?"var(--warn)":"var(--good)");
   R.appendChild(el("div",{class:"box"},[el("div",{class:"row"},[el("b",{text:"Suspicion "+sc+" / 100"}),el("span",{class:"mute",text:sc>=50?"look closely":(sc>=20?"worth a look":"looks normal")})]),
