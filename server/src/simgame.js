@@ -387,7 +387,7 @@ var ABILITIES=[
   desc:"Brace for two seconds. Anything reaching you is returned and its sender frozen."},
  {id:"infinity",name:"Infinity",rarity:"mythic",price:13000,yen:350,cd:26,color:0x8affd8,
   desc:"Starts a four second timer: a ball that comes close to you before it runs out is caught and held on your blade for the time that is left. Walk with it, aim it, and press again to throw it back faster. You cannot parry while you hold it, so anything else in the air will kill you."},
- {id:"grey",name:"Grey's 14 Inches",rarity:"mythic",price:15500,yen:340,cd:30,color:0x3ab4ff,
+ {id:"grey",name:"Grey's 14 Inches",rarity:"mythic",price:15500,yen:340,cd:36,color:0x3ab4ff,
   desc:"A wall of water rises in front of you and rolls away where you are aiming. Everyone it reaches is knocked back and off their feet, and if it catches the ball it hurls it on ahead, faster."},
  {id:"warts",name:"Dylan's Warts",rarity:"mythic",price:16000,yen:345,cd:1.8,color:0xffc040,
   desc:"Spin the chamber. No cooldown: spin again the moment it stops. Survive and keep a buff for the rest of the round: faster feet or harder returns. Every spin after that is riskier (1 in 6, then 5, 4, 3, 2). Hit BUST and you are out. Stop whenever you like."},
@@ -408,7 +408,7 @@ function isDuel(){
    list comes from the server at start and every minute; an online match
    brings its own in the start message, so every copy of it agrees. Guardian
    is off until the server says otherwise. */
-var ABIL_OFF={guardian:1};
+var ABIL_OFF={};
 (function(){try{var c=JSON.parse(window.localStorage.getItem("bb_abiloff")||"null");if(Array.isArray(c)){ABIL_OFF={};c.forEach(function(id){ABIL_OFF[id]=1;});}}catch(e){}})();
 function applyAbilOff(list){
   if(!Array.isArray(list))return;
@@ -740,14 +740,14 @@ function defaultSave(){
   return {coins:0,rp:0,swords:{trainer:1},abils:{dash:1},skins:{rookie:1,bert:1},
     eqSword:"trainer",eqAbil:"dash",eqSkin:"rookie",eqMap:"sky",
     wins:0,games:0,streak:0,bestStreak:0,fov:66,qual:1,sens:1,shiftLock:false,redeemed:{},
-    mouseLock:true,invertY:false,camDist:13,ballColor:"#9aa3ad",ballGlow:true,
+    mouseLock:true,invertY:false,camDist:13,binds:{},ballColor:"#9aa3ad",ballGlow:true,
     musicVol:0.45,sfxVol:0.75,musicUrl:"",musicOn:true,showFps:false,nameTags:true,feedOn:true,showHitbox:false,
     yen:0,yenV:2,t:0,seenVersion:"",casino:{hands:0,bjWins:0,spins:0,upgrades:0},netName:"",serverUrl:"",rangeBest:0,
     freeSpins:0,pass:{id:"",xp:0,got:0},
     freeSpinsL:0,tokens:0,login:{id:"",n:0,last:""},season:0,s0rp:0,passHr:[],emotes:{},eqEmotes:[]};
 }
 // the settings a wipe keeps: how the game looks and feels, not what you own
-var KEEP_ON_WIPE=["fov","qual","sens","shiftLock","mouseLock","invertY","camDist",
+var KEEP_ON_WIPE=["fov","qual","sens","shiftLock","mouseLock","invertY","camDist","binds",
   "ballColor","ballGlow","musicVol","sfxVol","musicUrl","musicOn","showFps",
   "nameTags","feedOn","showHitbox","netName","serverUrl","seenVersion"];
 var SAVE=defaultSave();
@@ -851,7 +851,7 @@ document.addEventListener("visibilitychange",function(){
    that belong to a device -- quality, sensitivity, volume -- stay on it. */
 var GOOGLE_CLIENT_ID="710765331188-b711mqvsvv7kf9n08f41suvmf030fav5.apps.googleusercontent.com";
 var CLOUDKEY="battleballs_cloud";
-var DEVICE_KEYS=["fov","qual","sens","shiftLock","mouseLock","invertY","camDist","musicVol","sfxVol","musicUrl",
+var DEVICE_KEYS=["fov","qual","sens","shiftLock","mouseLock","invertY","camDist","binds","musicVol","sfxVol","musicUrl",
   "musicOn","showFps","nameTags","feedOn","showHitbox","serverUrl","seenVersion","rangeBest","passHr"];
 var CLOUD_T={settle:2,gap:4,retry:20,pull:8};          // seconds: wait after a change, least time between sends, after a failure, between checks
 var CLOUD_OPS_PER=60;                                     // the server takes this many batches per request
@@ -3029,7 +3029,7 @@ function updateVenue(dt,t){
   var p=$("zonePrompt");
   var lbl=nearZone?nearZone.label:(RANGE.on&&RANGE.near&&RANGE.state==="idle"?"HIT THE BALL":null);
   if(lbl){
-    if(hudC.zone!==lbl){$("zoneLabel").textContent=lbl;$("zoneKey").textContent=touchMode?"TAP":"F";hudC.zone=lbl;}
+    if(hudC.zone!==lbl){$("zoneLabel").textContent=lbl;$("zoneKey").textContent=(touchMode&&lastTouch)?"TAP":keyName(bindKey("block"));hudC.zone=lbl;}
     p.classList.add("on");
   } else {p.classList.remove("on");hudC.zone=null;}
   for(i=0;i<VENUE_BB.length;i++){
@@ -4864,6 +4864,13 @@ Fighter.prototype.eliminate=function(){
     this.untarget=1.6;
     ringBurst(this.pos.x,2,this.pos.z,22,10,0xffffff,1.6,.7);
     feed(this.name+" survived on Guardian","gold");
+    // whoever runs the match: any ball coming for them starts over from the centre,
+    // same as after a death. Left in flight it would turn at full rally speed onto
+    // the nearest other target -- point blank on whoever just hit it
+    if(!NET.on||NET.isHost){
+      for(var gb=0;gb<balls.length;gb++)if(balls[gb].active&&balls[gb].target===this)resetBall(balls[gb],1.15);
+      if(NET.on)netSend({t:"guard",w:(this.netId||("bot"+this.botIndex))});
+    }
     return;
   }
   this.alive=false;
@@ -6094,7 +6101,9 @@ function ballHits(b,f,forced){
   }
   var killer=b.lastHit;
   if(killer&&killer!==f)f.killedBy=killer;     // so the dead can watch their killer
+  var saved=f.guardian;
   f.eliminate();
+  if(saved&&f.alive)return;                    // Guardian: eliminate() already reset the ball
   if(!f.alive){
     if(NET.on&&NET.isHost)
       netSend({t:"hit",w:(f.netId||("bot"+f.botIndex)),
@@ -6220,6 +6229,9 @@ function updateBall(b,dt,t){
   // (no time-based speed creep: pressure() closes the parry window instead)
   if(b.target&&(!b.target.alive||b.target.untarget>0)){
     var nt=pickTarget(b,b.target.alive?null:b.target);
+    // the only one left to turn on is whoever just hit it (a 1v1 against someone
+    // untargetable): it would come straight back at them point blank. Serve fresh
+    if(nt&&nt===b.lastHit&&b.target.alive&&nt.untarget<=0){resetBall(b,1.0);return;}
     if(nt){b.target=nt;setupFlight(b);}
     else{resetBall(b,1.0);return;}
   }
@@ -7037,7 +7049,7 @@ function riftEnterDuel(){
   if(riftAuth()&&balls.length)resetBall(balls[0],RIFT_T.intro);
   sfx("riftduel");
   flashWarn(c.name.toUpperCase()+"  VS  "+tg.name.toUpperCase(),1.6,"#ff2a44");
-  if(player===c){feed("Press G to SNAP: it ends the rift and takes you both out","ko");}
+  if(player===c){feed("Press "+keyName(bindKey("ability"))+" to SNAP: it ends the rift and takes you both out","ko");}
   else if(player===tg)feed("Your ability is sealed for the duel","ko");
   else feed("You are held at the edge while they fight","good");
   // a duelist left while we were being pulled in
@@ -7249,7 +7261,7 @@ function riftHud(){
   var el=$("riftAim");if(!el)return;
   var f=player,txt="",cls="";
   if(f&&f.alive&&STATE==="playing"){
-    if(RIFT.phase==="duel"&&f===RIFT.caster){txt=RIFT.t<RIFT_T.unfade?"":((touchMode?"ABILITY":"G")+"  —  SNAP  (you both die)");cls="snap";}
+    if(RIFT.phase==="duel"&&f===RIFT.caster){txt=RIFT.t<RIFT_T.unfade?"":((touchMode?"ABILITY":keyName(bindKey("ability")))+"  —  SNAP  (you both die)");cls="snap";}
     else if(!riftOn()&&abilById(f.ability).id==="bloodrift"&&!f.riftUsed){
       var why=riftWhyNot(f);
       if(why)txt="BLOOD RIFT — "+why;
@@ -10676,7 +10688,7 @@ function v4Mine(o){return (o.isPlayer&&!o.isRemote)||(o.isBot&&(!NET.on||NET.isH
    you are facing. Everyone it passes is carried with it; the ball, when it is
    reached, is thrown on much faster at whoever is ahead of it. Then the flood
    drains away. */
-var WAVE={speed:26,h:7,w:20,push:16,pop:9,boost:0.6};
+var WAVE={speed:26,h:7,w:14,push:12,pop:7,boost:0.35,stun:0};
 function greyWave(f,yaw){
   /* A wave you can read: it rises in FRONT of you, rolls away across a lane
      as wide as a few fighters, and crashes at the far side. Anyone it reaches
@@ -10722,7 +10734,7 @@ function greyWave(f,yaw){
         burst(o.pos.x,o.y+1.2,o.pos.z,26,9,0xbfe8ff,1.4,.55,-6);
         // knocked back, never knocked out: gentler the nearer they are to the edge
         var edge=clamp((R-Math.hypot(o.pos.x,o.pos.z))/10,.15,1),pw=WAVE.push*edge;
-        if(v4Mine(o)){o.vel.x=dx*pw;o.vel.z=dz*pw;o.vy=Math.max(o.vy,WAVE.pop);o.grounded=false;o.stun=Math.max(o.stun||0,.35);}
+        if(v4Mine(o)){o.vel.x=dx*pw;o.vel.z=dz*pw;o.vy=Math.max(o.vy,WAVE.pop);o.grounded=false;if(WAVE.stun)o.stun=Math.max(o.stun||0,WAVE.stun);}
       }
       if(!(NET.on&&!NET.isHost))for(var bi=0;bi<balls.length;bi++){var b=balls[bi];
         if(!b.active||b.held>0||ballHit[bi])continue;
@@ -12104,6 +12116,7 @@ function netHandle(m){
   if(m.t==="botstate"){if(!NET.isHost)netApplyBots(m);return;}
   if(m.t==="ball")    {if(!NET.isHost)netApplyBall(m);return;}
   if(m.t==="hit")     {if(!NET.isHost)netApplyHit(m);return;}
+  if(m.t==="guard")   {if(!NET.isHost){var gf=fighterByNetId(m.w);if(gf&&gf.alive){gf.guardian=true;gf.eliminate();}}return;}
   if(m.t==="roundover"){if(!NET.isHost)netApplyRoundOver(m);return;}
 }
 
@@ -13140,12 +13153,12 @@ function tryJump(){
 function updatePlayer(dt){
   var f=player;
   if(!f.alive)return;
-  var sprint=(keys.ControlLeft||keys.ControlRight)?RUN_SPRINT:1;
+  var sprint=bindHeld("sprint")?RUN_SPRINT:1;
   var ix=0,iz=0;
-  if(keys.KeyW)iz+=1;
-  if(keys.KeyS)iz-=1;
-  if(keys.KeyA)ix-=1;
-  if(keys.KeyD)ix+=1;
+  if(bindHeld("fwd"))iz+=1;
+  if(bindHeld("back"))iz-=1;
+  if(bindHeld("left"))ix-=1;
+  if(bindHeld("right"))ix+=1;
   if(touchMode){ix+=moveIn.x;iz-=moveIn.y;}
   var mag=Math.sqrt(ix*ix+iz*iz);
   if(mag>1){ix/=mag;iz/=mag;mag=1;}
@@ -13169,6 +13182,76 @@ function updatePlayer(dt){
    music link or redeem box also drove the game: W, A, S, D, space and the
    arrows were swallowed by preventDefault and never reached the input at all,
    P and Escape paused, Shift flipped shift lock, F swung and G fired. */
+/* ---- key bindings ----
+   Every key the game listens for can be moved in Settings. Saved with the rest
+   of your settings; anything you never touched stays on its default. Fixed on
+   purpose: left click always blocks, the arrows turn the camera, 1-8 pick off
+   the emote wheel and Esc always pauses (and cancels a rebind). */
+var BINDS=[
+  ["fwd","MOVE FORWARD","KeyW"],["back","MOVE BACK","KeyS"],["left","MOVE LEFT","KeyA"],["right","MOVE RIGHT","KeyD"],
+  ["jump","JUMP","Space"],["block","BLOCK / INTERACT","KeyF"],["ability","ABILITY","KeyG"],
+  ["emote","EMOTE WHEEL (HOLD)","KeyT"],["sprint","SPRINT (HOLD)","ControlLeft"],["shift","SHIFT LOCK","ShiftLeft"],["pause","PAUSE","KeyP"]];
+var BIND_FIXED={Escape:1,Tab:1,ArrowUp:1,ArrowDown:1,ArrowLeft:1,ArrowRight:1,MetaLeft:1,MetaRight:1,
+  Digit1:1,Digit2:1,Digit3:1,Digit4:1,Digit5:1,Digit6:1,Digit7:1,Digit8:1};
+// left and right Shift/Ctrl/Alt are one key as far as the game cares
+function keyNorm(c){return c==="ShiftRight"?"ShiftLeft":c==="ControlRight"?"ControlLeft":c==="AltRight"?"AltLeft":c;}
+function bindKey(a){
+  var b=SAVE&&SAVE.binds;if(b&&b[a])return b[a];
+  for(var i=0;i<BINDS.length;i++)if(BINDS[i][0]===a)return BINDS[i][2];
+  return "";
+}
+function isBind(code,a){return keyNorm(code)===bindKey(a);}
+function bindHeld(a){return !!keys[bindKey(a)];}
+function keyName(c){
+  if(!c)return "\u2014";
+  var m={Space:"SPACE",ShiftLeft:"SHIFT",ControlLeft:"CTRL",AltLeft:"ALT",Backquote:"`",Minus:"-",Equal:"=",
+    BracketLeft:"[",BracketRight:"]",Backslash:"\\",Semicolon:";",Quote:"'",Comma:",",Period:".",Slash:"/",
+    Enter:"ENTER",Backspace:"BKSP",CapsLock:"CAPS",Delete:"DEL",Insert:"INS",Home:"HOME",End:"END",PageUp:"PGUP",PageDown:"PGDN"};
+  if(m[c])return m[c];
+  return c.replace(/^Key|^Digit/,"").replace(/^Numpad/,"NUM ").toUpperCase();
+}
+// the key the last input came from: a touchscreen laptop still says TAP only
+// once you actually tap
+var lastTouch=!!(window.matchMedia&&window.matchMedia("(pointer: coarse)").matches);
+function setLastTouch(on){if(lastTouch!==on){lastTouch=on;hudC.zone=null;}}
+// pointer events say which it was (a tap's follow-up mouse events do not count)
+window.addEventListener("pointerdown",function(e){setLastTouch(e.pointerType==="touch"||e.pointerType==="pen");},true);
+function setBind(a,code){
+  SAVE.binds=SAVE.binds||{};
+  var old=bindKey(a);
+  // taken by something else: they swap, so nothing is ever left without a key
+  for(var i=0;i<BINDS.length;i++){var o=BINDS[i][0];if(o!==a&&bindKey(o)===code)SAVE.binds[o]=old;}
+  SAVE.binds[a]=code;
+  keys={};writeSave();refreshKeyLabels();
+}
+function refreshKeyLabels(){
+  var t=function(id,v){var el=$(id);if(el)el.textContent=v;};
+  t("kParry",keyName(bindKey("block")));t("kAbil",keyName(bindKey("ability")));
+  t("kbMove",[bindKey("fwd"),bindKey("left"),bindKey("back"),bindKey("right")].map(keyName).join(" "));
+  t("kbJump",keyName(bindKey("jump")));t("kbBlock",keyName(bindKey("block")));t("kbAbil",keyName(bindKey("ability")));
+  t("kbEmote",keyName(bindKey("emote")));t("kbShift",keyName(bindKey("shift")));t("kbSprint",keyName(bindKey("sprint")));
+  t("kbShift2","OR PRESS "+keyName(bindKey("shift"))+" IN GAME");
+  for(var i=0;i<BINDS.length;i++)t("bind_"+BINDS[i][0],keyName(bindKey(BINDS[i][0])));
+  hudC.zone=null;
+}
+var bindWait=null;        // the action waiting for its new key
+function bindStart(a){
+  if(bindWait)bindStop();
+  bindWait=a;var el=$("bind_"+a);if(el){el.textContent="PRESS A KEY\u2026";el.classList.add("on");}
+}
+function bindStop(){
+  var el=bindWait&&$("bind_"+bindWait);if(el)el.classList.remove("on");
+  bindWait=null;refreshKeyLabels();
+}
+// ahead of everything else: while a rebind waits, the next key is the answer
+window.addEventListener("keydown",function(e){
+  if(!bindWait)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  if(e.code==="Escape"){bindStop();return;}
+  var c=keyNorm(e.code);
+  if(BIND_FIXED[c]){var el=$("bind_"+bindWait);if(el)el.textContent="NOT THAT ONE";return;}
+  var a=bindWait;bindStop();setBind(a,c);sfx("tick");
+},true);
 function typingInField(e){
   var t=e&&e.target;
   if(!t)return false;
@@ -13186,23 +13269,25 @@ window.addEventListener("keydown",function(e){
   // let the field have the keystroke, and drop anything already held so the
   // character does not keep running while you type
   if(typingInField(e)){keys={};return;}
-  keys[e.code]=true;
-  if(e.code==="Space"){tryJump();e.preventDefault();}
-  if(e.code==="KeyF"){if(STATE==="venue"){if(!rangeSwing())interact();}else tryParry();}
-  if(e.code==="KeyG"&&player)useAbility(player);
-  if(e.code==="KeyT"&&!tauntWheelOpen())openTauntWheel();      // held: let go of T to send
+  setLastTouch(false);
+  var k=keyNorm(e.code);
+  keys[k]=true;
+  if(isBind(k,"jump")){tryJump();e.preventDefault();}
+  if(isBind(k,"block")){if(STATE==="venue"){if(!rangeSwing())interact();}else tryParry();}
+  if(isBind(k,"ability")&&player)useAbility(player);
+  if(isBind(k,"emote")&&!tauntWheelOpen())openTauntWheel();      // held: let go to send
   if(tauntWheelOpen()&&/^Digit[1-8]$/.test(e.code)){var we=wheelEmotes()[+e.code.slice(5)-1];if(we)doTaunt(we.id);}
   if(e.code==="Tab"&&NET.spec&&(STATE==="playing"||STATE==="countdown")){e.preventDefault();specNext();return;}
   if(e.code==="Escape"&&tauntWheelOpen()){closeTauntWheel();return;}
-  if(e.code==="Escape"||e.code==="KeyP")togglePause();
-  if(e.code==="ShiftLeft"||e.code==="ShiftRight"){setShiftLock(!shiftLock);e.preventDefault();}
-  if(["KeyW","KeyA","KeyS","KeyD","Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code)>=0)
+  if(e.code==="Escape"||isBind(k,"pause"))togglePause();
+  if(isBind(k,"shift")){setShiftLock(!shiftLock);e.preventDefault();}
+  if(/^Arrow/.test(k)||isBind(k,"fwd")||isBind(k,"back")||isBind(k,"left")||isBind(k,"right"))
     e.preventDefault();
 });
 window.addEventListener("keyup",function(e){
   if(typingInField(e))return;
-  keys[e.code]=false;
-  if(e.code==="KeyT"&&tauntWheelOpen())releaseTauntWheel();
+  keys[keyNorm(e.code)]=false;
+  if(isBind(e.code,"emote")&&tauntWheelOpen())releaseTauntWheel();
 });
 window.addEventListener("blur",function(){keys={};});
 var dragging=false,rightLook=false;
@@ -14147,7 +14232,7 @@ function renderEmoteDetail(){
   if(own){
     h+="<div class='dnote' style='margin-top:6px'>Your wheel: tap a slot to put <b>"+tk.txt+"</b> there.</div><div class='emslots'>";
     for(var i=0;i<8;i++){var w=wheel[i];h+="<button class='emslot"+(w&&w.id===tk.id?" on":"")+"' data-i='"+i+"'><b>"+(w?w.e:"")+"</b><i>"+(i+1)+"</i></button>";}
-    h+="</div><div class='dnote'>Hold <b>T</b> (or the TAUNT button) in a match, point, and let go.</div>";
+    h+="</div><div class='dnote'>Hold <b>"+keyName(bindKey("emote"))+"</b> (or the TAUNT button) in a match, point, and let go.</div>";
   } else if(tk.pack){
     var PK=PACKS[tk.pack],pn=Date.now();
     h+=pn>=PK.to?"<button class='big ghost' disabled>GONE FOREVER</button>":"<button class='big' id='pdAct'>PACK STAND &middot; "+PK.yen.toLocaleString()+" YEN</button><div class='dnote'>Only in the Interdimensional Pack.</div>";
@@ -15561,6 +15646,7 @@ function buildSwatches(){
   });
 }
 function refreshSettings(){
+  refreshKeyLabels();
   var v;
   v=$("sSens"); if(v){v.value=SAVE.sens;$("sSensV").textContent=(+SAVE.sens).toFixed(2);}
   v=$("sFov");  if(v){v.value=SAVE.fov;$("sFovV").textContent=SAVE.fov;}
@@ -15582,6 +15668,13 @@ function refreshSettings(){
 function openSettings(){refreshSettings();showScreen("settings");}
 function wireSettings(){
   var on=function(id,ev,fn){var el=$(id);if(el)el.addEventListener(ev,fn);};
+  var br=$("bindRows");
+  if(br){
+    br.innerHTML=BINDS.map(function(b){return "<div class='setrow'><label class='ol1'>"+b[1]+"</label><button class='bindk' id='bind_"+b[0]+"' data-a='"+b[0]+"'></button></div>";}).join("");
+    br.addEventListener("click",function(e){var bt=e.target.closest&&e.target.closest(".bindk");if(bt){bindStart(bt.getAttribute("data-a"));sfx("tick");}});
+  }
+  on("bindReset","click",function(){SAVE.binds={};keys={};writeSave();if(bindWait)bindStop();refreshKeyLabels();sfx("tick");});
+  refreshKeyLabels();
   on("sSens","input",function(){
     SAVE.sens=+$("sSens").value;SENS=SAVE.sens;
     $("sSensV").textContent=SAVE.sens.toFixed(2);writeSave();});
