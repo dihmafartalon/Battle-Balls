@@ -56,6 +56,8 @@ export async function handleAdmin(request, env, H) {
     // f: everyone always has it (a starter or a free item), so there is nothing to take away
     for (const t of ["sword", "abil", "skin"]) out[t] = CAT.items[t].list.map(it => ({ id: it.id, n: it.n, r: it.r,
       f: it.free || it.id === CAT.items[t].starter ? 1 : 0 }));
+    // emotes: the eight everyone has are not listed; only what can be given or taken
+    out.emote = (CAT.emotes || []).filter(e => !e.base).map(e => ({ id: e.id, n: e.n, r: e.r, f: 0 }));
     return H.jsonRes({ items: out, ranks: CAT.ranks.map(r => ({ id: r.id, rp: r.rp })), season: CAT.season || null });
   }
   if (b.op === "list") return H.jsonRes((await H.dirCall(env, { op: "list", q: b.q, only: b.only, sort: b.sort })) || { list: [], total: 0, nodir: true });
@@ -370,12 +372,13 @@ function draw(sub,j){
   R.appendChild(el("p",{},[el("button",{text:"Save these",on:function(){var ed=[];for(var k in inputs)ed.push({k:"set",key:k,v:Math.max(0,parseInt(inputs[k].value,10)||0)});
     api("edit",Object.assign({sub:sub,edits:ed},giftOpts())).then(function(r){say(r.ok?"Saved":"Could not save",!r.ok);open(sub);});}})]));
   // items
-  [["sword","swords","Blades"],["abil","abils","Abilities"],["skin","skins","Skins"]].forEach(function(t){
+  [["sword","swords","Blades"],["abil","abils","Abilities"],["skin","skins","Skins"],["emote","emotes","Emotes"]].forEach(function(t){
     var bag=s[t[1]]||{},ids=Object.keys(bag).filter(function(id){return bag[id];});
     R.appendChild(el("h3",{text:t[2]+" ("+ids.length+")"}));
     R.appendChild(el("div",{class:"chips"},ids.map(function(id){return el("span",{class:"chip",style:always(t[0],id)?"padding-right:10px":""},[nameOf(t[0],id),
       always(t[0],id)?null:el("button",{class:"bad",title:"Remove",text:"\\u00d7",on:function(){api("edit",{sub:sub,edits:[{k:"del",tab:t[0],id:id}]}).then(function(){say("Removed "+nameOf(t[0],id));open(sub);});}})]);})));
-    var sel=el("select",{},(CAT[t[0]]||[]).filter(function(x){return !bag[x.id];}).map(function(x){return el("option",{value:x.id,text:x.n+" ("+x.r+")"});}));
+    var opts=(CAT[t[0]]||[]).filter(function(x){return !bag[x.id];}).map(function(x){return el("option",{value:x.id,text:x.n+" ("+x.r+")"});});
+    var sel=el("select",{},opts.length?opts:[el("option",{value:"",text:"They have them all"})]);
     R.appendChild(el("div",{class:"row",style:"margin-top:8px"},[sel,el("button",{text:"Give",on:function(){if(!sel.value)return;
       api("edit",Object.assign({sub:sub,edits:[{k:"add",tab:t[0],id:sel.value}]},giftOpts())).then(function(){say("Gave "+nameOf(t[0],sel.value));open(sub);});}})]));});
   // flags
