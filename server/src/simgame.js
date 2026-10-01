@@ -426,7 +426,7 @@ function ownersLine(it,tab){
   if(!it||!it.ultra||it.top1)return "";      // Apex is always exactly one player
   var n=ULTRA_OWNERS[tab+":"+it.id];
   if(typeof n!=="number")return "";
-  return "<div class='owners'>OWNED BY <b>"+n.toLocaleString()+"</b> PLAYER"+(n===1?"":"S")+"</div>";
+  return "<div class='owners'><svg viewBox='0 0 20 20' width='14' height='14'><circle cx='10' cy='10' r='8' fill='none' stroke='currentColor' stroke-width='1.8'/><ellipse cx='10' cy='10' rx='3.6' ry='8' fill='none' stroke='currentColor' stroke-width='1.5'/><path d='M2.5 7.5h15M2.5 12.5h15' stroke='currentColor' stroke-width='1.5'/></svg>"+n.toLocaleString()+" owned</div>";
 }
 function fetchAbilOff(){
   var b=typeof serverBase==="function"?serverBase():"";

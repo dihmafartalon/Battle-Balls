@@ -199,9 +199,9 @@ input[type=range]{accent-color:#3dbb22;cursor:pointer}
   background:var(--nv);color:var(--rc)}
 .ddesc{font-size:13.5px;line-height:1.45;color:#eaf3ff;min-height:40px}
 .dtags{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
-.owners{font-size:12px;font-weight:700;letter-spacing:.08em;color:#ffb3c0;margin-top:4px;text-shadow:0 2px 0 rgba(11,25,66,.8)}
-.owners b{color:#fff;font-size:14px}
-.pvtop .owners{font-size:15px;margin-top:8px}.pvtop .owners b{font-size:18px}
+.owners{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:#eaf3ff;margin-top:4px;text-shadow:0 2px 0 rgba(11,25,66,.8)}
+.owners svg{opacity:.85}
+.pvtop .owners{font-size:16px;margin-top:8px}.pvtop .owners svg{width:17px;height:17px}
 .emslots{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%}
 .emslot{position:relative;height:50px;border-radius:12px;border:3px solid var(--nv);background:#14204a;color:#fff;cursor:pointer;font-family:inherit}
 .emslot b{font-size:22px}.emslot i{position:absolute;right:5px;bottom:2px;font-style:normal;font-size:9px;opacity:.6}
@@ -2037,7 +2037,7 @@ function ownersLine(it,tab){
   if(!it||!it.ultra||it.top1)return "";      // Apex is always exactly one player
   var n=ULTRA_OWNERS[tab+":"+it.id];
   if(typeof n!=="number")return "";
-  return "<div class='owners'>OWNED BY <b>"+n.toLocaleString()+"</b> PLAYER"+(n===1?"":"S")+"</div>";
+  return "<div class='owners'><svg viewBox='0 0 20 20' width='14' height='14'><circle cx='10' cy='10' r='8' fill='none' stroke='currentColor' stroke-width='1.8'/><ellipse cx='10' cy='10' rx='3.6' ry='8' fill='none' stroke='currentColor' stroke-width='1.5'/><path d='M2.5 7.5h15M2.5 12.5h15' stroke='currentColor' stroke-width='1.5'/></svg>"+n.toLocaleString()+" owned</div>";
 }
 function fetchAbilOff(){
   var b=typeof serverBase==="function"?serverBase():"";
