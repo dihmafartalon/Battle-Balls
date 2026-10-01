@@ -2133,6 +2133,8 @@ var SKINS=[
   desc:"Full helm with a slit visor, heavy pauldrons and a mirror finish."},
  {id:"seraph",name:"Seraph",price:0,yen:290,rarity:"mythic",style:"seraph",body:0xfff4d0,limb:0xd8c090,skin:0xfffaf0,glow:0xffd23f,
   desc:"A halo hangs above the head and light-wings unfold from the back."},
+ {id:"plone",name:"Plone",price:-1,yen:330,rarity:"unreleased",style:"plone",body:0x121214,limb:0x121214,skin:0xd9d6cc,glow:0x000000,
+  desc:"Spiky blue hair, one long eyebrow and eyes that have seen everything. A black PLONE tee. Burps mid-sentence."},
  {id:"cucci",name:"Cucci",price:-1,yen:330,rarity:"unreleased",style:"cucci",body:0x121214,limb:0x121214,skin:0xf2c9a0,glow:0x000000,
   desc:"Big head, bigger eyes, a black CUCCI tee and skinny jeans. Unbothered. Blinks slowly at whoever is about to lose."},
  {id:"wraith",name:"Wraith",price:0,yen:330,rarity:"mythic",style:"wraith",body:0x181422,limb:0x0a0810,skin:0x9a3aff,glow:0xb14aff,
@@ -11353,6 +11355,59 @@ SIG_SKIN.cucci=function(f,g,sk,box,glowM,darkM,bodyM){
   em.scale.set(.6,.45,1);em.position.set(0,2.2,.365);g.add(em);
   f.sig={kind:"cucci",lids:lids,hd:hd};
 };
+/* PLONE: a long pale head, spiky light-blue hair swept up and back, one wavy
+   eyebrow, droopy eyes with bags under them; a black tee with PLONE across it
+   (the P orange), brown slacks and shoes. */
+SIG_SKIN.plone=function(f,g,sk,box,glowM,darkM,bodyM){
+  var sd,i,skin=new THREE.MeshLambertMaterial({color:0xd9d6cc}),pants=new THREE.MeshLambertMaterial({color:0x7a5a3a});
+  var shoe=new THREE.MeshLambertMaterial({color:0x3a2616}),hairM=new THREE.MeshLambertMaterial({color:0x6fd2f4,emissive:0x0a3a4a,emissiveIntensity:.5});
+  var white=new THREE.MeshBasicMaterial({color:0xffffff}),ink=new THREE.MeshBasicMaterial({color:0x101010}),brow=new THREE.MeshLambertMaterial({color:0x6fb8d8,emissive:0x0a3040,emissiveIntensity:.4});
+  var line=new THREE.MeshBasicMaterial({color:0x8a8478});
+  (f.headParts||[]).forEach(function(m){m.visible=false;});
+  f.mLimb.color.setHex(0x121214);
+  f.arms.forEach(function(a){a.children.forEach(function(c,ix){if(ix>0)c.material=skin;});});
+  f.legs.forEach(function(l){l.children.forEach(function(c){c.material=c.position.y<-1.25?shoe:pants;});});
+  // the head: long, a little narrow, with a chin
+  var hd=new THREE.Group();hd.position.set(0,3.32,0);g.add(hd);
+  var head=new THREE.Mesh(GEO.sph,skin);head.scale.set(1.08,1.4,1.06);hd.add(head);
+  box(.3,.3,.3,0,2.62,0,skin);
+  for(sd=-1;sd<=1;sd+=2){var ear=new THREE.Mesh(GEO.sphLo,skin);ear.scale.set(.15,.28,.15);ear.position.set(sd*.54,-.05,0);hd.add(ear);}
+  // the hair: a short blue cap over the back of the crown, spikes swept up and back round it
+  var cap=new THREE.Mesh(DRIP_LID.cap,hairM);cap.scale.set(1.14,1.46,1.12);cap.rotation.x=-.55;hd.add(cap);
+  // spikes in rows from the hairline back, each fanned out and swept up and back
+  var rows=[[.62,-.05,5,.5,.36,-.35],[.5,-.3,6,.62,.4,-.85],[.24,-.45,6,.7,.38,-1.3],[-.06,-.48,5,.66,.34,-1.75]];
+  rows.forEach(function(rw){for(var k=0;k<rw[2];k++){
+    var u=rw[2]>1?k/(rw[2]-1)-.5:0,sx=u*rw[3]*1.6;
+    var sp=new THREE.Mesh(GEO.cone,hairM);sp.scale.set(.32,(rw[4]+(k%2)*.12)*1.45,.24);
+    sp.position.set(sx,rw[0]-Math.abs(u)*.2,rw[1]+Math.abs(u)*.12);
+    sp.rotation.x=rw[5];sp.rotation.z=-u*1.6;hd.add(sp);}});
+  // the eyes: white, ringed, pupils dead centre, lids half down; bags under them
+  var lids=[];
+  for(sd=-1;sd<=1;sd+=2){
+    var ew=new THREE.Group();ew.position.set(sd*.2,.12,.45);hd.add(ew);
+    var rim=new THREE.Mesh(GEO.sph,ink);rim.scale.set(.36,.36,.12);ew.add(rim);
+    var eye=new THREE.Mesh(GEO.sph,white);eye.scale.set(.33,.33,.13);eye.position.z=.012;ew.add(eye);
+    var pup=new THREE.Mesh(GEO.sphLo,ink);pup.scale.set(.05,.05,.03);pup.position.set(0,-.04,.075);ew.add(pup);
+    var lid=new THREE.Mesh(DRIP_LID.half,skin);lid.scale.set(.355,.355,.145);lid.position.z=.012;ew.add(lid);
+    var shut=new THREE.Mesh(GEO.sph,skin);shut.scale.set(.355,.355,.145);shut.position.z=.012;shut.visible=false;ew.add(shut);
+    var lash=new THREE.Mesh(DRIP_LID.edge,ink);lash.scale.set(.355,.355,.145);lash.position.z=.012;ew.add(lash);
+    lid.userData.shut=shut;lid.userData.lash=lash;lids.push(lid);
+    for(i=0;i<2;i++){var bag=new THREE.Mesh(GEO.box,line);bag.scale.set(.2-i*.05,.018,.02);bag.position.set(sd*.2,-.1-i*.06,.5);bag.rotation.z=sd*.12;hd.add(bag);}
+  }
+  // the unibrow: one long wavy bar
+  [[-.36,.36,.25],[-.18,.33,-.08],[0,.35,0],[.18,.33,.08],[.36,.36,-.25]].forEach(function(q){var b=new THREE.Mesh(GEO.box,brow);b.scale.set(.2,.055,.05);b.position.set(q[0],q[1],.49);b.rotation.z=q[2];hd.add(b);});
+  // nose and a flat, knowing smile
+  var nose=new THREE.Mesh(GEO.sphLo,skin);nose.scale.set(.09,.1,.09);nose.position.set(0,-.12,.55);hd.add(nose);
+  [[-.15,-.41,-.12],[0,-.43,0],[.15,-.41,.12]].forEach(function(q){var m=new THREE.Mesh(GEO.box,ink);m.scale.set(.17,.025,.03);m.position.set(q[0],q[1],.5);m.rotation.z=q[2];hd.add(m);});
+  // the tee: PLONE across the chest, the P orange
+  var c=cvs(256,96),x=c.getContext("2d");
+  x.font="bold 76px Georgia, 'Times New Roman', serif";x.textBaseline="middle";x.textAlign="left";
+  var wP=x.measureText("P").width,wR=x.measureText("LONE").width,x0=(256-wP-wR)/2;
+  x.fillStyle="#e8862a";x.fillText("P",x0,52);x.fillStyle="#ffffff";x.fillText("LONE",x0+wP,52);
+  var em=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(c),transparent:true,depthWrite:false}));
+  em.scale.set(.9,.34,1);em.position.set(0,2.2,.365);g.add(em);
+  f.sig={kind:"plone",lids:lids,hd:hd};
+};
 SIG_SKIN.ascended=function(f,g,sk,box,glowM,darkM,bodyM){
   var i,sd,crack=new THREE.MeshBasicMaterial({color:0xfff0c0}),eye=new THREE.MeshBasicMaterial({color:0xffffff});
   var cloth=new THREE.MeshLambertMaterial({color:0x0c0a10}),cloth2=new THREE.MeshLambertMaterial({color:0x16121c});
@@ -11568,6 +11623,12 @@ SIG_SKIN.butcher=function(f,g,sk,box,glowM,darkM,bodyM){
 };
 // the per-frame life of the 4.0 skins
 var SIG_TICK4={
+  plone:function(f,s,dt,t){
+    // a slow, tired blink, and the head sways like he has had a drink or two
+    var bl=(t*.8+f.phase+1.7)%5<.16;
+    for(var i=0;i<s.lids.length;i++){var L=s.lids[i];L.visible=!bl;L.userData.lash.visible=!bl;L.userData.shut.visible=bl;}
+    s.hd.rotation.z=Math.sin(t*.8+f.phase)*.06;
+  },
   cucci:function(f,s,dt,t){
     // a slow, unbothered blink now and then, and the head bobs a touch
     var bl=(t*.9+f.phase)%4.2<.14;
@@ -11836,6 +11897,12 @@ Object.assign(SKIN_FX,{
   s1meatskin:{c:0xff2a4a,rate:8,vy:[-.3,.5],g:2,sz:.4,life:.7,r:.6}
 });
 Object.assign(SIG_SKIN_ICON,{
+  plone:"<ellipse cx='20' cy='13' rx='8.5' ry='10.5' fill='#d9d6cc' stroke='#0b1942' stroke-width='1.6'/><path d='M12 9l-3-6 5 3 1-5 3 4 3-4 2 4 3-3v6' fill='#a6dcec' stroke='#0b1942' stroke-width='1.2'/>"+
+    "<path d='M13 9q3.5-1.6 7 0t7 0' stroke='#8fc6d8' stroke-width='1.6' fill='none'/>"+
+    "<circle cx='16.5' cy='12.5' r='3' fill='#fff' stroke='#101010' stroke-width='.9'/><circle cx='23.5' cy='12.5' r='3' fill='#fff' stroke='#101010' stroke-width='.9'/>"+
+    "<rect x='13' y='9.4' width='14' height='3' fill='#d9d6cc'/><circle cx='16.5' cy='13.4' r='.8' fill='#101010'/><circle cx='23.5' cy='13.4' r='.8' fill='#101010'/>"+
+    "<path d='M17 19.5h6' stroke='#101010' stroke-width='1.1'/>"+
+    "<rect x='10' y='24' width='20' height='12' rx='2' fill='#121214' stroke='#0b1942' stroke-width='1.6'/><text x='20' y='32' font-size='5.2' text-anchor='middle' font-weight='bold' font-family='Georgia'><tspan fill='#e8862a'>P</tspan><tspan fill='#fff'>LONE</tspan></text>",
   cucci:"<circle cx='20' cy='13' r='10' fill='#f2c9a0' stroke='#0b1942' stroke-width='1.6'/><path d='M14 4.5q6-3 12 0' stroke='#14100c' stroke-width='2.4' fill='none'/>"+
     "<circle cx='16' cy='12' r='3.6' fill='#fff' stroke='#101010' stroke-width='1'/><circle cx='24' cy='12' r='3.6' fill='#fff' stroke='#101010' stroke-width='1'/>"+
     "<rect x='12' y='8.2' width='16' height='3.6' fill='#f2c9a0'/><circle cx='17.4' cy='12.6' r='1' fill='#101010'/><circle cx='25.4' cy='12.6' r='1' fill='#101010'/>"+
