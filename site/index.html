@@ -2664,15 +2664,19 @@ function giftQueue(g,note){GIFTQ.push({g:g,note:note});setTimeout(giftNext,900);
 function giftNext(){
   if(!GIFTQ.length||document.querySelector(".giftpop"))return;
   if(cloudInMatch()){setTimeout(giftNext,2000);return;}
-  var q=GIFTQ.shift(),g=q.g||{},items=(g.items||[]).filter(function(x){var dd=x&&shopData(x.tab);return dd&&findId(dd.list,x.id)&&dd.own[x.id];});
+  var q=GIFTQ.shift(),g=q.g||{},items=(g.items||[]).filter(function(x){if(x&&x.tab==="emote")return !!tauntById(x.id)&&emoteOwned(x.id);var dd=x&&shopData(x.tab);return dd&&findId(dd.list,x.id)&&dd.own[x.id];});
   if(!items.length&&!(g.coins>0||g.yen>0||g.spins>0)){giftNext();return;}
   var d=document.createElement("div");d.className="giftpop";
   var card=document.createElement("div");card.className="gpcard";
   var html="<div class='gpribbon'>GIFT FROM THE DEV</div>";
   if(items.length){
-    var first=findId(shopData(items[0].tab).list,items[0].id);
+    var first=items[0].tab==="emote"?{rarity:(tauntById(items[0].id).rarity||"common")}:findId(shopData(items[0].tab).list,items[0].id);
     card.style.setProperty("--gc",tierColor(first));
-    html+="<div class='gpitems'>"+items.slice(0,6).map(function(x){var dd=shopData(x.tab),it=findId(dd.list,x.id);
+    html+="<div class='gpitems'>"+items.slice(0,6).map(function(x){
+      if(x.tab==="emote"){var tk=tauntById(x.id),er=tk.rarity||"common";
+        return "<div class='gpit'><div class='dicon' style='box-shadow:inset 0 0 0 4px "+tierColor({rarity:er})+",0 5px 0 #0b1942'>"+emoteIcon(tk).replace("width='34' height='34'","width='74' height='74'")+"</div>"+
+          "<div class='dname'>"+tk.txt+"</div><span class='dpill r-"+er+"'>EMOTE &middot; "+(RARITY[er]||RARITY.common).n+"</span></div>";}
+      var dd=shopData(x.tab),it=findId(dd.list,x.id);
       return "<div class='gpit'><div class='dicon' style='box-shadow:inset 0 0 0 4px "+tierColor(it)+",0 5px 0 #0b1942'>"+dd.icon(it)+"</div>"+
         "<div class='dname'>"+it.name+"</div><span class='dpill r-"+itemTier(it)+"'>"+({sword:"BLADE",abil:"ABILITY",skin:"SKIN"}[x.tab])+" &middot; "+tierLabel(it)+"</span></div>";}).join("")+"</div>";
   }
@@ -2690,6 +2694,7 @@ function giftNext(){
   var close=function(){if(d.parentNode)d.parentNode.removeChild(d);setTimeout(giftNext,250);};
   card.querySelector("[data-a=ok]").addEventListener("click",close);
   var eb=card.querySelector("[data-a=eq]");
+  if(eb&&items[0].tab==="emote"){eb.textContent="SEE EMOTES";eb.addEventListener("click",function(){close();openPicker("emote");});eb=null;}
   if(eb)eb.addEventListener("click",function(){var x=items[0],dd=shopData(x.tab);
     if(dd.own[x.id]){SAVE[dd.eq]=x.id;writeSave();try{updateChips();updateLobbyBar();reskinLobbyPlayer();if(NET.ws&&NET.status==="lobby")mpSendLoadout();}catch(e){}}
     close();});
@@ -6720,13 +6725,13 @@ var TAUNTS=[
   {id:"dance",e:"\ud83d\udd7a",txt:"DANCE BREAK", col:"#b98aff"},
   {id:"point",e:"\ud83d\udc49",txt:"YOU'RE NEXT", col:"#ff3a6e"},
   {id:"clap", e:"\ud83d\udc4f",txt:"GG",          col:"#6bffb0"},
-  {id:"yawn", e:"\ud83e\udd71",txt:"BORING...",   col:"#9fb4cc"}
+  {id:"yawn", e:"\ud83e\udd71",txt:"BORING...",   col:"#9fb4cc"},
+  // the pack's emote: a portal opens behind you, a peace sign, and you lean back into it
+  {id:"portal",e:"\u270c\ufe0f",txt:"PEACE OUT",col:"#6bff3a",pack:"interdim",fx:"portal",rarity:"mythic",
+  desc:"A green portal tears open behind you. Throw up the peace sign and lean back like you're about to dip. From the Interdimensional Pack."}
 ];
 var TAUNT_DUR=2.2,TAUNT_GAP=2;
-var TAUNT_BASE=TAUNTS.map(function(t){return t.id;});      // the eight everyone has
-// the pack's emote: a portal opens behind you, a peace sign, and you lean back into it
-TAUNTS.push({id:"portal",e:"\u270c\ufe0f",txt:"PEACE OUT",col:"#6bff3a",pack:"interdim",fx:"portal",rarity:"mythic",
-  desc:"A green portal tears open behind you. Throw up the peace sign and lean back like you're about to dip. From the Interdimensional Pack."});
+var TAUNT_BASE=TAUNTS.filter(function(t){return !t.pack;}).map(function(t){return t.id;});      // the eight everyone has
 function emoteOwned(id){return TAUNT_BASE.indexOf(id)>=0||!!(SAVE.emotes&&SAVE.emotes[id]);}
 // what is in your wheel: the eight you equipped (anything not yours drops back to a default)
 function wheelEmotes(){

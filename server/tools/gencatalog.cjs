@@ -34,7 +34,7 @@ function grab(name) {
 }
 const NAMES = ["SWORDS", "ABILITIES", "SKINS", "RANKS", "MODES", "PASS", "PASS_TIERS", "RARITY", "RARORDER",
   "RARITY_ORDER", "LIMITED_DROPS", "LIM_MARKUP", "CHEST_GRADES", "SYMS", "UPCHAIN", "UPODDS", "UPFEE", "YEN_RATE",
-  "SELL", "RODRIGA", "LOGIN_CAL", "EVENT_SHOPS", "SEASON", "PACKS"];
+  "SELL", "RODRIGA", "LOGIN_CAL", "EVENT_SHOPS", "SEASON", "PACKS", "TAUNTS"];
 const ctx = { Date, Math };
 vm.createContext(ctx);
 for (const n of NAMES) {
@@ -104,6 +104,8 @@ const CAT = {
 if (G.RODRIGA) CAT.rodriga = G.RODRIGA;
 if (G.LOGIN_CAL) CAT.login = G.LOGIN_CAL;
 if (G.EVENT_SHOPS) CAT.events = G.EVENT_SHOPS;
+// every emote; base ones everyone has and are never stored
+if (G.TAUNTS) CAT.emotes = G.TAUNTS.map(t => ({ id: t.id, n: t.txt, r: t.rarity || "common", ...(t.pack ? {} : { base: 1 }) }));
 if (G.PACKS) { CAT.packs = {}; for (const k in G.PACKS) CAT.packs[k] = { yen: G.PACKS[k].yen, items: G.PACKS[k].items, from: G.PACKS[k].from, to: G.PACKS[k].to }; }
 if (G.SEASON) CAT.season = G.SEASON;
 

@@ -873,6 +873,10 @@ export class Vault {
           save[e.key] = Math.floor(e.v); done.push(e.key + "=" + save[e.key]);
           const up = save[e.key] - was, gk = { coins: "coins", yen: "yen", freeSpins: "spins" }[e.key];
           if (gk && up > 0) gift[gk] += up;
+        } else if (e.tab === "emote" && (e.k === "add" || e.k === "del")) {
+          const em = (CAT.emotes || []).find(x => x.id === e.id && !x.base);
+          if (em && e.k === "add") { if (!save.emotes[e.id]) gift.items.push({ tab: "emote", id: e.id }); save.emotes[e.id] = 1; done.push("+emote:" + e.id); }
+          else if (em && save.emotes[e.id]) { delete save.emotes[e.id]; done.push("-emote:" + e.id); }
         } else if (e.k === "add" && bag && itemOf(e.tab, e.id)) {
           if (!save[bag][e.id]) gift.items.push({ tab: e.tab, id: e.id });
           save[bag][e.id] = 1; done.push("+" + e.id);
