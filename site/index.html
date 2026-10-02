@@ -12226,6 +12226,12 @@ SIG_SHAPE.dev2sniper=function(g,seg,B,H,G){
   var mz=new THREE.Mesh(new THREE.TorusGeometry(.11,.03,6,16),pur);mz.rotation.x=Math.PI/2;mz.position.y=4.2;g.add(mz);
   var hot=new THREE.Mesh(GEO.sphLo,purA);hot.scale.setScalar(.3);hot.position.y=4.22;hot.userData.aura=true;g.add(hot);
   g.userData.pulse=hot;g.userData.flareMul=.25;
+  // always on: a laser sight off the scope, rings of light riding the suppressor
+  var lz=v4Add(0xff4fd8,.55),lg=v4Add(0xb46bff,.14);
+  var las=new THREE.Mesh(GEO.cyl8,lz);las.scale.set(.025,16,.025);las.position.set(0,1.2+8,-.44);las.userData.aura=true;g.add(las);
+  var lgl=new THREE.Mesh(GEO.cyl8,lg);lgl.scale.set(.1,16,.1);lgl.position.copy(las.position);lgl.userData.aura=true;g.add(lgl);
+  var rings=[];[0x5fe8ff,0xb46bff,0xff4fd8].forEach(function(c,i){var r=new THREE.Mesh(new THREE.TorusGeometry(.2,.022,6,20),v4Add(c,.85));r.rotation.x=Math.PI/2;r.userData.aura=true;r.userData.ph=i/3;g.add(r);rings.push(r);});
+  g.userData.ph={laser:las,laserGlow:lgl,rings:rings,strip:pur,lens:lens.material};
   // where the hands go, in the weapon's own units
   g.userData.grip=new THREE.Vector3(0,-.03,.24);
   g.userData.support=new THREE.Vector3(0,1.25,.17);
@@ -12257,8 +12263,13 @@ SIG_SHAPE.dev2karambit=function(g,seg,B,H,G){
   var pts=[[.8,-.74]].concat(edge).map(function(p){return new THREE.Vector3(p[0]-.005,p[1]+.012,0);});
   var crv=new THREE.CatmullRomCurve3(pts);
   var ec=new THREE.Mesh(new THREE.TubeGeometry(crv,24,.016,5,false),pur);ec.rotation.y=-Math.PI/2;g.add(ec);
-  var eg=new THREE.Mesh(new THREE.TubeGeometry(crv,24,.05,6,false),purA);eg.rotation.y=-Math.PI/2;eg.userData.aura=true;g.add(eg);
+  var eg=new THREE.Mesh(new THREE.TubeGeometry(crv,24,.085,6,false),purA);eg.rotation.y=-Math.PI/2;eg.userData.aura=true;g.add(eg);
   g.userData.edge=eg;g.userData.flareMul=.2;
+  var motes=[];[0x5fe8ff,0xff4fd8,0xb46bff].forEach(function(c){var m=new THREE.Mesh(GEO.sphLo,v4Add(c,.95));m.scale.setScalar(.11);m.userData.aura=true;g.add(m);motes.push(m);});
+  // a soft glow sitting in the hook of the blade
+  var halo=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:glowTex(),color:0xb46bff,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));
+  halo.scale.setScalar(1.5);halo.position.set(0,-.78,.38);halo.userData.aura=true;g.add(halo);
+  g.userData.ph={motes:motes,ring:ri.material,edgeCore:ec.material,halo:halo};
   g.userData.grip=new THREE.Vector3(0,0,0);
   g.userData.tipPt=new THREE.Vector3(0,-.74,.8);
   return -.95;
@@ -12353,7 +12364,45 @@ Fighter.prototype.phantomFrame=function(p,dt){
   }
   // the karambit alone: the other hand up in a guard
   if(mode==="karambit")hsArm(L,PHv2.set(-.5,2.02+br,.78),1);
+  phIdleFx(this,gun,knife,dt,t);
 };
+/* ---- always on ----
+   The sniper: a laser sight, three rings of light sliding down the suppressor,
+   the strips shimmering violet to magenta to cyan. The karambit: three motes
+   round the finger ring, the edge burning, sparks lifting off it. And moving,
+   a ghost of the weapon is left behind. */
+var _phC=new THREE.Color(),_phA=new THREE.Color(0x8a3cff),_phB=new THREE.Color(0xff4fd8),_phCy=new THREE.Color(0x5fe8ff);
+function phShimmer(u,out){u=((u%1)+1)%1;if(u<1/3)return out.copy(_phA).lerp(_phB,u*3);if(u<2/3)return out.copy(_phB).lerp(_phCy,(u-1/3)*3);return out.copy(_phCy).lerp(_phA,(u-2/3)*3);}
+function phIdleFx(f,gun,knife,dt,t){
+  if(!dt)return;
+  var me=f===player,rate=me?1:(QUAL>1?.45:.25);
+  if(gun&&gun.userData.ph){var P=gun.userData.ph;
+    P.strip.color.copy(phShimmer(t*.35+f.phase,_phC));P.lens.color.copy(phShimmer(t*.35+f.phase+.4,_phC));
+    var fl=.8+.2*Math.sin(t*31)*Math.sin(t*17);P.laser.material.opacity=.5*fl;P.laserGlow.material.opacity=.13*fl;
+    for(var i=0;i<P.rings.length;i++){var r=P.rings[i],u=(t*.7+r.userData.ph)%1;r.position.y=2.95+u*1.25;r.scale.setScalar(1+Math.sin(u*Math.PI)*.35);r.material.opacity=.85*Math.sin(u*Math.PI);r.rotation.z=t*3+i;}
+  }
+  if(knife&&knife.userData.ph){var K=knife.userData.ph;
+    for(var j=0;j<K.motes.length;j++){var a=t*3.2+j*TAU/3;K.motes[j].position.set(Math.sin(a*1.3)*.08,.5+Math.cos(a)*.24,Math.sin(a)*.24);}
+    K.ring.color.copy(phShimmer(t*.5+f.phase,_phC));K.edgeCore.color.copy(phShimmer(t*.5+f.phase+.25,_phC));
+    K.halo.quaternion.copy(camera.quaternion);if(knife.parent)K.halo.quaternion.premultiply(knife.getWorldQuaternion(PHq2).invert());
+    K.halo.material.color.copy(phShimmer(t*.5+f.phase+.5,_phC));K.halo.material.opacity=.4+.2*Math.sin(t*5+f.phase);
+    // embers off the edge
+    if(QUAL>0&&Math.random()<dt*30*rate){var e=Math.random(),ep=phW(f,phLocal(knife,PHv.set(0,-.4-e*.5,.1+e*.7),new THREE.Vector3()));
+      var c=Math.random();spark(ep.x,ep.y,ep.z,rr(-.3,.3),rr(.6,1.6),rr(-.3,.3),c<.4?.71:c<.75?1:.37,c<.4?.42:c<.75?.31:.91,1,rr(.14,.26),rr(.3,.55),-1.5);}
+  }
+  // moving: a fading ghost of the weapon left where it was
+  var sp=f.vel?Math.hypot(f.vel.x,f.vel.z):0;
+  if(QUAL>1&&sp>4&&(me||rate>.4)){f._phGh=(f._phGh||0)+dt;if(f._phGh>.12){f._phGh=0;[gun,knife].forEach(function(w){if(w)phGhost(f,w);});}}
+}
+// a see-through violet copy of the weapon, frozen where it was, fading out
+function phGhost(f,w){
+  f.mesh.updateMatrixWorld(true);
+  var g=new THREE.Group(),mat=new THREE.MeshBasicMaterial({color:0x8a3cff,transparent:true,opacity:.32,blending:THREE.AdditiveBlending,depthWrite:false});
+  w.traverse(function(o){if(o.isMesh&&!o.userData.aura&&o.geometry&&!(o.material&&o.material.blending===THREE.AdditiveBlending)){var m=new THREE.Mesh(o.geometry,mat);o.matrixWorld.decompose(m.position,m.quaternion,m.scale);g.add(m);}});
+  scene.add(g);var t=0;
+  phOwn(f,{tick:function(dt){t+=dt;var k=t/.35;if(k>=1)return false;mat.opacity=.32*(1-k);mat.color.copy(phShimmer(.1+k*.5,_phC));return true;},
+    done:function(){scene.remove(g);mat.dispose();}});
+}
 /* ---- the look: violet and purple, hot magenta, an ice-cyan edge, white at the core ---- */
 var PH_COL={vio:0x6a2cff,pur:0xb46bff,mag:0xff4fd8,cy:0x5fe8ff,wh:0xffffff};
 function phOwn(f,e){e.owner=f;V4FX.push(e);return e;}
