@@ -140,7 +140,7 @@ console.log("currency split tests passed"); }
   console.log("macro check tests passed");
 }
 
-// ---- Phantom Ops: BOTH needs both; unreleased items have no worth and cannot be had ----
+// ---- Dev2: BOTH needs both; unreleased items have no worth and cannot be had ----
 {
   assert.equal(ownsSword({ swords: { dev2sniper: 1 } }, "dev2both"), false, "BOTH needs the karambit too");
   assert.equal(ownsSword({ swords: { dev2karambit: 1 } }, "dev2both"), false, "BOTH needs the sniper too");
@@ -156,5 +156,5 @@ console.log("currency split tests passed"); }
     const day = new Date(Date.UTC(2026, 10, d)).toISOString().slice(0, 10);
     for (const x of limitedOn(day)) assert.ok(!String(x[1]).startsWith("dev2"), "never on the Limited stall: " + day);
   }
-  console.log("phantom ops tests passed");
+  console.log("dev2 tests passed");
 }
