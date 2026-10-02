@@ -668,6 +668,13 @@ details.move[open] summary::before{transform:rotate(90deg)}
 .evtpic.rap{background:radial-gradient(90% 70% at 50% 40%,#4a0a16 0%,#12060a 70%)}
 .packitems .pi.sec{box-shadow:inset 0 0 0 2px #ff1a34}.packitems .pi.sec b{color:#ff6a7a}
 /* the trailer for the pack that's coming */
+.phbar{width:100%;margin-top:4px;padding:10px;border-radius:14px;background:linear-gradient(180deg,#1a1240,#0e0a26);box-shadow:inset 0 0 0 2px #6a3fd0}
+.phhd{font-weight:800;font-size:12px;letter-spacing:.12em;color:#c9b4ff;margin-bottom:8px;text-align:center}
+.phbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.phm{height:40px;border-radius:10px;border:2px solid #6a3fd0;background:#1c1450;color:#e8dcff;font-family:inherit;font-weight:800;font-size:13px;letter-spacing:.06em;cursor:pointer}
+.phm.on{background:linear-gradient(180deg,#9a5cff,#6a2fe0);border-color:#d4b8ff;color:#fff;box-shadow:0 0 14px rgba(180,107,255,.6)}
+.phm:disabled{opacity:.4;cursor:not-allowed}
+.phft{margin-top:8px;font-size:11px;color:#9a8ccc;text-align:center;letter-spacing:.08em}
 .trailerpop .gpcard{--gc:#ff1a34;width:min(760px,100%);padding:30px 16px 16px}
 .trailerpop video{width:100%;border-radius:12px;border:3px solid var(--nv);background:#000;display:block;aspect-ratio:16/9}
 .trailerpop .tpsub{margin:2px 0 10px;font-weight:800;color:var(--y1);letter-spacing:.03em}
@@ -1930,6 +1937,11 @@ var SWORDS=[
   desc:"A framed platinum record, swung like a bat. Every block lands with a flash of PARRY!"},
  {id:"vampfang",name:"Vamp Fang",rarity:"mythic",event:"pack",secret:true,price:-1,yen:345,blade:0xf2ead8,hilt:0x141016,glow:0xff1a34,shape:"vampfang",hold:"one",swing:"slash",idle:"none",
   desc:"The Rap Pack's secret. One long curved fang of ivory, a blood-red gem in a bat-wing guard. Every cut is red, and the bats come out."},
+ // PHANTOM OPS (Dev2): price, rarity and how you get them are not decided yet
+ {id:"dev2sniper",name:"Dev2 Sniper",rarity:"unreleased",price:-1,phantom:"sniper",set:"PHANTOM OPS",blade:0xc8ccd6,hilt:0x141418,glow:0xb46bff,shape:"dev2sniper",hold:"phantom",swing:"phantom",idle:"none",size:.9,
+  desc:"Phantom Ops. A skeletal black-and-silver sniper, a long suppressor and purple running through it. A parry is a shot: a flash at the muzzle and the kick. Carry it with the Dev2 Karambit for BOTH."},
+ {id:"dev2karambit",name:"Dev2 Karambit",rarity:"unreleased",price:-1,phantom:"karambit",set:"PHANTOM OPS",blade:0xd8dce6,hilt:0x141418,glow:0xb46bff,shape:"dev2karambit",hold:"phantom",swing:"phantom",idle:"none",
+  desc:"Phantom Ops. A hooked silver-black karambit with a finger ring and a glowing purple edge. A parry is a quick cut and a white-purple crescent. Carry it with the Dev2 Sniper for BOTH."},
  {id:"divineright",name:"Divine Right",price:-1,rank:"god",blade:0xdce6f2,hilt:0xd8b050,glow:0x7ad8ff,shape:"divine",hold:"rhip",swing:"divine",idle:"orbit",
   desc:"The GOD rank's blade. Worn on the right hip and drawn in one stroke: the wings open, the runes light, and every cut sheds feathers of light."},
  {id:"crown",name:"Apex",rarity:"ultra",price:-1,ultra:true,code:true,top1:true,blade:0xfff0c0,hilt:0x0e0c0a,glow:0xffd27a,shape:"apex",hold:"back",size:.9,swing:"apex",idle:"none",
@@ -2361,7 +2373,17 @@ function copyMode(m){
 function byId(arr,id){for(var i=0;i<arr.length;i++)if(arr[i].id===id)return arr[i];return arr[0];}
 // the same, but nothing when there is no such item (for what the server says you won)
 function findId(arr,id){for(var i=0;i<arr.length;i++)if(arr[i].id===id)return arr[i];return null;}
-function swordById(id){return byId(SWORDS,id);}
+function swordById(id){if(id==="dev2both")return PH_BOTH;return byId(SWORDS,id);}
+/* Phantom Ops BOTH: not an item -- the Dev2 Sniper and Dev2 Karambit carried
+   together, the sniper in the right hand, the knife in the left. Never listed,
+   never sold; it is what you carry when that mode is chosen and you own both. */
+var PH_BOTH={id:"dev2both",name:"Dev2 Sniper + Karambit",rarity:"unreleased",price:-1,phantom:"both",virtual:true,set:"PHANTOM OPS",
+  blade:0xc8ccd6,hilt:0x141418,glow:0xb46bff,shape:"dev2sniper",hold:"phantom",swing:"phantom",idle:"none",size:.9,
+  desc:"Phantom Ops, both at once: the sniper in the right hand, the karambit in the left, the parries taking turns."};
+function phOwnsBoth(){return !!(SAVE.swords&&SAVE.swords.dev2sniper&&SAVE.swords.dev2karambit);}
+// what you actually carry: the saved blade, or both Phantom Ops weapons when that mode is chosen and both are yours
+function eqBlade(){var id=SAVE.eqSword;if((id==="dev2sniper"||id==="dev2karambit")&&SAVE.phMode==="both"&&phOwnsBoth())return "dev2both";return id;}
+function phModeNow(){var b=eqBlade();return b==="dev2both"?"both":b==="dev2sniper"?"sniper":b==="dev2karambit"?"karambit":null;}
 /* Taken out of the game: whoever owned one gets its price back in coins. The
    server does the same to its copy (econ.js RETIRED) -- for a signed-in
    player its coins are the ones that count. */
@@ -2408,7 +2430,7 @@ var VERSION="4.0";
 // what an item is worth in yen, by rarity
 var SELL={common:15,rare:40,epic:85,legendary:190,mythic:465};
 function itemValue(it){
-  if(!it||it.rank||it.rarity==="rank"||it.ultra||it.pass||it.event)return 0;
+  if(!it||it.rank||it.rarity==="rank"||it.ultra||it.pass||it.event||it.rarity==="unreleased")return 0;   // unreleased: no price yet, so no worth
   // every item carries its own worth; the rarity table is only a fallback
   if(typeof it.yen==="number")return it.yen;
   return SELL[it.rarity||"common"]||15;
@@ -2532,14 +2554,14 @@ function cloudBackup(o){try{window.localStorage.setItem(SAVEKEY+"_backup",JSON.s
 function applyCloudSave(o){
   var keep={},i,k;
   for(i=0;i<DEVICE_KEYS.length;i++){k=DEVICE_KEYS[i];if(SAVE[k]!==undefined)keep[k]=SAVE[k];}
-  var eq=SAVE.eqSword+"|"+SAVE.eqAbil+"|"+SAVE.eqSkin;
+  var eq=eqBlade()+"|"+SAVE.eqAbil+"|"+SAVE.eqSkin;
   applySaveObject(JSON.parse(JSON.stringify(o)));
   for(k in keep)SAVE[k]=keep[k];
   CLOUD.applying=true;writeSave();CLOUD.applying=false;
   LAST_BODY=progressKey();
   try{refreshCoins();updateChips();refreshShowcase();}catch(e){}
   // standing in the lobby in the old gear: put the new gear on
-  try{if(STATE==="venue"&&eq!==SAVE.eqSword+"|"+SAVE.eqAbil+"|"+SAVE.eqSkin)enterLobby();}catch(e){}
+  try{if(STATE==="venue"&&eq!==eqBlade()+"|"+SAVE.eqAbil+"|"+SAVE.eqSkin)enterLobby();}catch(e){}
 }
 function cloudPost(path,body,keepalive){
   var base=serverBase();
@@ -4513,7 +4535,7 @@ function buildLobby(){
   vAnim(vRing(2.1,.07,0,1.14,0,0xff9a3a,.55),"spinz",{sp:.5});
   vAnim(vRing(4.0,.07,0,.58,0,HW.PURPLE,.40),"spinz",{sp:-.32});
   for(i=0;i<4;i++){var pa2=i*TAU/4+.78;var pk2=sigPumpkin(.8);pk2.position.set(Math.cos(pa2)*4.6,.95,Math.sin(pa2)*4.6);pk2.rotation.y=-pa2+Math.PI/2;venue.add(pk2);}
-  var eq=swordById(SAVE.eqSword)||SWORDS[0];
+  var eq=swordById(eqBlade())||SWORDS[0];
   var disp=buildSword(eq);
   disp.position.set(0,2.9,0);disp.scale.setScalar(1.0);
   venue.add(disp);
@@ -4828,7 +4850,7 @@ function enterCasino(){
 }
 function spawnVenuePlayer(x,z){
   player=new Fighter({name:"YOU",isPlayer:true,x:x,z:z,team:0,
-    sword:SAVE.eqSword,ability:SAVE.eqAbil,skinDef:skinById(SAVE.eqSkin)});
+    sword:eqBlade(),ability:SAVE.eqAbil,skinDef:skinById(SAVE.eqSkin)});
   fighters.push(player);
   camYaw=Math.PI;camPitch=-0.14;camDist=prefCamDist();
   camLook.set(x,2.6,z);
@@ -5171,6 +5193,7 @@ Fighter.prototype.strikeFx=function(){
 var SIG_LEAD=0.10;
 function sigWarp(p,w0){return p<SIG_LEAD?p/SIG_LEAD*w0:w0+(p-SIG_LEAD)/(1-SIG_LEAD)*(1-w0);}
 Fighter.prototype.swingFrame=function(p,dt){
+  if(this.swordDef.phantom){this.phantomFrame(p,dt);this.mirrorPose();return;}
   var S=SIG_SWING[this.swordDef.swing];
   if(S){var w=sigWarp(p,S.beats[0].w);this._rawP=p;this.animateSwing(w);this.drawFrame(p);this.mirrorPose();
     // the Dev blade: remember where the tip goes through the cut, for its rift
@@ -5263,6 +5286,7 @@ var FXD={
 };
 // which blade wears which signature
 var SWORD_FX={
+  dev2sniper:"none",dev2karambit:"none",dev2both:"none",   // Phantom Ops runs its own wisps
   trainer:"none",  katana:"spark",     fang:"blood",     frost:"frost",
   exec:"holy",     twin:"spark",       scythe:"void",    spike:"volt",
   plasma:"plasmafx", cleaver:"bone",   dragon:"ember",   prism:"prismfx",
@@ -5365,7 +5389,7 @@ function swingSweep(f){
    blade every frame, carried in the direction the edge is actually travelling.
    Whatever the animation does, the trail does. */
 Fighter.prototype.bladeTrail=function(dt){
-  if(QUAL===0||!this.sword)return 0;
+  if(QUAL===0||!this.sword||this.swordDef.phantom)return 0;   // Phantom Ops draws its own
   var d=this.swordDef,FX=fxFor(d),boost=RARE_BOOST[d.rarity]||1;
   var sg=this.bladeSeg();
   var n=(this===player?3:1)*(QUAL>1?2:1);
@@ -5386,6 +5410,7 @@ Fighter.prototype.bladeTrail=function(dt){
 function swingSfx(d){
   if(!AC)return;
   if(d.shape==="fetus"){fetusSfx("swing");return;}
+  if(d.phantom)return;                       // the shot or the cut sounds when it happens
   if(SIG_SWING[d.swing]){sigSwingSfx(d);return;}
   var st=d.swing,heavy=(st==="hammer"||st==="overhead");
   if(d.id==="vampfang"){
@@ -5795,7 +5820,7 @@ var HOLD={
    floating ones beside you. A swing draws it -- the hand goes to the grip and
    brings it out -- and a moment after the last swing it goes back. Only the
    weapons named in IN_HAND are held at rest. */
-var IN_HAND={carver:1,pbfetus:1,ricky9:1,portalgun:1};   // the knife, point-down; PB Fetus on its cord; the guns as they always were
+var IN_HAND={carver:1,pbfetus:1,ricky9:1,portalgun:1,dev2sniper:1,dev2karambit:1,dev2both:1};   // the knife, point-down; PB Fetus on its cord; the guns as they always were
 var STOW={drawnFor:.8,sheathe:.30,draw:.24,hilt:[0.86,1.32,-0.30],floor:.30,
   arm:[-0.06,0,0.10],                   // the sword arm hangs easy beside the hip
   hipMax:2.2,                           // longer than this and it goes on the back
@@ -6686,6 +6711,7 @@ Fighter.prototype.buildSkinDetail=function(g,sk){
   }
 };
 Fighter.prototype.setSword=function(id){
+  phantomClear(this);                 // a flash or a crescent still running goes with the old weapon
   // browsing the blade picker rebuilds this over and over, so let the old one go
   if(this.sword&&this.sword.parent)this.sword.parent.remove(this.sword);
   if(this.sword)disposeTree(this.sword);
@@ -6705,6 +6731,11 @@ Fighter.prototype.setSword=function(id){
     this.sword2=buildSword(this.swordDef);
     this.arms[0].add(this.sword2);
   }
+  if(this.swordDef.phantom==="both"){            // the karambit, for the other hand
+    this.sword2=buildSword(swordById("dev2karambit"));
+    this.mesh.add(this.sword2);
+  }
+  this.phAnim=0;this.phAlt=0;
   // remember the blade's natural size so Colossus can hand it back
   this.swordScale=this.sword.scale.x||1;
   /* Measure the weapon so its animation can be derived from it rather than
@@ -6750,7 +6781,7 @@ Fighter.prototype.restSword=function(){
   }
 };
 Fighter.prototype.swing=function(){
-  if(LIVE.n&&!NET.on&&this.netId)liveSend({t:"swing",from:this.netId});
+  if(LIVE.n&&!NET.on&&this.netId)liveSend({t:"swing",from:this.netId,pa:this.phAnim|0});
   // Weight you can read. A heavy blade takes its time getting there, a light
   // one is quicker, and nothing is so fast that it happens before you see it.
   /* Weight you can read. The style sets the shape of the swing and the weapon's
@@ -6761,6 +6792,8 @@ Fighter.prototype.swing=function(){
                 uppercut:.38,twirl:.42,hammer:.52})[this.swordDef.swing]||
                 (SIG_SWING[this.swordDef.swing]&&SIG_SWING[this.swordDef.swing].dur)||.36;
   this.swingDur=Math.max(0.30,baseDur*(0.86+(this.bladeHeft||1)*0.17));
+  if(this.swordDef.phantom)this.swingDur=.36;        // one length for all three modes
+  this._phFx=0;
   // swung again before the last one finished: the new swing starts from where
   // the blade actually is, not with a jump back to the beginning
   if(this.swingT>0&&SIG_SWING[this.swordDef.swing]&&this.sword&&this.mesh){
@@ -7356,6 +7389,7 @@ Fighter.prototype.update=function(dt,t){
       if(this.sheatheT>0)this.stowBlend(1-clamp(this.sheatheT/STOW.sheathe,0,1));
       arm.scale.y=damp(arm.scale.y,1,14,dt);la.scale.y=damp(la.scale.y,1,14,dt);
     }
+    if(this.swordDef.phantom)this.phantomFrame(-1,dt);
     this.mirrorPose();
     this.idleWeapon(dt,t);
   }
@@ -7735,6 +7769,8 @@ function pressBlock(f){
   if(f.stun>0||f.frozen>0)return false;
   if(f.blockT>0||f.blockCd>0)return false;
   f.blockT=blockActive(f);f.blockAge=0;f.blockShow=1;
+  // Phantom Ops BOTH: each parry is the gun or the knife, in turn
+  if(f.swordDef&&f.swordDef.phantom==="both"){f.phAnim=f.phAlt|0;f.phAlt=f.phAnim^1;}
   // the blade swings the moment you press, hit or miss, like Blade Ball; the
   // ball turning round is what tells you it landed
   f.swing();
@@ -12133,6 +12169,231 @@ function rapBats(x,y,z,n,dirx,dirz,ring){
       done:function(){scene.remove(m);m.material.dispose();}});
   })(i);
 }
+/* ---- PHANTOM OPS: the Dev2 sniper and its matching karambit ----
+   Two weapons and three ways to carry them, all of it cosmetic: the sniper
+   alone (a parry is a shot -- a muzzle flash and the kick), the karambit alone
+   (a parry is a quick cut and a white-purple crescent), or both, the sniper in
+   the right hand and the knife in the left, the parries taking turns. Nothing
+   here touches the parry itself: its timing, reach, cooldown and what the ball
+   does are the game's, the same for every weapon, and the flash fires nothing.
+
+   The sniper is built along +y (the barrel) with its top at -z, gripped at
+   the origin; the karambit stands upright (+y) with the blade hooking forward
+   (+z) out of the bottom of the fist. */
+SIG_SHAPE.dev2sniper=function(g,seg,B,H,G){
+  var i,sd,black=v4Phong(0x141418,70),dark=v4Phong(0x24242c,90),silver=v4Phong(0xc8ccd6,140,0x2a2e38,.2);
+  var pur=new THREE.MeshBasicMaterial({color:0xb46bff}),purA=v4Add(0xb46bff,.55);
+  function bx(m,w,h,d,x,y,z,rx){var o=new THREE.Mesh(GEO.box,m);o.scale.set(w,h,d);o.position.set(x,y,z);if(rx)o.rotation.x=rx;g.add(o);return o;}
+  function cy(m,r,h,y,z,rz){var o=new THREE.Mesh(GEO.cyl,m);o.scale.set(r*2,h,r*2);o.position.set(0,y,z||0);if(rz)o.rotation.z=rz;g.add(o);return o;}
+  // the pistol grip and trigger
+  bx(black,.17,.24,.5,0,-.04,.24,-.35);
+  bx(silver,.05,.32,.04,0,.12,.21);
+  // the receiver: a black core inside silver side frames, a purple line down each
+  bx(black,.24,1.3,.26,0,.45,-.08);
+  for(sd=-1;sd<=1;sd+=2){
+    bx(silver,.03,1.2,.07,sd*.13,.45,-.18);bx(silver,.03,1.2,.06,sd*.13,.45,.03);
+    bx(pur,.02,.95,.03,sd*.135,.45,-.075);
+    for(i=0;i<3;i++)bx(silver,.03,.06,.22,sd*.13,.0+i*.45,-.08);
+  }
+  // the rail on top, with its teeth
+  bx(black,.14,1.5,.06,0,.5,-.24);
+  for(i=0;i<9;i++)bx(dark,.16,.05,.04,0,-.15+i*.16,-.28);
+  // the scope: tube, bells, the lens glowing purple, the turrets
+  cy(dark,.1,1.15,.45,-.44);
+  cy(black,.15,.26,1.06,-.44);cy(black,.13,.2,-.12,-.44);
+  var lens=cy(pur,.12,.03,1.2,-.44);lens.userData.core=true;
+  cy(silver,.155,.04,.93,-.44);cy(silver,.135,.04,.02,-.44);
+  for(i=0;i<2;i++)bx(silver,.1,.1,.18,0,.12+i*.66,-.33);
+  var tu=cy(silver,.06,.1,.45,-.58);var tu2=cy(silver,.06,.1,.45,-.44,Math.PI/2);tu2.position.x=.13;
+  // the magazine
+  bx(black,.15,.32,.42,0,.62,.29,.15);
+  // the stock: an open skeleton of bars, braced, with a silver butt pad
+  bx(black,.12,1.42,.09,0,-.95,-.16);
+  bx(black,.1,1.46,.08,0,-.92,.36,-.03);
+  bx(silver,.05,.62,.05,0,-.62,.1,.85);bx(silver,.05,.62,.05,0,-1.22,.1,-.85);
+  bx(black,.16,.14,.66,0,-1.66,.1);bx(silver,.17,.05,.68,0,-1.75,.1);
+  bx(silver,.1,.62,.06,0,-1.1,-.23);
+  bx(pur,.03,1.22,.03,0,-.95,-.21);
+  // the handguard: four rails round the barrel, held by silver rings
+  for(sd=-1;sd<=1;sd+=2)for(var sz=-1;sz<=1;sz+=2)bx(black,.04,1.32,.04,sd*.1,1.76,sz*.1);
+  for(i=0;i<3;i++)cy(silver,.155,.06,1.12+i*.62,0);
+  bx(pur,.03,1.12,.02,0,1.76,.13);
+  for(sd=-1;sd<=1;sd+=2)bx(black,.03,.7,.03,sd*.05,1.9,.2);         // the bipod, folded
+  // the barrel, and the long suppressor on the end of it
+  var br=cy(silver,.06,2.0,2.0);br.userData.core=true;
+  cy(black,.13,1.26,3.56);
+  for(i=0;i<3;i++)cy(silver,.145,.05,3.0+i*.55,0);
+  var mz=new THREE.Mesh(new THREE.TorusGeometry(.11,.03,6,16),pur);mz.rotation.x=Math.PI/2;mz.position.y=4.2;g.add(mz);
+  var hot=new THREE.Mesh(GEO.sphLo,purA);hot.scale.setScalar(.3);hot.position.y=4.22;hot.userData.aura=true;g.add(hot);
+  g.userData.pulse=hot;g.userData.flareMul=.25;
+  // where the hands go, in the weapon's own units
+  g.userData.grip=new THREE.Vector3(0,-.03,.24);
+  g.userData.support=new THREE.Vector3(0,1.25,.17);
+  B.emissiveIntensity=.04;
+  return 4.2;
+};
+SIG_SHAPE.dev2karambit=function(g,seg,B,H,G){
+  var i,sd,black=v4Phong(0x141418,70),silver=v4Phong(0xd8dce6,150,0x30343e,.2);
+  var pur=new THREE.MeshBasicMaterial({color:0xc58aff}),purA=v4Add(0xb46bff,.6);
+  function bx(m,w,h,d,x,y,z){var o=new THREE.Mesh(GEO.box,m);o.scale.set(w,h,d);o.position.set(x,y,z);g.add(o);return o;}
+  // the handle, the bolts, a purple inlay, the bolster
+  bx(black,.15,.64,.22,0,0,0);
+  for(sd=-1;sd<=1;sd+=2){bx(pur,.02,.44,.05,sd*.08,0,0);for(i=0;i<2;i++){var bt=new THREE.Mesh(GEO.cyl8,silver);bt.scale.set(.07,.18,.07);bt.rotation.z=Math.PI/2;bt.position.set(0,-.15+i*.3,0);g.add(bt);}}
+  bx(silver,.19,.09,.28,0,-.34,0);
+  // the finger ring, its hole to the side, a thin purple ring inside it
+  var ring=new THREE.Mesh(new THREE.TorusGeometry(.17,.045,8,22),silver);ring.rotation.y=Math.PI/2;ring.position.y=.5;g.add(ring);
+  var ri=new THREE.Mesh(new THREE.TorusGeometry(.13,.012,6,22),pur);ri.rotation.y=Math.PI/2;ri.position.y=.5;g.add(ri);
+  // the blade: one hooked curve, the edge on the inside of it
+  var spine=[[-.08,-.34],[-.1,-.6],[-.02,-.86],[.18,-1.04],[.44,-1.08],[.66,-.96],[.8,-.74]];
+  var edge=[[.62,-.86],[.44,-.9],[.24,-.86],[.12,-.72],[.08,-.52],[.09,-.34]];
+  var sh=new THREE.Shape();sh.moveTo(spine[0][0],spine[0][1]);
+  sh.splineThru(spine.slice(1).map(function(p){return new THREE.Vector2(p[0],p[1]);}));
+  sh.splineThru(edge.map(function(p){return new THREE.Vector2(p[0],p[1]);}));
+  sh.lineTo(spine[0][0],spine[0][1]);
+  var bg=new THREE.ExtrudeGeometry(sh,{depth:.05,bevelEnabled:true,bevelThickness:.022,bevelSize:.02,bevelSegments:1,curveSegments:10});
+  bg.translate(0,0,-.025);
+  var blade=new THREE.Mesh(bg,silver);blade.rotation.y=-Math.PI/2;g.add(blade);
+  // the glowing edge: a bright core and a soft glow, traced along the inside curve
+  var pts=[[.8,-.74]].concat(edge).map(function(p){return new THREE.Vector3(p[0]-.005,p[1]+.012,0);});
+  var crv=new THREE.CatmullRomCurve3(pts);
+  var ec=new THREE.Mesh(new THREE.TubeGeometry(crv,24,.016,5,false),pur);ec.rotation.y=-Math.PI/2;g.add(ec);
+  var eg=new THREE.Mesh(new THREE.TubeGeometry(crv,24,.05,6,false),purA);eg.rotation.y=-Math.PI/2;eg.userData.aura=true;g.add(eg);
+  g.userData.edge=eg;g.userData.flareMul=.2;
+  g.userData.grip=new THREE.Vector3(0,0,0);
+  g.userData.tipPt=new THREE.Vector3(0,-.74,.8);
+  return -.95;
+};
+SWORD_ICON.dev2sniper="<path d='M3 27l6-2 2 4-6 2z' fill='#141418' stroke='#0b1942' stroke-width='1.2'/><path d='M5 25l9-4M6 29l9-5' stroke='#c8ccd6' stroke-width='1.4'/>"+
+  "<rect x='13' y='18.5' width='10' height='5' rx='1' transform='rotate(-24 18 21)' fill='#141418' stroke='#0b1942' stroke-width='1.2'/>"+
+  "<path d='M22 17.5L33 12.6' stroke='#c8ccd6' stroke-width='2'/><path d='M31 13.4l6.5-2.9' stroke='#141418' stroke-width='3.6' stroke-linecap='round'/>"+
+  "<rect x='14' y='13' width='9' height='3' rx='1.4' transform='rotate(-24 18 15)' fill='#24242c' stroke='#0b1942' stroke-width='1'/><circle cx='23.2' cy='11.7' r='1.5' fill='#b46bff'/>"+
+  "<path d='M16 25l2 4' stroke='#141418' stroke-width='2.4'/><path d='M14 22.2l8-3.6' stroke='#b46bff' stroke-width='1'/><circle cx='37.6' cy='10.4' r='1.2' fill='#c58aff'/>";
+SWORD_ICON.dev2karambit="<rect x='17' y='6' width='6' height='15' rx='2' fill='#141418' stroke='#0b1942' stroke-width='1.6'/><path d='M18.8 9v9' stroke='#b46bff' stroke-width='1.1'/>"+
+  "<circle cx='20' cy='4.6' r='3.4' fill='none' stroke='#d8dce6' stroke-width='1.6'/>"+
+  "<path d='M17.6 21.5C16.6 28 19 34 26 35.4c3.6.7 6.4-.6 8.2-3.6-3 1.6-6 1.4-8.6-.4-3.1-2.3-4-6.2-3.6-9.9z' fill='#d8dce6' stroke='#0b1942' stroke-width='1.5'/>"+
+  "<path d='M22.2 22c-.3 3.6.7 7 3.6 9.1 2.4 1.7 5.3 1.9 8 .7' stroke='#c58aff' stroke-width='1.5' fill='none'/>";
+OWN_GRIP.dev2sniper=1;OWN_GRIP.dev2karambit=1;
+/* ---- carrying them ----
+   Both weapons live in the body's frame and the hands are fitted to them
+   (hsArm), so a hand is always ON the grip -- the same way the path swings do
+   it. Everything is laid out on the sword side (+x) and the mirror afterwards
+   puts the sniper in the right hand and, in BOTH, the knife in the left. */
+var PHq=new THREE.Quaternion(),PHq2=new THREE.Quaternion(),PHv=new THREE.Vector3(),PHv2=new THREE.Vector3(),
+    PHX=new THREE.Vector3(1,0,0),PHY=new THREE.Vector3(0,1,0),PHZ=new THREE.Vector3(0,0,1);
+function phEase(p,a,b){var t=clamp((p-a)/(b-a),0,1);return t*t*(3-2*t);}
+// the kick of a shot: snaps in, rides out
+function phKick(p){return p<.1?0:p<.17?(p-.1)/.07:Math.max(0,1-Math.pow((p-.17)/.5,.8));}
+// the sniper's barrel along `pitch` (0 level, + up) turned by `yaw`, its scope on top
+function phAimGun(sw,gx,gy,gz,pitch,yaw){
+  PHq.setFromAxisAngle(PHY,yaw);PHq2.setFromAxisAngle(PHX,Math.PI/2-pitch);PHq.multiply(PHq2);
+  sw.quaternion.copy(PHq);
+  // place it so its grip is where asked
+  PHv.copy(sw.userData.grip||PHv2.set(0,0,0)).multiplyScalar(sw.scale.x).applyQuaternion(PHq);
+  sw.position.set(gx-PHv.x,gy-PHv.y,gz-PHv.z);
+}
+// the knife upright in the fist, tipped forward by `tilt`, turned by `yaw`, rolled by `roll`
+function phAimKnife(sw,kx,ky,kz,tilt,yaw,roll){
+  PHq.setFromAxisAngle(PHY,yaw);PHq2.setFromAxisAngle(PHX,tilt);PHq.multiply(PHq2);
+  PHq2.setFromAxisAngle(PHZ,roll);PHq.multiply(PHq2);
+  sw.quaternion.copy(PHq);sw.position.set(kx,ky,kz);
+}
+function phLocal(sw,v,out){return out.copy(v).multiplyScalar(sw.scale.x).applyQuaternion(sw.quaternion).add(sw.position);}
+// a point in the body's (unmirrored) frame, out in the world where it will be drawn
+function phW(f,v){if(MIRROR_POSE)v.x=-v.x;f.mesh.updateMatrixWorld(true);return f.mesh.localToWorld(v);}
+// a few keys of the knife's cut: [p, x, y, z, tilt, yaw]
+var PH_CUT=[[0,.92,1.55,.5,.15,-.25],[.1,1.12,1.95,.18,.05,-.95],[.3,-.08,1.78,1.0,.4,1.15],[.48,-.22,1.58,.82,.3,1.45],[1,.92,1.55,.5,.15,-.25]];
+function phCutAt(p,out){
+  for(var i=1;i<PH_CUT.length;i++){var b=PH_CUT[i];if(p<=b[0]||i===PH_CUT.length-1){var a=PH_CUT[i-1],u=phEase(p,a[0],b[0]);
+    for(var k=1;k<6;k++)out[k-1]=lerp(a[k],b[k],u);return out;}}
+  return out;
+}
+var _phK=[0,0,0,0,0];
+Fighter.prototype.phantomFrame=function(p,dt){
+  var d=this.swordDef,mode=d.phantom,R=this.arms[1],L=this.arms[0],me=this;
+  var gun=mode==="karambit"?null:this.sword,knife=mode==="karambit"?this.sword:(mode==="both"?this.sword2:null);
+  var kArm=mode==="karambit"?R:L,ks=mode==="karambit"?1:-1;
+  var t=gameT||0,br=Math.sin(t*2.1+this.phase)*.03,sw=p>=0,anim=mode==="sniper"?0:mode==="karambit"?1:(this.phAnim|0);
+  // an emote: the weapons go into the hands as they are and ride along with the arms
+  if(this.tauntT>0){
+    if(gun){if(gun.parent!==R)R.add(gun);gun.position.set(0,-1.26,.05);gun.rotation.set(Math.PI+.25,0,0);}
+    if(knife){if(knife.parent!==kArm)kArm.add(knife);knife.position.set(0,-1.26,0);knife.rotation.set(0,0,0);}
+    return;
+  }
+  [gun,knife].forEach(function(s){if(s&&s.parent!==me.mesh)me.mesh.add(s);});
+  R.position.set(R.userData.baseX,R.userData.baseY,R.userData.baseZ);L.position.set(L.userData.baseX,L.userData.baseY,L.userData.baseZ);
+  if(gun){
+    var two=mode==="sniper",gx,gy,gz,pitch,yaw;
+    if(two){gx=.36;gy=2.1+br;gz=.8;pitch=-.04;yaw=0;}          // braced, aimed down the line
+    else{gx=.86;gy=1.62+br;gz=.55;pitch=-.3;yaw=.06;}          // one-handed, low and ready
+    if(sw&&anim===0){
+      if(!two){var up=phEase(p,0,.1)*(1-phEase(p,.6,1));pitch=lerp(pitch,-.02,up);gy+=up*.5;gz+=up*.2;gx=lerp(gx,.62,up);}
+      var kick=phKick(p);pitch+=kick*(two?.3:.42);gz-=kick*.3;gy+=kick*.05;
+      if(!this._phFx&&p>=.1){this._phFx=1;phShot(this,gun);}
+    }
+    phAimGun(gun,gx,gy,gz,pitch,yaw);
+    hsArm(R,PHv2.set(gx,gy,gz),1);
+    if(two)hsArm(L,phLocal(gun,gun.userData.support,PHv2),1);
+    // a thread of purple smoke off it now and then
+    if(QUAL>0&&Math.random()<dt*(this===player?7:2.5)){
+      var u=Math.random()*.9+.05,a=phW(this,phLocal(gun,PHv.set(0,-1.5+u*5.6,0),PHv));
+      spark(a.x+rr(-.1,.1),a.y+rr(-.08,.08),a.z+rr(-.1,.1),rr(-.15,.15),rr(.25,.7),rr(-.15,.15),.62,.36,1,rr(.18,.32),rr(.5,.9),-.6);
+    }
+  }
+  if(knife){
+    var k=_phK;k[0]=.92;k[1]=1.55+br;k[2]=.5;k[3]=.15;k[4]=-.25;
+    if(sw&&anim===1){phCutAt(p,k);k[1]+=br;if(!this._phFx&&p>=.18){this._phFx=1;phCut(this,knife,ks);}}
+    phAimKnife(knife,k[0]*ks,k[1],k[2],k[3],k[4]*ks,0);
+    hsArm(kArm,PHv2.set(k[0]*ks,k[1],k[2]),1);
+    if(knife.userData.edge)knife.userData.edge.material.opacity=.45+.25*Math.sin(t*4+this.phase);
+  }
+  // the karambit alone: the other hand up in a guard
+  if(mode==="karambit")hsArm(L,PHv2.set(-.5,2.02+br,.78),1);
+};
+/* ---- the shot: a flash at the muzzle and a kick, and nothing leaves it ---- */
+function phOwn(f,e){e.owner=f;V4FX.push(e);return e;}
+function phShot(f,gun){
+  phSfx("shot",f);
+  if(QUAL===0||!f.mesh)return;
+  var tip=gun.userData.tipY||4.2;
+  var a=phW(f,phLocal(gun,PHv.set(0,tip,0),new THREE.Vector3())),b=phW(f,phLocal(gun,PHv.set(0,tip-1,0),new THREE.Vector3())),dir=a.clone().sub(b).normalize();
+  var flash=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:glowTex(),color:0xe8d4ff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+  flash.position.copy(a).addScaledVector(dir,.2);scene.add(flash);
+  var cone=new THREE.Mesh(GEO.cone,new THREE.MeshBasicMaterial({color:0xc58aff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+  cone.position.copy(a).addScaledVector(dir,.55);cone.quaternion.setFromUnitVectors(PHY,dir);scene.add(cone);
+  var t=0;
+  phOwn(f,{tick:function(dt){t+=dt;var k=t/.11;if(k>=1)return false;
+      flash.quaternion.copy(camera.quaternion);flash.scale.setScalar(1.6*(1-k*.5));flash.material.opacity=1-k;
+      cone.scale.set(.5*(1-k),1.3*(1-k*.3),.5*(1-k));cone.material.opacity=.9*(1-k);return true;},
+    done:function(){scene.remove(flash);scene.remove(cone);flash.material.dispose();cone.material.dispose();}});
+  var near=f===player||!player||dist2(f.pos.x,f.pos.z,player.pos.x,player.pos.z)<60*60;
+  if(!near)return;
+  for(var i=0;i<(QUAL>1?14:6);i++){var s=rr(2,7);
+    spark(a.x,a.y,a.z,dir.x*s+rr(-1.2,1.2),dir.y*s+rr(-.6,1.2),dir.z*s+rr(-1.2,1.2),rr(.75,1),rr(.55,.85),1,rr(.2,.38),rr(.1,.22),0);}
+  for(var j=0;j<(QUAL>1?6:3);j++)spark(a.x+dir.x*.3,a.y+dir.y*.3,a.z+dir.z*.3,dir.x*rr(.3,1)+rr(-.3,.3),rr(.2,.7),dir.z*rr(.3,1)+rr(-.3,.3),.55,.4,.85,rr(.4,.7),rr(.5,.9),-.4);
+  if(f===player)shakeCam(.06);
+}
+/* ---- the cut: quick, with a white-purple crescent following the hook ---- */
+function phCut(f,knife,ks){
+  phSfx("cut",f);
+  if(QUAL===0)return;
+  // the left hand's cut runs the other way across
+  spawnSlash(f,{span:3.4,tilt:.32,r:.9,w:1.1},0xb46bff,ks<0);
+  spawnSlash(f,{span:3.0,tilt:.32,r:.86,w:.45,hot:true},0xf2e8ff,ks<0);
+  var near=f===player||!player||dist2(f.pos.x,f.pos.z,player.pos.x,player.pos.z)<60*60;
+  if(!near||!knife.userData.tipPt)return;
+  var p=phW(f,phLocal(knife,knife.userData.tipPt,PHv));
+  for(var i=0;i<(QUAL>1?10:5);i++)spark(p.x,p.y,p.z,rr(-2.5,2.5),rr(-.5,2),rr(-2.5,2.5),rr(.8,1),rr(.6,.9),1,rr(.2,.36),rr(.15,.3),-2);
+}
+function phSfx(k,f){
+  if(!AC||!(f===player||QUAL>1))return;
+  if(k==="shot"){noiseHit(.06,.32,4200);tone(220,60,.16,"square",.2);tone(1800,600,.05,"sawtooth",.06);
+    setTimeout(function(){tone(2400,2000,.04,"triangle",.05);tone(900,700,.05,"square",.04);},120);}   // the bolt
+  else{noiseHit(.12,.22,3600);tone(1900,700,.1,"sawtooth",.07);tone(3200,2600,.06,"triangle",.05);}
+}
+// whatever this fighter still has running goes, at once: a weapon swap, a match ending
+function phantomClear(f){
+  for(var i=V4FX.length-1;i>=0;i--){var e=V4FX[i];if(e.owner===f){if(e.done)e.done();V4FX.splice(i,1);}}
+}
 // DIVINE RIGHT -- a silver-blue blade with a rune channel lit cyan, barbed
 // flanges near the guard, a gold guard spreading into two great glowing
 // wings, a star-orb at the heart, a gold-wound grip and an orb pommel
@@ -14512,7 +14773,7 @@ function wsUrlFor(code){
   if(NET.specTok&&NET.specWatch)return ws+"/live/"+encodeURIComponent(NET.specWatch)+"?spectate="+encodeURIComponent(NET.specTok);
   if(NET.specTok)return ws+"/room/"+code+"?spectate="+encodeURIComponent(NET.specTok);
   var q=(NET.queue?"?q=1&":"?")+"name="+encodeURIComponent((SAVE.netName||"Player").slice(0,14))+
-        "&sword="+encodeURIComponent(SAVE.eqSword)+
+        "&sword="+encodeURIComponent(eqBlade())+
         "&skin="+encodeURIComponent(SAVE.eqSkin)+
         "&abil="+encodeURIComponent(SAVE.eqAbil)+
         // online play is for Google accounts: the room checks it, so a ban sticks
@@ -14812,7 +15073,7 @@ function startMatch(modeId){
   var banned=!abilityAllowed(playerAbil);
   playerAbil=resolveAbility(playerAbil);
   player=new Fighter({name:"YOU",isPlayer:true,x:ARENA_R*0.5,z:0,team:0,
-    sword:SAVE.eqSword,ability:playerAbil,skinDef:skinById(SAVE.eqSkin)});
+    sword:eqBlade(),ability:playerAbil,skinDef:skinById(SAVE.eqSkin)});
   player.guardian=(playerAbil==="guardian");
   fighters.push(player);
   var names=BOTNAMES.slice();
@@ -15101,8 +15362,9 @@ function netRemoteState(m){
 }
 function netRemoteSwing(m){
   var f=NET.remote[m.from];
-  if(f&&f.alive)f.swing();
+  if(f&&f.alive){phTake(f,m);f.swing();}
 }
+function phTake(f,m){if(typeof m.pa==="number"&&f.swordDef&&f.swordDef.phantom==="both"){f.phAnim=m.pa&1;f.phAlt=f.phAnim^1;}}
 function netRemoteAbility(m){
   if(m.only==="rift"||m.only==="riftsnap"){riftNet(m);return;}
   if(m.only==="flash"){screenFlash(AURA_T,"aura");return;}   // a bot's aura, on the host
@@ -15183,6 +15445,7 @@ var NETBLK={before:0.06,after:0.08,lagShare:0.5,jitter:60};
 function netHostParryClaim(m){
   var f=NET.remote[m.from];
   if(!f||!f.alive)return;
+  phTake(f,m);                         // which of the two it was, as they saw it
   showBlock(f);                        // everyone sees it go up
   if(!NET.isHost||!NET.on)return;
   var now=netNow();
@@ -15260,7 +15523,7 @@ function netBallMsg(){
       ob:b.orbit?1:0,oa:+(b.orbitA||0).toFixed(2),
       fx:b.fxT>0?b.fx:0,ft:+(b.fxT||0).toFixed(2),
       fb:b.fxBy?(b.fxBy.netId||("bot"+b.fxBy.botIndex)):null,
-      ag:+(b.age||0).toFixed(3),ln:b.launchN||0,lh:netIdOf(b.lastHit),
+      ag:+(b.age||0).toFixed(3),ln:b.launchN||0,lh:netIdOf(b.lastHit),lp:b.lastHit?(b.lastHit.phAnim|0):0,
       ae:b.aerial?1:0,cv:b.c0?[+b.c0.x.toFixed(2),+b.c0.y.toFixed(2),+b.c0.z.toFixed(2),+b.c1.x.toFixed(2),+b.c1.y.toFixed(2),+b.c1.z.toFixed(2),+(b.s||0).toFixed(4)]:0});
   }
   var bots=[];
@@ -15268,7 +15531,7 @@ function netBallMsg(){
     var f=fighters[i];
     if(!f.isBot)continue;
     bots.push({i:f.botIndex,x:+f.pos.x.toFixed(2),z:+f.pos.z.toFixed(2),
-      y:+f.y.toFixed(2),r:+f.yaw.toFixed(2),d:f.alive?0:1,bk:f.blockT>0?1:0});
+      y:+f.y.toFixed(2),r:+f.yaw.toFixed(2),d:f.alive?0:1,bk:f.blockT>0?1:0,pa:f.phAnim|0});
   }
   return {t:"ball",b:bs,n:bots,gt:+gameT.toFixed(2),c:netNow()};
 }
@@ -15349,7 +15612,7 @@ function netApplyBall(m){
         if(hitter===player){
           // the host counted our block: whatever we saw, no cooldown
           if(b._predN!==b.launchN)blockLanded(player);
-        } else if(hitter.alive){swingOnce(hitter);hitter.blockVis=0;hitter.blockFlash=1;}
+        } else if(hitter.alive){if(!(hitter.swingT>0))phTake(hitter,{pa:s.lp});swingOnce(hitter);hitter.blockVis=0;hitter.blockFlash=1;}
       }
     }
     b.roff.x=ox;b.roff.y=oy;b.roff.z=oz;
@@ -15391,7 +15654,7 @@ function netApplyBall(m){
     f.netTarget=f.netTarget||{x:f.pos.x,z:f.pos.z,y:0,yaw:f.yaw};
     f.netTarget.x=bs.x;f.netTarget.z=bs.z;f.netTarget.y=bs.y;f.netTarget.yaw=bs.r;
     // a block that stays up across snapshots (or a new one straight after a landed one) stays shown
-    if(bs.bk){if(!f._bk)showBlock(f);else f.blockVis=Math.max(f.blockVis,0.12);}
+    if(bs.bk){if(!f._bk){phTake(f,bs);showBlock(f);}else f.blockVis=Math.max(f.blockVis,0.12);}
     f._bk=!!bs.bk;
     if(bs.d&&f.alive)f.eliminate();
   }
@@ -15747,7 +16010,7 @@ function tryParry(){
   // a block with no key, click or tap behind it: something called the game directly
   if(STATE==="playing"&&performance.now()-AC_IN.last>400)AC_IN.ghost++;
   // everyone sees the block go up; the host also uses the time of the press
-  if(NET.on)netSend({t:"parry",c:netNow(),y:+camYaw.toFixed(3)});
+  if(NET.on)netSend({t:"parry",c:netNow(),y:+camYaw.toFixed(3),pa:player.phAnim|0});
 }
 /* A held swing lands as soon as the ball is genuinely in range. If it never
    gets there, it becomes the miss it always was. */
@@ -16151,7 +16414,7 @@ function refreshShowcase(){
      the glitched figure on the podium. */
   if(STATE!=="menu")return;
   showcase=new Fighter({name:"YOU",isPlayer:true,x:0,z:0,
-    sword:SAVE.eqSword,ability:SAVE.eqAbil,skinDef:skinById(SAVE.eqSkin)});
+    sword:eqBlade(),ability:SAVE.eqAbil,skinDef:skinById(SAVE.eqSkin)});
   showcase.tag.visible=false;
 }
 function updateShowcase(dt){
@@ -16179,7 +16442,7 @@ var SCREENS=["boot","menu","modes","shop","ranked","howto","profile","results","
 function syncVenueLoadout(){
   if(!player)return false;
   var newSkin=player.skinId!==SAVE.eqSkin;
-  var newBlade=!player.swordDef||player.swordDef.id!==SAVE.eqSword;
+  var newBlade=!player.swordDef||player.swordDef.id!==eqBlade();
   // the lobby shows your blade on the plinth too, and that is built with the
   // room, so a new blade there means rebuilding the room
   if(newBlade&&venueKind==="lobby"){enterLobby();return true;}
@@ -16190,7 +16453,7 @@ function syncVenueLoadout(){
     player.yaw=yaw;player.mesh.rotation.y=yaw;
     return false;                            // the respawn brought the rest with it
   }
-  if(newBlade)player.setSword(SAVE.eqSword);
+  if(newBlade)player.setSword(eqBlade());
   player.ability=SAVE.eqAbil;
   return false;
 }
@@ -16226,7 +16489,7 @@ function showScreen(id){
 }
 function updateChips(){
   grantRankRewards(true);
-  $("chipSword").textContent=swordById(SAVE.eqSword).name;
+  $("chipSword").textContent=swordById(eqBlade()).name;
   $("chipAbil").textContent=abilById(SAVE.eqAbil).name;
   $("chipSkin").textContent=skinById(SAVE.eqSkin).name;
   $("chipMap").textContent=SAVE.eqMap==="random"?"Random":mapById(SAVE.eqMap).name;
@@ -16907,7 +17170,8 @@ function itemTile(it,d,o){
 }
 function itemFacts(it,tab){
   var t=[];
-  if(tab==="sword"){var HN={rhip:"HIP DRAW",pistol:"SIDEARM",dangle:"ON A CORD"};t.push(it.swing.toUpperCase()+" SWING");t.push(HN[it.hold]||(it.hold.toUpperCase()+" GRIP"));}
+  if(tab==="sword"&&it.phantom){t.push("PHANTOM OPS");t.push(it.phantom==="sniper"?"SHOT PARRY":"SLASH PARRY");t.push("3 EQUIP MODES");}
+  else if(tab==="sword"){var HN={rhip:"HIP DRAW",pistol:"SIDEARM",dangle:"ON A CORD"};t.push(it.swing.toUpperCase()+" SWING");t.push(HN[it.hold]||(it.hold.toUpperCase()+" GRIP"));}
   if(tab==="abil"){t.push(it.ultra?"ONE USE PER GAME":it.passive?"PASSIVE":(it.cd+"s COOLDOWN"));if(it.notReady)t.push("COMING IN A LATER UPDATE");if(ABIL_OFF[it.id])t.push("TEMPORARILY DISABLED: PLAYS AS DASH");if(it.no1v1||it.hides)t.push("NOT IN 1v1");}
   if(itemValue(it))t.push("WORTH "+itemValue(it).toLocaleString()+" YEN");
   return t;
@@ -16953,7 +17217,9 @@ function renderPicker(fresh){
   // never got go once the season is over
   // everything is listed, owned or not: what you do not have shows locked
   // (a pack's secret bonus is the exception: not listed until it is yours)
-  var list=d.list.filter(function(it){if(it.secret&&!d.own[it.id]){var pk=packOf(tab,it.id);return !(pk&&packSecret(PACKS[pk],tab,it.id));}return true;});
+  // (and nothing unreleased shows to anyone who has not been given it)
+  var list=d.list.filter(function(it){if(it.rarity==="unreleased"&&!d.own[it.id])return false;
+    if(it.secret&&!d.own[it.id]){var pk=packOf(tab,it.id);return !(pk&&packSecret(PACKS[pk],tab,it.id));}return true;});
   var owned=list.filter(function(it){return d.own[it.id];});
   list=owned.concat(list.filter(function(it){return !d.own[it.id];}));
   $("pickSub").textContent=owned.length+" / "+list.length+" OWNED";
@@ -17018,8 +17284,10 @@ function renderPickDetail(it){
     if(onLimitedShelf(tab,it.id))btn+="<div class='dnote' style='color:#ffd1f2'>Gnorman has one on his Limited stall in the lobby today, for "+
       limPrice(it).toLocaleString()+" yen.</div>";
   }
+  if(tab==="sword"&&it.phantom&&own)btn=phModeBar();
   if(tab==="sword")btn+="<button class='big ghost sm' id='pdView' style='margin-top:6px'>VIEW IN 3D</button>";
   box.innerHTML=detailHead(it,d,tab)+btn;
+  phModeWire(box);
   var pv=box.querySelector("#pdView");
   if(pv)pv.addEventListener("click",function(){sfx("tick");openPreview(it);});
   // the big icon opens it too
@@ -17075,6 +17343,30 @@ function renderEmoteDetail(){
     if(was>=0)cur[was]=cur[i];          // already in the wheel: the two swap places
     cur[i]=tk.id;SAVE.eqEmotes=cur;writeSave();sfx("coin");renderEmotePicker();});});
   var act=box.querySelector("#pdAct");if(act)act.addEventListener("click",function(){openPackStand();});
+}
+/* ---- Phantom Ops: choose how you carry them ----
+   SNIPER, KARAMBIT, or BOTH (which needs both). The choice is saved, and what
+   you carry goes out to everyone in the room the same way any blade does. */
+function phModeBar(){
+  var cur=phModeNow(),o1=!!SAVE.swords.dev2sniper,o2=!!SAVE.swords.dev2karambit,both=o1&&o2;
+  function b(m,lab,ok){return "<button class='phm"+(cur===m?" on":"")+"' data-ph='"+m+"'"+(ok?"":" disabled")+">"+lab+"</button>";}
+  return "<div class='phbar'><div class='phhd'>PHANTOM OPS &middot; EQUIP MODE</div><div class='phbtns'>"+
+    b("sniper","SNIPER",o1)+b("karambit","KARAMBIT",o2)+b("both","BOTH",both)+"</div>"+
+    "<div class='dnote'>"+(both?"BOTH: the sniper in your right hand, the karambit in your left, taking turns on each parry.":"Own the Dev2 Sniper and the Dev2 Karambit to carry BOTH.")+"</div>"+
+    "<div class='phft'>Same timing &middot; Same range &middot; Same cooldown</div></div>";
+}
+function phModeWire(box){
+  [].forEach.call(box.querySelectorAll(".phm"),function(el){el.addEventListener("click",function(){phSetMode(el.getAttribute("data-ph"));});});
+}
+function phSetMode(m){
+  if(m==="sniper"&&SAVE.swords.dev2sniper){SAVE.eqSword="dev2sniper";SAVE.phMode="sniper";}
+  else if(m==="karambit"&&SAVE.swords.dev2karambit){SAVE.eqSword="dev2karambit";SAVE.phMode="karambit";}
+  else if(m==="both"&&phOwnsBoth()){if(SAVE.eqSword!=="dev2karambit")SAVE.eqSword="dev2sniper";SAVE.phMode="both";}
+  else{sfx("tick");return;}
+  writeSave();sfx("coin");
+  renderPicker(false);updateChips();updateLobbyBar();
+  reskinLobbyPlayer();
+  if(NET.ws&&NET.status==="lobby")mpSendLoadout();
 }
 function equipFromPicker(it){
   var d=shopData(pickTab);
@@ -18007,7 +18299,7 @@ function lobbyRender(){
 }
 function mpSendLoadout(ready){
   netSend({t:"loadout",name:(SAVE.netName||"Player").slice(0,14),
-    sword:SAVE.eqSword,skin:SAVE.eqSkin,abil:SAVE.eqAbil,
+    sword:eqBlade(),skin:SAVE.eqSkin,abil:SAVE.eqAbil,
     ready:ready===undefined?undefined:!!ready});
 }
 function wireMP(){
@@ -18132,7 +18424,7 @@ function updateLobbyBar(){
   refreshPassButton();
   $("lbSkinIco").innerHTML=skinIcon(skinById(SAVE.eqSkin)).replace("width='34' height='34'","width='26' height='26'");
   $("lbAbilIco").innerHTML=abilIcon(abilById(SAVE.eqAbil),26);
-  $("lbBladeIco").innerHTML=swordIcon(swordById(SAVE.eqSword)).replace("width='34' height='34'","width='26' height='26'");
+  $("lbBladeIco").innerHTML=swordIcon(swordById(eqBlade())).replace("width='34' height='34'","width='26' height='26'");
 }
 var casTab="bj";
 function openCasino(tab){

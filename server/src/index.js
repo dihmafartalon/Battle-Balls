@@ -93,6 +93,14 @@ export function checkRate(state, now, budget, windowMs) {
   return state.count <= budget;
 }
 
+/* Carried, not owned: Phantom Ops BOTH is the Dev2 Sniper and the Dev2
+   Karambit together, so it needs both of them. */
+const SWORD_COMBOS = { dev2both: ["dev2sniper", "dev2karambit"] };
+export function ownsSword(inv, id) {
+  if (!inv || !inv.swords) return false;
+  if (Object.prototype.hasOwnProperty.call(SWORD_COMBOS, id)) return SWORD_COMBOS[id].every(x => !!inv.swords[x]);
+  return !!inv.swords[id];
+}
 export function routeMessage(msg, senderId, hostId) {      // hostId: the room's leader
   if (!msg || typeof msg !== "object" || typeof msg.t !== "string")
     return { action: "drop", reason: "malformed" };
@@ -234,7 +242,7 @@ export class Room {
   // gear you do not own is swapped for the starter, and noted
   checkLoadout(me, inv, noteIt) {
     const bad = [];
-    if (me.sword && !inv.swords[me.sword]) { bad.push(me.sword); me.sword = CAT.items.sword.starter; }
+    if (me.sword && !ownsSword(inv, me.sword)) { bad.push(me.sword); me.sword = CAT.items.sword.starter; }
     if (me.skin && !inv.skins[me.skin]) { bad.push(me.skin); me.skin = CAT.items.skin.starter; }
     if (me.abil && !inv.abils[me.abil]) { bad.push(me.abil); me.abil = CAT.items.abil.starter; }
     if (bad.length && noteIt !== false) this.report(me.sub, { kind: "gear", sev: "flag", detail: "equipped " + bad.join(", ") + " without owning it" });
@@ -482,7 +490,7 @@ export class Room {
       for (const k in d.fields) if (d.fields[k] !== undefined) me[k] = d.fields[k];
       if (me.sub) {
         let inv = await this.inventory(me.sub);
-        const stale = inv && ((me.sword && !inv.swords[me.sword]) || (me.skin && !inv.skins[me.skin]) || (me.abil && !inv.abils[me.abil]));
+        const stale = inv && ((me.sword && !ownsSword(inv, me.sword)) || (me.skin && !inv.skins[me.skin]) || (me.abil && !inv.abils[me.abil]));
         // asked again, and noted, at most every few seconds: a flood of loadouts cannot flood the Vault
         const now = Date.now(), fresh = now - (this.invAt.get(me.sub) || 0) > 5000;
         if (stale && fresh) { this.invAt.set(me.sub, now); this.invs.delete(me.sub); inv = await this.inventory(me.sub); }
