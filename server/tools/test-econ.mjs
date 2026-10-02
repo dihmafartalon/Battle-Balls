@@ -1,4 +1,4 @@
-import { applyAct, ensure, ultrasOf } from "../src/econ.js";
+import { applyAct, ensure, ultrasOf, newStats, timingAdd, timingPooled, timingVerdict, fakeInputVerdict, watchFlags } from "../src/econ.js";
 import { crownFix } from "../src/index.js";
 import assert from "assert";
 const oct3 = Date.UTC(2026, 9, 3, 18), sep30 = Date.UTC(2026, 8, 30, 18), oct9 = Date.UTC(2026, 9, 9, 18);
@@ -103,4 +103,39 @@ console.log("currency split tests passed"); }
   assert.ok(!u.includes("sword:crown"), "apex never counted");
   assert.ok(!u.includes("sword:trainer"), "common blades not counted");
   console.log("owner counter tests passed");
+}
+// macro checks: timing pooled across matches, scripted input flagged per match
+{
+  const st = newStats(Date.now());
+  // a script: ~15ms spread every match, about 10 timed blocks each
+  for (let i = 0; i < 2; i++) timingAdd(st, 10, 120 + i, 15);
+  assert.equal(timingVerdict(timingPooled(st).n, timingPooled(st).sd, timingPooled(st).mean), null, "20 blocks: too few to judge");
+  timingAdd(st, 10, 121, 14);
+  const p = timingPooled(st);
+  assert.ok(p.n === 30 && p.sd < 20, "pooled " + JSON.stringify(p));
+  assert.ok(timingVerdict(p.n, p.sd, p.mean), "a tight script is flagged");
+  const w = watchFlags(st, [], Date.now());
+  assert.ok(w.some(f => f.kind === "timing" && f.sev === "flag"), "watch flags it");
+  assert.ok(!watchFlags(st, [], Date.now()).some(f => f.kind === "timing"), "only once a day");
+  // a person: ~55ms spread, and their average drifts between matches
+  const hu = newStats(Date.now());
+  for (let i = 0; i < 6; i++) timingAdd(hu, 10, 100 + (i % 3) * 30, 50);
+  assert.equal(timingVerdict(timingPooled(hu).n, timingPooled(hu).sd, timingPooled(hu).mean), null, "a person is not flagged");
+  // a very consistent person (35ms) is still clear of the line
+  const good = newStats(Date.now());
+  for (let i = 0; i < 6; i++) timingAdd(good, 10, 110, 35);
+  assert.equal(timingVerdict(timingPooled(good).n, timingPooled(good).sd, timingPooled(good).mean), null, "a very steady person is not flagged");
+  // only the last 12 matches count
+  for (let i = 0; i < 20; i++) timingAdd(good, 5, 100, 40);
+  assert.equal(good.tim.length, 12);
+  // junk is ignored
+  const j = newStats(Date.now()); timingAdd(j, "x", 1, 1); timingAdd(j, 5, NaN, 2); timingAdd(j, 5000, 1, 1);
+  assert.equal((j.tim || []).length, 0);
+  // fake input
+  assert.equal(fakeInputVerdict(2, 1), null);
+  assert.ok(fakeInputVerdict(7, 0) && fakeInputVerdict(0, 9) && fakeInputVerdict(5, 5));
+  const s2 = ensure({ econ: { v: 1 } }), flags = [];
+  applyAct(s2, { k: "match", mode: "classic", won: false, rp: 0, coins: 0, secs: 60, blocks: 10, perfects: 2, fk: 12, gh: 0 }, { now: Date.now(), flags, rnd: () => .5 });
+  assert.ok(flags.some(f => f.kind === "fakeinput"), "scripted inputs flagged: " + JSON.stringify(flags));
+  console.log("macro check tests passed");
 }

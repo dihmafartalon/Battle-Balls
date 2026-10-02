@@ -11,7 +11,7 @@
    ===================================================================== */
 
 import { CAT } from "./catalog.js";
-import { ECON_KEYS, setAbilOff, ultrasOf, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdict, retire, RETIRED, newStats, snap, recordAct, watchFlags, suspicion, summary, seasonReset, rankClean } from "./econ.js";
+import { ECON_KEYS, setAbilOff, ultrasOf, timingVerdict, timingAdd, timingPooled, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdict, retire, RETIRED, newStats, snap, recordAct, watchFlags, suspicion, summary, seasonReset, rankClean } from "./econ.js";
 const RETIRED_RE = new RegExp('"(' + Object.keys(RETIRED.abil).join("|") + ')"');
 import { adminPage, handleAdmin, ADMIN_TRIES, ADMIN_WINDOW_MS, specCheck } from "./admin.js";
 import { SimHost, SIM_ID } from "./sim.js";
@@ -553,6 +553,12 @@ export class Room {
       const v = who ? parryVerdict(Number(o.blocks) | 0, Number(o.perfects) | 0) : null;
       if (v) this.report(who.sub, { kind: "autoparry-host", sev: v.sev, by: "room",
         detail: "the room timed " + Math.round(v.rate * 100) + "% perfect over " + (o.blocks | 0) + " blocks" });
+      // and how evenly: the room saw every press against its own ball. One match is
+      // too few to judge, so it goes to the account, which judges the last several
+      if (who && who.sub && (o.tn | 0) > 0 && this.env && this.env.VAULT) {
+        const p = toVault(this.env, who.sub, { op: "tim", sub: who.sub, n: o.tn | 0, mean: Number(o.tmean), sd: Number(o.tsd) }).catch(() => {});
+        if (this.ctx && this.ctx.waitUntil) this.ctx.waitUntil(p);
+      }
     }
     // anything else the game says (its own loadout, pings, lobby setup) is for nobody
   }
@@ -841,6 +847,19 @@ export class Vault {
       list.push({ id: t.id.slice(0, 40), mode: t.mode.slice(0, 16), won: !!t.won, secs: Math.max(0, Math.min(3600, Number(t.secs) || 0)), at: now });
       await st.put("tickets", list.slice(-TICKETS_KEPT));
       return jsonRes({ ok: true });
+    }
+    if (body.op === "tim") {                         // a room timed this player's blocks (never from a player)
+      const stats = (await st.get("stats")) || newStats(now);
+      if (!stats.wf) stats.wf = {};
+      timingAdd(stats, body.n, body.mean, body.sd);
+      const tp = timingPooled(stats), tv = timingVerdict(tp.n, tp.sd, tp.mean);
+      let b = null;
+      if (tv && !(stats.wf.tim && now - stats.wf.tim < 86400000)) {
+        stats.wf.tim = now;
+        b = await this.flagIn(sub, { kind: "timing-room", sev: "flag", by: "room", detail: "the room measured " + tv.detail + ", over the last " + stats.tim.length + " online matches" }, now);
+      }
+      await st.put("stats", stats);
+      return jsonRes({ ok: true, flagged: !!tv, banned: !!b });
     }
     if (body.op === "flag") {                        // a room caught something
       const b = await this.flagIn(sub, body.flag, now);
