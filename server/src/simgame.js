@@ -3015,13 +3015,17 @@ function buildRange(x,z){
   RANGE.sign={c:c,tex:st};rangeSignDraw();
   vFloorText("TARGETS",HW.ORANGE,x+1,z,7).rotation.z=-Math.PI/2;
 }
+// a press in the lobby: the practice ball if it's in reach, else whatever you're
+// standing at, else just a swing -- so you can see your blade (and Dev2's modes) anywhere
+function venuePress(){if(rangeSwing())return;if(nearZone){interact();return;}venueSwing();}
+function venueSwing(){if(!player||!player.alive||player.swingT>0)return;phStep(player);player.swing();}
 // a press in the lobby: hit the practice ball if it is close enough, and say so
 function rangeSwing(){
   if(!RANGE.on||!RANGE.ball||!player||!player.alive)return false;
   var p=RANGE.pos,dx=p.x-player.pos.x,dz=p.z-player.pos.z,dy=p.y-(player.y+1.9);
   var reach=4.6+RANGE.speed*0.05,near=dx*dx+dz*dz+dy*dy<reach*reach;
   if(!near)return false;
-  player.swing();
+  phStep(player);player.swing();
   if(RANGE.state==="toTarget")return true;         // already on its way
   // off it goes, at one of the targets
   RANGE.tgt=Math.floor(Math.random()*RANGE.targets.length);
@@ -6120,6 +6124,8 @@ function bodyGap(f,x,y,z){
   return Math.sqrt(dx*dx+dy*dy+dz*dz)-HB.r;
 }
 function touching(b,f){return bodyGap(f,b.pos.x,b.pos.y,b.pos.z)<=BALL_R;}
+// Dev2 BOTH: each press is the gun or the knife, in turn -- every local press goes through here
+function phStep(f){if(f&&f.swordDef&&f.swordDef.phantom==="both"){f.phAnim=f.phAlt|0;f.phAlt=f.phAnim^1;}}
 // raise a block, if the rules allow one right now
 function pressBlock(f){
   if(!f||!f.alive)return false;
@@ -6128,7 +6134,7 @@ function pressBlock(f){
   if(f.blockT>0||f.blockCd>0)return false;
   f.blockT=blockActive(f);f.blockAge=0;f.blockShow=1;
   // Dev2 BOTH: each parry is the gun or the knife, in turn
-  if(f.swordDef&&f.swordDef.phantom==="both"){f.phAnim=f.phAlt|0;f.phAlt=f.phAnim^1;}
+  phStep(f);
   // the blade swings the moment you press, hit or miss, like Blade Ball; the
   // ball turning round is what tells you it landed
   f.swing();
@@ -10854,6 +10860,11 @@ Fighter.prototype.phantomFrame=function(p,dt){
       var su=Math.random()*.9+.05,a=phW(this,phLocal(gun,PHv.set(0,-1.5+su*5.6,0),new THREE.Vector3()));
       spark(a.x+rr(-.1,.1),a.y+rr(-.08,.08),a.z+rr(-.1,.1),rr(-.15,.15),rr(.25,.7),rr(-.15,.15),.36,.16,.6,rr(.18,.32),rr(.5,.9),-.6);
     }
+    // the whole rifle burns while it's working: purple-and-black fire licking off it, heaviest at the shot
+    if(live&&QUAL>0&&e<1.0){var heat=e<.35?1:Math.max(.25,1-(e-.35)/.65),nf=dt*(this===player?70:25)*heat;
+      for(;nf>0;nf--){if(nf<1&&Math.random()>nf)break;
+        var fu2=Math.random(),fp2=phW(this,phLocal(gun,PHv.set(rr(-.12,.12),-1.7+fu2*5.9,rr(-.45,.3)),new THREE.Vector3()));
+        var fk2=Math.random();phFlame(this,fp2,fk2<.4?"dark":fk2<.7?"deep":fk2<.92?"glow":"hot",rr(.75,1.25)*(.7+heat*.5),rr(.28,.48),rr(.9,1.8));}}
     // smoke curling off the muzzle after the shot
     if(live&&QUAL>0&&e>.12&&e<.9&&Math.random()<dt*30){var mz=phW(this,phLocal(gun,PHv.set(0,gun.userData.tipY||4.2,0),new THREE.Vector3()));
       phFlame(this,mz,Math.random()<.6?"dark":"deep",rr(.25,.45),rr(.4,.7),rr(.6,1.2));}
@@ -10882,6 +10893,11 @@ Fighter.prototype.phantomFrame=function(p,dt){
         hsArm(L,(this._phSup||kh).clone().lerp(kh,off),1);}
     } else hsArm(kArm,hand,1);
     if(knife.userData.edge)knife.userData.edge.material.opacity=.45+.25*Math.sin(t*4+this.phase);
+    // the knife burns through the cut and the spin: fire off the hook, a trail of it behind the point
+    if(cutting&&QUAL>0&&te<.7){var nk=dt*(this===player?80:28);
+      for(;nk>0;nk--){if(nk<1&&Math.random()>nk)break;var ku=Math.random();
+        var kp=phW(this,phLocal(knife,ku<.35?knife.userData.tipPt:PHv.set(0,-.3-ku*.6,ku*.75),new THREE.Vector3()));
+        var kk2=Math.random();phFlame(this,kp,kk2<.4?"dark":kk2<.72?"deep":kk2<.93?"glow":"hot",rr(.75,1.2),rr(.24,.42),rr(.8,1.6));}}
   }
   if(mode==="karambit")hsArm(L,PHv2.set(-.5,2.02+br,.78),1);
   // the body turns into the cut and takes the kick (mirrored with everything else)
@@ -10956,12 +10972,12 @@ var DEV2_CRES={};
    additive one (the violet edge, the white-hot line down its middle, the
    flame). It's drawn on in a flick, holds, then burns away from the tail. */
 var PH_SLASH_MAT=null;
-function phSlashGeo(span){
-  var k=span.toFixed(2);if(DEV2_CRES[k])return DEV2_CRES[k];
+function phSlashGeo(span,thick){
+  thick=thick||1;var k=span.toFixed(2)+"x"+thick.toFixed(2);if(DEV2_CRES[k])return DEV2_CRES[k];
   var N=QUAL>1?72:40,R=2.55,pos=[],at=[],idx=[],a0=-Math.PI/2-span/2;
   for(var i=0;i<=N;i++){var u=i/N,ang=a0+u*span;
     // thin; fattest a little past the middle, drawn right down to a point at each end
-    var h=.62*Math.pow(Math.sin(Math.PI*Math.pow(u,.8)),1.25)+.004;
+    var h=.62*thick*Math.pow(Math.sin(Math.PI*Math.pow(u,.8)),1.25)+.004;
     // and room past the edge at the ends for the flames to lick into
     var fl=.8*(Math.pow(Math.max(0,1-u/.3),1.3)+Math.pow(Math.max(0,(u-.7)/.3),1.3))+.08;
     var W=h+fl,c=Math.cos(ang),sn=-Math.sin(ang);
@@ -10975,11 +10991,11 @@ function phSlashGeo(span){
 function phSlashMat(glow){
   return new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,toneMapped:false,
     blending:glow?THREE.AdditiveBlending:THREE.NormalBlending,
-    uniforms:{uT:{value:0},uHead:{value:0},uTail:{value:0},uOp:{value:1},uDir:{value:1},
+    uniforms:{uT:{value:0},uHead:{value:0},uTail:{value:0},uOp:{value:1},uDir:{value:1},uFloor:{value:-99},
       uDark:{value:new THREE.Color(0x0e0318)},uRim:{value:new THREE.Color(0x7a2cff)},uHot:{value:new THREE.Color(0xf0dcff)}},
-    vertexShader:"attribute vec3 sl;varying vec3 vS;void main(){vS=sl;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}",
+    vertexShader:"attribute vec3 sl;varying vec3 vS;varying float vY;void main(){vS=sl;vY=(modelMatrix*vec4(position,1.0)).y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}",
     fragmentShader:[
-      "uniform float uT,uHead,uTail,uOp,uDir;uniform vec3 uDark,uRim,uHot;varying vec3 vS;",
+      "uniform float uT,uHead,uTail,uOp,uDir,uFloor;uniform vec3 uDark,uRim,uHot;varying vec3 vS;varying float vY;",
       "float h2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}",
       "float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);",
       " return mix(mix(h2(i),h2(i+vec2(1,0)),f.x),mix(h2(i+vec2(0,1)),h2(i+vec2(1,1)),f.x),f.y);}",
@@ -10989,7 +11005,7 @@ function phSlashMat(glow){
       " float g=uDir>0.0?u:1.0-u;",                                     // along the way it was cut
       // the solid: a sharp-edged crescent, a white-hot line down it
       " float body=1.0-smoothstep(s*.82,s,d);",
-      " float core=1.0-smoothstep(s*.1,s*.6,abs(v+s*.15));",
+      " float core=1.0-smoothstep(s*.04,s*.3,abs(v+s*.5));",
       " float rim=smoothstep(s*.5,s*.92,d)*body;",
       // the flames: tongues of noise licking out past the edge at the ends, streaming back along the cut
       " float tip=max(1.0-smoothstep(0.0,.3,u),smoothstep(.7,1.0,u));",
@@ -11000,13 +11016,14 @@ function phSlashMat(glow){
       " float e=fbm(vec2(u*9.0,v*2.0+uT*3.0));",
       " float vis=smoothstep(0.0,.06,uHead-g)*smoothstep(-.12,.0,g-uTail*1.15+e*.15);",
       " float a;vec3 c;",
-      glow?" c=uRim*(rim*1.8+body*.25+fl*1.4*(1.0-n*.6))+uHot*(core*1.5*body+fl*fl*.6);a=1.0;"
-          :" a=body*(.55+.25*(1.0-core))+fl*.6;c=uDark;",
+      glow?" c=uRim*(rim*1.9+body*.06+fl*1.4*(1.0-n*.6))+uHot*(core*1.4*body+fl*fl*.6);a=1.0;"
+          :" a=body*(.72+.2*(1.0-core))+fl*.6;c=uDark;",
+      " vis*=smoothstep(uFloor+.1,uFloor+.9,vY);",                       // it fades into the floor rather than being cut off by it
       " gl_FragColor=vec4(c,a*vis*uOp);}"].join("\n")});
 }
 function devSlash(f,o){
   if(QUAL===0)return;
-  var span=o.span||4.2,G=phSlashGeo(span),dir=o.dir||1;
+  var span=o.span||4.2,G=phSlashGeo(span,o.thick),dir=o.dir||1;
   var grp=new THREE.Group(),inner=new THREE.Group();grp.add(inner);
   var dark=phSlashMat(false),glow=phSlashMat(true);
   if(o.rim)glow.uniforms.uRim.value.set(o.rim);
@@ -11028,8 +11045,9 @@ function devSlash(f,o){
   var t=0,life=o.life||.46,hold=o.hold||.14,drift=o.drift||0,p0=grp.position.clone(),flick=o.flick||.08;
   phOwn(f,{tick:function(dt){t+=dt;
       var head=Math.min(1.2,t/flick*1.2),tail=t<hold?0:Math.pow((t-hold)/(life-hold),.8),op=t<.025?t/.025:1;
-      [dark,glow].forEach(function(m){var U=m.uniforms;U.uT.value=t;U.uHead.value=head;U.uTail.value=tail;U.uOp.value=op;});
-      if(echo){var U=echo.material.uniforms;U.uT.value=t;U.uHead.value=Math.max(0,head-.25);U.uTail.value=Math.min(1,tail*1.4+(t>hold*.6?.15:0));U.uOp.value=.4*op;}
+      var fy=f.y||0;
+      [dark,glow].forEach(function(m){var U=m.uniforms;U.uT.value=t;U.uHead.value=head;U.uTail.value=tail;U.uOp.value=op;U.uFloor.value=fy;});
+      if(echo){var U=echo.material.uniforms;U.uFloor.value=fy;U.uT.value=t;U.uHead.value=Math.max(0,head-.25);U.uTail.value=Math.min(1,tail*1.4+(t>hold*.6?.15:0));U.uOp.value=.4*op;}
       inner.scale.y=1;inner.rotation.y=(1-Math.min(1,t/flick))*-.35*dir;     // a little whip into place
       if(drift)grp.position.copy(p0).addScaledVector(fwd,drift*(1-Math.pow(1-Math.min(1,t/life),2)));
       if(o.track)grp.position.set(o.track.pos.x,o.track.y+(o.trackY||0),o.track.pos.z);
@@ -11068,11 +11086,11 @@ function phFlameMats(){
   return PH_FM;
 }
 // one flame: born at p, rising, flickering, shrinking out over `life`
-function phFlame(f,p,kind,size,life,vy,par){
+function phFlame(f,p,kind,size,life,vy,par,vel){
   var m=new THREE.Sprite(phFlameMats()[kind]);m.position.copy(p);m.renderOrder=kind==="glow"||kind==="hot"?9:8;(par||scene).add(m);
   var t=0,ph=Math.random()*9,w=size*(.75+Math.random()*.4);
   phOwn(f,{tick:function(dt){t+=dt;var k=t/life;if(k>=1)return false;
-      m.position.y+=vy*dt;var fl=1+.18*Math.sin(t*40+ph);
+      m.position.y+=vy*dt;if(vel){m.position.addScaledVector(vel,dt);vel.multiplyScalar(Math.max(0,1-dt*5));}var fl=1+.18*Math.sin(t*40+ph);
       var s=(k<.2?k/.2:1-(k-.2)/.8);m.scale.set(w*s*fl*.6,w*s*(1.2+k*.5),1);return true;},
     done:function(){(par||scene).remove(m);}});
 }
@@ -11156,6 +11174,34 @@ function phCasing(f,gun){
       if(cs.position.y<f.y+.05){cs.position.y=f.y+.05;v.y=Math.abs(v.y)*.35;v.x*=.6;v.z*=.6;}return true;},
     done:function(){scene.remove(cs);cs.material.dispose();}});
 }
+/* A little explosion of purple-and-black fire: a white-hot core, a ball of
+   flame thrown out (dark tongues under glowing ones), a shockwave ring
+   facing down the shot, sparks, and black smoke rolling up after. */
+var PH_RING=null;
+function phBoom(f,p,dir,sz){
+  if(QUAL===0||!phNear(f))return;
+  var hi=QUAL>1,me=f===player;sz=sz||1;
+  phPop(f,p,0xffffff,2.2*sz,.09,null,0,1);
+  phPop(f,p,0xd8b0ff,3.6*sz,.16,phStarTex(),3,.9);
+  phPop(f,p,0x7a2cff,5*sz,.26,null,0,.55);
+  // the fireball
+  var n=Math.round((hi?26:12)*sz);
+  for(var i=0;i<n;i++){var v=new THREE.Vector3(rr(-1,1),rr(-.5,1),rr(-1,1)).normalize().multiplyScalar(rr(3,8)*sz).addScaledVector(dir,rr(2,6)*sz);
+    var k=i%4;phFlame(f,p.clone(),k===0?"dark":k===1?"deep":k===2?"glow":"hot",rr(.7,1.3)*sz,rr(.3,.55),rr(.4,1.4),null,v);}
+  // the shockwave
+  if(!PH_RING)PH_RING=new THREE.RingGeometry(.82,1,40);
+  [[0xc890ff,.9,.24],[0x3a0a66,.7,.32]].forEach(function(c,j){
+    var m=new THREE.Mesh(PH_RING,new THREE.MeshBasicMaterial({color:c[0],transparent:true,opacity:c[1],side:THREE.DoubleSide,depthWrite:false,
+      blending:j?THREE.NormalBlending:THREE.AdditiveBlending,toneMapped:false}));
+    m.position.copy(p);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),dir.clone().normalize());scene.add(m);
+    var t=0;phOwn(f,{tick:function(dt){t+=dt;var k=t/c[2];if(k>=1)return false;m.scale.setScalar((.25+2.2*(1-Math.pow(1-k,2.5)))*sz*(j?.85:1));m.material.opacity=c[1]*(1-k);return true;},
+      done:function(){scene.remove(m);m.material.dispose();}});});
+  // sparks
+  for(var s2=0;s2<(hi?30:12)*sz;s2++){var c2=s2%3;spark(p.x,p.y,p.z,dir.x*rr(2,9)+rr(-4,4),rr(-1,5),dir.z*rr(2,9)+rr(-4,4),c2?1:.8,c2===1?.45:.8,1,rr(.18,.36),rr(.2,.45),3);}
+  // black smoke rolling up after
+  for(var q=0;q<(hi?8:3)*sz;q++)(function(d){setTimeout(function(){if(f.mesh)phFlame(f,p.clone().add(new THREE.Vector3(rr(-.4,.4),rr(0,.4),rr(-.4,.4))),"dark",rr(1,1.6)*sz,rr(.6,.9),rr(.8,1.4));},d);})(80+q*30);
+  if(me)shakeCam(.14*sz);
+}
 function phShot(f,gun){
   phSfx("shot",f);
   if(QUAL===0||!f.mesh)return;
@@ -11170,10 +11216,9 @@ function phShot(f,gun){
   var near=phNear(f);
   // two slashes of fire wrapped round the body, crossed; a white flash and a bubble of it bursting out
   var sd=Math.random()<.5?1:-1;
-  devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+1.6,f.pos.z),track:f,trackY:1.6,yaw:f.yaw+rr(-.3,.3),roll:.42*sd,span:4.4,scale:1.5,dir:sd,
-    life:.5,hold:.16,flick:.07,fire:true});
-  var f2=f;setTimeout(function(){if(f2.mesh)devSlash(f2,{pos:new THREE.Vector3(f2.pos.x,f2.y+1.5,f2.pos.z),track:f2,trackY:1.5,yaw:f2.yaw+Math.PI*.15*sd,roll:-.5*sd,span:3.7,scale:1.32,dir:-sd,
-    life:.42,hold:.12,flick:.06,fire:true});},45);
+  devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+2.3,f.pos.z),track:f,trackY:2.3,yaw:f.yaw+rr(-.15,.15),roll:.85*sd,span:4.3,scale:1.55,thick:1.9,dir:sd,
+    life:.58,hold:.2,flick:.07,fire:true});
+  phBoom(f,at(.35),dir,1);
   phBubble(f,1.5);
   if(near)phPop(f,new THREE.Vector3(f.pos.x,f.y+1.6,f.pos.z),0xffffff,5,.12,phStarTex(),2,.7);
   if(near)for(var fi=0;fi<(hi?6:3);fi++){var fp=at(.2+fi*.25);phFlame(f,fp,fi%2?"glow":"dark",.9,.35,.9);}
@@ -11216,10 +11261,11 @@ function phCut(f,knife,ks){
   phSfx("cut",f);
   if(QUAL===0)return;
   // a crescent on the diagonal of the cut (the left hand's runs the other way)
-  devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+1.8,f.pos.z),track:f,trackY:1.8,yaw:f.yaw,roll:-.55*ks,span:3.8,scale:1.55,dir:ks,life:.44,hold:.13,flick:.07,fire:true});
+  devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+1.8,f.pos.z),track:f,trackY:1.8,yaw:f.yaw,roll:-.55*ks,span:3.9,scale:1.55,thick:1.5,dir:ks,life:.5,hold:.15,flick:.07,fire:true});
   if(!phNear(f)||!knife.userData.tipPt)return;
   var p=phW(f,phLocal(knife,knife.userData.tipPt,new THREE.Vector3()));
   phPop(f,p,0xb890ff,2.4,.18,phStarTex(),4,.85);
+  phBoom(f,p,new THREE.Vector3(Math.sin(f.yaw),0,Math.cos(f.yaw)),.6);
   ringBurst(p.x,p.y,p.z,QUAL>1?22:10,9,PH_COL.cy,1.1,.35);
   ringBurst(p.x,p.y,p.z,QUAL>1?16:8,6,PH_COL.mag,1.3,.45);
   var cols=[[.71,.42,1],[1,.31,.85],[.37,.91,1],[1,1,1]];
@@ -14846,7 +14892,8 @@ function tryParry(){
       if(hb2.orbit)return;                    // the singularity lets go when it wants to
       if(NET.on&&!NET.isHost){
         // the host holds the truth: tell it, and show the swing locally
-        netSend({t:"hold",a:hb2.wrath?"hit":"rel",y:+camYaw.toFixed(3)});
+        phStep(player);
+        netSend({t:"hold",a:hb2.wrath?"hit":"rel",y:+camYaw.toFixed(3),pa:player.phAnim|0});
         player.swing();
         return;
       }
@@ -15001,7 +15048,7 @@ window.addEventListener("keydown",function(e){
   var k=keyNorm(e.code);
   keys[k]=true;
   if(isBind(k,"jump")){tryJump();e.preventDefault();}
-  if(isBind(k,"block")){if(STATE==="venue"){if(!rangeSwing())interact();}else tryParry();}
+  if(isBind(k,"block")){if(STATE==="venue")venuePress();else tryParry();}
   if(isBind(k,"ability")&&player)useAbility(player);
   if(isBind(k,"emote")&&!tauntWheelOpen())openTauntWheel();      // held: let go to send
   if(tauntWheelOpen()&&/^Digit[1-8]$/.test(e.code)){var we=wheelEmotes()[+e.code.slice(5)-1];if(we)doTaunt(we.id);}
@@ -15053,7 +15100,7 @@ function unlockPointer(){
 function pointerLocked(){return document.pointerLockElement===canvas;}
 canvas.addEventListener("mousedown",function(e){
   if(e.button===0&&STATE==="playing")tryParry();
-  if(e.button===0&&STATE==="venue")rangeSwing();
+  if(e.button===0&&STATE==="venue"&&!rangeSwing())venueSwing();
   if(e.button===2){
     // right button is look: hold it to steer, and it grabs the cursor
     rightLook=true;dragging=true;lockPointer();refreshCursor();
@@ -15144,7 +15191,7 @@ function bindTouch(id,fn){
   el.addEventListener("mousedown",down);
   el.addEventListener("mouseup",up);
 }
-bindTouch("tParry",function(){if(STATE==="venue"){if(!rangeSwing())interact();}else tryParry();});
+bindTouch("tParry",function(){if(STATE==="venue")venuePress();else tryParry();});
 bindTouch("tJump",tryJump);
 bindTouch("tAbil",function(){if(player)useAbility(player);});
 bindTouch("tLock",function(){setShiftLock(!shiftLock);});
