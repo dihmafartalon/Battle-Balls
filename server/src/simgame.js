@@ -11005,6 +11005,8 @@ function phSlashMat(glow){
       " float g=uDir>0.0?u:1.0-u;",                                     // along the way it was cut
       // the solid: a sharp-edged crescent, a white-hot line down it
       " float body=1.0-smoothstep(s*.82,s,d);",
+      " float veil=mix(.35,1.0,smoothstep(-s,s*.9,v));",                // denser toward the outer edge, a veil toward the inner
+      " float wisp=.75+.25*fbm(vec2(u*30.0-uT*4.0*uDir,v*4.0));",
       " float core=1.0-smoothstep(s*.04,s*.3,abs(v+s*.5));",
       " float rim=smoothstep(s*.5,s*.92,d)*body;",
       // the flames: tongues of noise licking out past the edge at the ends, streaming back along the cut
@@ -11016,8 +11018,8 @@ function phSlashMat(glow){
       " float e=fbm(vec2(u*9.0,v*2.0+uT*3.0));",
       " float vis=smoothstep(0.0,.06,uHead-g)*smoothstep(-.12,.0,g-uTail*1.15+e*.15);",
       " float a;vec3 c;",
-      glow?" c=uRim*(rim*1.9+body*.06+fl*1.4*(1.0-n*.6))+uHot*(core*1.4*body+fl*fl*.6);a=1.0;"
-          :" a=body*(.72+.2*(1.0-core))+fl*.6;c=uDark;",
+      glow?" c=(uRim*(rim*1.25*wisp+body*veil*.1+fl*1.1*(1.0-n*.6))+uHot*(core*.9*body+fl*fl*.45))*.85;a=1.0;"
+          :" a=body*veil*wisp*.42+fl*.4;c=uDark;",
       " vis*=smoothstep(uFloor+.1,uFloor+.9,vY);",                       // it fades into the floor rather than being cut off by it
       " gl_FragColor=vec4(c,a*vis*uOp);}"].join("\n")});
 }
@@ -11079,9 +11081,9 @@ function phFlameMats(){
   if(PH_FM)return PH_FM;
   var t=phFlameTex();
   PH_FM={
-    dark:new THREE.SpriteMaterial({map:t,color:0x14041f,transparent:true,opacity:.85,depthWrite:false}),
-    deep:new THREE.SpriteMaterial({map:t,color:0x2a0850,transparent:true,opacity:.9,depthWrite:false}),
-    glow:new THREE.SpriteMaterial({map:t,color:0x6a18d0,transparent:true,opacity:.85,depthWrite:false,blending:THREE.AdditiveBlending}),
+    dark:new THREE.SpriteMaterial({map:t,color:0x14041f,transparent:true,opacity:.55,depthWrite:false}),
+    deep:new THREE.SpriteMaterial({map:t,color:0x2a0850,transparent:true,opacity:.6,depthWrite:false}),
+    glow:new THREE.SpriteMaterial({map:t,color:0x6a18d0,transparent:true,opacity:.7,depthWrite:false,blending:THREE.AdditiveBlending}),
     hot:new THREE.SpriteMaterial({map:t,color:0xb060ff,transparent:true,opacity:.55,depthWrite:false,blending:THREE.AdditiveBlending})};
   return PH_FM;
 }
@@ -11158,7 +11160,7 @@ function phBubble(f,y){
   var m=new THREE.Mesh(PH_BUB||(PH_BUB=new THREE.SphereGeometry(1,28,18)),new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,
     uniforms:{uOp:{value:1}},
     vertexShader:"varying float vF;void main(){vec4 mv=modelViewMatrix*vec4(position,1.0);vec3 n=normalize(normalMatrix*normal);vF=1.0-abs(dot(n,normalize(-mv.xyz)));gl_Position=projectionMatrix*mv;}",
-    fragmentShader:"uniform float uOp;varying float vF;void main(){float r=pow(vF,2.6);gl_FragColor=vec4(mix(vec3(.55,.35,1.0),vec3(1.0),r)*(r*1.1+.05)*uOp,1.0);}"}));
+    fragmentShader:"uniform float uOp;varying float vF;void main(){float r=pow(vF,2.6);gl_FragColor=vec4(mix(vec3(.55,.35,1.0),vec3(1.0),r)*(r*.7+.03)*uOp,1.0);}"}));
   scene.add(m);var t=0;
   phOwn(f,{tick:function(dt){t+=dt;var k=t/.32;if(k>=1)return false;
       m.position.set(f.pos.x,f.y+y,f.pos.z);m.scale.setScalar(2+1.9*(1-Math.pow(1-k,3)));m.material.uniforms.uOp.value=k<.1?k/.1:Math.pow(1-(k-.1)/.9,1.4);return true;},
@@ -11190,7 +11192,7 @@ function phBoom(f,p,dir,sz){
     var k=i%4;phFlame(f,p.clone(),k===0?"dark":k===1?"deep":k===2?"glow":"hot",rr(.7,1.3)*sz,rr(.3,.55),rr(.4,1.4),null,v);}
   // the shockwave
   if(!PH_RING)PH_RING=new THREE.RingGeometry(.82,1,40);
-  [[0xc890ff,.9,.24],[0x3a0a66,.7,.32]].forEach(function(c,j){
+  [[0xc890ff,.5,.24],[0x3a0a66,.32,.32]].forEach(function(c,j){
     var m=new THREE.Mesh(PH_RING,new THREE.MeshBasicMaterial({color:c[0],transparent:true,opacity:c[1],side:THREE.DoubleSide,depthWrite:false,
       blending:j?THREE.NormalBlending:THREE.AdditiveBlending,toneMapped:false}));
     m.position.copy(p);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),dir.clone().normalize());scene.add(m);
@@ -11216,7 +11218,7 @@ function phShot(f,gun){
   var near=phNear(f);
   // two slashes of fire wrapped round the body, crossed; a white flash and a bubble of it bursting out
   var sd=Math.random()<.5?1:-1;
-  devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+2.3,f.pos.z),track:f,trackY:2.3,yaw:f.yaw+rr(-.15,.15),roll:.85*sd,span:4.3,scale:1.55,thick:1.9,dir:sd,
+  devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+1.75,f.pos.z),track:f,trackY:1.75,yaw:f.yaw+rr(-.15,.15),roll:0,span:4.3,scale:1.55,thick:1.9,dir:sd,
     life:.58,hold:.2,flick:.07,fire:true});
   phBoom(f,at(.35),dir,1);
   phBubble(f,1.5);
