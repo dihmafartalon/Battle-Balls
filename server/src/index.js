@@ -93,9 +93,9 @@ export function checkRate(state, now, budget, windowMs) {
   return state.count <= budget;
 }
 
-/* Carried, not owned: Phantom Ops BOTH is the Dev2 Sniper and the Dev2
-   Karambit together, so it needs both of them. */
-const SWORD_COMBOS = { dev2both: ["dev2sniper", "dev2karambit"] };
+/* Carried, not owned: Dev2 is one item, and its karambit and BOTH modes are
+   ways of carrying it, so each needs Dev2 itself. */
+const SWORD_COMBOS = { dev2both: ["dev2sniper"], dev2karambit: ["dev2sniper"] };
 export function ownsSword(inv, id) {
   if (!inv || !inv.swords) return false;
   if (Object.prototype.hasOwnProperty.call(SWORD_COMBOS, id)) return SWORD_COMBOS[id].every(x => !!inv.swords[x]);
