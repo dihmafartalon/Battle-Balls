@@ -5096,9 +5096,11 @@ Fighter.prototype.strikeFx=function(){
   burst(tip.x,tip.y,tip.z,QUAL>1?16:10,9,d.glow,1.05,.28,-5);
   var near=this===player||!player||dist2(this.pos.x,this.pos.z,player.pos.x,player.pos.z)<60*60;
   if(near){
-    spawnSlash(this);
-    slashRing(this.pos.x,this.y+1.25,this.pos.z,d.glow,0,.12);
-    slashRing(this.pos.x,this.y+1.05,this.pos.z,d.glow,.07,-.08);
+    if(d.id!=="vampfang"){           // the fang draws its own cut, in black, and leaves the floor alone
+      spawnSlash(this);
+      slashRing(this.pos.x,this.y+1.25,this.pos.z,d.glow,0,.12);
+      slashRing(this.pos.x,this.y+1.05,this.pos.z,d.glow,.07,-.08);
+    }
   }
   if(d.rarity==="legendary"||d.rarity==="mythic")
     ringBurst(tip.x,tip.y,tip.z,QUAL>1?24:14,11,d.glow,1.5,.5);
@@ -11960,25 +11962,52 @@ function rapWord(txt,col,x,y,z,size,life){
       mesh.quaternion.copy(camera.quaternion);mesh.material.opacity=k<.7?1:1-(k-.7)/.3;return true;},
     done:function(){scene.remove(mesh);mesh.material.dispose();}});
 }
-/* THE VAMP FANG'S CUT: three red crescents crossing, blood sprayed across
-   the floor, a shockwave, a spray of droplets, and a whole swarm of bats
-   bursting out of the cut and wheeling away. */
+/* A thick black crescent with a red edge all the way round: the Vamp Fang's
+   cut. Drawn normally (not added as light) so the black reads as black. It
+   sweeps across in a few frames, then thins and fades. */
+function rapDarkSlashGeo(r0,r1,span,seg,minW){
+  var g=new THREE.RingGeometry(r0,r1,seg,1,-Math.PI/2-span/2,span),p=g.attributes.position,mid=(r0+r1)/2;
+  for(var i=0;i<p.count;i++){var x=p.getX(i),y=p.getY(i),r=Math.sqrt(x*x+y*y),a=Math.atan2(y,x);
+    var t=(a-(-Math.PI/2-span/2))/span;t=Math.min(1,Math.max(0,t));
+    var w=Math.max(minW,Math.pow(Math.sin(t*Math.PI),.7)),nr=mid+(r-mid)*w;
+    p.setXY(i,Math.cos(a)*nr,Math.sin(a)*nr);}
+  p.needsUpdate=true;return g;
+}
+function rapDarkSlash(f,tilt,span,scale){
+  if(QUAL===0)return;
+  // its own geometry each time: the sweep is drawn by trimming it
+  var G0={red:rapDarkSlashGeo(1.45,3.75,span,28,.12),blk:rapDarkSlashGeo(1.7,3.45,span,28,0)};
+  var grp=new THREE.Group(),inner=new THREE.Group();grp.add(inner);
+  var red=new THREE.Mesh(G0.red,new THREE.MeshBasicMaterial({color:0xff1a34,transparent:true,depthWrite:false,side:THREE.DoubleSide,toneMapped:false}));
+  var blk=new THREE.Mesh(G0.blk,new THREE.MeshBasicMaterial({color:0x07040a,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+  red.renderOrder=6;blk.renderOrder=7;red.rotation.x=blk.rotation.x=-Math.PI/2;blk.position.y=.01;
+  inner.add(red);inner.add(blk);
+  grp.position.set(f.pos.x,f.y+1.9,f.pos.z);grp.rotation.order="YZX";grp.rotation.y=f.yaw;grp.rotation.z=tilt;grp.scale.setScalar(scale*(1+Math.min(1.7,f.bladeReach||1)*.2));
+  scene.add(grp);
+  var t=0,IDX=G0.blk.index.count;
+  V4FX.push({tick:function(dt){t+=dt;
+      var sw=Math.min(1,t/.09),n=Math.max(6,Math.floor(IDX*sw/6)*6);
+      red.geometry.setDrawRange(0,n);blk.geometry.setDrawRange(0,n);
+      var fade=t<.12?1:Math.max(0,1-(t-.12)/.3);
+      red.material.opacity=fade;blk.material.opacity=Math.min(1,fade*1.1);
+      inner.scale.z=1-(1-fade)*.4;
+      if(t>=.42)return false;return true;},
+    done:function(){scene.remove(grp);red.material.dispose();blk.material.dispose();G0.red.dispose();G0.blk.dispose();}});
+}
+/* THE VAMP FANG'S CUT: two thick black crescents edged in red, crossing;
+   a shockwave, a spray of droplets, and a few bats out of the cut. */
 function vampFangFx(f,tip){
   var X=f.pos.x,Y=f.y,Z=f.pos.z,fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),k,a,hi=QUAL>1;
-  spawnSlash(f,{span:4.8,tilt:.62,r:1.55,w:1.7},0xff1a34);
-  spawnSlash(f,{span:4.2,tilt:-.5,r:1.35,w:1.2},0x9a0010,true);
-  spawnSlash(f,{span:5.4,tilt:.2,r:1.95,w:.55,hot:true},0xff6a7a);
-  hwDecal(X+fx*2.6,Y+.07,Z+fz*2.6,"bloodsplat",0xc8101c,11,1.6,0,f.yaw);
-  hwBeam(X+fx*2,Y,Z+fz*2,0xff1a34,1.4,.45);
-  slashRing(X,Y+.5,Z,0xff1a34,0,0);slashRing(X,Y+1.2,Z,0x9a0010,.06,.15);slashRing(X,Y+.9,Z,0xff6a7a,.12,-.12);
+  rapDarkSlash(f,.55,4.6,1.4);
+  rapDarkSlash(f,-.5,3.6,1.1);
   ringBurst(tip.x,tip.y,tip.z,hi?34:16,13,0xff1a34,1.8,.6);
   burst(tip.x,tip.y,tip.z,hi?34:14,11,0xc8102a,1.5,.45,-6);
   // blood: heavy droplets thrown along the cut, falling hard
   for(k=0;k<(hi?40:16);k++){a=f.yaw+hr(-1.1,1.1);
     spark(tip.x,tip.y,tip.z,Math.sin(a)*hr(4,11),hr(1,6),Math.cos(a)*hr(4,11),hr(.6,.9),0,hr(0,.08),hr(.35,.7),hr(.5,.9),14);}
   // the swarm: a ring of bats bursting out round you, and a stream off the blade
-  rapBats(X,Y+2,Z,hi?14:6,0,0,true);
-  rapBats(tip.x,tip.y,tip.z,hi?10:5,fx,fz);
+  rapBats(X,Y+2,Z,hi?3:2,0,0,true);
+  rapBats(tip.x,tip.y,tip.z,hi?2:1,fx,fz);
   if(f===player)shakeCam(.14);
 }
 /* Bats: little black silhouettes flapping up and away from a cut. */
