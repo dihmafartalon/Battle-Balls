@@ -1918,6 +1918,10 @@ var SWORDS=[
   desc:"Not a sword. A block is a shot: the ball is blown back the way you are aiming with a crack, a muzzle flash and a tracer across the arena."},
  {id:"portalgun",name:"Portal Gun",rarity:"mythic",event:"pack",price:-1,yen:345,portal:true,blade:0xe4e8ec,hilt:0x2a2e34,glow:0x6bff3a,shape:"portalgun",hold:"pistol",size:.64,swing:"gunshot",idle:"none",
   desc:"Grey, chunky and humming, with a tube of something green sloshing on top. A block is a shot: the ball goes back through a portal of green light."},
+ {id:"plaque",name:"Platinum Plaque",rarity:"mythic",event:"pack",price:-1,yen:345,blade:0xe8eef6,hilt:0x141416,glow:0xdfe8ff,shape:"plaque",hold:"two",swing:"hammer",idle:"none",size:.82,
+  desc:"A framed platinum record, swung like a bat. Every block lands with a flash of PARRY!"},
+ {id:"vampfang",name:"Vamp Fang",rarity:"mythic",event:"pack",secret:true,price:-1,yen:345,blade:0xf2ead8,hilt:0x141016,glow:0xff1a34,shape:"vampfang",hold:"one",swing:"slash",idle:"none",
+  desc:"The Rap Pack's secret. One long curved fang of ivory, a blood-red gem in a bat-wing guard. Every cut is red, and the bats come out."},
  {id:"divineright",name:"Divine Right",price:-1,rank:"god",blade:0xdce6f2,hilt:0xd8b050,glow:0x7ad8ff,shape:"divine",hold:"rhip",swing:"divine",idle:"orbit",
   desc:"The GOD rank's blade. Worn on the right hip and drawn in one stroke: the wings open, the runes light, and every cut sheds feathers of light."},
  {id:"crown",name:"Apex",rarity:"ultra",price:-1,ultra:true,code:true,top1:true,blade:0xfff0c0,hilt:0x0e0c0a,glow:0xffd27a,shape:"apex",hold:"back",size:.9,swing:"apex",idle:"none",
@@ -2185,6 +2189,10 @@ var SKINS=[
   desc:"Spiky blue hair, one long eyebrow and eyes that have seen everything. A black PLONE tee. Burps mid-sentence."},
  {id:"cucci",name:"Cucci",price:-1,yen:330,rarity:"mythic",event:"pack",style:"cucci",body:0x121214,limb:0x121214,skin:0xf2c9a0,glow:0x000000,
   desc:"Big head, bigger eyes, a black CUCCI tee and skinny jeans. Unbothered. Blinks slowly at whoever is about to lose."},
+ {id:"cartwheel",name:"Playboi Cartwheel",price:-1,yen:330,rarity:"mythic",event:"pack",style:"cartwheel",body:0x141416,limb:0x141416,skin:0x7b4a2d,glow:0x000000,
+  desc:"Black dreads, one red eye open and one winking, fangs in the grin. A black long-sleeve with red marks, a silver chain and cross, a red belt with a chain hanging off it."},
+ {id:"lilvertigo",name:"Lil Vertigo",price:-1,yen:330,rarity:"mythic",event:"pack",style:"vertigo",body:0x141416,limb:0x141416,skin:0x6e4228,glow:0x000000,
+  desc:"Purple dreads standing straight up, black shades, tongue out and fangs. A purple puffer with star camo, black cargos, chunky purple shoes."},
  {id:"wraith",name:"Wraith",price:0,yen:330,rarity:"mythic",style:"wraith",body:0x181422,limb:0x0a0810,skin:0x9a3aff,glow:0xb14aff,
   desc:"Curved horns, a ragged shroud and two violet embers where eyes should be."},
  // ranked path rewards
@@ -5096,6 +5104,10 @@ Fighter.prototype.strikeFx=function(){
     ringBurst(tip.x,tip.y,tip.z,QUAL>1?24:14,11,d.glow,1.5,.5);
   if(d.swing==="hammer"||d.swing==="overhead")
     ringBurst(this.pos.x,this.y+.2,this.pos.z,QUAL>1?18:10,9,d.glow,1.4,.45);
+  // the rap pack: the plaque says PARRY!, the fang lets the bats out
+  if(d.id==="plaque"&&near)rapWord("PARRY!","#e8f4ff",tip.x,tip.y+.8,tip.z,1.3,.9);
+  if(d.id==="vampfang"&&near){rapBats(tip.x,tip.y,tip.z,QUAL>1?7:4,Math.sin(this.yaw),Math.cos(this.yaw));
+    burst(tip.x,tip.y,tip.z,QUAL>1?16:8,7,0xc8102a,1,.35,-6);}
 };
 /* A signature swing's first cut lands when a plain swing's does: a tenth of
    the way in. It used to play its wind-up at full length first, so the cut, its
@@ -7352,7 +7364,10 @@ var TAUNTS=[
   {id:"yawn", e:"\ud83e\udd71",txt:"BORING...",   col:"#9fb4cc"},
   // the pack's emote: a portal opens behind you, a peace sign, and you lean back into it
   {id:"portal",e:"\u270c\ufe0f",txt:"PEACE OUT",col:"#6bff3a",pack:"interdim",fx:"portal",rarity:"mythic",
-  desc:"A green portal tears open behind you. Throw up the peace sign and lean back like you're about to dip. From the Interdimensional Pack."}
+  desc:"A green portal tears open behind you. Throw up the peace sign and lean back like you're about to dip. From the Interdimensional Pack."},
+  // the rap pack's: hype the crowd, dive, and there is no crowd
+  {id:"stagedive",e:"\ud83c\udfa4",txt:"STAGE DIVE",col:"#ff1a34",pack:"rap",fx:"stagedive",rarity:"mythic",
+  desc:"Hype the crowd up, dive off the stage... and land face first. Stars included. From the Rap Pack."}
 ];
 var TAUNT_DUR=2.2,TAUNT_GAP=2;
 var TAUNT_BASE=TAUNTS.filter(function(t){return !t.pack;}).map(function(t){return t.id;});      // the eight everyone has
@@ -7380,6 +7395,7 @@ Fighter.prototype.taunt=function(id){
     for(var pk=0;pk<(QUAL>1?24:10);pk++){var pa=Math.random()*TAU,pr=hr(.3,1.8);
       spark(this.pos.x-by*1.3+bz*Math.cos(pa)*pr,this.y+1.9+Math.sin(pa)*pr,this.pos.z-bz*1.3-by*Math.cos(pa)*pr,by*hr(.5,2),hr(-.3,.8),bz*hr(.5,2),.5,1,.4,hr(.25,.45),hr(.6,1.1),0);}
   }
+  if(tk.fx==="stagedive"&&this.mesh&&QUAL>=0)rapStageDiveFx(this);
   return true;
 };
 // the moves: arms[1] is the right (blade) arm, arms[0] the left
@@ -7397,6 +7413,23 @@ Fighter.prototype.tauntPose=function(dt){
     // the peace sign up by the face, the other hand on the hip, leaning back with a bounce
     s=Math.min(1,a/0.3);set(R,-2.5*s,0.5*s);set(L,0,-0.6*s);
     g.rotation.x=-0.22*s+Math.sin(a*10)*0.03;g.position.y+=Math.abs(Math.sin(a*5))*0.12*s;}
+  else if(k==="stagedive"){
+    // hype (arms up, bouncing), the dive (out and up, tipping over), the face-plant
+    var dx=Math.sin(this.yaw),dz=Math.cos(this.yaw),fw=0,u,LL=this.legs;
+    if(a<.7){s=Math.sin(a*14);set(R,0,2.75+s*.2);set(L,0,-2.75+s*.2);
+      g.position.y+=Math.abs(Math.sin(a*7))*.3;g.rotation.x=-.1;}
+    else if(a<1.2){u=(a-.7)/.5;set(R,-3,.25);set(L,-3,-.25);
+      fw=u*3.2;g.rotation.x=Math.sin(u*Math.PI/2)*1.5;g.position.y+=Math.sin(u*Math.PI)*1.6+u*.3;
+      LL[0].rotation.x=-.5*u;LL[1].rotation.x=-.3*u;}
+    else{u=Math.min(1,(a-1.2)/.12);s=Math.max(0,1-(a-1.2)*6);
+      set(R,-2.7,.9);set(L,-2.7,-.9);fw=3.2+u*.25;g.rotation.x=1.5+s*.12*Math.sin(a*40)+.06;g.position.y+=.32;
+      LL[0].rotation.x=-.25+Math.sin(a*9)*.15;LL[1].rotation.x=-.15-Math.sin(a*9)*.15;}
+    g.position.x+=dx*fw;g.position.z+=dz*fw;
+    // the rings at your feet stay flat on the floor
+    // the rings at your feet would go flying with you: off until you are up again
+    var me=this;if(a>=.7)g.children.forEach(function(r){if(r.visible&&r.geometry&&r.geometry.type==="RingGeometry"){r.visible=false;(me._sdHid=me._sdHid||[]).push(r);}});
+    // a weapon worn on the body would hang in the air through the dive: it waits out of sight
+    if(this.stowed&&this.sword)this.sword.visible=a<.7;}
   else if(k==="yawn"){s=Math.min(1,a/0.6);set(R,0,2.9*s);set(L,0,-2.9*s);g.rotation.x=-0.12*s;}
 };
 var tauntNext=0;
@@ -11835,6 +11868,121 @@ SIG_SHAPE.portalgun=function(g,seg,B,H,G){
   B.emissiveIntensity=.05;
   return 2.0;
 };
+// THE PLATINUM PLAQUE -- a framed platinum record: a black frame, a silver disc
+// with its grooves and a label, an engraved plate underneath; held by a short
+// black handle off the bottom of the frame. You hit people with it.
+SIG_SHAPE.plaque=function(g,seg,B,H,G){
+  var i,frame=v4Phong(0x111114,60),plat=v4Phong(0xe8eef6,160,0x3a4250,.35),gold=v4Phong(0xd8b050,120,0x4a3000,.4);
+  var matte=new THREE.MeshLambertMaterial({color:0x1c1c22});
+  function bx(m,w,h,d,x,y,z){var o=new THREE.Mesh(GEO.box,m);o.scale.set(w,h,d);o.position.set(x,y,z);g.add(o);return o;}
+  // the handle: wrapped black, a silver cap
+  seg(.2,1.0,.2,.2,0,H);
+  for(i=0;i<4;i++){var w=new THREE.Mesh(GEO.cyl8,matte);w.scale.set(.24,.05,.24);w.position.y=-.1+i*.24;g.add(w);}
+  var cp=new THREE.Mesh(GEO.cyl8,plat);cp.scale.set(.26,.1,.26);cp.position.y=-.32;g.add(cp);
+  // the frame: thick black border round a dark backing
+  var Y0=.75,W=1.5,HH=1.9,cy=Y0+HH/2;
+  var back=bx(matte,W-.1,HH-.1,.1,0,cy,-.02);
+  bx(frame,W,.14,.22,0,Y0,0);bx(frame,W,.14,.22,0,Y0+HH,0);bx(frame,.14,HH,.22,-W/2,cy,0);bx(frame,.14,HH,.22,W/2,cy,0);
+  // a thin silver inner edge
+  bx(plat,W-.26,.03,.04,0,Y0+.1,.06);bx(plat,W-.26,.03,.04,0,Y0+HH-.1,.06);
+  // the record: on both faces, so it reads from either side
+  for(var sd=-1;sd<=1;sd+=2){
+    var disc=new THREE.Mesh(GEO.cyl,plat);disc.scale.set(1.08,.03,1.08);disc.rotation.x=Math.PI/2;disc.position.set(0,cy+.18,sd*.06);g.add(disc);
+    disc.userData.core=true;
+    for(i=0;i<3;i++){var gr=new THREE.Mesh(new THREE.TorusGeometry(.26+i*.08,.008,4,30),v4Phong(0xa8b0bc,60));gr.position.set(0,cy+.18,sd*.08);g.add(gr);}
+    var lab=new THREE.Mesh(GEO.cyl,new THREE.MeshLambertMaterial({color:0xd0142a}));lab.scale.set(.32,.035,.32);lab.rotation.x=Math.PI/2;lab.position.set(0,cy+.18,sd*.075);g.add(lab);
+    var hole=new THREE.Mesh(GEO.cyl8,frame);hole.scale.set(.05,.04,.05);hole.rotation.x=Math.PI/2;hole.position.set(0,cy+.18,sd*.08);g.add(hole);
+    // the engraved plate
+    bx(gold,.9,.22,.03,0,Y0+.28,sd*.065);
+    bx(frame,.6,.03,.035,0,Y0+.3,sd*.07);bx(frame,.4,.025,.035,0,Y0+.24,sd*.07);
+  }
+  var shine=new THREE.Mesh(GEO.sphLo,v4Add(0xdfe8ff,.35));shine.scale.set(.9,.9,.2);shine.position.set(0,cy+.18,0);shine.userData.aura=true;g.add(shine);
+  g.userData.pulse=shine;g.userData.flareMul=.25;
+  B.emissiveIntensity=.05;
+  return Y0+HH;
+};
+// THE VAMP FANG -- one long curved fang of ivory, a blood-red gem set in a
+// black bat-wing guard, a ribbed black grip and a little gem at the pommel
+SIG_SHAPE.vampfang=function(g,seg,B,H,G){
+  var i,ivory=v4Phong(0xfff4dc,110,0x6a5a40,.35),black=v4Phong(0x141016,60),gem=v4Phong(0xd0102a,160,0x8a0010,.6);
+  // the grip, ribbed
+  seg(.2,.95,.2,.25,0,H);
+  for(i=0;i<6;i++){var r=new THREE.Mesh(GEO.cyl8,black);r.scale.set(.25,.05,.25);r.position.y=-.12+i*.16;g.add(r);}
+  var pg=new THREE.Mesh(new THREE.OctahedronGeometry(.13),gem);pg.position.y=-.32;g.add(pg);
+  // the guard: two swept bat wings and a gem at the heart
+  for(var sd=-1;sd<=1;sd+=2){
+    for(i=0;i<3;i++){var wg=new THREE.Mesh(GEO.cone,black);wg.scale.set(.16,.62-i*.12,.08);
+      wg.rotation.z=sd*(-1.25+i*.28);wg.position.set(sd*(.28+i*.06),.84+i*.08,0);g.add(wg);}}
+  bx2(black,.5,.16,.2,0,.8,0);
+  var gm=new THREE.Mesh(new THREE.OctahedronGeometry(.17),gem);gm.scale.set(1,1.25,.6);gm.position.set(0,.84,.08);g.add(gm);
+  var gb=gm.clone();gb.position.z=-.08;g.add(gb);
+  // the fang: a curve of segments thick at the root, thin and sharp at the tip
+  var y=.92,x=0,n=9,L=2.6;
+  for(i=0;i<n;i++){var t=i/(n-1),ang=t*t*.8,len=L/n*1.08,wd=.42*(1-t*.8);
+    var s=new THREE.Mesh(GEO.box,ivory);s.scale.set(wd,len,.16*(1-t*.6));
+    s.rotation.z=-ang;s.position.set(x+Math.sin(ang)*len/2,y+Math.cos(ang)*len/2,0);g.add(s);
+    x+=Math.sin(ang)*len*.94;y+=Math.cos(ang)*len*.94;}
+  var tipc=new THREE.Mesh(GEO.cone,ivory);tipc.scale.set(.1,.3,.06);tipc.rotation.z=-.85;tipc.position.set(x+.07,y+.08,0);g.add(tipc);
+  // a red edge down the inside of the curve, like it has been used
+  var edge=new THREE.MeshBasicMaterial({color:0x9a0a1c});
+  y=.92;x=0;for(i=0;i<n-1;i++){var t2=i/(n-1),a2=t2*t2*.8,l2=L/n*1.08,w2=.42*(1-t2*.8);
+    var e=new THREE.Mesh(GEO.box,edge);e.scale.set(.025,l2,.165*(1-t2*.6));e.rotation.z=-a2;
+    e.position.set(x+Math.sin(a2)*l2/2-Math.cos(a2)*w2/2,y+Math.cos(a2)*l2/2+Math.sin(a2)*w2/2,0);g.add(e);
+    x+=Math.sin(a2)*l2*.94;y+=Math.cos(a2)*l2*.94;}
+  var hot=new THREE.Mesh(GEO.sphLo,v4Add(0xff1a34,.5));hot.scale.setScalar(.36);hot.position.set(0,.84,0);hot.userData.aura=true;g.add(hot);
+  g.userData.pulse=hot;g.userData.flareMul=.3;
+  B.emissiveIntensity=.04;
+  function bx2(m,w,h,d,px,py,pz){var o=new THREE.Mesh(GEO.box,m);o.scale.set(w,h,d);o.position.set(px,py,pz);g.add(o);return o;}
+  return y+.3;
+};
+/* A word painted in the air that faces the camera, punches in and fades:
+   the plaque's PARRY!. */
+var RAP_WORDS={};
+function rapWord(txt,col,x,y,z,size,life){
+  if(QUAL===0)return;
+  var m=RAP_WORDS[txt+col];
+  if(!m){var c=cvs(512,160),q=c.getContext("2d");
+    q.font="italic 900 112px Arial Black, Impact, sans-serif";q.textAlign="center";q.textBaseline="middle";
+    q.lineWidth=18;q.strokeStyle="#0b0b10";q.strokeText(txt,256,84);
+    q.fillStyle=col;q.fillText(txt,256,84);
+    q.globalCompositeOperation="source-atop";var gr=q.createLinearGradient(0,30,0,140);gr.addColorStop(0,"rgba(255,255,255,.75)");gr.addColorStop(.5,"rgba(255,255,255,0)");q.fillStyle=gr;q.fillRect(0,0,512,160);
+    m=RAP_WORDS[txt+col]={tex:mkTex(c)};}
+  var mesh=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:m.tex,transparent:true,depthWrite:false,depthTest:false}));
+  mesh.renderOrder=20;mesh.position.set(x,y,z);scene.add(mesh);
+  var t=0;
+  V4FX.push({tick:function(dt){t+=dt;var k=t/life;if(k>=1)return false;
+      var pop=k<.12?k/.12*1.25:k<.22?1.25-(k-.12)/.1*.25:1;
+      mesh.scale.set(size*3.2*pop,size*pop,1);mesh.position.y=y+k*.8;mesh.rotation.z=-.08;
+      mesh.quaternion.copy(camera.quaternion);mesh.material.opacity=k<.7?1:1-(k-.7)/.3;return true;},
+    done:function(){scene.remove(mesh);mesh.material.dispose();}});
+}
+/* Bats: little black silhouettes flapping up and away from a cut. */
+var RAP_BAT=null;
+function rapBatTex(){
+  if(RAP_BAT)return RAP_BAT;
+  var c=cvs(128,64),q=c.getContext("2d");q.fillStyle="#1a0c16";q.strokeStyle="#ff2a4a";q.lineWidth=5;q.lineJoin="round";
+  q.beginPath();q.moveTo(64,26);q.quadraticCurveTo(40,4,4,14);q.quadraticCurveTo(18,22,14,34);q.quadraticCurveTo(26,30,30,40);q.quadraticCurveTo(40,32,48,42);
+  q.quadraticCurveTo(56,38,64,46);q.quadraticCurveTo(72,38,80,42);q.quadraticCurveTo(88,32,98,40);q.quadraticCurveTo(102,30,114,34);q.quadraticCurveTo(110,22,124,14);q.quadraticCurveTo(88,4,64,26);q.stroke();q.fill();
+  q.beginPath();q.arc(64,30,8,0,Math.PI*2);q.fill();
+  q.beginPath();q.moveTo(58,24);q.lineTo(56,14);q.lineTo(62,22);q.moveTo(70,24);q.lineTo(72,14);q.lineTo(66,22);q.fill();
+  q.fillStyle="#ff2040";q.fillRect(59,28,3,3);q.fillRect(66,28,3,3);
+  return RAP_BAT=mkTex(c);
+}
+function rapBats(x,y,z,n,dirx,dirz){
+  if(QUAL===0)return;
+  var tex=rapBatTex();
+  for(var i=0;i<n;i++)(function(){
+    var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+    var sz=hr(.9,1.4),vx=dirx*hr(1.5,3.5)+hr(-2,2),vy=hr(1,2.6),vz=dirz*hr(1.5,3.5)+hr(-2,2),t=0,life=hr(.7,1.1),ph=hr(0,6);
+    m.position.set(x+hr(-.3,.3),y+hr(-.3,.3),z+hr(-.3,.3));scene.add(m);
+    V4FX.push({tick:function(dt){t+=dt;if(t>=life)return false;
+        m.position.x+=vx*dt;m.position.y+=vy*dt;m.position.z+=vz*dt;vy+=1.5*dt;
+        m.quaternion.copy(camera.quaternion);
+        var fl=.45+.55*Math.abs(Math.sin(t*26+ph));m.scale.set(sz*fl,sz*.5,1);
+        m.material.opacity=t/life<.7?1:1-(t/life-.7)/.3;return true;},
+      done:function(){scene.remove(m);m.material.dispose();}});
+  })();
+}
 // DIVINE RIGHT -- a silver-blue blade with a rune channel lit cyan, barbed
 // flanges near the guard, a gold guard spreading into two great glowing
 // wings, a star-orb at the heart, a gold-wound grip and an orb pommel
@@ -15998,6 +16146,206 @@ var EVENT_SHOPS={
   wendigo:{name:"THE WENDIGO SHRINE",tab:"sword",id:"wendigo",yen:2000,
     from:Date.UTC(2026,9,1,7,0,0),to:Date.UTC(2026,9,8,7,0,0)}
 };
+/* ---- THE RAP PACK ----
+   Two rappers who are definitely not anybody you have heard of, a platinum
+   plaque you hit people with, a vampire's fang, and a stage dive that goes
+   about as well as they usually do. */
+var RAP_CYL=null;
+function rapCyl(){return RAP_CYL||(RAP_CYL=new THREE.CylinderGeometry(.5,.42,1,6));}
+// the stock head goes; a big round cartoon one, ears, a neck
+function rapHead(f,g,box,skinCol){
+  (f.headParts||[]).forEach(function(m){m.visible=false;});
+  var skin=new THREE.MeshLambertMaterial({color:skinCol});
+  var hd=new THREE.Group();hd.position.set(0,3.2,0);g.add(hd);
+  var head=new THREE.Mesh(GEO.sph,skin);head.scale.set(1.18,1.1,1.08);hd.add(head);
+  box(.3,.3,.3,0,2.62,0,skin);
+  for(var sd=-1;sd<=1;sd+=2){var ear=new THREE.Mesh(GEO.sphLo,skin);ear.scale.set(.15,.24,.15);ear.position.set(sd*.58,-.04,0);hd.add(ear);}
+  return {hd:hd,skin:skin};
+}
+/* Dreads: each one a tapered six-sided rope rooted on the scalp. `droop`
+   bends it from straight out (0) to hanging straight down (1). The face is
+   kept clear except for a fringe over the forehead. */
+function rapDreads(hd,mat,o){
+  var Y=new THREE.Vector3(0,1,0),n=new THREE.Vector3(),q=new THREE.Quaternion(),tipMat=o.tip||mat;
+  var rows=o.rows;
+  for(var r=0;r<rows.length;r++){var R=rows[r];
+    for(var k=0;k<R.n;k++){
+      var th=(R.from+(R.to-R.from)*(R.n>1?k/(R.n-1):.5))*Math.PI/180,el=R.el*Math.PI/180;
+      var px=.59*Math.cos(el)*Math.sin(th),py=.55*Math.sin(el),pz=.54*Math.cos(el)*Math.cos(th);
+      n.set(px,py,pz).normalize();
+      var d=R.droop+(Math.sin(k*7.3+r)*.06);
+      n.multiplyScalar(1-d).add(new THREE.Vector3(0,-d,0)).normalize();
+      if(R.out)n.x+=Math.sign(px)*R.out,n.normalize();
+      var len=R.len*(.85+.3*((Math.sin(k*3.1+r*1.7)+1)/2)),rad=R.r||.075;
+      var m=new THREE.Mesh(rapCyl(),mat);m.scale.set(rad*2,len,rad*2);
+      q.setFromUnitVectors(Y,n);m.quaternion.copy(q);
+      m.position.set(px+n.x*len/2*.92,py+n.y*len/2*.92,pz+n.z*len/2*.92);hd.add(m);
+      if(o.beads&&r===0){var b=new THREE.Mesh(GEO.sphLo,tipMat);b.scale.setScalar(rad*1.9);
+        b.position.set(px+n.x*len*.95,py+n.y*len*.95,pz+n.z*len*.95);hd.add(b);}
+    }
+  }
+  // a cap of hair over the crown so the roots never show scalp
+  var cap=new THREE.Mesh(DRIP_LID.cap,mat);cap.scale.set(1.22,1.16,1.12);cap.rotation.x=-.12;hd.add(cap);
+}
+function rapChain(g,box){
+  var silver=v4Phong(0xe4e8ee,140,0x30343a,.25);
+  var ch=new THREE.Mesh(new THREE.TorusGeometry(.34,.03,6,22),silver);ch.position.set(0,2.4,.12);ch.rotation.x=-1.3;g.add(ch);
+  return silver;
+}
+function rapCanvasPlane(w,h,cw,ch,draw){
+  var c=cvs(cw,ch),x=c.getContext("2d");draw(x,cw,ch);
+  var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(c),transparent:true,depthWrite:false}));
+  m.scale.set(w,h,1);return m;
+}
+// a red sigil: jagged and hand-drawn, nobody's logo
+function rapSigil(x,w,h,col){
+  x.strokeStyle=col;x.fillStyle=col;x.lineCap="round";x.lineJoin="round";x.lineWidth=w*.07;
+  var cx=w/2,cy=h/2;
+  x.beginPath();x.moveTo(cx,h*.08);x.lineTo(cx,h*.92);x.stroke();
+  x.beginPath();x.moveTo(w*.18,h*.34);x.lineTo(w*.82,h*.34);x.stroke();
+  x.lineWidth=w*.05;
+  x.beginPath();x.moveTo(w*.22,h*.6);x.lineTo(w*.42,h*.5);x.lineTo(w*.58,h*.7);x.lineTo(w*.78,h*.58);x.stroke();
+  x.beginPath();x.moveTo(w*.24,h*.14);x.lineTo(w*.36,h*.24);x.moveTo(w*.76,h*.14);x.lineTo(w*.64,h*.24);x.stroke();
+  x.beginPath();x.moveTo(w*.3,h*.86);x.lineTo(w*.4,h*.76);x.moveTo(w*.7,h*.86);x.lineTo(w*.6,h*.76);x.stroke();
+}
+function rapFangs(hd,y,z,s){
+  var white=new THREE.MeshBasicMaterial({color:0xffffff});
+  for(var sd=-1;sd<=1;sd+=2){var fg=new THREE.Mesh(GEO.cone,white);fg.scale.set(.05*s,.1*s,.05*s);fg.rotation.x=Math.PI;fg.position.set(sd*.085*s,y,z);hd.add(fg);}
+}
+/* PLAYBOI CARTWHEEL: black dreads over a red-eyed, fanged grin (one eye winking),
+   a black long-sleeve with red marks, a silver chain and cross, a red belt
+   with a chain off it, baggy black pants, black-and-red sneakers. */
+SIG_SKIN.cartwheel=function(f,g,sk,box,glowM,darkM,bodyM){
+  var sd,H=rapHead(f,g,box,0x7b4a2d),hd=H.hd;
+  var ink=new THREE.MeshBasicMaterial({color:0x140d0b}),white=new THREE.MeshBasicMaterial({color:0xffffff});
+  var red=new THREE.MeshLambertMaterial({color:0xd0142a}),redGlow=new THREE.MeshBasicMaterial({color:0xff1a34});
+  var black=new THREE.MeshLambertMaterial({color:0x141416}),hair=new THREE.MeshLambertMaterial({color:0x18120f});
+  f.mLimb.color.setHex(0x141416);
+  // long sleeves: black down to the wrist
+  f.arms.forEach(function(a){a.children.forEach(function(c){if(c.position.y<-1.18)c.material=H.skin;else c.material=black;});});
+  // red marks down the sleeves
+  f.arms.forEach(function(a,i){var m=rapCanvasPlane(.22,.42,64,128,function(x,w,h){rapSigil(x,w,h,"#e0162e");});m.position.set(0,-.62,.17);a.add(m);});
+  // baggy black pants with a red stripe; black sneakers with red soles and toe caps
+  f.legs.forEach(function(l,i){var s=i?1:-1;
+    l.children.forEach(function(c){c.material=c.position.y<-1.25?black:black;if(c.position.y>-1.2)c.scale.x*=1.12,c.scale.z*=1.1;});
+    var st=new THREE.Mesh(GEO.box,red);st.scale.set(.03,1.0,.12);st.position.set(s*.225,-.6,0);l.add(st);
+    var so=new THREE.Mesh(GEO.box,red);so.scale.set(.38,.07,.58);so.position.set(0,-1.37,.11);l.add(so);
+    var toe=new THREE.Mesh(GEO.box,red);toe.scale.set(.3,.1,.12);toe.position.set(0,-1.27,.38);l.add(toe);});
+  // the dreads: a fringe over the forehead, the rest hanging to the shoulders
+  rapDreads(hd,hair,{rows:[
+    {n:9,from:-70,to:70,el:62,len:.24,droop:.55,r:.07},          // fringe, short, over the brow
+    {n:7,from:55,to:180,el:38,len:.62,droop:.72},{n:7,from:-180,to:-55,el:38,len:.62,droop:.72},
+    {n:6,from:-48,to:48,el:44,len:.22,droop:.5,r:.07},
+    {n:10,from:95,to:265,el:10,len:.72,droop:.8},
+    {n:4,from:52,to:84,el:16,len:.58,droop:.82},{n:4,from:-84,to:-52,el:16,len:.58,droop:.82}]});
+  // the face: one red eye open, the other winking; blush; a grin with fangs
+  var ew=new THREE.Mesh(GEO.sph,white);ew.scale.set(.2,.17,.06);ew.position.set(-.2,.06,.5);hd.add(ew);
+  var ir=new THREE.Mesh(GEO.sphLo,redGlow);ir.scale.set(.1,.11,.03);ir.position.set(-.19,.05,.53);hd.add(ir);
+  var pu=new THREE.Mesh(GEO.sphLo,ink);pu.scale.set(.045,.05,.02);pu.position.set(-.19,.05,.545);hd.add(pu);
+  var wink=new THREE.Mesh(new THREE.TorusGeometry(.085,.022,4,10,Math.PI),ink);wink.position.set(.2,.03,.52);hd.add(wink);
+  var brow=new THREE.Mesh(GEO.box,ink);brow.scale.set(.18,.03,.03);brow.position.set(-.2,.2,.52);brow.rotation.z=-.15;hd.add(brow);
+  var blush=new THREE.MeshBasicMaterial({color:0xff5a6a,transparent:true,opacity:.55,depthWrite:false});
+  for(sd=-1;sd<=1;sd+=2){var bl=new THREE.Mesh(GEO.sphLo,blush);bl.scale.set(.12,.06,.02);bl.position.set(sd*.3,-.1,.48);hd.add(bl);}
+  var mouth=new THREE.Mesh(GEO.sph,new THREE.MeshBasicMaterial({color:0x5a0d14}));mouth.scale.set(.3,.15,.06);mouth.position.set(0,-.22,.48);hd.add(mouth);
+  var teeth=new THREE.Mesh(GEO.box,white);teeth.scale.set(.24,.04,.03);teeth.position.set(0,-.17,.515);hd.add(teeth);
+  rapFangs(hd,-.215,.525,1);
+  var tongue=new THREE.Mesh(GEO.sphLo,new THREE.MeshBasicMaterial({color:0xe85a6a}));tongue.scale.set(.14,.06,.03);tongue.position.set(0,-.26,.5);hd.add(tongue);
+  for(sd=-1;sd<=1;sd+=2){var stud=new THREE.Mesh(new THREE.OctahedronGeometry(.05),white);stud.position.set(sd*.6,-.16,.04);hd.add(stud);}
+  // the shirt's red sigil
+  var em=rapCanvasPlane(.5,.5,128,128,function(x,w,h){rapSigil(x,w,h,"#e0162e");});em.position.set(0,2.18,.366);g.add(em);
+  // chain and a cross
+  var silver=rapChain(g,box);
+  box(.06,.3,.04,0,2.02,.36,silver);box(.18,.06,.04,0,2.08,.36,silver);
+  // a red belt, a silver buckle, and a chain looping off the hip
+  box(.98,.16,.58,0,1.46,0,red);box(.2,.12,.05,0,1.46,.3,silver);
+  for(var i=0;i<6;i++){var a=i/5,l=new THREE.Mesh(new THREE.TorusGeometry(.055,.018,4,8),silver);
+    l.position.set(-.18-a*.3,1.4-Math.sin(a*Math.PI)*.28,.3-a*.06);l.rotation.y=i%2?Math.PI/2:0;g.add(l);}
+  f.sig={kind:"cartwheel",hd:hd,wink:wink,ew:ew,ir:ir,pu:pu};
+};
+/* LIL VERTIGO: purple dreads standing up and spilling over, black shades,
+   tongue out with fangs, a purple puffer over a black tee, a silver chain,
+   black cargo pants and chunky purple shoes. */
+SIG_SKIN.vertigo=function(f,g,sk,box,glowM,darkM,bodyM){
+  var sd,i,H=rapHead(f,g,box,0x6e4228),hd=H.hd;
+  var ink=new THREE.MeshBasicMaterial({color:0x0c0a0e}),white=new THREE.MeshBasicMaterial({color:0xffffff});
+  var purple=new THREE.MeshLambertMaterial({color:0x7a2ed8}),purple2=new THREE.MeshLambertMaterial({color:0x5a1fa8});
+  var hairM=new THREE.MeshLambertMaterial({color:0x9b3cff,emissive:0x3a0a6a,emissiveIntensity:.45});
+  var black=new THREE.MeshLambertMaterial({color:0x141416}),grey=new THREE.MeshLambertMaterial({color:0x26262c});
+  f.mLimb.color.setHex(0x141416);
+  // puffy purple sleeves, quilted: the arm parts go purple and swell, the hands stay hands
+  f.arms.forEach(function(a){a.children.forEach(function(c){if(c.position.y<-1.18)c.material=H.skin;else{c.material=purple;c.scale.x*=1.25;c.scale.z*=1.25;}});
+    for(var k=0;k<3;k++){var p=new THREE.Mesh(GEO.sph,k%2?purple2:purple);p.scale.set(.46,.3,.46);p.position.set(0,-.22-k*.32,0);a.add(p);}});
+  // cargo pants with a pocket on each thigh; chunky purple shoes on white soles
+  f.legs.forEach(function(l,i){var s=i?1:-1;
+    l.children.forEach(function(c){c.material=black;if(c.position.y>-1.2)c.scale.x*=1.1,c.scale.z*=1.08;});
+    var pk=new THREE.Mesh(GEO.box,grey);pk.scale.set(.06,.3,.26);pk.position.set(s*.23,-.5,0);l.add(pk);
+    var sh=new THREE.Mesh(GEO.box,purple);sh.scale.set(.42,.2,.62);sh.position.set(0,-1.26,.12);l.add(sh);
+    var so=new THREE.Mesh(GEO.box,new THREE.MeshLambertMaterial({color:0xf0eef6}));so.scale.set(.44,.07,.64);so.position.set(0,-1.38,.12);l.add(so);});
+  // the puffer: two quilted panels open over the black tee, a high collar
+  for(sd=-1;sd<=1;sd+=2){
+    var pn=new THREE.Mesh(GEO.box,purple);pn.scale.set(.36,1.02,.68);pn.position.set(sd*.37,1.98,0);g.add(pn);
+    for(i=0;i<3;i++){var q=new THREE.Mesh(GEO.box,purple2);q.scale.set(.37,.04,.69);q.position.set(sd*.37,1.66+i*.3,0);g.add(q);}
+    // camo stars: lighter purple, scattered
+    var cm=rapCanvasPlane(.32,.9,64,160,function(x,w,h){x.fillStyle="#a45cff";
+      [[.3,.15],[.7,.4],[.35,.62],[.72,.85]].forEach(function(p,j){var cx=p[0]*w,cy=p[1]*h,r=w*(.16+(j%2)*.06);x.beginPath();
+        for(var t=0;t<10;t++){var a=t*Math.PI/5-Math.PI/2,rr2=t%2?r*.45:r;x.lineTo(cx+Math.cos(a)*rr2,cy+Math.sin(a)*rr2);}x.closePath();x.fill();});});
+    cm.position.set(sd*.37,1.98,.345);g.add(cm);
+  }
+  box(.9,.18,.66,0,2.56,0,purple);
+  // the dreads: standing up off the crown and spilling down the sides and back
+  rapDreads(hd,hairM,{beads:true,tip:new THREE.MeshLambertMaterial({color:0xc58aff}),rows:[
+    {n:7,from:-150,to:150,el:80,len:.55,droop:.0,r:.085},
+    {n:8,from:-150,to:150,el:66,len:.5,droop:.3},
+    {n:12,from:-170,to:170,el:44,len:.62,droop:.86},
+    {n:9,from:-60,to:60,el:58,len:.24,droop:.5,r:.07},                // a short fringe
+    {n:10,from:90,to:270,el:16,len:.66,droop:.88},
+    {n:3,from:58,to:82,el:18,len:.5,droop:.9},{n:3,from:-82,to:-58,el:18,len:.5,droop:.9}]});
+  // the shades: black, wide, with a glint
+  var gl=v4Phong(0x0a0a10,160,0x000000,0);
+  var bar=new THREE.Mesh(GEO.box,gl);bar.scale.set(.66,.07,.05);bar.position.set(0,.12,.53);hd.add(bar);
+  for(sd=-1;sd<=1;sd+=2){var ln=new THREE.Mesh(GEO.box,gl);ln.scale.set(.26,.17,.06);ln.position.set(sd*.17,.05,.535);hd.add(ln);
+    var gt=new THREE.Mesh(GEO.box,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.75}));gt.scale.set(.06,.03,.01);gt.position.set(sd*.17-.06,.1,.57);gt.rotation.z=.6;hd.add(gt);}
+  // tongue out, fangs
+  var mouth=new THREE.Mesh(GEO.sph,new THREE.MeshBasicMaterial({color:0x4a0c12}));mouth.scale.set(.24,.14,.06);mouth.position.set(0,-.22,.48);hd.add(mouth);
+  rapFangs(hd,-.19,.525,.9);
+  var tongue=new THREE.Mesh(GEO.box,new THREE.MeshLambertMaterial({color:0xf0607a}));tongue.scale.set(.13,.16,.05);tongue.position.set(0,-.33,.53);tongue.rotation.x=.35;hd.add(tongue);
+  for(sd=-1;sd<=1;sd+=2){var stud=new THREE.Mesh(new THREE.OctahedronGeometry(.05),white);stud.position.set(sd*.6,-.16,.04);hd.add(stud);}
+  rapChain(g,box);
+  f.sig={kind:"vertigo",hd:hd,tongue:tongue};
+};
+
+// the stage dive: hype the crowd, dive, and there is no crowd. Dust when you
+// land, then cartoon stars circling your head while you lie there
+var RAP_STAR=null;
+function rapStarTex(){
+  if(RAP_STAR)return RAP_STAR;
+  var c=cvs(64,64),q=c.getContext("2d");q.beginPath();
+  for(var t=0;t<10;t++){var a=t*Math.PI/5-Math.PI/2,r=t%2?11:28;q.lineTo(32+Math.cos(a)*r,32+Math.sin(a)*r);}
+  q.closePath();q.fillStyle="#ffe14a";q.fill();q.lineWidth=4;q.strokeStyle="#0b0b10";q.stroke();
+  return RAP_STAR=mkTex(c);
+}
+function rapStageDiveFx(f){
+  var t=0,landed=false,stars=[],tex=rapStarTex(),fx=Math.sin(f.yaw),fz=Math.cos(f.yaw);
+  try{tone(300,900,.5,"square",.05);}catch(e){}
+  V4FX.push({tick:function(dt){t+=dt;
+      if(!f.alive||!(f.tauntT>0)||f.tauntK!=="stagedive")return false;
+      if(t>.7&&f.bubT>.05)f.bubT=.05;                // the bubble would flip over with you
+      if(!landed&&t>=1.18){landed=true;
+        var X=f.pos.x+fx*5,Z=f.pos.z+fz*5;
+        try{noiseHit(.25,.4,500);tone(140,50,.3,"sine",.25);}catch(e){}
+        for(var k=0;k<(QUAL>1?22:10);k++){var a=Math.random()*TAU;
+          spark(X+Math.cos(a)*hr(.2,1.4),f.y+.2,Z+Math.sin(a)*hr(.2,1.4),Math.cos(a)*hr(1,3),hr(.5,2),Math.sin(a)*hr(1,3),.75,.68,.6,hr(.5,.9),hr(.4,.7),3);}
+        for(var s=0;s<3;s++){var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false}));
+          m.scale.setScalar(.55);scene.add(m);stars.push(m);}
+        try{setTimeout(function(){tone(1400,1900,.12,"triangle",.04);setTimeout(function(){tone(1700,2300,.12,"triangle",.04);},140);},150);}catch(e){}
+      }
+      if(landed){var hx=f.pos.x+fx*6.4,hz=f.pos.z+fz*6.4,hy=f.y+1.25;
+        for(var i=0;i<stars.length;i++){var a2=t*5+i*TAU/3;
+          stars[i].position.set(hx+Math.cos(a2)*.8,hy+Math.sin(a2*2)*.1,hz+Math.sin(a2)*.8);
+          stars[i].quaternion.copy(camera.quaternion);stars[i].rotateZ(t*6+i);}}
+      return true;},
+    done:function(){if(f.sword)f.sword.visible=true;(f._sdHid||[]).forEach(function(r){r.visible=true;});f._sdHid=null;stars.forEach(function(m){scene.remove(m);m.material.dispose();});}});
+}
 /* ---- PACKS: several items for one price, only from the pack ---- */
 var PACKS={
   interdim:{name:"INTERDIMENSIONAL PACK",yen:1500,col:"#6bff3a",
