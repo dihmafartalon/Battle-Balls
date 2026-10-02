@@ -742,7 +742,7 @@ function defaultSave(){
     wins:0,games:0,streak:0,bestStreak:0,fov:66,qual:1,sens:1,shiftLock:false,redeemed:{},
     mouseLock:true,invertY:false,camDist:13,binds:{},ballColor:"#9aa3ad",ballGlow:true,
     musicVol:0.45,sfxVol:0.75,musicUrl:"",musicOn:true,showFps:false,nameTags:true,feedOn:true,showHitbox:false,
-    yen:0,yenV:2,t:0,seenVersion:"",casino:{hands:0,bjWins:0,spins:0,upgrades:0},netName:"",serverUrl:"",rangeBest:0,
+    yen:0,yenV:2,t:0,seenVersion:"",casino:{hands:0,bjWins:0,spins:0,upgrades:0},apexShown:0,netName:"",serverUrl:"",rangeBest:0,
     freeSpins:0,pass:{id:"",xp:0,got:0},
     freeSpinsL:0,tokens:0,login:{id:"",n:0,last:""},season:0,s0rp:0,passHr:[],emotes:{},eqEmotes:[]};
 }
@@ -1042,6 +1042,7 @@ function adminInbox(list){
     var m=list[i];
     if(!m||seen[m.id])continue;
     if(m.gift){seen[m.id]=1;giftQueue(m.gift,String(m.text||"").slice(0,300));continue;}
+    if(m.demo==="apex"){seen[m.id]=1;apexDemoWhenReady();continue;}
     if(!m.text)continue;
     seen[m.id]=1;adminNote(String(m.text).slice(0,400));
   }
@@ -1061,6 +1062,140 @@ function adminNote(text){
   card.appendChild(h);card.appendChild(p);card.appendChild(b);d.appendChild(card);
   try{document.body.appendChild(d);}catch(e){}
   try{if(window.__DBG)window.__DBG.lastNote=text;}catch(e){}
+}
+/* ---- APEX UNLOCKED ----
+   Whoever is #1 holds Apex. The first time a save has it -- the day it is won,
+   or the first load after this update for whoever is #1 right now -- the game
+   stops and shows it: the room goes dark, light falls from above, the real blade
+   rises out of the floor spinning and settles, and it lands with a flash.
+   Nothing here runs on its own clock: apexU.tick(t) sets every frame from t, so
+   it plays the same on a slow phone and can be scrubbed for a video.
+   SAVE.apexShown remembers it was shown; it clears when the Crown is lost, so
+   winning it back plays it again. */
+var APEXU=null;
+function apexCrownSvg(){return "<svg class='au-crown' viewBox='0 0 64 40'><path d='M4 34 L8 10 L20 22 L32 4 L44 22 L56 10 L60 34 Z' fill='#ffd23f' stroke='#6a4408' stroke-width='3' stroke-linejoin='round'/>"+
+  "<rect x='4' y='34' width='56' height='5' rx='2' fill='#e8a92a' stroke='#6a4408' stroke-width='2.5'/><circle cx='8' cy='9' r='3.2' fill='#fff6c8' stroke='#6a4408' stroke-width='2'/><circle cx='32' cy='3.5' r='3.6' fill='#fff6c8' stroke='#6a4408' stroke-width='2'/><circle cx='56' cy='9' r='3.2' fill='#fff6c8' stroke='#6a4408' stroke-width='2'/></svg>";}
+function apexUnlock(auto,demo){
+  if(APEXU||typeof THREE==="undefined")return null;
+  var def=swordById("crown");if(!def)return null;
+  var el=document.createElement("div");el.className="apexu";
+  // a preview from the admin page: the same scene, but it gives and equips nothing
+  var equipped=demo?true:SAVE.eqSword==="crown";
+  el.innerHTML="<div class='au-rays'></div><div class='au-beam'></div><canvas class='au-cv'></canvas>"+
+    "<div class='au-txt'>"+apexCrownSvg()+"<div class='au-t1'>APEX</div><div class='au-t2'>UNLOCKED</div>"+
+    "<div class='au-t3'>YOU ARE <b>#1</b> ON THE LEADERBOARD</div>"+
+    "<div class='au-t4'>It is yours for as long as you stay on top. Fall from #1 and it goes to whoever takes your place.</div>"+
+    "<div class='au-btns'>"+(equipped?"":"<button class='big gold' data-a='eq'>EQUIP APEX</button>")+"<button class='big' data-a='ok'>"+(demo?"CLOSE PREVIEW":(equipped?"NICE":"CONTINUE"))+"</button></div></div>"+
+    "<div class='au-flash'></div>";
+  document.body.appendChild(el);
+  var q=function(c){return el.querySelector(c);};
+  var rays=q(".au-rays"),beam=q(".au-beam"),cv=q(".au-cv"),flash=q(".au-flash"),crown=q(".au-crown"),
+      t1=q(".au-t1"),t2=q(".au-t2"),t3=q(".au-t3"),t4=q(".au-t4"),btns=q(".au-btns");
+  var r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+  r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));r.setClearColor(0x000000,0);
+  var sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(32,1,.1,200);
+  sc.add(new THREE.HemisphereLight(0xfff4d8,0x3a2a10,1.15));
+  var key=new THREE.DirectionalLight(0xffffff,1.0);key.position.set(4,8,6);sc.add(key);
+  var warm=new THREE.PointLight(0xffd27a,1.7,40);warm.position.set(0,0,4);sc.add(warm);
+  var sw=buildSword(def),piv=new THREE.Group();
+  var bb=new THREE.Box3();sw.updateMatrixWorld(true);
+  sw.traverse(function(o){if(o.isMesh&&!o.userData.aura&&o!==sw.userData.flare)bb.expandByObject(o);});
+  var cy=(bb.min.y+bb.max.y)/2,SH=Math.max(1,bb.max.y-bb.min.y),SW=Math.max(1,bb.max.x-bb.min.x);
+  sw.position.y=-cy;piv.add(sw);sc.add(piv);
+  // gold motes drifting up through the light
+  var N=150,pg=new THREE.BufferGeometry(),pp=new Float32Array(N*3),seed=[];
+  for(var i=0;i<N;i++){seed.push({x:rr(-4.5,4.5),y:rr(0,1),z:rr(-2.5,2),v:rr(.05,.16),ph:rr(0,TAU)});}
+  pg.setAttribute("position",new THREE.BufferAttribute(pp,3));
+  var pm=new THREE.PointsMaterial({map:glowTex(),color:0xffd27a,size:.55,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending});
+  var pts=new THREE.Points(pg,pm);pts.frustumCulled=false;sc.add(pts);
+  var W=0,H=0,dist=14,vh=8,done={},calm=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var sm=function(x){x=x<0?0:(x>1?1:x);return x*x*(3-2*x);};
+  var out=function(x){x=x<0?0:(x>1?1:x);return 1-Math.pow(1-x,3);};
+  var back=function(x){x=x<0?0:(x>1?1:x);var c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);};
+  var snd=function(k,fn){if(!done[k]){done[k]=1;try{fn();}catch(e){}}};
+  var T_RISE=.7,T_LAND=2.5;
+  function tick(t){
+    var w=el.clientWidth||window.innerWidth,h=el.clientHeight||window.innerHeight;
+    if(w!==W||h!==H){W=w;H=h;r.setSize(W,H);cam.aspect=W/H;cam.updateProjectionMatrix();
+      var th=Math.tan(cam.fov*Math.PI/360);
+      // the blade fills the top ~40% of the screen, the words take the bottom
+      dist=Math.max((SH/.50)/(2*th),(SW/.70)/(2*th*cam.aspect));vh=2*dist*th;}
+    el.style.opacity=sm(t/.55);
+    // light falls from above, rays turn behind it
+    var lit=sm((t-.35)/1.5),surge=t>T_LAND?1+Math.max(0,1-(t-T_LAND)*1.6)*.9:1;
+    rays.style.opacity=Math.min(1,lit*surge);rays.style.transform="rotate("+(t*7)+"deg) scale("+(.7+lit*.4+(surge-1)*.25)+")";
+    beam.style.opacity=lit*.85*surge;beam.style.transform="scaleY("+(.35+.65*out((t-.3)/1.1))+")";
+    // the blade rises out of the dark, spinning, and slows into a three-quarter view
+    var u=sm((t-T_RISE)/(T_LAND-T_RISE)),e=out((t-T_RISE)/(T_LAND-T_RISE));
+    var spin=Math.pow(1-u,2.2)*18,hang=t<T_LAND?0:Math.sin((t-T_LAND)*1.5)*.10;
+    piv.rotation.y=.55+spin+(t>T_LAND?Math.sin((t-T_LAND)*.8)*.32:0);
+    piv.rotation.z=-.16+(1-e)*.5;
+    piv.scale.setScalar(.55+.45*e);
+    var base=vh*.24;
+    piv.position.set(0,base+lerp(-vh*.75,0,e)+hang,0);
+    sw.visible=t>T_RISE-.15;
+    cam.position.set(Math.sin(t*.25)*.4,0,dist-(t>T_LAND?Math.min(1,(t-T_LAND)/2)*.6:0));cam.lookAt(0,0,0);
+    if(!calm&&t>T_LAND&&t<T_LAND+.5){var k=(1-(t-T_LAND)/.5)*.14;cam.position.x+=Math.sin(t*90)*k;cam.position.y+=Math.cos(t*77)*k;}
+    // motes
+    pm.opacity=lit*.9;
+    for(var i=0;i<N;i++){var sd=seed[i],yy=((sd.y+t*sd.v)%1);
+      pp[i*3]=sd.x+Math.sin(t*.8+sd.ph)*.3;pp[i*3+1]=(yy-.5)*vh*1.15;pp[i*3+2]=sd.z;}
+    pg.attributes.position.needsUpdate=true;
+    warm.intensity=1.2+lit*.6+Math.max(0,1-(t-T_LAND)*1.4)*3;
+    if(sw.userData.flare)sw.userData.flare.material.opacity=.42+Math.max(0,1-(t-T_LAND)*1.2)*.5;
+    r.render(sc,cam);
+    // the landing flash
+    var fl=t<T_LAND?0:Math.pow(Math.max(0,1-(t-T_LAND)/.45),1.6);flash.style.opacity=calm?fl*.25:fl*.9;
+    // the words
+    var a=out((t-(T_LAND+.05))/.3);
+    crown.style.opacity=a;crown.style.transform="translateY("+((1-a)*-40)+"px) scale("+(1+(1-a)*.6)+")";
+    var b=t-(T_LAND+.1),bs=back(b/.42);
+    t1.style.opacity=Math.min(1,Math.max(0,b/.12));t1.style.transform="scale("+(2.4-1.4*bs)+")";
+    var c=out((t-(T_LAND+.5))/.35);t2.style.opacity=c;t2.style.transform="translateY("+((1-c)*14)+"px)";t2.style.letterSpacing=(.32+(1-c)*.6)+"em";
+    t3.style.opacity=out((t-(T_LAND+.95))/.4);t4.style.opacity=out((t-(T_LAND+1.5))/.5);
+    var bo=out((t-(T_LAND+1.9))/.4);btns.style.opacity=bo;btns.classList.toggle("on",bo>.6);
+    // sound: a rising shimmer as it climbs, a boom and a chord when it lands
+    if(auto){
+      snd("a",function(){tone(180,1500,1.7,"sawtooth",.045);tone(360,3000,1.7,"sine",.05);noiseHit(1.4,.12,5200);});
+      snd("b",function(){if(t>=T_LAND){noiseHit(.7,.5,500);tone(95,34,1.3,"sine",.4);sfx("rank");
+        [523.25,659.25,783.99,1046.5,1318.5].forEach(function(f,i){setTimeout(function(){tone(f,f*1.002,1.1,"sine",.06);},i*70);});}});
+    }
+  }
+  var t0=0,raf=0,closed=false;
+  function loop(ts){if(closed)return;if(!t0)t0=ts;tick((ts-t0)/1000);raf=requestAnimationFrame(loop);}
+  function close(){
+    if(closed)return;closed=true;cancelAnimationFrame(raf);
+    try{disposeTree(sw);pg.dispose();pm.dispose();r.dispose();if(r.forceContextLoss)r.forceContextLoss();}catch(e){}
+    if(el.parentNode)el.parentNode.removeChild(el);APEXU=null;
+  }
+  q("[data-a=ok]").addEventListener("click",function(){sfx("tick");close();});
+  var eq=q("[data-a=eq]");
+  if(eq)eq.addEventListener("click",function(){
+    if(SAVE.swords.crown){SAVE.eqSword="crown";writeSave();
+      try{updateChips();updateLobbyBar();reskinLobbyPlayer();if(NET.ws&&NET.status==="lobby")mpSendLoadout();}catch(e){}}
+    sfx("coin");close();});
+  APEXU={tick:tick,close:close,el:el};
+  if(auto){tick(0);raf=requestAnimationFrame(loop);}
+  return APEXU;
+}
+/* Called every couple of seconds: shows it once the Crown is in the save and the
+   game is somewhere it will not land on top of a round or another pop-up. */
+function apexCheck(){
+  try{
+    var own=!!(SAVE.swords&&SAVE.swords.crown);
+    if(!own){if(SAVE.apexShown){SAVE.apexShown=0;writeSave();}return;}
+    if(SAVE.apexShown||APEXU)return;
+    if(STATE!=="venue"||document.querySelector(".giftpop,.admsg,#banNote"))return;
+    SAVE.apexShown=1;writeSave();
+    apexUnlock(true);
+  }catch(e){}
+}
+setInterval(apexCheck,2500);
+// the admin page's "play it on their game": waits for the lobby like the real one
+function apexDemoWhenReady(){
+  if(APEXU)return;
+  if(STATE!=="venue"||document.querySelector(".giftpop,.admsg,#banNote")){setTimeout(apexDemoWhenReady,2000);return;}
+  apexUnlock(true,true);
 }
 /* A gift from the dev: what arrived, and the note if there is one. It waits for
    the end of a match -- it never lands on top of a round. */
@@ -9309,12 +9444,14 @@ function seasonReset(s){
 /* ---------- ranked RP ----------
    A sitting could take a player from nothing to 10,000 in about forty
    minutes. A win is now worth less the higher you are, a loss costs more, and
-   a performance bonus is small. Near the top, a 50% win rate goes nowhere. */
+   a performance bonus is small. Near the top, a 50% win rate goes nowhere.
+   A win is 40-65: 50 at the bottom and 40 at the top, plus up to 15 (10 at the
+   top) for how well you played. A loss is unchanged. */
 function rpFor(won,perf,teams){
   var f=currentRankIndex()/Math.max(1,RANKS.length-2);          // 0 at Poop, 1 at Meat
   f=clamp(f,0,1);
   if(won){
-    var base=Math.round(lerp(40,18,f)),bonus=Math.round(clamp(perf/6,0,lerp(10,6,f)));
+    var base=Math.round(lerp(50,40,f)),bonus=Math.round(clamp(perf/6,0,lerp(15,10,f)));
     return base+bonus;
   }
   return -Math.round(lerp(teams?12:15,teams?28:34,f));
@@ -15117,7 +15254,7 @@ function buildLadder(){
   $("rankSummary").innerHTML="<b style='color:#ffd23f'>"+SEASON.name+"</b> &middot; You are <b style='color:#ffd23f'>"+currentRank().name+
     "</b> with <b>"+SAVE.rp+" RP</b>"+(SAVE.s0rp?" <span style='opacity:.6'>(Season 0: "+SAVE.s0rp+" RP)</span>":"")+". "+
     (rankIsPvp()?"<b style='color:#fff0b0'>GOD is people only:</b> ranked here is one on one against another GOD player. Matches against bots move no RP.":
-    "At your rank a win is worth about <b>"+winNow+"\u2013"+(winNow+10)+" RP</b> and a loss costs <b>"+lossNow+"</b>. The higher you climb, the less a win pays and the more a loss costs. "+
+    "At your rank a win is worth about <b>"+winNow+"\u2013"+(winNow+Math.round(lerp(15,10,clamp(currentRankIndex()/Math.max(1,RANKS.length-2),0,1))))+" RP</b> and a loss costs <b>"+lossNow+"</b>. The higher you climb, the less a win pays and the more a loss costs. "+
     "Casual modes pay coins but no RP.<br><b style='color:#ffa8e0'>Opponents are seeded at your rank</b> \u2014 they get sharper every tier, "+
     "and Omega opponents almost never miss. <b style='color:#fff0b0'>GOD</b> waits at 15,000 RP.");
   $("rkPlay1").textContent=rankIsPvp()?"FIND A GOD OPPONENT":"RANKED 1v1";

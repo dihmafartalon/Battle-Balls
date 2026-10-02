@@ -763,7 +763,7 @@ export class Vault {
     const inbox = (await this.state.storage.get("inbox")) || [];
     if (!inbox.length) return undefined;
     await this.state.storage.put("inbox", []);
-    return inbox.map(m => ({ id: m.id, at: m.at, text: m.text, gift: m.gift }));
+    return inbox.map(m => ({ id: m.id, at: m.at, text: m.text, gift: m.gift, demo: m.demo }));
   }
   async flagIn(sub, f, now) {
     if (!f || typeof f !== "object") return null;
@@ -865,6 +865,13 @@ export class Vault {
       // live if they are in a room (the Worker tried that first); otherwise the next time the game talks to us
       if (!body.live) await st.put("inbox", ((await st.get("inbox")) || []).concat([m]).slice(-20));
       await st.put("sent", ((await st.get("sent")) || []).concat([Object.assign({ live: !!body.live }, m)]).slice(-30));
+      return jsonRes({ ok: true });
+    }
+    // play a screen on their game to see it (the Apex unlock): it grants nothing, whatever their rank
+    if (body.op === "adm_demo") {
+      if (body.demo !== "apex") return jsonRes({ error: "unknown demo" }, 400);
+      const m = { id: randomHex(6), at: now, text: "", demo: "apex" };
+      await st.put("inbox", ((await st.get("inbox")) || []).concat([m]).slice(-20));
       return jsonRes({ ok: true });
     }
     if (body.op === "adm_edit") {
