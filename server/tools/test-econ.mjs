@@ -142,11 +142,11 @@ console.log("currency split tests passed"); }
 
 // ---- Dev2: BOTH needs both; unreleased items have no worth and cannot be had ----
 {
-  assert.equal(ownsSword({ swords: { dev2sniper: 1 } }, "dev2both"), false, "BOTH needs the karambit too");
-  assert.equal(ownsSword({ swords: { dev2karambit: 1 } }, "dev2both"), false, "BOTH needs the sniper too");
-  assert.equal(ownsSword({ swords: { dev2sniper: 1, dev2karambit: 1 } }, "dev2both"), true);
-  assert.equal(ownsSword({ swords: { dev2sniper: 1 } }, "dev2sniper"), true);
-  assert.equal(ownsSword({ swords: {} }, "dev2sniper"), false);
+  assert.equal(ownsSword({ swords: { dev2sniper: 1 } }, "dev2both"), true, "Dev2 owned: BOTH");
+  assert.equal(ownsSword({ swords: { dev2sniper: 1 } }, "dev2karambit"), true, "Dev2 owned: the karambit");
+  assert.equal(ownsSword({ swords: {} }, "dev2both"), false, "BOTH needs Dev2");
+  assert.equal(ownsSword({ swords: {} }, "dev2karambit"), false, "the karambit needs Dev2");
+  assert.equal(ownsSword({ swords: { dev2karambit: 1 } }, "dev2both"), false, "an old karambit alone is not Dev2");
   const t = tamperVerdict([[["swords", "dev2sniper"], "=", 1]]);
   assert.ok(t && t.sev === "ban", "a save that gives itself an unreleased blade is a ban");
   const s = ensure({ coins: 0, swords: { dev2sniper: 1 }, eqSword: "trainer" });
