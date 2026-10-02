@@ -11965,34 +11965,47 @@ function rapWord(txt,col,x,y,z,size,life){
 /* A thick black crescent with a red edge all the way round: the Vamp Fang's
    cut. Drawn normally (not added as light) so the black reads as black. It
    sweeps across in a few frames, then thins and fades. */
-function rapDarkSlashGeo(r0,r1,span,seg,minW){
-  var g=new THREE.RingGeometry(r0,r1,seg,1,-Math.PI/2-span/2,span),p=g.attributes.position,mid=(r0+r1)/2;
-  for(var i=0;i<p.count;i++){var x=p.getX(i),y=p.getY(i),r=Math.sqrt(x*x+y*y),a=Math.atan2(y,x);
-    var t=(a-(-Math.PI/2-span/2))/span;t=Math.min(1,Math.max(0,t));
-    var w=Math.max(minW,Math.pow(Math.sin(t*Math.PI),.7)),nr=mid+(r-mid)*w;
-    p.setXY(i,Math.cos(a)*nr,Math.sin(a)*nr);}
-  p.needsUpdate=true;return g;
+function rapCrescentShape(mid,half,span,minW){
+  var sh=new THREE.Shape(),N=30,a0=-Math.PI/2-span/2,k,t,a,w;
+  for(k=0;k<=N;k++){t=k/N;a=a0+t*span;w=Math.max(minW,Math.pow(Math.sin(t*Math.PI),.7));
+    var r=mid+half*w;if(k)sh.lineTo(Math.cos(a)*r,Math.sin(a)*r);else sh.moveTo(Math.cos(a)*r,Math.sin(a)*r);}
+  for(k=N;k>=0;k--){t=k/N;a=a0+t*span;w=Math.max(minW,Math.pow(Math.sin(t*Math.PI),.7));
+    var r2=mid-half*w;sh.lineTo(Math.cos(a)*r2,Math.sin(a)*r2);}
+  return sh;
 }
+function rapCrescentGeo(mid,half,span,minW,depth,bev){
+  var g=new THREE.ExtrudeGeometry(rapCrescentShape(mid,half,span,minW),{depth:depth,bevelEnabled:true,bevelThickness:bev,bevelSize:bev*.8,bevelSegments:QUAL>1?3:1,curveSegments:4});
+  g.translate(0,0,-depth/2);return g;
+}
+var RAP_CRES={};
 function rapDarkSlash(f,tilt,span,scale){
   if(QUAL===0)return;
-  // its own geometry each time: the sweep is drawn by trimming it
-  var G0={red:rapDarkSlashGeo(1.45,3.75,span,28,.12),blk:rapDarkSlashGeo(1.7,3.45,span,28,0)};
-  var grp=new THREE.Group(),inner=new THREE.Group();grp.add(inner);
-  var red=new THREE.Mesh(G0.red,new THREE.MeshBasicMaterial({color:0xff1a34,transparent:true,depthWrite:false,side:THREE.DoubleSide,toneMapped:false}));
-  var blk=new THREE.Mesh(G0.blk,new THREE.MeshBasicMaterial({color:0x07040a,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
-  red.renderOrder=6;blk.renderOrder=7;red.rotation.x=blk.rotation.x=-Math.PI/2;blk.position.y=.01;
-  inner.add(red);inner.add(blk);
+  /* A solid crescent with real thickness: black, bevelled so the light rolls
+     off its edges, inside a red shell drawn from the back (a toon outline, so
+     the red runs all the way round it from any angle). It swings in across the
+     cut, two black afterimages trailing it, then thins and fades. */
+  var k=span.toFixed(2);
+  if(!RAP_CRES[k])RAP_CRES[k]={blk:rapCrescentGeo(2.55,.9,span,.03,.18,.11),red:rapCrescentGeo(2.55,1.02,span*1.03,.08,.32,.14)};
+  var G0=RAP_CRES[k];
+  var grp=new THREE.Group(),sweep=new THREE.Group(),inner=new THREE.Group();grp.add(sweep);sweep.add(inner);
+  var parts=[];
+  function add(geo,mat,op,par,order){var m=new THREE.Mesh(geo,mat);m.rotation.x=-Math.PI/2;m.renderOrder=order;(par||inner).add(m);parts.push({m:m,op:op});return m;}
+  add(G0.red,new THREE.MeshBasicMaterial({color:0xff1a34,side:THREE.BackSide,transparent:true,toneMapped:false}),1,null,6);
+  add(G0.blk,new THREE.MeshPhongMaterial({color:0x040203,specular:0x6a1a28,shininess:110,transparent:true}),1,null,7);
+  if(QUAL>1)[[.28,.5],[.56,.25]].forEach(function(e){var eg=new THREE.Group();eg.rotation.y=-e[0];inner.add(eg);
+    add(G0.blk,new THREE.MeshBasicMaterial({color:0x0c070a,transparent:true,depthWrite:false}),e[1],eg,5);
+    add(G0.red,new THREE.MeshBasicMaterial({color:0xff1a34,side:THREE.BackSide,transparent:true,depthWrite:false,toneMapped:false}),e[1]*.6,eg,4);});
   grp.position.set(f.pos.x,f.y+1.9,f.pos.z);grp.rotation.order="YZX";grp.rotation.y=f.yaw;grp.rotation.z=tilt;grp.scale.setScalar(scale*(1+Math.min(1.7,f.bladeReach||1)*.2));
   scene.add(grp);
-  var t=0,IDX=G0.blk.index.count;
+  var t=0;
   V4FX.push({tick:function(dt){t+=dt;
-      var sw=Math.min(1,t/.09),n=Math.max(6,Math.floor(IDX*sw/6)*6);
-      red.geometry.setDrawRange(0,n);blk.geometry.setDrawRange(0,n);
-      var fade=t<.12?1:Math.max(0,1-(t-.12)/.3);
-      red.material.opacity=fade;blk.material.opacity=Math.min(1,fade*1.1);
-      inner.scale.z=1-(1-fade)*.4;
-      if(t>=.42)return false;return true;},
-    done:function(){scene.remove(grp);red.material.dispose();blk.material.dispose();G0.red.dispose();G0.blk.dispose();}});
+      // the sweep: it comes round from behind the cut into place
+      var sw=Math.min(1,t/.1);sweep.rotation.y=-(1-sw)*(1-sw)*1.1;
+      var fade=t<.14?Math.min(1,t/.03):Math.max(0,1-(t-.14)/.3);
+      parts.forEach(function(p){p.m.material.opacity=p.op*fade;p.m.material.depthWrite=fade>.98&&p.op>=1;});
+      inner.scale.y=1-(1-Math.min(1,fade))*.6*(t>.14?1:0);inner.scale.z=1-(t>.14?(1-fade)*.4:0);
+      if(t>=.46)return false;return true;},
+    done:function(){scene.remove(grp);parts.forEach(function(p){p.m.material.dispose();});}});
 }
 /* THE VAMP FANG'S CUT: two thick black crescents edged in red, crossing;
    a shockwave, a spray of droplets, and a few bats out of the cut. */
