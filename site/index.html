@@ -1884,7 +1884,7 @@ var SWORDS=[
  {id:"omega",name:"Season 0 Omega Blade",season:0,price:-1,rank:"omega",blade:0xffffff,hilt:0x101018,glow:0x00ffe0,shape:"glaive",hold:"float",swing:"spin",idle:"orbit",
   desc:"Season 0 ranked reward (Omega). The last blade on the old path. It hums."},
  // Halloween Pass: only ever from the pass, never chests, shops, codes or selling
- {id:"carver",name:"Carving Knife",rarity:"halloween",pass:15,price:-1,blade:0xe4eaf2,hilt:0x121016,glow:0xff4a1a,shape:"chef",hold:"one",swing:"frenzy",idle:"none",
+ {id:"carver",name:"Carving Knife",rarity:"halloween",pass:15,price:-1,blade:0xe4eaf2,hilt:0x121016,glow:0xff4a1a,shape:"chef",hold:"icepick",size:.78,swing:"frenzy",idle:"none",
   desc:"A kitchen knife that has carved more than pumpkins. Cuts an X and drives the point home."},
  {id:"harvester",name:"Harvester",rarity:"halloween",pass:30,price:-1,blade:0x16100e,hilt:0x1a0e06,glow:0xff7a12,shape:"harvest",hold:"staff",swing:"reap",idle:"drift",
   desc:"A scythe with a lit jack-o'-lantern where the blade meets the shaft. Reaps a full circle of fire."},
@@ -4946,12 +4946,28 @@ var SIG_LEAD=0.10;
 function sigWarp(p,w0){return p<SIG_LEAD?p/SIG_LEAD*w0:w0+(p-SIG_LEAD)/(1-SIG_LEAD)*(1-w0);}
 Fighter.prototype.swingFrame=function(p,dt){
   var S=SIG_SWING[this.swordDef.swing];
-  if(S){var w=sigWarp(p,S.beats[0].w);this._rawP=p;this.animateSwing(w);sigSwingFx(this,w);return;}
-  var w=swingWarp(p);
+  if(S){var w=sigWarp(p,S.beats[0].w);this._rawP=p;this.animateSwing(w);this.drawFrame(p);this.mirrorPose();
+    // the Dev blade: remember where the tip goes through the cut, for its rift
+    if(this.swordDef.swing==="riftslash"){
+      if(w<.2)this._rpath=[];
+      else if(w<=.48&&this._rpath){var tp=this.swordTip();this._rpath.push([tp.x,tp.y,tp.z]);}
+    }
+    sigSwingFx(this,w);return;}
+  var w=swingWarp(p);this._rawP=undefined;
   this.animateSwing(w);
+  this.drawFrame(p);
+  this.mirrorPose();
   if(w>=.3)this.strikeFx();              // the instant the cut starts moving
 };
 
+// the start of a swing that drew the weapon: the hand is on the grip at the
+// hip, and the weapon comes out into the swing
+Fighter.prototype.drawFrame=function(p){
+  if(!this._drawing)return;
+  var u=clamp(p/STOW.draw,0,1);
+  if(u>=1){this._drawing=false;return;}
+  this.stowBlend(1-u*u*(3-2*u));
+};
 function ringBurst(x,y,z,n,spd,hex,size,life){
   var c=hex2rgb(hex);
   for(var i=0;i<n;i++){
@@ -5543,6 +5559,386 @@ var HOLD={
   hip:     {sp:[1.78,1.02,-0.64],sr:[0.12,0.10,Math.PI/2], ra:[-0.24,0,0.12], la:null}
 };
 
+/* ---- carried, not held ----
+   A weapon is worn until it is used: at the hip, across the back, or for the
+   floating ones beside you. A swing draws it -- the hand goes to the grip and
+   brings it out -- and a moment after the last swing it goes back. Only the
+   weapons named in IN_HAND are held at rest. */
+var IN_HAND={carver:1,pbfetus:1,ricky9:1,portalgun:1};   // the knife, point-down; PB Fetus on its cord; the guns as they always were
+var STOW={drawnFor:.8,sheathe:.30,draw:.24,hilt:[0.86,1.32,-0.30],floor:.30,
+  arm:[-0.06,0,0.10],                   // the sword arm hangs easy beside the hip
+  hipMax:2.2,                           // longer than this and it goes on the back
+  upMin:3.9,                            // longer than this and it stands upright on the back
+  back:[0.50,2.62,-0.46]};              // over the right shoulder, drawn straight up and out
+// how a weapon is carried: "side" (worn at the hip, drawn into the hand),
+// "body" (lives on the body even mid-swing: the sling/back carries), or null
+function carryOf(d){
+  if(!d||IN_HAND[d.id]||d.hold==="float")return null;
+  if(d.hold==="hip"||d.hold==="rhip"||d.hold==="back")return "body";
+  return "side";
+}
+var _cq1=new THREE.Quaternion(),_cq2=new THREE.Quaternion(),_cq3=new THREE.Quaternion(),
+    _cv1=new THREE.Vector3(),_cv2=new THREE.Vector3(),_cm=new THREE.Matrix4(),_ce=new THREE.Euler();
+var _RY=new THREE.Vector3(0,1,0),_cq4=new THREE.Quaternion(),_cq2Raise=new THREE.Quaternion();
+var _cSpin=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI/2);
+/* Worn at the hip: the grip forward and up by the belt, the weapon hanging
+   down and back behind the leg, its flat to the side. The longer it is, the
+   further back it leans, so the tip never digs into the floor. */
+Fighter.prototype.stowPose=function(left){
+  var sw=this.sword,L=(sw&&sw.userData.len1)||3;
+  L*=(sw?sw.scale.y:1);                         // in the body's units, as big as it is right now
+  var m=left?-1:1;
+  // a gun sits in its holster on the hip, pointing the way you face
+  if(this.swordDef.hold==="pistol"){
+    _ce.set(Math.PI/2+0.12,0,0);_cq1.setFromEuler(_ce);
+    return {p:_cv1.set(.84*m,1.48,-.34),q:_cq1};
+  }
+  /* Very long (spears, glaives, the big two-handers): worn upright on the back,
+     the butt low by the sword hip and the head up past the other shoulder. */
+  if(L>STOW.upMin){
+    _ce.set(-0.30,0,0.36*m);_cq1.setFromEuler(_ce);
+    return {p:_cv1.set(.48*m,1.18,-.48),q:_cq1};
+  }
+  /* Too long for the hip -- it either hit the floor or stuck straight out
+     behind like a tail -- so it is slung across the back instead: the grip up
+     over the sword shoulder, the weapon running down across the back to the
+     other hip, as far over as it needs to clear the floor. */
+  if(L>STOW.hipMax&&this.swordDef.hold!=="pistol"){   // a gun is always holstered at the hip
+    var B=STOW.back,cb=clamp((B[1]-STOW.floor)/L,.35,.94),ab=Math.acos(cb);
+    _ce.set(Math.PI+0.10,0,ab*m);                  // pointing down, leaned across to the far side
+    _cq1.setFromEuler(_ce);
+    return {p:_cv1.set(B[0]*m,B[1],B[2]),q:_cq1};
+  }
+  var H=STOW.hilt,c=clamp((H[1]-STOW.floor)/Math.max(.5,L),0,.97),a=Math.acos(c);
+  _ce.set(Math.PI+a,0,-0.14*m);
+  _cq1.setFromEuler(_ce).multiply(_cSpin);
+  return {p:_cv1.set(H[0]*m,H[1],H[2]),q:_cq1};
+};
+function ballHeldBy(f){for(var i=0;i<balls.length;i++)if(balls[i].held>0&&balls[i].heldBy===f)return true;return false;}
+// point an arm so the hand lands on mesh-space point `pt`
+function armAim(arm,pt,out){
+  var dx=pt.x-arm.position.x,dy=pt.y-arm.position.y,dz=pt.z-arm.position.z,l=Math.hypot(dx,dy,dz)||1;
+  dx/=l;dy/=l;dz/=l;
+  out.z=Math.asin(clamp(dx,-1,1));out.x=Math.atan2(-dz,-dy);out.y=0;
+  return l;
+}
+/* Blend a drawn weapon toward where it is worn: s=0 leaves the animated pose
+   alone, s=1 is the hand on the grip with the weapon still in its place. Used
+   both ways -- coming out on the draw, going back on the sheathe. */
+var _cAim={x:0,y:0,z:0};
+Fighter.prototype.stowBlend=function(s){
+  if(s<=0)return;
+  var pairs=[[this.arms[1],this.sword,false]];
+  if(this.sword2)pairs.push([this.arms[0],this.sword2,true]);
+  for(var i=0;i<pairs.length;i++){
+    var arm=pairs[i][0],sw=pairs[i][1];
+    if(!sw||sw.parent!==arm)continue;
+    var st=this.stowPose(pairs[i][2]);
+    // where the animation has the weapon, in the body's frame
+    arm.updateMatrix();
+    _cq2.copy(arm.quaternion).multiply(sw.quaternion);           // mesh-space orientation
+    var lp=_cv2.copy(sw.position);
+    armAim(arm,st.p,_cAim);
+    arm.rotation.x=lerp(arm.rotation.x,_cAim.x,s);
+    arm.rotation.y=lerp(arm.rotation.y,0,s);
+    arm.rotation.z=lerp(arm.rotation.z,_cAim.z,s);
+    arm.updateMatrix();
+    // orientation: turn from the animated one toward the worn one
+    _cq2.slerp(st.q,s);
+    _cq3.copy(arm.quaternion).invert();
+    sw.quaternion.copy(_cq3.multiply(_cq2));
+    // position: from the fist toward the scabbard
+    _cm.copy(arm.matrix).invert();
+    var sp=st.p.clone().applyMatrix4(_cm);
+    sw.position.set(lerp(lp.x,sp.x,s),lerp(lp.y,sp.y,s),lerp(lp.z,sp.z,s));
+  }
+};
+Fighter.prototype.stowNow=function(){
+  if(carryOf(this.swordDef)!=="side")return;
+  if(this.sword.parent!==this.mesh)this.mesh.add(this.sword);
+  if(this.sword2&&this.sword2.parent!==this.mesh)this.mesh.add(this.sword2);
+  this.stowed=true;this.drawnT=0;this.sheatheT=0;
+};
+Fighter.prototype.drawNow=function(){
+  if(!this.stowed)return;
+  this.arms[1].add(this.sword);
+  if(this.sword2)this.arms[0].add(this.sword2);
+  this.stowed=false;
+};
+/* The body-carried weapons (the sling and back carries) stay on the body and
+   are placed by their own choreography. The arm used to swing on its own
+   beside them and never touched the grip; now it reaches for it and keeps
+   hold of it, `w` of the way (0 = its own pose, 1 = on the grip). If the grip
+   is further than an arm can reach, the weapon comes to the hand instead. */
+function handOnGrip(f,arm,sw,w){
+  if(w<=0||!sw)return;
+  var reach=1.24,dx=sw.position.x-arm.position.x,dy=sw.position.y-arm.position.y,dz=sw.position.z-arm.position.z;
+  var l=Math.hypot(dx,dy,dz)||1;
+  if(l>reach){var k=lerp(1,reach/l,w);sw.position.set(arm.position.x+dx*k,arm.position.y+dy*k,arm.position.z+dz*k);}
+  armAim(arm,sw.position,_cAim);
+  arm.rotation.x=lerp(arm.rotation.x,_cAim.x,w);
+  arm.rotation.y=lerp(arm.rotation.y,0,w);
+  arm.rotation.z=lerp(arm.rotation.z,_cAim.z,w);
+}
+
+/* ---- swung like a person would ----
+   A swing is a path, not a pile of joint angles. Every key says where the
+   sword hand is (the arm's direction from the shoulder) and which way the
+   weapon points; the path between keys is a smooth curve through them, so
+   the weapon is never stopped dead mid-swing and never snaps. The weapon's
+   roll is carried along the path (each frame turns it by only as much as its
+   direction changed), so it cannot flip over. The hands are then put ON the
+   grip: the sword arm reaches the hand, and on a two-handed weapon the other
+   arm reaches the other hand's place on the handle. The body coils into the
+   wind-up and unwinds through the cut, and the lead foot steps into it.
+   Directions are [azimuth, elevation] in degrees: azimuth 0 is straight ahead,
+   90 is out to the sword side, 180 straight back; elevation 90 is straight up.
+   (Laid out with the sword on the +x side; the whole pose is mirrored on
+   screen so the sword is in the RIGHT hand -- see mirrorPose.) */
+var HS_REACH=1.22,HS_DEG=Math.PI/180;
+function hsDir(az,el,out){az*=HS_DEG;el*=HS_DEG;return (out||new THREE.Vector3()).set(Math.sin(az)*Math.cos(el),Math.sin(el),Math.cos(az)*Math.cos(el));}
+// where the hands go on the handle: [sword hand, measured up the weapon from its
+// butt, as a share of its length; the other hand, from the sword hand, along it]
+var HS_GRIP={two:[.12,-.30],shoulder:[.12,-.30],staff:[.22,.62],glaive:[.22,.62],lance:[.22,.62]};
+var HS_GUARD={one:[[15,-55],[12,28]],two:[[-28,-42],[-4,32]],knife:[[22,-22],[28,-72]]};
+var HS={
+  // a diagonal cut: cocked up over the sword shoulder, down across the body,
+  // carried on past the off hip
+  slash:{keys:[[0,"g"],[.14,60,5,100,45],[.30,80,35,150,60],[.42,55,40,60,72],[.55,15,12,-10,25],
+    [.74,-45,-15,-65,-20],[.88,-58,-30,-80,-38],[1,"g"]],
+    tw:[[0,0],[.30,.50],[.55,0],[.74,-.40],[.90,-.45],[1,0]],step:1},
+  slash2:{keys:[[0,"g"],[.14,10,10,90,50],[.30,10,40,140,60],[.42,0,35,60,70],[.55,-10,10,5,22],
+    [.74,-35,-25,-60,-22],[.88,-40,-35,-75,-38],[1,"g"]],
+    tw:[[0,0],[.30,.55],[.55,0],[.74,-.45],[.90,-.50],[1,0]],step:1},
+  // straight up and over, and split down the middle
+  overhead:{keys:[[0,"g"],[.14,25,40,60,80],[.30,10,80,178,25],[.46,8,45,5,62],[.60,5,0,3,-8],
+    [.74,3,-30,0,-48],[.88,0,-45,-5,-64],[1,"g"]],
+    tw:[[0,0],[.30,.18],[.74,-.14],[1,0]],step:1},
+  overhead2:{keys:[[0,"g"],[.14,-12,30,-5,80],[.36,-15,75,180,12],[.52,-15,72,180,28],[.64,-15,35,0,62],
+    [.82,-15,-35,0,-45],[.93,-15,-45,0,-62],[1,"g"]],
+    tw:[[0,0],[.36,.20],[.82,-.16],[1,0]],step:1.2},
+  // the thrust: elbow back, the point driven dead level down the line
+  stab:{keys:[[0,"g"],[.30,100,-55,5,5],[.55,22,-10,3,3],[.74,5,-4,0,0],[.88,6,-8,0,-4],[1,"g"]],
+    tw:[[0,0],[.30,.38],[.74,-.30],[1,0]],step:1.4,push:[[0,0],[.30,-.15],[.74,.38],[1,0]]},
+  stab2:{keys:[[0,"g"],[.30,-10,-50,0,4],[.74,-12,-20,0,0],[.88,-12,-25,0,-4],[1,"g"]],
+    tw:[[0,0],[.30,.30],[.74,-.20],[1,0]],step:1.4,push:[[0,0],[.30,-.35],[.74,.55],[1,0]]},
+  // from low behind the hip, torn up through the middle
+  uppercut:{keys:[[0,"g"],[.30,70,-62,160,-35],[.48,40,-38,40,-18],[.62,10,12,-10,45],
+    [.74,-15,52,-20,78],[.88,-20,58,-30,84],[1,"g"]],
+    tw:[[0,0],[.30,.32],[.74,-.32],[1,0]],step:1},
+  // the body turns right round with it, the weapon held out level
+  spin:{keys:[[0,"g"],[.30,85,-10,118,0],[.74,82,-10,96,-4],[.90,70,-22,80,-10],[1,"g"]],
+    tw:[[0,0],[.30,.55],[.74,.55-TAU],[.90,-TAU],[1,-TAU]],step:.6},
+  spin2:{keys:[[0,"g"],[.30,10,-25,100,5],[.74,5,-25,95,0],[.90,0,-30,80,-5],[1,"g"]],
+    tw:[[0,0],[.30,.55],[.74,.55-TAU],[.90,-TAU],[1,-TAU]],step:.6},
+  // two blades: up and out, then an X down through the front
+  twirl:{keys:[[0,"g"],[.30,65,45,110,65],[.50,25,12,-10,30],[.74,-35,-20,-60,-35],[.88,-40,-30,-70,-45],[1,"g"]],
+    tw:[[0,0],[.30,.10],[.74,-.08],[1,0]],step:.8,dual:.05},
+  // the knife, held point-down: across, back across, and a stab straight down
+  frenzy:{guard:"knife",keys:[[0,"g"],[.10,65,35,75,-15],[.19,-35,-15,-55,-60],[.30,-45,25,-60,-15],
+    [.43,55,-15,65,-65],[.55,10,75,5,-5],[.70,5,-20,5,-80],[.85,0,-35,0,-85],[1,"g"]],
+    tw:[[0,0],[.10,.35],[.19,-.35],[.30,-.40],[.43,.35],[.55,.10],[.70,-.15],[1,0]],step:1},
+  // Apex: off the back, up overhead, one great diagonal, and home again
+  apex:{body:1,keys:[[0,"s"],[.16,95,15,160,70],[.30,25,78,178,30],[.46,-30,-20,-50,-35],
+    [.60,-45,-35,-65,-50],[.80,45,20,150,60],[1,"s"]],
+    tw:[[0,0],[.30,.40],[.46,-.50],[.60,-.55],[.80,.10],[1,0]],step:1.2},
+  // Divine Right: drawn from the hip in one rising cut, then slid home
+  divine:{body:1,keys:[[0,"s"],[.16,30,-40,40,-10],[.40,-35,35,-50,55],[.56,-45,45,-60,65],
+    [.74,10,-20,30,-20],[.88,25,-42,150,-25],[1,"s"]],
+    tw:[[0,0],[.16,.30],[.40,-.45],[.56,-.50],[.74,-.10],[1,0]],step:1.1}
+};
+var HSq=new THREE.Quaternion(),HSq2=new THREE.Quaternion(),HSv=new THREE.Vector3(),HSv2=new THREE.Vector3(),
+    HSv3=new THREE.Vector3(),HSY=new THREE.Vector3(0,1,0),HSm=new THREE.Matrix4();
+// which path a weapon uses, or null for the hand-animated ones
+function hsStyle(d){
+  if(!d||d.hold==="float")return null;
+  var st=d.swing,two=!!HS_GRIP[d.hold];
+  if(two&&HS[st+"2"])return st+"2";
+  if(two&&(st==="hammer"))return "overhead2";
+  if(st==="hammer")return "overhead";
+  if(st==="divine")return null;                 // Divine Right keeps its original draw
+  if(HS[st]&&!(HS[st].body&&d.hold!=="back"&&d.hold!=="rhip"))return st;
+  return null;
+}
+function hsSm(t){t=t<0?0:(t>1?1:t);return t*t*(3-2*t);}
+// a smooth curve through the keys (Catmull-Rom), read at w
+function hsCurve(keys,w,ix,out){
+  var n=keys.length,i=1;
+  while(i<n-1&&w>keys[i].w)i++;
+  var k1=keys[i-1],k2=keys[i],k0=keys[Math.max(0,i-2)],k3=keys[Math.min(n-1,i+1)];
+  var u=clamp((w-k1.w)/Math.max(1e-6,k2.w-k1.w),0,1),u2=u*u,u3=u2*u;
+  var a=k0[ix],b=k1[ix],c=k2[ix],d=k3[ix];
+  function cr(p0,p1,p2,p3){return .5*((2*p1)+(-p0+p2)*u+(2*p0-5*p1+4*p2-p3)*u2+(-p0+3*p1-3*p2+p3)*u3);}
+  return out.set(cr(a.x,b.x,c.x,d.x),cr(a.y,b.y,c.y,d.y),cr(a.z,b.z,c.z,d.z)).normalize();
+}
+function hsKeyed(arr,w){if(!arr)return 0;return keyed(w,arr);}
+// the weapon's resting orientation for a direction: flat to the side
+function hsCanon(D,out){
+  out.setFromUnitVectors(HSY,D);
+  return out;
+}
+Fighter.prototype.hsGrip=function(){var g=HS_GRIP[this.swordDef.hold];return g||[0,0];};
+Fighter.prototype.hsLen=function(){var sw=this.sword;return ((sw&&sw.userData.len1)||3)*(sw?sw.scale.y:1);};
+// the guard: where a drawn weapon is held between swings
+Fighter.prototype.hsGuard=function(){
+  var S=HS[this._hsStyle]||{},g=HS_GUARD[S.guard||(HS_GRIP[this.swordDef.hold]?"two":"one")];
+  return g;
+};
+// build this swing's keys: directions resolved, the ends tied to where the
+// weapon really is (worn, or held in guard)
+Fighter.prototype.hsBuild=function(style){
+  var S=HS[style],gd=this.hsGuard(),keys=[],arm=this.arms[1];
+  var st=S.body||this.stowed?this.hsStowPose():null;
+  for(var i=0;i<S.keys.length;i++){
+    var k=S.keys[i],o={w:k[0]};
+    if(k[1]==="s"&&st){o.A=HSv.copy(st.g).sub(arm.position).normalize().clone();o.D=st.D.clone();}
+    else if(k[1]==="g"||k[1]==="s"){o.A=hsDir(gd[0][0],gd[0][1]);o.D=hsDir(gd[1][0],gd[1][1]);}
+    else{o.A=hsDir(k[1],k[2]);o.D=hsDir(k[3],k[4]);}
+    keys.push(o);
+  }
+  this._hsKeys=keys;
+};
+// where a worn weapon's grip and point are, in the body's frame
+Fighter.prototype.hsStowPose=function(){
+  var sw=this.sword,d=this.swordDef,p,q;
+  if(d.hold==="back"||d.hold==="rhip"||d.hold==="hip"){var h=HOLD[d.hold];
+    p=HSv2.set(h.sp[0],h.sp[1],h.sp[2]);_ce.set(h.sr[0],h.sr[1],h.sr[2]);q=HSq2.setFromEuler(_ce);}
+  else{var s=this.stowPose(false);p=HSv2.copy(s.p);q=HSq2.copy(s.q);}
+  var D=HSv3.copy(HSY).applyQuaternion(q);
+  var gr=this.hsGrip()[0]*this.hsLen();
+  return {p:p.clone(),q:q.clone(),D:D.clone(),g:p.clone().addScaledVector(D,gr)};
+};
+// put an arm's hand on mesh-space point pt, stretching it a little if it must
+function hsArm(arm,pt,w){
+  var l=armAim(arm,pt,_cAim);
+  if(w>=1){arm.rotation.set(_cAim.x,0,_cAim.z);}
+  else{arm.rotation.x=lerp(arm.rotation.x,_cAim.x,w);arm.rotation.y=lerp(arm.rotation.y,0,w);arm.rotation.z=lerp(arm.rotation.z,_cAim.z,w);}
+  arm.scale.y=lerp(1,clamp(l/HS_REACH,.8,1.2),w);
+}
+/* One frame of a path swing at warped time w. The weapon lives in the body's
+   frame for the whole of it; the arms are fitted to it afterwards. */
+Fighter.prototype.hsFrame=function(w,p){
+  var S=HS[this._hsStyle],arm=this.arms[1],la=this.arms[0],sw=this.sword,keys=this._hsKeys;
+  if(!S||!keys)return;
+  if(sw.parent!==this.mesh)this.mesh.add(sw);
+  var bx=arm.userData.baseX,by=arm.userData.baseY,bz=arm.userData.baseZ;
+  var push=hsKeyed(S.push,w);
+  arm.position.set(bx,by,bz+push);
+  var A=hsCurve(keys,w,"A",HSv),D=hsCurve(keys,w,"D",HSv3);
+  var G=new THREE.Vector3().copy(arm.position).addScaledVector(A,HS_REACH);
+  // the roll is carried, not recomputed: turn it by exactly how far the point moved
+  if(!this._hsQ){this._hsQ=hsCanon(D,new THREE.Quaternion());this._hsD=D.clone();}
+  HSq.setFromUnitVectors(this._hsD,D);this._hsQ.premultiply(HSq).normalize();this._hsD.copy(D);
+  var q=this._hsQ,pos=G.clone().addScaledVector(D,-this.hsGrip()[0]*this.hsLen());
+  // drawn from where it was worn: early on, still partly at the scabbard
+  if(this._hsFrom){
+    var u=hsSm((p!==undefined?p:w)/STOW.draw);
+    if(u<1){var F=this._hsFrom;pos.lerpVectors(F.p,pos,u);q=F.q.clone().slerp(q,u);
+      G.lerpVectors(F.g,G,u);}
+    else this._hsFrom=null;
+  }
+  // sheathing at the end of a sling swing: settle exactly into the scabbard
+  if(S.body){var st=this._hsStow;if(st){var e=hsSm((w-.86)/.14);if(e>0){pos.lerp(st.p,e);q=q.clone().slerp(st.q,e);G.lerp(st.g,e);}}}
+  sw.position.copy(pos);sw.quaternion.copy(q);
+  hsArm(arm,G,1);
+  // the other hand: on the handle, or swinging the other way for balance
+  var gr=this.hsGrip();
+  if(gr[1]){
+    var D2=HSv2.set(0,1,0).applyQuaternion(q);
+    hsArm(la,G.clone().addScaledVector(D2,gr[1]*this.hsLen()),1);
+  } else if(this.sword2&&S.dual){
+    this.hsSecond(w-S.dual,la);
+  } else {
+    la.scale.y=1;
+    la.rotation.x=keyed(w,[[0,0],[.30,-.55],[.74,.50],[1,0]]);la.rotation.z=keyed(w,[[0,0],[.30,-.15],[.74,-.25],[1,0]]);la.rotation.y=0;
+  }
+  // the body: coil, unwind, and step into it
+  var tw=hsKeyed(S.tw,w),stp=(S.step||1)*keyed(w,[[0,0],[.30,.6],[.74,-1],[.90,-.8],[1,0]]);
+  this.legs[0].rotation.x+=-.42*Math.max(0,-stp)+.18*Math.max(0,stp);
+  this.legs[1].rotation.x+=.30*Math.max(0,-stp)-.12*Math.max(0,stp);
+  if(this.mesh)this.mesh.rotation.y=this.yaw+tw;
+};
+// the second blade, its path the mirror of the first, a moment behind it
+Fighter.prototype.hsSecond=function(w,la){
+  var keys=this._hsKeys,sw2=this.sword2;w=clamp(w,0,1);
+  if(sw2.parent!==this.mesh)this.mesh.add(sw2);
+  la.position.set(la.userData.baseX,la.userData.baseY,la.userData.baseZ);
+  var A=hsCurve(keys,w,"A",new THREE.Vector3()),D=hsCurve(keys,w,"D",new THREE.Vector3());
+  A.x=-A.x;D.x=-D.x;
+  var G=la.position.clone().addScaledVector(A,HS_REACH);
+  if(!this._hsQ2){this._hsQ2=hsCanon(D,new THREE.Quaternion());this._hsD2=D.clone();}
+  HSq.setFromUnitVectors(this._hsD2,D);this._hsQ2.premultiply(HSq).normalize();this._hsD2.copy(D);
+  var q=this._hsQ2,pos=G.clone();
+  if(this._hsFrom2){var u=hsSm(w/STOW.draw);if(u<1){pos.lerpVectors(this._hsFrom2.p,pos,u);q=this._hsFrom2.q.clone().slerp(q,u);}else this._hsFrom2=null;}
+  sw2.position.copy(pos);sw2.quaternion.copy(q);
+  hsArm(la,G,1);
+};
+// a swing begins: remember where the weapon is coming from
+Fighter.prototype.hsStart=function(){
+  var style=hsStyle(this.swordDef);this._hsStyle=style;
+  if(!style)return;
+  var S=HS[style];
+  if(S.body){this._hsStow=this.hsStowPose();}
+  if(this.stowed&&!S.body){
+    var st=this.hsStowPose();this._hsFrom={p:st.p,q:st.q,g:st.g};
+    if(this.sword2){var s2=this.stowPose(true);this._hsFrom2={p:s2.p.clone(),q:s2.q.clone()};}
+    this._hsQ=st.q.clone();this._hsD=st.D.clone();
+    if(this.sword2){this._hsQ2=this._hsFrom2.q.clone();this._hsD2=new THREE.Vector3(0,1,0).applyQuaternion(this._hsQ2);}
+    this.stowed=false;
+  } else if(S.body){var s0=this._hsStow;this._hsQ=s0.q.clone();this._hsD=s0.D.clone();}
+  this.hsBuild(style);
+};
+// between swings with the weapon out: held in guard, both hands on it
+Fighter.prototype.hsHold=function(dt,sheathe){
+  var gd=this.hsGuard(),arm=this.arms[1],la=this.arms[0],sw=this.sword;
+  if(sw.parent!==this.mesh)this.mesh.add(sw);
+  arm.position.set(arm.userData.baseX,arm.userData.baseY,arm.userData.baseZ);
+  var A=hsDir(gd[0][0],gd[0][1]),D=hsDir(gd[1][0],gd[1][1]);
+  // breathing: the guard is never perfectly still
+  A.y+=Math.sin(this.anim*1.3)*.02;A.normalize();
+  var G=arm.position.clone().addScaledVector(A,HS_REACH);
+  var canon=hsCanon(D,new THREE.Quaternion());
+  if(!this._hsQ)this._hsQ=canon.clone();
+  this._hsQ.slerp(canon,1-Math.exp(-dt*10));this._hsD=new THREE.Vector3(0,1,0).applyQuaternion(this._hsQ);
+  var q=this._hsQ.clone(),pos=G.clone().addScaledVector(D,-this.hsGrip()[0]*this.hsLen());
+  if(sheathe>0){var st=this.hsStowPose(),e=hsSm(sheathe);pos.lerp(st.p,e);q.slerp(st.q,e);G.lerp(st.g,e);}
+  sw.position.copy(pos);sw.quaternion.copy(q);
+  hsArm(arm,G,1);
+  var gr=this.hsGrip();
+  if(gr[1])hsArm(la,G.clone().addScaledVector(HSv2.set(0,1,0).applyQuaternion(q),gr[1]*this.hsLen()),1);
+  else if(this.sword2){
+    la.position.set(la.userData.baseX,la.userData.baseY,la.userData.baseZ);
+    var A2=A.clone();A2.x=-A2.x;var D2=D.clone();D2.x=-D2.x;
+    var G2=la.position.clone().addScaledVector(A2,HS_REACH),q2=hsCanon(D2,new THREE.Quaternion()),p2=G2.clone();
+    if(sheathe>0){var s2=this.stowPose(true),e2=hsSm(sheathe);p2.lerp(s2.p,e2);q2.slerp(s2.q,e2);G2.lerp(s2.p,e2);}
+    if(this.sword2.parent!==this.mesh)this.mesh.add(this.sword2);
+    this.sword2.position.copy(p2);this.sword2.quaternion.copy(q2);hsArm(la,G2,1);this._hsQ2=null;
+  }
+};
+/* ---- the mirror ----
+   Everything above is laid out with the sword on the +x side, which -- the
+   fighter facing +z -- is its LEFT hand. Rather than rewrite every pose, the
+   finished pose is reflected across the body's centre line each frame: every
+   arm, leg and weapon swaps sides, and the body's turn reverses. Done again,
+   it undoes itself, which is how each frame starts from the unmirrored pose. */
+var MIRROR_POSE=true;
+function mirrorObj(o){
+  o.position.x=-o.position.x;
+  var q=o.quaternion;q.set(q.x,-q.y,-q.z,q.w);
+}
+Fighter.prototype.mirrorPose=function(){
+  var list=this._mirObjs;
+  if(list){for(var i=0;i<list.length;i++)mirrorObj(list[i]);this._mirObjs=null;return;}
+  if(!MIRROR_POSE)return;
+  list=[this.arms[0],this.arms[1],this.legs[0],this.legs[1]];
+  if(this.sword&&this.swordDef.hold!=="float")list.push(this.sword);
+  if(this.sword2)list.push(this.sword2);
+  for(var j=0;j<list.length;j++)mirrorObj(list[j]);
+  this._mirObjs=list;
+  var tw=this.mesh.rotation.y-this.yaw;
+  if(Math.abs(tw)>1e-5)this.mesh.rotation.y=this.yaw-tw;
+};
+
 /* ============================================================
    8. FIGHTERS
    ============================================================ */
@@ -6089,6 +6485,14 @@ Fighter.prototype.setSword=function(id){
   var len=(this.sword.userData.tipY||3.5)*(this.sword.scale.y||1);
   this.bladeReach=clamp(len/3.1,0.62,1.85);
   this.bladeHeft=clamp(Math.pow(bbm.sx*bbm.sz*bbm.sy/0.9,0.34),0.70,1.55);
+  // the weapon's real extent along its length, for where it can be worn
+  var _bx=new THREE.Box3();this.sword.updateMatrixWorld(true);
+  this.sword.traverse(function(o){if(o.isMesh&&!o.userData.aura)_bx.expandByObject(o);});
+  this.sword.userData.len1=isFinite(_bx.max.y)?_bx.max.y/(this.sword.scale.y||1):3;
+  this.stowed=false;this.drawnT=0;this.sheatheT=0;
+  this._hsStyle=hsStyle(this.swordDef);this._hsQ=null;this._hsQ2=null;this._hsKeys=null;this._hsFrom=null;this._hsFrom2=null;
+  this._mirObjs=null;this.arms[0].scale.y=1;this.arms[1].scale.y=1;
+  this.stowNow();
   this.restSword();
   apexCrown(this);
 };
@@ -6100,6 +6504,12 @@ Fighter.prototype.scaleSword=function(mul){
   if(this.sword2)this.sword2.scale.setScalar(s);
 };
 Fighter.prototype.restSword=function(){
+  if(this.stowed){
+    var st=this.stowPose(false);
+    this.sword.position.copy(st.p);this.sword.quaternion.copy(st.q);
+    if(this.sword2){st=this.stowPose(true);this.sword2.position.copy(st.p);this.sword2.quaternion.copy(st.q);}
+    return;
+  }
   var h=HOLD[this.swordDef.hold]||HOLD.one;
   this.sword.position.set(h.sp[0],h.sp[1],h.sp[2]);
   this.sword.rotation.set(h.sr[0],h.sr[1],h.sr[2]);
@@ -6128,6 +6538,11 @@ Fighter.prototype.swing=function(){
       ax:a0.rotation.x,az:a0.rotation.z,pz:a0.position.z,tw:this.mesh.rotation.y-this.yaw};
   } else this._from=null;
   this.swingT=this.swingDur;
+  // worn at the hip: this swing draws it, and it stays out a moment after
+  if(hsStyle(this.swordDef)){this.sheatheT=0;this.hsStart();}
+  else if(this.stowed){this.drawNow();this._drawing=true;}
+  else if(this.sheatheT>0){this.sheatheT=0;}
+  if(carryOf(this.swordDef)==="side")this.drawnT=STOW.drawnFor;
   var d=this.swordDef;
   if(this===player||QUAL>1)swingSfx(d);
   // the burst, the rings and the crescent all wait for the strike itself
@@ -6202,6 +6617,7 @@ function keyed(p,keys){
   return keys[keys.length-1][1];
 }
 Fighter.prototype.animateSwing=function(p){
+  if(this._hsStyle&&this._hsKeys&&HS[this._hsStyle]){this.hsFrame(p,this._rawP);return;}
   var arm=this.arms[1],la=this.arms[0],sw=this.sword;
   var h=HOLD[this.swordDef.hold]||HOLD.one;
   var style=this.swordDef.swing;
@@ -6380,9 +6796,9 @@ Fighter.prototype.idleWeapon=function(dt,t){
   if(sw.userData.dangle||sw.userData.frags||sw.userData.wings)v4SwordIdle(this,sw,t,dt);
   if(sw.userData.spinY)sw.userData.spinY.rotation.y=t*1.6;
   if(sw.userData.pulse2)sw.userData.pulse2.material.opacity=.18+.2*(.5+.5*Math.sin(t*3.1));
-  else if(k==="drift")
+  else if(k==="drift"&&!this.stowed)
     sw.rotation.z=(HOLD[d.hold]||HOLD.one).sr[2]+Math.sin(t*1.5)*0.09;
-  else if(k==="swing")
+  else if(k==="swing"&&!this.stowed)
     sw.rotation.z=(HOLD[d.hold]||HOLD.one).sr[2]+Math.sin(t*2.6)*0.22;
   // ---- the aura: emitter + sheath pulse + orbiting motes ----
   var FX=sw.userData.fx,boost=sw.userData.fxBoost||1;
@@ -6650,6 +7066,7 @@ Fighter.prototype.update=function(dt,t){
   if(RIFT.phase)riftConstrain(this,dt);
   if(this.y<-20){this.pos.set(rr(-5,5),0,rr(-5,5));this.y=4;this.vy=0;}
   g.position.set(this.pos.x,this.y,this.pos.z);
+  if(this._mirObjs)this.mirrorPose();          // back to the unmirrored pose to work from
   g.rotation.order="YXZ";
   g.rotation.y=this.yaw;
   var sp=Math.sqrt(this.vel.x*this.vel.x+this.vel.z*this.vel.z);
@@ -6671,8 +7088,23 @@ Fighter.prototype.update=function(dt,t){
   } else {
     this._lastTip=null;
     var arm=this.arms[1],la=this.arms[0];
+    this._drawing=false;
+    // a ball held on the blade (or a catch waiting for one) needs it out
+    if(carryOf(this.swordDef)==="side"&&(this.catchArmT>0||this.holdT>0||ballHeldBy(this))){
+      if(this.stowed)this.drawNow();
+      this.sheatheT=0;this.drawnT=Math.max(this.drawnT,STOW.drawnFor);
+    }
+    // drawn, and nothing swung for a while: put it away
+    if(!this.stowed&&carryOf(this.swordDef)==="side"&&!(this.tauntT>0)){
+      if(this.sheatheT>0){
+        this.sheatheT-=dt;
+        if(this.sheatheT<=0)this.stowNow();
+      } else if((this.drawnT-=dt)<=0)this.sheatheT=STOW.sheathe;
+    }
+    // worn, not held: the arms hang free and swing with the stride
+    if(this.stowed&&!(this.tauntT>0))h={ra:[STOW.arm[0],STOW.arm[1],STOW.arm[2]],la:null};
     if(this.tauntT>0)this.tauntPose(dt);else{
-    arm.rotation.x=damp(arm.rotation.x,h.ra[0]+swk*.2,12,dt);
+    arm.rotation.x=damp(arm.rotation.x,h.ra[0]+swk*(this.stowed?.55:.2),12,dt);
     arm.rotation.y=damp(arm.rotation.y,h.ra[1],12,dt);
     arm.rotation.z=damp(arm.rotation.z,h.ra[2],12,dt);
     arm.position.z=damp(arm.position.z,arm.userData.baseZ,12,dt);
@@ -6685,6 +7117,15 @@ Fighter.prototype.update=function(dt,t){
     }
     }
     this.restSword();
+    var hsSt=hsStyle(this.swordDef);
+    if(hsSt&&!this.stowed&&carryOf(this.swordDef)!=="body"){
+      this._hsStyle=hsSt;
+      this.hsHold(dt,this.sheatheT>0?1-clamp(this.sheatheT/STOW.sheathe,0,1):0);
+    } else {
+      if(this.sheatheT>0)this.stowBlend(1-clamp(this.sheatheT/STOW.sheathe,0,1));
+      arm.scale.y=damp(arm.scale.y,1,14,dt);la.scale.y=damp(la.scale.y,1,14,dt);
+    }
+    this.mirrorPose();
     this.idleWeapon(dt,t);
   }
   this.skinTick(dt,t);
@@ -9524,7 +9965,7 @@ var SIG_SWING={
     {w:.55,st:{span:5.6,tilt:.26,r:1.25,w:.8,hot:1},col:0xffd84a}]},
   // the Dev blade: one draw-and-cut off the back, and the cut tears the world open
   riftslash:{dur:.60,col:0x9a4bff,beats:[
-    {w:.40,st:{span:3.6,tilt:.62,r:1.2,w:1.0,hot:1},col:0xb06aff,tear:true}]},
+    {w:.47,st:{span:3.6,tilt:.62,r:1.2,w:1.0,hot:1},col:0xb06aff,tear:true}]},
   // the Wendigo: one draw off the hip. The cut throws frost all the way round
   // the body, and halfway through it the Wendigo itself looks out over you
   wendigo:{dur:.62,col:0x4ab8ff,beats:[
@@ -9551,6 +9992,7 @@ function sigAnimate(f,p,arm,la,sw,h,bx,by,bz){
     f.legs[1].rotation.x=k(p,[[0,0],[.60,.32],[.72,-.62],[1,0]]);
     f.legs[0].rotation.x=k(p,[[0,0],[.60,-.2],[.72,.44],[1,0]]);
     tw=k(p,[[0,0],[.10,.45],[.19,-.45],[.33,-.4],[.43,.42],[.60,.1],[.70,-.12],[1,0]]);
+    if(f.swordDef.hold==="icepick")E+=Math.PI;       // point down out of the fist the whole way
   } else if(style==="reap"){
     // coiled up and back, then a full turn of the body with the blade held
     // out level, then round to face front again
@@ -9589,7 +10031,29 @@ function sigAnimate(f,p,arm,la,sw,h,bx,by,bz){
     f.legs[1].rotation.x=k(p,[[0,0],[.3,.3],[.44,-.5],[1,0]]);
     f.legs[0].rotation.x=k(p,[[0,0],[.3,-.2],[.44,.35],[1,0]]);
     tw=k(p,[[0,0],[.26,.4],[.44,-.5],[1,0]]);
-  } else if(style==="riftslash"||style==="wendigo"||style==="divine"||style==="apex"){
+  } else if(style==="riftslash"){
+    /* The Dev blade: off the back and up over the sword shoulder, then one
+       diagonal cut down across the front of the body -- the same line the rift
+       then tears open along (the rift is traced from where the tip went). It
+       used to chop straight down out at the side, nowhere near its rift. */
+    var sm2=function(t){t=t<0?0:(t>1?1:t);return t*t*t*(t*(t*6-15)+10);};
+    var up=sm2(p/.24),cut=sm2((p-.27)/.19),home=sm2((p-.62)/.38);
+    var G1=[.85,3.45,.30],G2=[.05,1.85,1.05];
+    var gx=lerp(lerp(h.sp[0],G1[0],up),G2[0],cut),gy=lerp(lerp(h.sp[1],G1[1],up),G2[1],cut)+Math.sin(cut*Math.PI)*.25,
+        gz=lerp(lerp(h.sp[2],G1[2],up),G2[2],cut)+Math.sin(cut*Math.PI)*.45;
+    _ce.set(h.sr[0],h.sr[1],h.sr[2]);_cq1.setFromEuler(_ce);                    // worn
+    _cq2Raise.setFromUnitVectors(_RY,_cv2.set(.35,.9,-.25).normalize());        // raised
+    _cq3.setFromUnitVectors(_RY,_cv2.set(-.85,-.35,.40).normalize());           // cut through
+    _cq2.copy(_cq1).slerp(_cq4.copy(_cq2Raise),up);_cq2.slerp(_cq3,cut);
+    sw.quaternion.copy(_cq2).slerp(_cq1,home);
+    sw.position.set(lerp(gx,h.sp[0],home),lerp(gy,h.sp[1],home),lerp(gz,h.sp[2],home));
+    handOnGrip(f,arm,sw,sm2(p/.10)*(1-sm2((p-.86)/.14)));
+    var sc2=Math.sin(cut*Math.PI);
+    f.legs[1].rotation.x+=-.36*(cut-home)*1;f.legs[0].rotation.x+=.28*(cut-home);
+    tw=(.38*up-.80*cut)*(1-home);
+    if(f.mesh)f.mesh.rotation.y=f.yaw+tw;
+    return;
+  } else if(style==="wendigo"||style==="divine"||style==="apex"){
     /* The sling's own draw and cut, made fluid: the draw, the cut and the
        return home overlap, each easing in and out (smootherstep), so the blade
        is never stopped and never snaps -- it comes off the back, goes through,
@@ -9617,6 +10081,8 @@ function sigAnimate(f,p,arm,la,sw,h,bx,by,bz){
         arm.rotation.x=lerp(arm.rotation.x,F.ax,bl);arm.rotation.z=lerp(arm.rotation.z,F.az,bl);
         arm.position.z=lerp(arm.position.z,F.pz,bl);tw=lerp(tw,F.tw,bl);}
     }
+    // the hand goes to the grip on the back and keeps hold of it until it is home
+    if(style!=="divine")handOnGrip(f,arm,sw,sm(p/.12)*(1-sm((p-.84)/.16)));
     if(f.mesh)f.mesh.rotation.y=f.yaw+tw;
     return;                          // placed, not swung from the arm
   } else {
@@ -9703,7 +10169,24 @@ function sigBeat(f,S,b,i){
   } else if(st==="riftslash"){
     // the cut opens a hole in the world in front of you: dark, full of stars,
     // rimmed in violet fire; loose light is pulled into it, and it zips shut
-    var fxw=Math.sin(f.yaw),fzw=Math.cos(f.yaw),cx=X+fxw*2.4,cy=Y+2.25,cz=Z+fzw*2.4,roll=-.62,len=7.5;
+    var fxw=Math.sin(f.yaw),fzw=Math.cos(f.yaw),cx=X+fxw*2.4,cy=Y+2.25,cz=Z+fzw*2.4,roll=.62,len=7.5;
+    /* Along the line the tip actually cut, in the plane in front of you: from
+       where it started down to where it finished, drawn a little longer than
+       the cut so the tear runs past both ends of it. */
+    var RP=f._rpath;
+    if(RP&&RP.length>=2){
+      var rxl=Math.cos(f.yaw),rzl=-Math.sin(f.yaw),P0=RP[0],P1=RP[RP.length-1];
+      var lx0=(P0[0]-X)*rxl+(P0[2]-Z)*rzl,lx1=(P1[0]-X)*rxl+(P1[2]-Z)*rzl;
+      var lz0=(P0[0]-X)*fxw+(P0[2]-Z)*fzw,lz1=(P1[0]-X)*fxw+(P1[2]-Z)*fzw;
+      var ddx=lx1-lx0,ddy=P1[1]-P0[1];
+      if(ddx<0){ddx=-ddx;ddy=-ddy;}
+      if(Math.hypot(ddx,ddy)>1){
+        roll=Math.atan2(ddy,ddx);len=clamp(Math.hypot(ddx,ddy)*1.3,5,9);
+        var lxm=(lx0+lx1)/2,lzm=Math.max(2.0,(lz0+lz1)/2);
+        cx=X+rxl*lxm+fxw*lzm;cz=Z+rzl*lxm+fzw*lzm;cy=clamp((P0[1]+P1[1])/2,Y+1.4,Y+3.6);
+      }
+    }
+    f._rpath=null;
     hwTear(cx,cy,cz,f.yaw,roll,len,3.0,.95);
     var rxw=Math.cos(f.yaw),rzw=-Math.sin(f.yaw),dxw=rxw*Math.cos(roll),dyw=Math.sin(roll),dzw=rzw*Math.cos(roll);
     for(k=0;k<(QUAL>1?20:10);k++){var t=Math.random()-.5,up=Math.random()<.5?1:-1,wv=Math.random()<.4;
@@ -11108,6 +11591,9 @@ HOLD.rhip={sp:[0.64,2.07,1.02],sr:[-1.875,Math.PI/2,-0.1],ra:[-0.24,0,0.12],la:n
 // side, the shaft leaning a little back and away from the head
 HOLD.glaive={sp:[0,-1.95,0.02],sr:[0.1,0,-0.22],ra:[-0.35,0,0.14],la:null};  // same easy carry, gripped further up the shaft
 // reverse grip: the blade runs back from the fist and trails behind the leg
+// the knife: point down out of the bottom of the fist, held up in a guard (hung
+// from a lowered arm, a blade this long went through the floor)
+HOLD.icepick={sp:[0,-1.24,.04],sr:[3.85,0,0.10],ra:[-1.28,0,0.22],la:null};   // fist up in a guard, point down and a little forward
 HOLD.rgrip={sp:[0,-1.22,.02],sr:[-1.62,0,0.08],ra:[-0.26,0,0.16],la:null};
 // slung across the back, point up over the left shoulder, like the Dev blade
 // is carried: drawn off the back in one stroke
@@ -11657,7 +12143,7 @@ SIG_SKIN.cucci=function(f,g,sk,box,glowM,darkM,bodyM){
   (f.headParts||[]).forEach(function(m){m.visible=false;});
   f.mLimb.color.setHex(0x121214);
   // arms: short black sleeves, bare from the elbow down
-  f.arms.forEach(function(a){a.children.forEach(function(c,ix){if(ix>0)c.material=skin;});});
+  f.arms.forEach(function(a){a.children.forEach(function(c){if(c.position.y<-.45)c.material=skin;});});   // sleeve down to the elbow (by where a part is: on high detail the second piece is the shoulder band, which came out bare)
   // legs: skinny jeans, white sneakers
   f.legs.forEach(function(l){l.children.forEach(function(c){c.material=c.position.y<-1.25?shoe:jeans;});
     var sole=new THREE.Mesh(GEO.box,shoe);sole.scale.set(.38,.08,.58);sole.position.set(0,-1.36,.12);l.add(sole);});
@@ -11707,7 +12193,7 @@ SIG_SKIN.plone=function(f,g,sk,box,glowM,darkM,bodyM){
   var line=new THREE.MeshBasicMaterial({color:0x8a8478});
   (f.headParts||[]).forEach(function(m){m.visible=false;});
   f.mLimb.color.setHex(0x121214);
-  f.arms.forEach(function(a){a.children.forEach(function(c,ix){if(ix>0)c.material=skin;});});
+  f.arms.forEach(function(a){a.children.forEach(function(c){if(c.position.y<-.45)c.material=skin;});});   // sleeve down to the elbow (by where a part is: on high detail the second piece is the shoulder band, which came out bare)
   f.legs.forEach(function(l){l.children.forEach(function(c){c.material=c.position.y<-1.25?shoe:pants;});});
   // the head: long, a little narrow, with a chin
   var hd=new THREE.Group();hd.position.set(0,3.32,0);g.add(hd);
@@ -12510,7 +12996,8 @@ function v4Pose(f,dt){
   if(f.raiseT>0){
     f.raiseT-=dt;
     var la=f.arms[0];
-    la.rotation.x=-2.95;la.rotation.z=-.25;
+    if(f._mirObjs){la.rotation.x=-2.95;la.rotation.z=.25;la.rotation.y=0;}   // the pose is mirrored by now
+    else{la.rotation.x=-2.95;la.rotation.z=-.25;}
     if(QUAL>0&&Math.random()<.5){f.mesh.updateMatrixWorld(true);var v=new THREE.Vector3(0,-1.3,0);la.localToWorld(v);
       spark(v.x,v.y,v.z,rr(-.3,.3),rr(1,2.5),rr(-.3,.3),1,.95,.8,.5,.4,-1);}
   }
