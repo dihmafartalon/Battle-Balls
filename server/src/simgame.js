@@ -10792,8 +10792,8 @@ function phLocal(sw,v,out){return out.copy(v).multiplyScalar(sw.scale.x).applyQu
 function phW(f,v){if(MIRROR_POSE)v.x=-v.x;f.mesh.updateMatrixWorld(true);return f.mesh.localToWorld(v);}
 // a few keys of the knife's cut: [p, x, y, z, tilt, yaw]
 // [seconds, x, y, z, tilt, yaw]: back and up, a fast diagonal cut across, the follow-through, home
-var PH_CUT=[[0,.92,1.55,.5,.15,-.25],[.07,1.15,2.05,.12,0,-1.0],[.17,-.1,1.55,1.0,.55,1.2],[.28,-.25,1.4,.78,.45,1.45],[.48,.92,1.55,.5,.15,-.25],[9,.92,1.55,.5,.15,-.25]];
-var PH_TWIST=[[0,0],[.07,.28],[.17,-.35],[.28,-.4],[.48,0],[9,0]];
+var PH_CUT=[[0,.92,1.55,.5,.15,-.25],[.07,1.15,2.05,.12,0,-1.0],[.17,-.1,1.55,1.0,.55,1.2],[.32,.92,1.55,.5,.15,-.25],[9,.92,1.55,.5,.15,-.25]];
+var PH_TWIST=[[0,0],[.07,.28],[.17,-.35],[.32,0],[9,0]];
 function phTwistAt(e){for(var i=1;i<PH_TWIST.length;i++){var b=PH_TWIST[i];if(e<=b[0]){var a=PH_TWIST[i-1];return lerp(a[1],b[1],phEase(e,a[0],b[0]));}}return 0;}
 function phCutAt(p,out){
   for(var i=1;i<PH_CUT.length;i++){var b=PH_CUT[i];if(p<=b[0]||i===PH_CUT.length-1){var a=PH_CUT[i-1],u=phEase(p,a[0],b[0]);
@@ -10824,32 +10824,29 @@ Fighter.prototype.phantomFrame=function(p,dt){
   if(gun){
     /* At rest the sniper is held at the low ready, both hands on it, the muzzle
        down at an angle. A shot snaps it to the shoulder, fires, rides the kick,
-       then -- still shouldered -- the trigger hand goes up to the bolt, works
-       it (up, back, forward, down), comes back to the grip, and it lowers. */
+       and goes straight back down to the low ready, the bolt cycling itself. */
     var live=anim===0&&e<1.2;
     // [x, y, z, pitch, yaw, roll]: shouldered off the right of the chest so the stock runs outside the body
     var REST=[.58,1.95+br,.5,-.45,-.3,0],AIM=[.62,2.12,.82,-.02,-.035,0],ONE=[.7,1.78+br,.52,-.4,-.08,0];
-    var u=0,kick=0,fire=.07,away=0,hb=0,lift=0,pull=0;
+    var u=0,kick=0,fire=.07,away=0,lift=0,pull=0;
     if(live){
-      u=phEase(e,0,.07)*(1-phEase(e,.74,.98));
+      u=phEase(e,0,.07)*(1-phEase(e,.2,.42));
       kick=e<fire?0:e<fire+.03?(e-fire)/.03:Math.max(0,1-Math.pow((e-fire-.03)/.26,.8));
       // the bolt: hand to it, lift, rack back, home, lock down, hand back to the grip
-      hb=phEase(e,.24,.32)*(1-phEase(e,.62,.7));
-      lift=phEase(e,.32,.37)*(1-phEase(e,.53,.58));
-      pull=phEase(e,.37,.43)*(1-phEase(e,.45,.52));
+      lift=phEase(e,.22,.26)*(1-phEase(e,.36,.4));
+      pull=phEase(e,.26,.3)*(1-phEase(e,.31,.36));
       if(!this._phFx&&e>=fire){this._phFx=1;phShot(this,gun);}
       if(this._phFx===1&&pull>.9){this._phFx=2;phCasing(this,gun);}
     }
     var G=[];for(var gi=0;gi<6;gi++)G[gi]=lerp(lerp(REST[gi],ONE[gi],off),AIM[gi],u);   // one hand on it: the grip shifts, the muzzle drops
     if(!live)G[3]+=Math.sin(t*.9+this.phase)*.02;
-    G[5]-=hb*.22;G[3]-=pull*.04;twist+=hb*.06;                                       // canted over to work the bolt
+    
     G[3]+=kick*.34;G[2]-=kick*.34;G[1]+=kick*.06;twist-=kick*.12;
     G[0]+=away*.45;G[1]-=away*.1;G[2]-=away*.15;G[3]=lerp(G[3],0,away);
     phAimGun(gun,G[0],G[1],G[2],G[3],G[4],G[5],0);
     var bolt=gun.userData.bolt;
     if(bolt){bolt.position.y=gun.userData.boltY0-pull*.32;bolt.rotation.y=lift*1.15;}
     var gripP=PHv.set(G[0],G[1],G[2]);
-    if(hb>0&&bolt){bolt.updateMatrix();var kn=gun.userData.boltKnob.clone().applyMatrix4(bolt.matrix);gripP.lerp(phLocal(gun,kn,new THREE.Vector3()),hb);}
     hsArm(R,gripP,1);
     // the support hand: out on the fore-end (the shoulder rolled forward to reach it)
     var free=Math.max(away,off);
@@ -10873,13 +10870,13 @@ Fighter.prototype.phantomFrame=function(p,dt){
     // where the cut is (BOTH: the cut starts once the knife is out of the hip)
     var te=both?e-.1:e,kk=_phK,spin2=0,cutting=kLive&&te>=0;
     kk[0]=.92;kk[1]=1.55+br;kk[2]=.5;kk[3]=.15;kk[4]=-.25;
-    if(cutting){phCutAt(te,kk);kk[1]+=br;twist+=phTwistAt(te)*ks;spin2=-TAU*phEase(te,.3,.56);
+    if(cutting){phCutAt(te,kk);kk[1]+=br;twist+=phTwistAt(te)*ks;spin2=-TAU*phEase(te,.24,.5);
       if(!this._phFx&&te>=.1){this._phFx=1;phCut(this,knife,ks);}}
     phAimKnife(knife,kk[0]*ks,kk[1],kk[2],kk[3],kk[4]*ks,0);
     var ring=phLocal(knife,PHv.set(0,.5,0),new THREE.Vector3());
     if(spin2){PHq.setFromAxisAngle(PHX,spin2);knife.quaternion.multiply(PHq);
       var r2=phLocal(knife,PHv.set(0,.5,0),new THREE.Vector3());knife.position.add(ring.clone().sub(r2));}
-    var hand=PHv2.set(kk[0]*ks,kk[1],kk[2]),hw=cutting?phEase(te,.24,.3)*(1-phEase(te,.56,.64)):0;
+    var hand=PHv2.set(kk[0]*ks,kk[1],kk[2]),hw=cutting?phEase(te,.2,.26)*(1-phEase(te,.5,.58)):0;
     if(hw>0)hand.lerp(ring,hw);
     if(both){
       // on the left hip, pointing down, until it is drawn -- and back there after
@@ -11280,7 +11277,7 @@ function phSfx(k,f){
     // a suppressed crack with weight under it, a shimmer of energy, the bolt and the casing
     noiseHit(.07,.4,5200);tone(240,48,.22,"square",.22);tone(90,35,.35,"sine",.3);
     tone(1600,3600,.12,"sine",.06);tone(2400,800,.08,"sawtooth",.05);
-    setTimeout(function(){tone(2400,2000,.04,"triangle",.05);tone(900,700,.05,"square",.04);},310);
+    setTimeout(function(){tone(2400,2000,.04,"triangle",.05);tone(900,700,.05,"square",.04);},190);
     setTimeout(function(){tone(5200,4800,.05,"triangle",.04);setTimeout(function(){tone(4600,4400,.04,"triangle",.03);},90);},420);}
   else{
     // the swish, the bite, a bright chime of the edge
