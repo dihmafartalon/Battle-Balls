@@ -10538,64 +10538,171 @@ function rapBats(x,y,z,n,dirx,dirz,ring){
    The sniper is built along +y (the barrel) with its top at -z, gripped at
    the origin; the karambit stands upright (+y) with the blade hooking forward
    (+z) out of the bottom of the fist. */
+/* ---- the Dev2 rifle, built piece by piece ----
+   Its own frame: +y down the bore (butt at -1.87, muzzle at 4.2), -z up
+   (the scope rides at z -.44), +x the right side (the bolt side). Every
+   plain piece is collected as it's made and, once it's all built, merged
+   into one mesh per finish, so all that detail costs a handful of draws. */
+var PH_RIFLE_GEO=null;
 SIG_SHAPE.dev2sniper=function(g,seg,B,H,G){
-  // dark: a black body, gunmetal where the silver was, the purple dimmed to an ember
-  var i,sd,black=v4Phong(0x070709,50),dark=v4Phong(0x111116,70),silver=v4Phong(0x3c3e48,120,0x0e0a18,.2);
+  var i,sd,a,H2=Math.PI/2;
+  var black=v4Phong(0x070709,40),dark=v4Phong(0x101015,70),gm=v4Phong(0x202128,110),silver=v4Phong(0x3c3e48,130,0x0e0a18,.2),
+    rub=v4Phong(0x040405,6),glass=v4Phong(0x0a0414,220,0x1a0636,.6);
   var pur=new THREE.MeshBasicMaterial({color:0x7a2ad8}),purA=v4Add(0x8a3cff,.45);
-  function bx(m,w,h,d,x,y,z,rx){var o=new THREE.Mesh(GEO.box,m);o.scale.set(w,h,d);o.position.set(x,y,z);if(rx)o.rotation.x=rx;g.add(o);return o;}
-  function cy(m,r,h,y,z,rz){var o=new THREE.Mesh(GEO.cyl,m);o.scale.set(r*2,h,r*2);o.position.set(0,y,z||0);if(rz)o.rotation.z=rz;g.add(o);return o;}
-  // the pistol grip and trigger
-  bx(black,.17,.24,.5,0,-.04,.24,-.35);
-  bx(silver,.05,.32,.04,0,.12,.21);
-  // the receiver: a black core inside silver side frames, a purple line down each
-  bx(black,.24,1.3,.26,0,.45,-.08);
+  var MATS=[black,dark,gm,silver,rub,glass,pur],stat=[];
+  function put(o,m,x,y,z,rx,ry,rz,keep){o.position.set(x||0,y||0,z||0);o.rotation.set(rx||0,ry||0,rz||0);g.add(o);if(!keep&&MATS.indexOf(m)>=0)stat.push(o);return o;}
+  function bx(m,w,h,d,x,y,z,rx,ry,rz,keep){var o=new THREE.Mesh(GEO.box,m);o.scale.set(w,h,d);return put(o,m,x,y,z,rx,ry,rz,keep);}
+  // a cylinder down the bore (ax "y"), across (ax "x") or up and down (ax "z")
+  function cy(m,r,h,x,y,z,ax,keep,geo){var o=new THREE.Mesh(geo||GEO.cyl,m);o.scale.set(r*2,h,r*2);
+    return put(o,m,x,y,z,ax==="z"?H2:0,0,ax==="x"?H2:0,keep);}
+  function cone(m,r0,r1,h,x,y,z){var o=new THREE.Mesh(new THREE.CylinderGeometry(r1,r0,h,18,1,true),m);o.userData.own=1;return put(o,m,x,y,z);}
+  function tor(m,R,r,x,y,z,ax){var o=new THREE.Mesh(new THREE.TorusGeometry(R,r,6,18),m);o.userData.own=1;
+    return put(o,m,x,y,z,ax==="y"?H2:0,ax==="x"?H2:0,0);}
+  // knurling: little ridges round a cylinder
+  function knurl(m,r,h,n,x,y,z,ax){for(var k=0;k<n;k++){var q=k/n*Math.PI*2,c=Math.cos(q)*r,s2=Math.sin(q)*r;
+    if(ax==="y")bx(m,.022,h,.022,x+c,y,z+s2,0,-q,0);else if(ax==="x")bx(m,h,.022,.022,x,y+c,z+s2,q,0,0);else bx(m,.022,.022,h,x+c,y+s2,z,0,0,q);}}
+
+  /* -- the stock: skeleton chassis, adjustable cheek riser, rubber butt, monopod -- */
+  bx(rub,.19,.12,.76,0,-1.8,.08);
+  for(i=0;i<6;i++)bx(rub,.2,.03,.05,0,-1.87,-.24+i*.13);                  // the grip ridges on the pad
+  bx(silver,.17,.03,.72,0,-1.725,.08);bx(dark,.16,.04,.7,0,-1.695,.08);     // length-of-pull spacers
+  bx(gm,.05,.12,.05,.06,-1.71,-.22);bx(gm,.05,.12,.05,.06,-1.71,.4);         // the spacer screws
+  bx(black,.15,.14,.7,0,-1.6,.08);                                           // rear upright
+  bx(black,.12,1.24,.1,0,-1.02,-.17);                                       // top bar
+  bx(black,.1,1.2,.09,0,-1.0,.36,-.04);                                      // bottom bar
+  bx(silver,.05,.64,.05,0,-.7,.1,.82);bx(silver,.05,.64,.05,0,-1.25,.1,-.82); // the X brace
+  bx(gm,.07,.07,.07,0,-.97,.1);
+  for(sd=-1;sd<=1;sd+=2){bx(pur,.012,1.0,.025,sd*.062,-1.02,-.17);bx(pur,.012,.9,.02,sd*.052,-1.0,.36);}
+  // the cheek riser on two posts, a knurled lock knob on the right
+  bx(dark,.15,.66,.09,0,-1.07,-.3);bx(black,.155,.6,.03,0,-1.07,-.355);
+  cy(silver,.025,.1,0,-.86,-.24,"z");cy(silver,.025,.1,0,-1.28,-.24,"z");
+  cy(gm,.055,.07,.11,-1.07,-.23,"x");knurl(silver,.056,.075,10,.11,-1.07,-.23,"x");cy(pur,.022,.02,.15,-1.07,-.23,"x");
+  // the folding hinge at the receiver
+  bx(black,.14,.14,.62,0,-.44,.1);cy(silver,.06,.18,0,-.4,-.14,"x");cy(gm,.035,.2,0,-.4,-.14,"x");
+  // sling cups and the rear monopod
+  tor(silver,.045,.012,.075,-1.45,.3,"x");tor(silver,.045,.012,-.075,-1.45,.3,"x");
+  cy(dark,.04,.3,0,-1.48,.55,"z");cy(silver,.028,.18,0,-1.48,.74,"z");bx(rub,.12,.08,.05,0,-1.48,.84);
+  knurl(gm,.042,.05,8,0,-1.48,.48,"z");
+
+  /* -- the receiver -- */
+  bx(black,.24,1.5,.28,0,.35,-.08);
   for(sd=-1;sd<=1;sd+=2){
-    bx(silver,.03,1.2,.07,sd*.13,.45,-.18);bx(silver,.03,1.2,.06,sd*.13,.45,.03);
-    bx(pur,.02,.95,.03,sd*.135,.45,-.075);
-    for(i=0;i<3;i++)bx(silver,.03,.06,.22,sd*.13,.0+i*.45,-.08);
+    bx(gm,.03,1.36,.2,sd*.135,.38,-.08);
+    for(i=0;i<5;i++){bx(dark,.02,.1,.06,sd*.152,.02+i*.13,-.06);bx(pur,.012,.07,.022,sd*.158,.02+i*.13,-.06);}  // the vents
+    bx(silver,.025,.05,.22,sd*.14,-.32,-.08);bx(silver,.025,.05,.22,sd*.14,1.05,-.08);
+    for(i=0;i<3;i++)cy(silver,.018,.02,sd*.155,.75+i*.1,-.15,"x");                                         // action screws
   }
-  // the rail on top, with its teeth
-  bx(black,.14,1.5,.06,0,.5,-.24);
-  for(i=0;i<9;i++)bx(dark,.16,.05,.04,0,-.15+i*.16,-.28);
-  // the scope: tube, bells, the lens glowing purple, the turrets
-  cy(dark,.1,1.15,.45,-.44);
-  cy(black,.15,.26,1.06,-.44);cy(black,.13,.2,-.12,-.44);
-  var lens=cy(pur,.12,.03,1.2,-.44);lens.userData.core=true;
-  cy(silver,.155,.04,.93,-.44);cy(silver,.135,.04,.02,-.44);
-  for(i=0;i<2;i++)bx(silver,.1,.1,.18,0,.12+i*.66,-.33);
-  var tu=cy(silver,.06,.1,.45,-.58);var tu2=cy(silver,.06,.1,.45,-.44,Math.PI/2);tu2.position.x=.13;
-  // the magazine
-  bx(black,.15,.32,.42,0,.62,.29,.15);
-  // the stock: an open skeleton of bars, braced, with a silver butt pad
-  bx(black,.12,1.42,.09,0,-.95,-.16);
-  bx(black,.1,1.46,.08,0,-.92,.36,-.03);
-  bx(silver,.05,.62,.05,0,-.62,.1,.85);bx(silver,.05,.62,.05,0,-1.22,.1,-.85);
-  bx(black,.16,.14,.66,0,-1.66,.1);bx(silver,.17,.05,.68,0,-1.75,.1);
-  bx(silver,.1,.62,.06,0,-1.1,-.23);
-  bx(pur,.03,1.22,.03,0,-.95,-.21);
-  // the handguard: four rails round the barrel, held by silver rings
-  for(sd=-1;sd<=1;sd+=2)for(var sz=-1;sz<=1;sz+=2)bx(black,.04,1.32,.04,sd*.1,1.76,sz*.1);
-  for(i=0;i<3;i++)cy(silver,.155,.06,1.12+i*.62,0);
-  bx(pur,.03,1.12,.02,0,1.76,.13);
-  for(sd=-1;sd<=1;sd+=2)bx(black,.03,.7,.03,sd*.05,1.9,.2);         // the bipod, folded
-  // the barrel, and the long suppressor on the end of it
-  var br=cy(silver,.06,2.0,2.0);br.userData.core=true;
-  cy(black,.13,1.26,3.56);
-  for(i=0;i<3;i++)cy(silver,.145,.05,3.0+i*.55,0);
-  var mz=new THREE.Mesh(new THREE.TorusGeometry(.11,.03,6,16),pur);mz.rotation.x=Math.PI/2;mz.position.y=4.2;g.add(mz);
-  var hot=new THREE.Mesh(GEO.sphLo,purA);hot.scale.setScalar(.3);hot.position.y=4.22;hot.userData.aura=true;g.add(hot);
+  // the ejection port, with the bolt body bright inside it
+  bx(dark,.02,.4,.12,.152,.55,-.15);cy(silver,.045,.38,.135,.55,-.15,"y");
+  // the bolt shroud at the back, the cocking indicator glowing when it's ready
+  cy(gm,.085,.18,0,-.3,-.13,"y");cy(dark,.065,.06,0,-.41,-.13,"y");cy(pur,.022,.06,0,-.45,-.13,"y");
+  // the scope rail, its teeth, the full length of it
+  bx(black,.14,2.78,.06,0,1.17,-.25);
+  for(i=0;i<19;i++)bx(dark,.16,.045,.035,0,-.15+i*.145,-.29);
+  bx(pur,.012,2.6,.012,.072,1.17,-.25);bx(pur,.012,2.6,.012,-.072,1.17,-.25);
+  // the pistol grip: palm swell, finger ridges, a purple inlay, the cap
+  bx(black,.17,.24,.5,0,-.04,.24,-.35);bx(black,.19,.16,.26,0,-.08,.32,-.35);
+  for(i=0;i<3;i++)bx(rub,.15,.03,.06,0,.09-i*.045,.18+i*.11,-.35);
+  for(sd=-1;sd<=1;sd+=2)bx(pur,.012,.12,.3,sd*.092,-.05,.27,-.35);
+  bx(silver,.18,.26,.04,0,-.13,.5,-.35);
+  // the trigger and its guard
+  bx(silver,.04,.05,.15,0,.21,.22,.35);bx(silver,.045,.05,.05,0,.17,.29,.6);
+  bx(gm,.06,.5,.035,0,.26,.37);bx(gm,.06,.035,.18,0,.5,.29);bx(gm,.06,.035,.1,0,.02,.33,-.5);
+  // the magazine: ribbed, a baseplate, the release paddle ahead of the guard
+  bx(black,.15,.34,.44,0,.68,.3,.12);
+  for(i=0;i<3;i++)bx(dark,.16,.03,.38,0,.57+i*.11,.31,.12);
+  bx(silver,.17,.38,.04,0,.71,.53,.12);bx(pur,.012,.24,.03,.08,.68,.3,.12);
+  bx(silver,.06,.04,.1,0,.46,.17);
+
+  /* -- the handguard: octagonal, M-LOK slots, a hand stop, the bipod folded under -- */
+  bx(dark,.2,1.64,.2,0,1.8,0);
+  for(sd=-1;sd<=1;sd+=2)for(var sz=-1;sz<=1;sz+=2)bx(black,.06,1.64,.06,sd*.085,1.8,sz*.085,0,Math.PI/4,0);
+  for(i=0;i<4;i++){var yy=1.2+i*.36;
+    for(sd=-1;sd<=1;sd+=2){bx(black,.02,.22,.07,sd*.1,yy,.02);if(i%2)bx(pur,.01,.16,.025,sd*.108,yy,.02);}
+    bx(black,.07,.22,.02,0,yy,.1);}
+  for(i=0;i<3;i++)cy(gm,.122,.04,0,1.0+i*.8,0,"y");
+  bx(gm,.08,.07,.07,0,1.32,.13);                                             // the hand stop
+  // a short rail on the left, for show
+  bx(dark,.04,.44,.08,-.12,2.3,0);for(i=0;i<4;i++)bx(black,.05,.04,.1,-.125,2.14+i*.11,0);
+  // the bipod, legs folded forward along the underside
+  bx(gm,.16,.14,.1,0,2.48,.15);cy(silver,.025,.2,0,2.48,.18,"x");
+  for(sd=-1;sd<=1;sd+=2){cy(black,.028,.86,sd*.055,2.02,.17,"y");cy(silver,.034,.08,sd*.055,1.85,.17,"y");bx(rub,.06,.07,.06,sd*.055,1.56,.17);}
+
+  /* -- the laser: a PEQ box clamped on the top rail at the front, the beam
+        out of its front face, dead parallel to the bore, a pressure switch
+        cabled back to where the support hand sits -- */
+  var LX=.07,LY=2.56,LZ=-.37;
+  bx(dark,.13,.44,.12,LX-.01,2.33,-.35);bx(black,.135,.4,.02,LX-.01,2.33,-.415);
+  bx(silver,.15,.3,.03,LX-.01,2.33,-.295);cy(silver,.02,.17,LX-.01,2.28,-.3,"x");      // the rail clamp and its bolt
+  cy(gm,.03,.04,LX-.01,2.25,-.43,"z");cy(gm,.03,.04,LX+.06,2.42,-.35,"x");           // windage and elevation adjusters
+  bx(pur,.03,.05,.012,LX-.04,2.14,-.42);bx(gm,.03,.05,.012,LX+.01,2.14,-.42);       // the mode buttons
+  cy(gm,.032,.04,LX,LY-.01,LZ,"y");cy(glass,.024,.02,LX-.055,LY-.01,-.32,"y");      // the emitter, and the IR window beside it
+  var ldot=cy(new THREE.MeshBasicMaterial({color:0xff6ae0}),.02,.02,LX,LY+.005,LZ,"y",true);
+  var cab=new THREE.CatmullRomCurve3([new THREE.Vector3(LX+.06,2.13,-.33),new THREE.Vector3(.14,1.85,-.2),new THREE.Vector3(.13,1.5,-.02),new THREE.Vector3(.12,1.28,.05)]);
+  var cabM=new THREE.Mesh(new THREE.TubeGeometry(cab,14,.013,5,false),black);cabM.userData.own=1;put(cabM,black);
+  bx(gm,.03,.14,.07,.115,1.24,.06);bx(pur,.012,.08,.03,.13,1.24,.06);             // the pressure pad
+
+  /* -- the barrel: heavy, fluted, out of the handguard into the suppressor -- */
+  var br=cy(silver,.065,.6,0,2.86,0,"y",true);br.userData.core=true;
+  for(i=0;i<6;i++){a=i/6*Math.PI*2;bx(dark,.024,.5,.024,Math.cos(a)*.062,2.86,Math.sin(a)*.062,0,-a,0);}
+  cy(silver,.15,.1,0,3.08,0,"y");for(i=0;i<2;i++)bx(gm,.31,.06,.06,0,3.08,0,0,i*H2,0);  // the mount, with its wrench flats
+  cy(black,.135,1.04,0,3.65,0,"y");
+  for(i=0;i<2;i++){knurl(gm,.14,.05,14,0,3.22+i*.07,0,"y");knurl(gm,.14,.05,14,0,3.98+i*.07,0,"y");}
+  for(i=0;i<4;i++){a=i/4*Math.PI*2+Math.PI/4;bx(pur,.014,.46,.03,Math.cos(a)*.134,3.6,Math.sin(a)*.134,0,-a,0);}   // vents glowing in the can
+  cy(gm,.125,.08,0,4.18,0,"y");
+  for(i=0;i<4;i++){a=i/4*Math.PI*2;bx(dark,.04,.05,.04,Math.cos(a)*.1,4.17,Math.sin(a)*.1,0,-a,0);}               // the brake ports
+  var mz=new THREE.Mesh(new THREE.TorusGeometry(.1,.025,6,16),pur);mz.rotation.x=H2;mz.position.y=4.22;g.add(mz);
+  var hot=new THREE.Mesh(GEO.sphLo,purA);hot.scale.setScalar(.28);hot.position.y=4.24;hot.userData.aura=true;g.add(hot);
   g.userData.pulse=hot;g.userData.flareMul=.25;
-  // always on: a laser sight off the scope, rings of light riding the suppressor
-  var lz=v4Add(0xff4fd8,.55),lg=v4Add(0xb46bff,.14);
-  var las=new THREE.Mesh(GEO.cyl8,lz);las.scale.set(.025,16,.025);las.position.set(0,1.2+8,-.44);las.userData.aura=true;g.add(las);
-  var lgl=new THREE.Mesh(GEO.cyl8,lg);lgl.scale.set(.1,16,.1);lgl.position.copy(las.position);lgl.userData.aura=true;g.add(lgl);
-  var rings=[];
-  g.userData.ph={laser:las,laserGlow:lgl,rings:rings,strip:pur,lens:lens.material};
-  // the bolt handle, on the right of the receiver: worked after every shot
+
+  /* -- the scope: rings on clamped bases, a sunshaded objective with a flip
+        cap open over it, a knurled power ring, three turrets -- */
+  var SZ=-.44;
+  cy(dark,.1,1.0,0,.5,SZ,"y");
+  cy(black,.14,.26,0,-.05,SZ,"y");cone(black,.1,.14,.12,0,.14,SZ);
+  cy(rub,.15,.07,0,-.21,SZ,"y");cy(glass,.115,.012,0,-.25,SZ,"y");tor(silver,.11,.008,0,-.252,SZ,"y");
+  cy(gm,.13,.11,0,.3,SZ,"y");knurl(dark,.132,.1,12,0,.3,SZ,"y");bx(pur,.012,.02,.03,0,.24,SZ-.13);
+  cone(black,.1,.17,.36,0,.98,SZ);cy(black,.17,.26,0,1.29,SZ,"y");tor(gm,.17,.012,0,1.16,SZ,"y");tor(gm,.17,.012,0,1.42,SZ,"y");
+  var lens=cy(pur,.15,.02,0,1.415,SZ,"y",true);lens.userData.core=true;
+  tor(new THREE.MeshBasicMaterial({color:0xd6b8ff}),.085,.006,0,1.43,SZ,"y").userData.own=0;
+  // the flip cap, hinged on top, standing open
+  cy(silver,.02,.1,0,1.43,SZ-.18,"x");
+  var cap=new THREE.Mesh(GEO.cyl,black);cap.scale.set(.34,.035,.34);put(cap,black,0,1.43+.171,SZ-.18-.058,-1.9,0,0);
+  for(i=0;i<2;i++){var yR=.04+i*.74;cy(gm,.12,.09,0,yR,SZ,"y");bx(gm,.2,.09,.18,0,yR,-.31);cy(silver,.018,.24,0,yR,-.31,"x");
+    bx(gm,.1,.09,.04,0,yR,SZ-.12);for(sd=-1;sd<=1;sd+=2)cy(silver,.014,.03,sd*.035,yR,SZ-.145,"z");}
+  // turrets: elevation on top, windage on the right, parallax and the illumination on the left
+  cy(gm,.075,.06,0,.55,SZ-.12,"z");cy(dark,.068,.1,0,.55,SZ-.2,"z");knurl(silver,.07,.1,12,0,.55,SZ-.2,"z");
+  cy(silver,.05,.02,0,.55,SZ-.255,"z");bx(pur,.01,.04,.012,0,.6,SZ-.255);
+  cy(gm,.075,.06,.12,.55,SZ,"x");cy(dark,.062,.08,.19,.55,SZ,"x");knurl(silver,.064,.08,10,.19,.55,SZ,"x");
+  cy(gm,.07,.06,-.12,.55,SZ,"x");cy(dark,.06,.07,-.18,.55,SZ,"x");cy(pur,.028,.02,-.22,.55,SZ,"x");
+  bx(gm,.06,.12,.03,-.07,.85,SZ-.12);                                          // the anti-cant level
+
+  /* -- the bolt, on the right of the receiver: worked after every shot -- */
   var bolt=new THREE.Group();bolt.position.set(.13,.25,-.08);g.add(bolt);
-  var bh=new THREE.Mesh(GEO.cyl8,silver);bh.scale.set(.05,.16,.05);bh.rotation.z=Math.PI/2;bh.position.x=.08;bolt.add(bh);
-  var bk=new THREE.Mesh(GEO.sphLo,black);bk.scale.setScalar(.09);bk.position.x=.17;bolt.add(bk);
-  g.userData.bolt=bolt;g.userData.boltY0=.25;
+  var bh=new THREE.Mesh(GEO.cyl8,silver);bh.scale.set(.05,.18,.05);bh.rotation.z=H2;bh.position.x=.09;bolt.add(bh);
+  var bk=new THREE.Mesh(GEO.cyl,gm);bk.scale.set(.13,.12,.13);bk.rotation.z=H2;bk.position.x=.2;bolt.add(bk);
+  var bkc=new THREE.Mesh(GEO.cyl,pur);bkc.scale.set(.07,.02,.07);bkc.rotation.z=H2;bkc.position.x=.265;bolt.add(bkc);
+  for(i=0;i<8;i++){a=i/8*Math.PI*2;var kn=new THREE.Mesh(GEO.box,dark);kn.scale.set(.1,.02,.02);kn.position.set(.2,Math.cos(a)*.066,Math.sin(a)*.066);bolt.add(kn);}
+  g.userData.bolt=bolt;g.userData.boltY0=.25;g.userData.boltKnob=new THREE.Vector3(.2,0,0);
+
+  /* -- always on: the laser, out of the emitter and down range -- */
+  var lz=v4Add(0xff4fd8,.55),lg=v4Add(0xb46bff,.14);
+  var las=new THREE.Mesh(GEO.cyl8,lz);las.scale.set(.022,16,.022);las.position.set(LX,LY+8,LZ);las.userData.aura=true;g.add(las);
+  var lgl=new THREE.Mesh(GEO.cyl8,lg);lgl.scale.set(.09,16,.09);lgl.position.copy(las.position);lgl.userData.aura=true;g.add(lgl);
+  var lfl=new THREE.Mesh(GEO.sphLo,v4Add(0xff6ae0,.7));lfl.scale.setScalar(.09);lfl.position.set(LX,LY+.03,LZ);lfl.userData.aura=true;g.add(lfl);
+
+  /* -- weld it: one mesh per finish -- */
+  var groups=[];stat.forEach(function(o){var k=MATS.indexOf(o.material);(groups[k]=groups[k]||[]).push(o);});
+  var cached=PH_RIFLE_GEO;if(!cached)cached=PH_RIFLE_GEO=[];
+  groups.forEach(function(list,k){if(!list)return;
+    if(!cached[k]){var pos=[],nor=[];
+      list.forEach(function(o){o.updateMatrix();var gg=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();gg.applyMatrix4(o.matrix);
+        pos.push.apply(pos,gg.attributes.position.array);nor.push.apply(nor,gg.attributes.normal.array);gg.dispose();});
+      var mg=new THREE.BufferGeometry();mg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));mg.setAttribute("normal",new THREE.Float32BufferAttribute(nor,3));
+      mg.computeBoundingSphere();cached[k]=mg;GEO["dev2rifle"+k]=mg;}
+    list.forEach(function(o){g.remove(o);if(o.userData.own)o.geometry.dispose();});
+    g.add(new THREE.Mesh(cached[k],MATS[k]));});
+  g.userData.ph={laser:las,laserGlow:lgl,rings:[],strip:pur,lens:lens.material};
   // where the hands go, in the weapon's own units
   g.userData.grip=new THREE.Vector3(0,-.03,.24);
   g.userData.support=new THREE.Vector3(0,1.25,.17);
@@ -10711,25 +10818,33 @@ Fighter.prototype.phantomFrame=function(p,dt){
   if(gun){
     /* At rest the sniper is held at the low ready, both hands on it, the muzzle
        down at an angle. A shot snaps it to the shoulder, fires, rides the kick,
-       then the support hand lets go and it spins end over end round the grip. */
+       then -- still shouldered -- the trigger hand goes up to the bolt, works
+       it (up, back, forward, down), comes back to the grip, and it lowers. */
     var live=anim===0&&e<1.2;
     // [x, y, z, pitch, yaw, roll]: shouldered off the right of the chest so the stock runs outside the body
-    var REST=[.58,1.95+br,.5,-.45,-.3,0],AIM=[.58,2.12,.82,-.02,-.035,0],ONE=[.7,1.78+br,.52,-.4,-.08,0];
-    var u=0,spin=0,kick=0,fire=.07,away=0;
+    var REST=[.58,1.95+br,.5,-.45,-.3,0],AIM=[.62,2.12,.82,-.02,-.035,0],ONE=[.7,1.78+br,.52,-.4,-.08,0];
+    var u=0,kick=0,fire=.07,away=0,hb=0,lift=0,pull=0;
     if(live){
-      u=phEase(e,0,.07)*(1-phEase(e,.62,.86));
+      u=phEase(e,0,.07)*(1-phEase(e,.74,.98));
       kick=e<fire?0:e<fire+.03?(e-fire)/.03:Math.max(0,1-Math.pow((e-fire-.03)/.26,.8));
-      spin=-TAU*phEase(e,.32,.6);
-      away=phEase(e,.28,.34)*(1-phEase(e,.6,.7));
+      // the bolt: hand to it, lift, rack back, home, lock down, hand back to the grip
+      hb=phEase(e,.24,.32)*(1-phEase(e,.62,.7));
+      lift=phEase(e,.32,.37)*(1-phEase(e,.53,.58));
+      pull=phEase(e,.37,.43)*(1-phEase(e,.45,.52));
       if(!this._phFx&&e>=fire){this._phFx=1;phShot(this,gun);}
+      if(this._phFx===1&&pull>.9){this._phFx=2;phCasing(this,gun);}
     }
     var G=[];for(var gi=0;gi<6;gi++)G[gi]=lerp(lerp(REST[gi],ONE[gi],off),AIM[gi],u);   // one hand on it: the grip shifts, the muzzle drops
     if(!live)G[3]+=Math.sin(t*.9+this.phase)*.02;
+    G[5]-=hb*.22;G[3]-=pull*.04;twist+=hb*.06;                                       // canted over to work the bolt
     G[3]+=kick*.34;G[2]-=kick*.34;G[1]+=kick*.06;twist-=kick*.12;
     G[0]+=away*.45;G[1]-=away*.1;G[2]-=away*.15;G[3]=lerp(G[3],0,away);
-    phAimGun(gun,G[0],G[1],G[2],G[3],G[4],G[5],spin);
-    var bolt=gun.userData.bolt;if(bolt)bolt.position.y=gun.userData.boltY0;
-    hsArm(R,PHv.set(G[0],G[1],G[2]),1);
+    phAimGun(gun,G[0],G[1],G[2],G[3],G[4],G[5],0);
+    var bolt=gun.userData.bolt;
+    if(bolt){bolt.position.y=gun.userData.boltY0-pull*.32;bolt.rotation.y=lift*1.15;}
+    var gripP=PHv.set(G[0],G[1],G[2]);
+    if(hb>0&&bolt){bolt.updateMatrix();var kn=gun.userData.boltKnob.clone().applyMatrix4(bolt.matrix);gripP.lerp(phLocal(gun,kn,new THREE.Vector3()),hb);}
+    hsArm(R,gripP,1);
     // the support hand: out on the fore-end (the shoulder rolled forward to reach it)
     var free=Math.max(away,off);
     L.position.z=L.userData.baseZ+.36*(1-free);L.position.x=L.userData.baseX+.2*(1-free);
@@ -10739,8 +10854,9 @@ Fighter.prototype.phantomFrame=function(p,dt){
       var su=Math.random()*.9+.05,a=phW(this,phLocal(gun,PHv.set(0,-1.5+su*5.6,0),new THREE.Vector3()));
       spark(a.x+rr(-.1,.1),a.y+rr(-.08,.08),a.z+rr(-.1,.1),rr(-.15,.15),rr(.25,.7),rr(-.15,.15),.36,.16,.6,rr(.18,.32),rr(.5,.9),-.6);
     }
-    if(live&&spin&&QUAL>0&&e<.6&&Math.random()<dt*40){var mz=phW(this,phLocal(gun,PHv.set(0,gun.userData.tipY||4.2,0),new THREE.Vector3()));
-      spark(mz.x,mz.y,mz.z,rr(-.6,.6),rr(-.3,.6),rr(-.6,.6),.55,.2,1,rr(.2,.34),rr(.2,.4),0);}
+    // smoke curling off the muzzle after the shot
+    if(live&&QUAL>0&&e>.12&&e<.9&&Math.random()<dt*30){var mz=phW(this,phLocal(gun,PHv.set(0,gun.userData.tipY||4.2,0),new THREE.Vector3()));
+      phFlame(this,mz,Math.random()<.6?"dark":"deep",rr(.25,.45),rr(.4,.7),rr(.6,1.2));}
   }
   if(knife){
     // where the cut is (BOTH: the cut starts once the knife is out of the hip)
@@ -10922,7 +11038,7 @@ function devSlash(f,o){
           if(g>head||g<tail*1.1)continue;                          // only where the slash is burning
           if(Math.random()>dt*38*rate)continue;
           F.m.getWorldPosition(wp);var kd=Math.random();
-          phFlame(f,wp,kd<.4?"dark":kd<.75?"glow":"hot",rr(.55,.95),rr(.25,.4),rr(1.2,2.2));}}
+          phFlame(f,wp,kd<.4?"dark":kd<.75?"glow":"hot",rr(.55,.95)*(o.scale||1),rr(.25,.4),rr(1.2,2.2));}}
       if(t>=life)return false;return true;},
     done:function(){scene.remove(grp);dark.dispose();glow.dispose();if(echo)echo.material.dispose();}});
 }
@@ -11027,8 +11143,18 @@ function phBubble(f,y){
     fragmentShader:"uniform float uOp;varying float vF;void main(){float r=pow(vF,2.6);gl_FragColor=vec4(mix(vec3(.55,.35,1.0),vec3(1.0),r)*(r*1.1+.05)*uOp,1.0);}"}));
   scene.add(m);var t=0;
   phOwn(f,{tick:function(dt){t+=dt;var k=t/.32;if(k>=1)return false;
-      m.position.set(f.pos.x,f.y+y,f.pos.z);m.scale.setScalar(1.2+1.3*(1-Math.pow(1-k,3)));m.material.uniforms.uOp.value=k<.1?k/.1:Math.pow(1-(k-.1)/.9,1.4);return true;},
+      m.position.set(f.pos.x,f.y+y,f.pos.z);m.scale.setScalar(2+1.9*(1-Math.pow(1-k,3)));m.material.uniforms.uOp.value=k<.1?k/.1:Math.pow(1-(k-.1)/.9,1.4);return true;},
     done:function(){scene.remove(m);m.material.dispose();}});
+}
+// the spent casing, flipped out of the ejection port as the bolt comes back
+function phCasing(f,gun){
+  if(QUAL<2||!f.mesh||!phNear(f))return;
+  var ej=phW(f,phLocal(gun,PHv.set(.16,.55,-.15),new THREE.Vector3())),side=phW(f,phLocal(gun,PHv.set(1,.55,-.15),new THREE.Vector3())).sub(ej).normalize();
+  var cs=new THREE.Mesh(GEO.cyl8,new THREE.MeshPhongMaterial({color:0xe0c068,emissive:0x5a3a00,shininess:120}));cs.scale.set(.07,.2,.07);cs.position.copy(ej);scene.add(cs);
+  var v=side.multiplyScalar(4).add(new THREE.Vector3(0,3.5,0)),et=0;
+  phOwn(f,{tick:function(dt){et+=dt;if(et>.7)return false;v.y-=16*dt;cs.position.addScaledVector(v,dt);cs.rotation.x+=dt*22;cs.rotation.z+=dt*15;
+      if(cs.position.y<f.y+.05){cs.position.y=f.y+.05;v.y=Math.abs(v.y)*.35;v.x*=.6;v.z*=.6;}return true;},
+    done:function(){scene.remove(cs);cs.material.dispose();}});
 }
 function phShot(f,gun){
   phSfx("shot",f);
@@ -11044,12 +11170,12 @@ function phShot(f,gun){
   var near=phNear(f);
   // two slashes of fire wrapped round the body, crossed; a white flash and a bubble of it bursting out
   var sd=Math.random()<.5?1:-1;
-  devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+1.6,f.pos.z),track:f,trackY:1.6,yaw:f.yaw+rr(-.3,.3),roll:.42*sd,span:4.4,scale:.95,dir:sd,
+  devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+1.6,f.pos.z),track:f,trackY:1.6,yaw:f.yaw+rr(-.3,.3),roll:.42*sd,span:4.4,scale:1.5,dir:sd,
     life:.5,hold:.16,flick:.07,fire:true});
-  var f2=f;setTimeout(function(){if(f2.mesh)devSlash(f2,{pos:new THREE.Vector3(f2.pos.x,f2.y+1.5,f2.pos.z),track:f2,trackY:1.5,yaw:f2.yaw+Math.PI*.15*sd,roll:-.5*sd,span:3.7,scale:.85,dir:-sd,
+  var f2=f;setTimeout(function(){if(f2.mesh)devSlash(f2,{pos:new THREE.Vector3(f2.pos.x,f2.y+1.5,f2.pos.z),track:f2,trackY:1.5,yaw:f2.yaw+Math.PI*.15*sd,roll:-.5*sd,span:3.7,scale:1.32,dir:-sd,
     life:.42,hold:.12,flick:.06,fire:true});},45);
   phBubble(f,1.5);
-  if(near)phPop(f,new THREE.Vector3(f.pos.x,f.y+1.6,f.pos.z),0xffffff,3.2,.1,phStarTex(),2,.7);
+  if(near)phPop(f,new THREE.Vector3(f.pos.x,f.y+1.6,f.pos.z),0xffffff,5,.12,phStarTex(),2,.7);
   if(near)for(var fi=0;fi<(hi?6:3);fi++){var fp=at(.2+fi*.25);phFlame(f,fp,fi%2?"glow":"dark",.9,.35,.9);}
   if(!near)return;
   // sparks off the slash: violet, magenta, cyan, white
@@ -11057,15 +11183,6 @@ function phShot(f,gun){
   for(var i=0;i<(hi?30:12);i++){var s=rr(4,12),c=cols[i%4];
     spark(a.x,a.y,a.z,dir.x*s+rr(-2.4,2.4),dir.y*s+rr(-1.5,2.4),dir.z*s+rr(-2.4,2.4),c[0],c[1],c[2],rr(.22,.42),rr(.14,.32),2);}
   for(var j=0;j<(hi?8:3);j++)spark(a.x+dir.x*rr(.2,1),a.y+dir.y*.5,a.z+dir.z*rr(.2,1),dir.x*rr(.2,.9)+rr(-.4,.4),rr(.2,.9),dir.z*rr(.2,.9)+rr(-.4,.4),.42,.26,.75,rr(.5,.85),rr(.7,1.2),-.5);
-  // the casing, flipped out of the right side of the receiver
-  if(hi){
-    var ej=phW(f,phLocal(gun,PHv.set(.1,.5,-.05),new THREE.Vector3())),side=phW(f,phLocal(gun,PHv.set(1,.5,-.05),new THREE.Vector3())).sub(ej).normalize();
-    var cs=new THREE.Mesh(GEO.cyl8,new THREE.MeshPhongMaterial({color:0xe0c068,emissive:0x5a3a00,shininess:120}));cs.scale.set(.07,.2,.07);cs.position.copy(ej);scene.add(cs);
-    var v=side.multiplyScalar(4).add(new THREE.Vector3(0,3.5,0)),et=0;
-    phOwn(f,{tick:function(dt){et+=dt;if(et>.7)return false;v.y-=16*dt;cs.position.addScaledVector(v,dt);cs.rotation.x+=dt*22;cs.rotation.z+=dt*15;
-        if(cs.position.y<f.y+.05){cs.position.y=f.y+.05;v.y=Math.abs(v.y)*.35;v.x*=.6;v.z*=.6;}return true;},
-      done:function(){scene.remove(cs);cs.material.dispose();}});
-  }
   if(f===player)shakeCam(.1);
 }
 /* ---- the cut: a ribbon of light follows the hook through the swing, and
@@ -11099,7 +11216,7 @@ function phCut(f,knife,ks){
   phSfx("cut",f);
   if(QUAL===0)return;
   // a crescent on the diagonal of the cut (the left hand's runs the other way)
-  devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+1.8,f.pos.z),track:f,trackY:1.8,yaw:f.yaw,roll:-.55*ks,span:3.8,scale:1.1,dir:ks,life:.44,hold:.13,flick:.07,fire:true});
+  devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+1.8,f.pos.z),track:f,trackY:1.8,yaw:f.yaw,roll:-.55*ks,span:3.8,scale:1.55,dir:ks,life:.44,hold:.13,flick:.07,fire:true});
   if(!phNear(f)||!knife.userData.tipPt)return;
   var p=phW(f,phLocal(knife,knife.userData.tipPt,new THREE.Vector3()));
   phPop(f,p,0xb890ff,2.4,.18,phStarTex(),4,.85);
@@ -11115,7 +11232,7 @@ function phSfx(k,f){
     // a suppressed crack with weight under it, a shimmer of energy, the bolt and the casing
     noiseHit(.07,.4,5200);tone(240,48,.22,"square",.22);tone(90,35,.35,"sine",.3);
     tone(1600,3600,.12,"sine",.06);tone(2400,800,.08,"sawtooth",.05);
-    setTimeout(function(){tone(2400,2000,.04,"triangle",.05);tone(900,700,.05,"square",.04);},140);
+    setTimeout(function(){tone(2400,2000,.04,"triangle",.05);tone(900,700,.05,"square",.04);},310);
     setTimeout(function(){tone(5200,4800,.05,"triangle",.04);setTimeout(function(){tone(4600,4400,.04,"triangle",.03);},90);},420);}
   else{
     // the swish, the bite, a bright chime of the edge
