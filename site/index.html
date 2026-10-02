@@ -5564,7 +5564,7 @@ var HOLD={
    floating ones beside you. A swing draws it -- the hand goes to the grip and
    brings it out -- and a moment after the last swing it goes back. Only the
    weapons named in IN_HAND are held at rest. */
-var IN_HAND={carver:1,pbfetus:1};       // the knife, point-down in the fist; PB Fetus dangling on its cord
+var IN_HAND={carver:1,pbfetus:1,ricky9:1,portalgun:1};   // the knife, point-down; PB Fetus on its cord; the guns as they always were
 var STOW={drawnFor:.8,sheathe:.30,draw:.24,hilt:[0.86,1.32,-0.30],floor:.30,
   arm:[-0.06,0,0.10],                   // the sword arm hangs easy beside the hip
   hipMax:2.2,                           // longer than this and it goes on the back
@@ -5756,6 +5756,7 @@ function hsStyle(d){
   if(two&&HS[st+"2"])return st+"2";
   if(two&&(st==="hammer"))return "overhead2";
   if(st==="hammer")return "overhead";
+  if(st==="divine")return null;                 // Divine Right keeps its original draw
   if(HS[st]&&!(HS[st].body&&d.hold!=="back"&&d.hold!=="rhip"))return st;
   return null;
 }
@@ -10081,7 +10082,7 @@ function sigAnimate(f,p,arm,la,sw,h,bx,by,bz){
         arm.position.z=lerp(arm.position.z,F.pz,bl);tw=lerp(tw,F.tw,bl);}
     }
     // the hand goes to the grip on the back and keeps hold of it until it is home
-    handOnGrip(f,arm,sw,sm(p/.12)*(1-sm((p-.84)/.16)));
+    if(style!=="divine")handOnGrip(f,arm,sw,sm(p/.12)*(1-sm((p-.84)/.16)));
     if(f.mesh)f.mesh.rotation.y=f.yaw+tw;
     return;                          // placed, not swung from the arm
   } else {
@@ -11585,7 +11586,7 @@ SLASH_STYLE.gunshot=SIG_SWING.gunshot.beats[0].st;SWEEP.gunshot=SWEEP.stab;
 // slung on the right hip, blade hanging down and back: drawn and cut in one
 // worn like a sheathed blade: the grip forward and up at the hip, the blade
 // sweeping back and down behind the leg, turned so the wings fold along it
-HOLD.rhip={sp:[0.80,1.55,0.30],sr:(function(){var e=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),hsDir(165,-38)));return [e.x,e.y,e.z];})(),ra:[-0.10,0,0.10],la:null};   // at the sword hip, the blade angled down and back like a sheathed sword
+HOLD.rhip={sp:[0.64,2.07,1.02],sr:[-1.875,Math.PI/2,-0.1],ra:[-0.24,0,0.12],la:null};
 // a spear stood at rest: gripped low on the shaft with the arm easy at the
 // side, the shaft leaning a little back and away from the head
 HOLD.glaive={sp:[0,-1.95,0.02],sr:[0.1,0,-0.22],ra:[-0.35,0,0.14],la:null};  // same easy carry, gripped further up the shaft
