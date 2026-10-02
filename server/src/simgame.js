@@ -292,11 +292,11 @@ var SWORDS=[
   desc:"A framed platinum record, swung like a bat. Every block lands with a flash of PARRY!"},
  {id:"vampfang",name:"Vamp Fang",rarity:"mythic",event:"pack",secret:true,price:-1,yen:345,blade:0xf2ead8,hilt:0x141016,glow:0xff1a34,shape:"vampfang",hold:"one",swing:"slash",idle:"none",
   desc:"The Rap Pack's secret. One long curved fang of ivory, a blood-red gem in a bat-wing guard. Every cut is red, and the bats come out."},
- // PHANTOM OPS (Dev2): price, rarity and how you get them are not decided yet
- {id:"dev2sniper",name:"Dev2 Sniper",rarity:"unreleased",price:-1,phantom:"sniper",set:"PHANTOM OPS",blade:0xc8ccd6,hilt:0x141418,glow:0xb46bff,shape:"dev2sniper",hold:"phantom",swing:"phantom",idle:"none",size:.9,
-  desc:"Phantom Ops. A skeletal black-and-silver sniper, a long suppressor and purple running through it. A parry is a shot: a flash at the muzzle and the kick. Carry it with the Dev2 Karambit for BOTH."},
- {id:"dev2karambit",name:"Dev2 Karambit",rarity:"unreleased",price:-1,phantom:"karambit",set:"PHANTOM OPS",blade:0xd8dce6,hilt:0x141418,glow:0xb46bff,shape:"dev2karambit",hold:"phantom",swing:"phantom",idle:"none",
-  desc:"Phantom Ops. A hooked silver-black karambit with a finger ring and a glowing purple edge. A parry is a quick cut and a white-purple crescent. Carry it with the Dev2 Sniper for BOTH."},
+ // DEV2: price, rarity and how you get them are not decided yet
+ {id:"dev2sniper",name:"Dev2 Sniper",rarity:"unreleased",price:-1,phantom:"sniper",set:"DEV2",blade:0xc8ccd6,hilt:0x141418,glow:0xb46bff,shape:"dev2sniper",hold:"phantom",swing:"phantom",idle:"none",size:.9,
+  desc:"Dev2. A skeletal black-and-silver sniper, a long suppressor and purple running through it. A parry is a shot: a flash at the muzzle and the kick. Carry it with the Dev2 Karambit for BOTH."},
+ {id:"dev2karambit",name:"Dev2 Karambit",rarity:"unreleased",price:-1,phantom:"karambit",set:"DEV2",blade:0xd8dce6,hilt:0x141418,glow:0xb46bff,shape:"dev2karambit",hold:"phantom",swing:"phantom",idle:"none",
+  desc:"Dev2. A hooked silver-black karambit with a finger ring and a glowing purple edge. A parry is a quick cut and a white-purple crescent. Carry it with the Dev2 Sniper for BOTH."},
  {id:"divineright",name:"Divine Right",price:-1,rank:"god",blade:0xdce6f2,hilt:0xd8b050,glow:0x7ad8ff,shape:"divine",hold:"rhip",swing:"divine",idle:"orbit",
   desc:"The GOD rank's blade. Worn on the right hip and drawn in one stroke: the wings open, the runes light, and every cut sheds feathers of light."},
  {id:"crown",name:"Apex",rarity:"ultra",price:-1,ultra:true,code:true,top1:true,blade:0xfff0c0,hilt:0x0e0c0a,glow:0xffd27a,shape:"apex",hold:"back",size:.9,swing:"apex",idle:"none",
@@ -729,14 +729,14 @@ function byId(arr,id){for(var i=0;i<arr.length;i++)if(arr[i].id===id)return arr[
 // the same, but nothing when there is no such item (for what the server says you won)
 function findId(arr,id){for(var i=0;i<arr.length;i++)if(arr[i].id===id)return arr[i];return null;}
 function swordById(id){if(id==="dev2both")return PH_BOTH;return byId(SWORDS,id);}
-/* Phantom Ops BOTH: not an item -- the Dev2 Sniper and Dev2 Karambit carried
+/* Dev2 BOTH: not an item -- the Dev2 Sniper and Dev2 Karambit carried
    together, the sniper in the right hand, the knife in the left. Never listed,
    never sold; it is what you carry when that mode is chosen and you own both. */
-var PH_BOTH={id:"dev2both",name:"Dev2 Sniper + Karambit",rarity:"unreleased",price:-1,phantom:"both",virtual:true,set:"PHANTOM OPS",
+var PH_BOTH={id:"dev2both",name:"Dev2 Sniper + Karambit",rarity:"unreleased",price:-1,phantom:"both",virtual:true,set:"DEV2",
   blade:0xc8ccd6,hilt:0x141418,glow:0xb46bff,shape:"dev2sniper",hold:"phantom",swing:"phantom",idle:"none",size:.9,
-  desc:"Phantom Ops, both at once: the sniper in the right hand, the karambit in the left, the parries taking turns."};
+  desc:"Dev2, both at once: the sniper in the right hand, the karambit in the left, the parries taking turns."};
 function phOwnsBoth(){return !!(SAVE.swords&&SAVE.swords.dev2sniper&&SAVE.swords.dev2karambit);}
-// what you actually carry: the saved blade, or both Phantom Ops weapons when that mode is chosen and both are yours
+// what you actually carry: the saved blade, or both Dev2 weapons when that mode is chosen and both are yours
 function eqBlade(){var id=SAVE.eqSword;if((id==="dev2sniper"||id==="dev2karambit")&&SAVE.phMode==="both"&&phOwnsBoth())return "dev2both";return id;}
 function phModeNow(){var b=eqBlade();return b==="dev2both"?"both":b==="dev2sniper"?"sniper":b==="dev2karambit"?"karambit":null;}
 /* Taken out of the game: whoever owned one gets its price back in coins. The
@@ -3641,7 +3641,7 @@ var FXD={
 };
 // which blade wears which signature
 var SWORD_FX={
-  dev2sniper:"none",dev2karambit:"none",dev2both:"none",   // Phantom Ops runs its own wisps
+  dev2sniper:"none",dev2karambit:"none",dev2both:"none",   // Dev2 runs its own wisps
   trainer:"none",  katana:"spark",     fang:"blood",     frost:"frost",
   exec:"holy",     twin:"spark",       scythe:"void",    spike:"volt",
   plasma:"plasmafx", cleaver:"bone",   dragon:"ember",   prism:"prismfx",
@@ -3744,7 +3744,7 @@ function swingSweep(f){
    blade every frame, carried in the direction the edge is actually travelling.
    Whatever the animation does, the trail does. */
 Fighter.prototype.bladeTrail=function(dt){
-  if(QUAL===0||!this.sword||this.swordDef.phantom)return 0;   // Phantom Ops draws its own
+  if(QUAL===0||!this.sword||this.swordDef.phantom)return 0;   // Dev2 draws its own
   var d=this.swordDef,FX=fxFor(d),boost=RARE_BOOST[d.rarity]||1;
   var sg=this.bladeSeg();
   var n=(this===player?3:1)*(QUAL>1?2:1);
@@ -5148,7 +5148,7 @@ Fighter.prototype.swing=function(){
                 (SIG_SWING[this.swordDef.swing]&&SIG_SWING[this.swordDef.swing].dur)||.36;
   this.swingDur=Math.max(0.30,baseDur*(0.86+(this.bladeHeft||1)*0.17));
   if(this.swordDef.phantom)this.swingDur=.36;        // one length for all three modes
-  this._phFx=0;
+  this._phFx=0;this._phSw=(this._phSw|0)+1;
   // swung again before the last one finished: the new swing starts from where
   // the blade actually is, not with a jump back to the beginning
   if(this.swingT>0&&SIG_SWING[this.swordDef.swing]&&this.sword&&this.mesh){
@@ -6124,7 +6124,7 @@ function pressBlock(f){
   if(f.stun>0||f.frozen>0)return false;
   if(f.blockT>0||f.blockCd>0)return false;
   f.blockT=blockActive(f);f.blockAge=0;f.blockShow=1;
-  // Phantom Ops BOTH: each parry is the gun or the knife, in turn
+  // Dev2 BOTH: each parry is the gun or the knife, in turn
   if(f.swordDef&&f.swordDef.phantom==="both"){f.phAnim=f.phAlt|0;f.phAlt=f.phAnim^1;}
   // the blade swings the moment you press, hit or miss, like Blade Ball; the
   // ball turning round is what tells you it landed
@@ -10524,7 +10524,7 @@ function rapBats(x,y,z,n,dirx,dirz,ring){
       done:function(){scene.remove(m);m.material.dispose();}});
   })(i);
 }
-/* ---- PHANTOM OPS: the Dev2 sniper and its matching karambit ----
+/* ---- DEV2: the Dev2 sniper and its matching karambit ----
    Two weapons and three ways to carry them, all of it cosmetic: the sniper
    alone (a parry is a shot -- a muzzle flash and the kick), the karambit alone
    (a parry is a quick cut and a white-purple crescent), or both, the sniper in
@@ -10698,55 +10698,155 @@ Fighter.prototype.phantomFrame=function(p,dt){
     var k=_phK;k[0]=.92;k[1]=1.55+br;k[2]=.5;k[3]=.15;k[4]=-.25;
     if(sw&&anim===1){phCutAt(p,k);k[1]+=br;if(!this._phFx&&p>=.18){this._phFx=1;phCut(this,knife,ks);}}
     phAimKnife(knife,k[0]*ks,k[1],k[2],k[3],k[4]*ks,0);
+    // the ribbon: from the start of the cut through the follow-through
+    if(sw&&anim===1&&QUAL>0&&p>=.04&&p<=.62){
+      if(!this._phTr||this._phTrN!==this._phSw){this._phTr=phTrail(this);this._phTrN=this._phSw;}
+      this._phTr.add(phW(this,phLocal(knife,PHv.set(0,-.55,.12),new THREE.Vector3())),phW(this,phLocal(knife,knife.userData.tipPt,new THREE.Vector3())));
+    } else if(this._phTr){this._phTr.open=false;this._phTr=null;}
     hsArm(kArm,PHv2.set(k[0]*ks,k[1],k[2]),1);
     if(knife.userData.edge)knife.userData.edge.material.opacity=.45+.25*Math.sin(t*4+this.phase);
   }
   // the karambit alone: the other hand up in a guard
   if(mode==="karambit")hsArm(L,PHv2.set(-.5,2.02+br,.78),1);
 };
-/* ---- the shot: a flash at the muzzle and a kick, and nothing leaves it ---- */
+/* ---- the look: violet and purple, hot magenta, an ice-cyan edge, white at the core ---- */
+var PH_COL={vio:0x6a2cff,pur:0xb46bff,mag:0xff4fd8,cy:0x5fe8ff,wh:0xffffff};
 function phOwn(f,e){e.owner=f;V4FX.push(e);return e;}
+function phNear(f){return f===player||!player||dist2(f.pos.x,f.pos.z,player.pos.x,player.pos.z)<60*60;}
+// a four-pointed star of light: the glint on a shot and on a cut
+var PH_STAR=null;
+function phStarTex(){
+  if(PH_STAR)return PH_STAR;
+  var c=cvs(128,128),x=c.getContext("2d"),g=x.createRadialGradient(64,64,0,64,64,64);
+  g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(.18,"rgba(255,255,255,.55)");g.addColorStop(1,"rgba(255,255,255,0)");
+  x.fillStyle=g;x.fillRect(0,0,128,128);
+  x.globalCompositeOperation="lighter";
+  for(var i=0;i<2;i++){var sg=x.createLinearGradient(i?64:0,i?0:64,i?64:128,i?128:64);
+    sg.addColorStop(0,"rgba(255,255,255,0)");sg.addColorStop(.5,"rgba(255,255,255,1)");sg.addColorStop(1,"rgba(255,255,255,0)");
+    x.fillStyle=sg;if(i)x.fillRect(60,0,8,128);else x.fillRect(0,60,128,8);}
+  return PH_STAR=mkTex(c);
+}
+function phAddMat(col,map){return new THREE.MeshBasicMaterial({color:col,map:map||null,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});}
+// a billboard of light that pops and fades: [time, scale-curve peak, life]
+function phPop(f,pos,col,size,life,map,spin,op){
+  op=op===undefined?1:op;
+  var m=new THREE.Mesh(GEO.plane,phAddMat(col,map||glowTex()));m.position.copy(pos);scene.add(m);
+  var t=0,r0=Math.random()*TAU;
+  phOwn(f,{tick:function(dt){t+=dt;var k=t/life;if(k>=1)return false;
+      m.quaternion.copy(camera.quaternion);if(spin)m.rotateZ(r0+t*spin);
+      var s=k<.15?k/.15:1-(k-.15)/.85*.55;m.scale.setScalar(size*s);m.material.opacity=op*Math.pow(1-k,1.4);return true;},
+    done:function(){scene.remove(m);m.material.dispose();}});
+}
+/* ---- the shot: a blast of light at the muzzle, rings of it rolling off the
+   suppressor, the kick, a casing out of the side -- and nothing leaves the barrel ---- */
 function phShot(f,gun){
   phSfx("shot",f);
   if(QUAL===0||!f.mesh)return;
-  var tip=gun.userData.tipY||4.2;
+  var tip=gun.userData.tipY||4.2,hi=QUAL>1;
   var a=phW(f,phLocal(gun,PHv.set(0,tip,0),new THREE.Vector3())),b=phW(f,phLocal(gun,PHv.set(0,tip-1,0),new THREE.Vector3())),dir=a.clone().sub(b).normalize();
-  var flash=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:glowTex(),color:0xe8d4ff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
-  flash.position.copy(a).addScaledVector(dir,.2);scene.add(flash);
-  var cone=new THREE.Mesh(GEO.cone,new THREE.MeshBasicMaterial({color:0xc58aff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
-  cone.position.copy(a).addScaledVector(dir,.55);cone.quaternion.setFromUnitVectors(PHY,dir);scene.add(cone);
+  var at=function(d){return a.clone().addScaledVector(dir,d);};
+  // the blast: a white core, a violet bloom, a wide magenta haze, and the star
+  phPop(f,at(.12),PH_COL.wh,.9,.07,null,0,.9);
+  phPop(f,at(.3),PH_COL.pur,2.4,.14,null,0,.8);
+  phPop(f,at(.7),PH_COL.mag,3.2,.18,null,0,.35);
+  phPop(f,at(.25),0xa070ff,3.8,.16,phStarTex(),3,.85);
+  phPop(f,at(.25),PH_COL.cy,2.2,.12,phStarTex(),-2,.5);
+  // the flame: a long violet tongue round a thin white one
+  var cones=[];
+  [[PH_COL.vio,.6,2.4,.8],[PH_COL.mag,.34,2.0,.45],[PH_COL.cy,.13,1.6,.7]].forEach(function(c){
+    var m=new THREE.Mesh(GEO.cone,phAddMat(c[0]));m.quaternion.setFromUnitVectors(PHY,dir);scene.add(m);cones.push({m:m,w:c[1],l:c[2],o:c[3]});});
+  // rings rolling off the suppressor, one after another, opening as they go
+  var rings=[];
+  if(phNear(f))[[0,.3,PH_COL.cy],[.025,.95,PH_COL.pur],[.05,1.7,PH_COL.mag],[.075,2.5,PH_COL.vio]].forEach(function(r){
+    var m=new THREE.Mesh(new THREE.RingGeometry(.72,1,40),phAddMat(r[2]));m.quaternion.setFromUnitVectors(PHZ,dir);m.visible=false;scene.add(m);
+    rings.push({m:m,t0:r[0],d:r[1]});});
   var t=0;
-  phOwn(f,{tick:function(dt){t+=dt;var k=t/.11;if(k>=1)return false;
-      flash.quaternion.copy(camera.quaternion);flash.scale.setScalar(1.6*(1-k*.5));flash.material.opacity=1-k;
-      cone.scale.set(.5*(1-k),1.3*(1-k*.3),.5*(1-k));cone.material.opacity=.9*(1-k);return true;},
-    done:function(){scene.remove(flash);scene.remove(cone);flash.material.dispose();cone.material.dispose();}});
-  var near=f===player||!player||dist2(f.pos.x,f.pos.z,player.pos.x,player.pos.z)<60*60;
-  if(!near)return;
-  for(var i=0;i<(QUAL>1?14:6);i++){var s=rr(2,7);
-    spark(a.x,a.y,a.z,dir.x*s+rr(-1.2,1.2),dir.y*s+rr(-.6,1.2),dir.z*s+rr(-1.2,1.2),rr(.75,1),rr(.55,.85),1,rr(.2,.38),rr(.1,.22),0);}
-  for(var j=0;j<(QUAL>1?6:3);j++)spark(a.x+dir.x*.3,a.y+dir.y*.3,a.z+dir.z*.3,dir.x*rr(.3,1)+rr(-.3,.3),rr(.2,.7),dir.z*rr(.3,1)+rr(-.3,.3),.55,.4,.85,rr(.4,.7),rr(.5,.9),-.4);
-  if(f===player)shakeCam(.06);
+  phOwn(f,{tick:function(dt){t+=dt;var alive=false;
+      var k=t/.13;
+      cones.forEach(function(c){if(k<1){alive=true;c.m.visible=true;var s=k<.2?k/.2:1;c.m.scale.set(c.w*(1-k*.6),c.l*s,c.w*(1-k*.6));
+        c.m.position.copy(a).addScaledVector(dir,c.l*s*.5+.1);c.m.material.opacity=c.o*(1-k);}else c.m.visible=false;});
+      rings.forEach(function(r){var u=(t-r.t0)/.3;if(u<0){alive=true;return;}if(u>=1){r.m.visible=false;return;}alive=true;r.m.visible=true;
+        var e=1-Math.pow(1-u,3);r.m.scale.setScalar(.25+e*(.9+r.d*.25));r.m.position.copy(a).addScaledVector(dir,r.d+e*.7);r.m.material.opacity=.75*(1-u);});
+      return alive;},
+    done:function(){cones.forEach(function(c){scene.remove(c.m);c.m.material.dispose();});rings.forEach(function(r){scene.remove(r.m);r.m.geometry.dispose();r.m.material.dispose();});}});
+  if(!phNear(f))return;
+  // sparks: violet, magenta and cyan, thrown forward in a cone
+  var cols=[[.71,.42,1],[1,.31,.85],[.37,.91,1],[1,1,1]];
+  for(var i=0;i<(hi?34:12);i++){var s=rr(4,13),c=cols[i%4];
+    spark(a.x,a.y,a.z,dir.x*s+rr(-1.6,1.6),dir.y*s+rr(-1,1.8),dir.z*s+rr(-1.6,1.6),c[0],c[1],c[2],rr(.22,.42),rr(.12,.3),2);}
+  // the smoke after it: slow violet curls
+  for(var j=0;j<(hi?10:4);j++)spark(a.x+dir.x*rr(.2,1),a.y+dir.y*.5,a.z+dir.z*rr(.2,1),dir.x*rr(.2,.9)+rr(-.4,.4),rr(.2,.9),dir.z*rr(.2,.9)+rr(-.4,.4),.42,.26,.75,rr(.5,.85),rr(.7,1.2),-.5);
+  // the casing, flipped out of the right side of the receiver
+  if(hi){
+    var ej=phW(f,phLocal(gun,PHv.set(.1,.5,-.05),new THREE.Vector3())),side=phW(f,phLocal(gun,PHv.set(1,.5,-.05),new THREE.Vector3())).sub(ej).normalize();
+    var cs=new THREE.Mesh(GEO.cyl8,new THREE.MeshPhongMaterial({color:0xe0c068,emissive:0x5a3a00,shininess:120}));cs.scale.set(.07,.2,.07);cs.position.copy(ej);scene.add(cs);
+    var v=side.multiplyScalar(4).add(new THREE.Vector3(0,3.5,0)),ct=0;
+    phOwn(f,{tick:function(dt){ct+=dt;if(ct>.7)return false;v.y-=16*dt;cs.position.addScaledVector(v,dt);cs.rotation.x+=dt*22;cs.rotation.z+=dt*15;
+        if(cs.position.y<f.y+.05){cs.position.y=f.y+.05;v.y=Math.abs(v.y)*.35;v.x*=.6;v.z*=.6;}return true;},
+      done:function(){scene.remove(cs);cs.material.dispose();}});
+  }
+  if(f===player)shakeCam(.1);
 }
-/* ---- the cut: quick, with a white-purple crescent following the hook ---- */
+/* ---- the cut: a ribbon of light follows the hook through the swing, and
+   where it lands, a crescent of four colours and a star ---- */
+function phTrail(f){
+  var N=22,pos=new Float32Array(N*2*3),col=new Float32Array(N*2*3),idx=[];
+  for(var i=0;i<N-1;i++){var a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}
+  var g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(pos,3));g.setAttribute("color",new THREE.BufferAttribute(col,3));g.setIndex(idx);
+  var m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,toneMapped:false}));
+  m.frustumCulled=false;scene.add(m);
+  var pts=[],T={add:function(b,t){pts.unshift({b:b,t:t,age:0});if(pts.length>N)pts.pop();},open:true};
+  // white-hot at the newest, through cyan and magenta, out to violet as it dies
+  var ramp=[[1,1,1],[.37,.91,1],[1,.31,.85],[.42,.17,1]];
+  function rc(u,out){u=Math.min(.999,Math.max(0,u))*(ramp.length-1);var i=Math.floor(u),k=u-i,A=ramp[i],B=ramp[i+1];out[0]=A[0]+(B[0]-A[0])*k;out[1]=A[1]+(B[1]-A[1])*k;out[2]=A[2]+(B[2]-A[2])*k;return out;}
+  var cc=[0,0,0],LIFE=.2;
+  phOwn(f,{tick:function(dt){
+      for(var i=pts.length-1;i>=0;i--){pts[i].age+=dt;if(pts[i].age>LIFE)pts.splice(i,1);}
+      if(!pts.length&&!T.open)return false;
+      for(var j=0;j<N;j++){var P=pts[Math.min(j,pts.length-1)];
+        if(!P){for(var q=0;q<6;q++)pos[j*6+q]=0;continue;}
+        var u=P.age/LIFE,fade=Math.pow(1-u,1.5);rc(j/(N-1)*.6+u*.5,cc);
+        pos[j*6]=P.b.x;pos[j*6+1]=P.b.y;pos[j*6+2]=P.b.z;pos[j*6+3]=P.t.x;pos[j*6+4]=P.t.y;pos[j*6+5]=P.t.z;
+        col[j*6]=cc[0]*fade*.25;col[j*6+1]=cc[1]*fade*.25;col[j*6+2]=cc[2]*fade*.25;      // dim at the inner edge
+        col[j*6+3]=cc[0]*fade;col[j*6+4]=cc[1]*fade;col[j*6+5]=cc[2]*fade;}              // bright along the edge the hook traces
+      if(pts.length<2)for(var z=0;z<N*6;z++)col[z]=0;
+      g.attributes.position.needsUpdate=true;g.attributes.color.needsUpdate=true;return true;},
+    done:function(){scene.remove(m);g.dispose();m.material.dispose();}});
+  return T;
+}
 function phCut(f,knife,ks){
   phSfx("cut",f);
   if(QUAL===0)return;
-  // the left hand's cut runs the other way across
-  spawnSlash(f,{span:3.4,tilt:.32,r:.9,w:1.1},0xb46bff,ks<0);
-  spawnSlash(f,{span:3.0,tilt:.32,r:.86,w:.45,hot:true},0xf2e8ff,ks<0);
-  var near=f===player||!player||dist2(f.pos.x,f.pos.z,player.pos.x,player.pos.z)<60*60;
-  if(!near||!knife.userData.tipPt)return;
-  var p=phW(f,phLocal(knife,knife.userData.tipPt,PHv));
-  for(var i=0;i<(QUAL>1?10:5);i++)spark(p.x,p.y,p.z,rr(-2.5,2.5),rr(-.5,2),rr(-2.5,2.5),rr(.8,1),rr(.6,.9),1,rr(.2,.36),rr(.15,.3),-2);
+  var rev=ks<0;                         // the left hand's cut runs the other way across
+  // layered, not stacked: each colour its own band of the crescent
+  spawnSlash(f,{span:3.8,tilt:.3,r:1.04,w:.85},0x5a1ad8,rev);
+  spawnSlash(f,{span:3.4,tilt:.34,r:.84,w:.38},0xb0208a,rev);
+  if(!phNear(f)||!knife.userData.tipPt)return;
+  var p=phW(f,phLocal(knife,knife.userData.tipPt,new THREE.Vector3()));
+  phPop(f,p,0xb890ff,3.2,.22,phStarTex(),4,.9);
+  phPop(f,p,PH_COL.mag,2.2,.2,null,0,.45);
+  ringBurst(p.x,p.y,p.z,QUAL>1?22:10,9,PH_COL.cy,1.1,.35);
+  ringBurst(p.x,p.y,p.z,QUAL>1?16:8,6,PH_COL.mag,1.3,.45);
+  var cols=[[.71,.42,1],[1,.31,.85],[.37,.91,1],[1,1,1]];
+  for(var i=0;i<(QUAL>1?24:10);i++){var c=cols[i%4];spark(p.x,p.y,p.z,rr(-4,4),rr(-1,3.5),rr(-4,4),c[0],c[1],c[2],rr(.2,.4),rr(.18,.4),-1);}
+  if(f===player)shakeCam(.05);
 }
 function phSfx(k,f){
   if(!AC||!(f===player||QUAL>1))return;
-  if(k==="shot"){noiseHit(.06,.32,4200);tone(220,60,.16,"square",.2);tone(1800,600,.05,"sawtooth",.06);
-    setTimeout(function(){tone(2400,2000,.04,"triangle",.05);tone(900,700,.05,"square",.04);},120);}   // the bolt
-  else{noiseHit(.12,.22,3600);tone(1900,700,.1,"sawtooth",.07);tone(3200,2600,.06,"triangle",.05);}
+  if(k==="shot"){
+    // a suppressed crack with weight under it, a shimmer of energy, the bolt and the casing
+    noiseHit(.07,.4,5200);tone(240,48,.22,"square",.22);tone(90,35,.35,"sine",.3);
+    tone(1600,3600,.12,"sine",.06);tone(2400,800,.08,"sawtooth",.05);
+    setTimeout(function(){tone(2400,2000,.04,"triangle",.05);tone(900,700,.05,"square",.04);},140);
+    setTimeout(function(){tone(5200,4800,.05,"triangle",.04);setTimeout(function(){tone(4600,4400,.04,"triangle",.03);},90);},420);}
+  else{
+    // the swish, the bite, a bright chime of the edge
+    noiseHit(.14,.26,3800);tone(2100,600,.12,"sawtooth",.08);tone(220,90,.12,"sine",.14);
+    setTimeout(function(){tone(2637,2637,.22,"sine",.05);tone(3951,3951,.18,"sine",.03);},30);}
 }
 // whatever this fighter still has running goes, at once: a weapon swap, a match ending
 function phantomClear(f){
+  f._phTr=null;
   for(var i=V4FX.length-1;i>=0;i--){var e=V4FX[i];if(e.owner===f){if(e.done)e.done();V4FX.splice(i,1);}}
 }
 // DIVINE RIGHT -- a silver-blue blade with a rune channel lit cyan, barbed
@@ -15525,7 +15625,7 @@ function itemTile(it,d,o){
 }
 function itemFacts(it,tab){
   var t=[];
-  if(tab==="sword"&&it.phantom){t.push("PHANTOM OPS");t.push(it.phantom==="sniper"?"SHOT PARRY":"SLASH PARRY");t.push("3 EQUIP MODES");}
+  if(tab==="sword"&&it.phantom){t.push("DEV2");t.push(it.phantom==="sniper"?"SHOT PARRY":"SLASH PARRY");t.push("3 EQUIP MODES");}
   else if(tab==="sword"){var HN={rhip:"HIP DRAW",pistol:"SIDEARM",dangle:"ON A CORD"};t.push(it.swing.toUpperCase()+" SWING");t.push(HN[it.hold]||(it.hold.toUpperCase()+" GRIP"));}
   if(tab==="abil"){t.push(it.ultra?"ONE USE PER GAME":it.passive?"PASSIVE":(it.cd+"s COOLDOWN"));if(it.notReady)t.push("COMING IN A LATER UPDATE");if(ABIL_OFF[it.id])t.push("TEMPORARILY DISABLED: PLAYS AS DASH");if(it.no1v1||it.hides)t.push("NOT IN 1v1");}
   if(itemValue(it))t.push("WORTH "+itemValue(it).toLocaleString()+" YEN");
@@ -15699,13 +15799,13 @@ function renderEmoteDetail(){
     cur[i]=tk.id;SAVE.eqEmotes=cur;writeSave();sfx("coin");renderEmotePicker();});});
   var act=box.querySelector("#pdAct");if(act)act.addEventListener("click",function(){openPackStand();});
 }
-/* ---- Phantom Ops: choose how you carry them ----
+/* ---- Dev2: choose how you carry them ----
    SNIPER, KARAMBIT, or BOTH (which needs both). The choice is saved, and what
    you carry goes out to everyone in the room the same way any blade does. */
 function phModeBar(){
   var cur=phModeNow(),o1=!!SAVE.swords.dev2sniper,o2=!!SAVE.swords.dev2karambit,both=o1&&o2;
   function b(m,lab,ok){return "<button class='phm"+(cur===m?" on":"")+"' data-ph='"+m+"'"+(ok?"":" disabled")+">"+lab+"</button>";}
-  return "<div class='phbar'><div class='phhd'>PHANTOM OPS &middot; EQUIP MODE</div><div class='phbtns'>"+
+  return "<div class='phbar'><div class='phhd'>DEV2 &middot; EQUIP MODE</div><div class='phbtns'>"+
     b("sniper","SNIPER",o1)+b("karambit","KARAMBIT",o2)+b("both","BOTH",both)+"</div>"+
     "<div class='dnote'>"+(both?"BOTH: the sniper in your right hand, the karambit in your left, taking turns on each parry.":"Own the Dev2 Sniper and the Dev2 Karambit to carry BOTH.")+"</div>"+
     "<div class='phft'>Same timing &middot; Same range &middot; Same cooldown</div></div>";
