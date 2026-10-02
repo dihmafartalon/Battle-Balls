@@ -1029,10 +1029,14 @@ function econFlush(){
 function econMatch(won,rpGain){
   if(!econOn()||!run||run.reported)return;
   run.reported=true;
+  // online, the room times the blocks itself; this is the player's own game's count
+  var acT=(player&&!NET.on)?acTiming(player):{n:0,sd:0,mean:0};
   econQueue({k:"match",mode:MODE&&MODE.id||"",won:!!won,rp:rpGain|0,coins:run.coins|0,
     secs:Math.round((Date.now()-(run.at||Date.now()))/1000),
     blocks:player?player.tBlocks|0:0,perfects:player?player.tPerfects|0:0,
+    tn:acT.n,tsd:acT.sd,tmean:acT.mean,fk:AC_IN.fake|0,gh:AC_IN.ghost|0,
     mt:(NET.on&&NET.mid)?NET.mid:undefined});
+  AC_IN.fake=0;AC_IN.ghost=0;
 }
 /* A message from whoever runs the game. It arrives on the back of any call to
    the server, is shown once, and is never anything the player typed. */
@@ -6639,13 +6643,14 @@ function ballHits(b,f,forced){
   // it touched a block that was up
   if(!forced&&f.blockT>0&&!f.isRemote){
     var pf=f.blockAge<=BLOCK.perfect;
+    acLead(f,f.blockAge*1000,b.age);
     blockLanded(f);deflect(b,f,pf,true);return;
   }
   // a player on the network: did they press in time? If we have not heard yet,
   // give them one round trip to say so
   if(!forced&&NET.on&&NET.isHost&&f.isRemote&&f.alive){
     var cNow=netNow(),use=netPressFor(f,cNow);
-    if(use){use.used=true;f.blockVis=0;f.blockFlash=1;deflect(b,f,cNow-use.t<=BLOCK.perfect*1000+40,true);return;}
+    if(use){use.used=true;f.blockVis=0;f.blockFlash=1;acLead(f,cNow-use.t,b.age);deflect(b,f,cNow-use.t<=BLOCK.perfect*1000+40,true);return;}
     if(!f.hitPending){
       f.hitPending={b:b,at:gameT+netGrace(),contact:cNow};
       b.freeze=netGrace()+0.05;
@@ -13583,7 +13588,7 @@ function netFinish(won){
   econMatch(won,rpGain);
   // the host timed every guest's blocks: those go to the server's anticheat (never to the other players)
   if(NET.isHost)for(var ri=0;ri<fighters.length;ri++){var rf=fighters[ri];
-    if(rf.isRemote&&rf.netId&&(rf.tBlocks|0)>0)netSend({t:"acrep",who:rf.netId,blocks:rf.tBlocks|0,perfects:rf.tPerfects|0});}
+    if(rf.isRemote&&rf.netId&&(rf.tBlocks|0)>0){var at=acTiming(rf);netSend({t:"acrep",who:rf.netId,blocks:rf.tBlocks|0,perfects:rf.tPerfects|0,tn:at.n,tsd:at.sd,tmean:at.mean});}}
   sfx(won?"win":"lose");
   var tok=NET.matchSeq=(NET.matchSeq||0)+1;
   setTimeout(function(){
@@ -13753,6 +13758,31 @@ function hitWindow(b,f){
   var sp=Math.max(1,(b.flightSpeed||1)*(b.slow>0?(b.slowK||0.5):1));
   return hitReach(f)/sp;
 }
+/* ---- is it a person? ----
+   Two things a script gives away. Timing: how long before the ball arrived each
+   block was pressed, kept per fighter (clashes left out); a person's spread is
+   wide, a script's is not. Input: the browser marks key, click and touch events
+   a script made as untrusted, and a script that calls the game directly makes
+   no event at all. Both go to the server with the match; it decides. */
+var AC_IN={last:-1e9,fake:0,ghost:0};
+["keydown","mousedown","pointerdown","touchstart"].forEach(function(ev){
+  window.addEventListener(ev,function(e){
+    if(e.isTrusted)AC_IN.last=performance.now();
+    else if(STATE==="playing")AC_IN.fake++;
+  },{capture:true,passive:true});
+});
+function acLead(f,leadMs,flight){
+  if(!(flight>=0.45)||!(leadMs>=0)||leadMs>700)return;   // a clash, or nothing to read
+  var a=f.tLeads||(f.tLeads=[]);
+  if(a.length<400)a.push(leadMs);
+}
+function acTiming(f){
+  var a=(f&&f.tLeads)||[],n=a.length,m=0,v=0,i;
+  if(!n)return {n:0,sd:0,mean:0};
+  for(i=0;i<n;i++)m+=a[i];m/=n;
+  for(i=0;i<n;i++)v+=(a[i]-m)*(a[i]-m);
+  return {n:n,sd:Math.round(Math.sqrt(v/n)*10)/10,mean:Math.round(m)};
+}
 function tryParry(){
   if(player&&player.alive&&player.stdT>0){stdChoose("light");return;}
   if(player&&player.alive&&player.ds){if(dsPress())return;}
@@ -13775,6 +13805,8 @@ function tryParry(){
   if(!player||!player.alive||(STATE!=="playing"&&STATE!=="venue"))return;
   if(paused)return;          // the world is frozen; a press here is free thinking time
   if(!pressBlock(player))return;
+  // a block with no key, click or tap behind it: something called the game directly
+  if(STATE==="playing"&&performance.now()-AC_IN.last>400)AC_IN.ghost++;
   // everyone sees the block go up; the host also uses the time of the press
   if(NET.on)netSend({t:"parry",c:netNow(),y:+camYaw.toFixed(3)});
 }

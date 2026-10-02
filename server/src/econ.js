@@ -251,6 +251,43 @@ export function matchCap(mode, secs, won) {
    players land a fair share; a script lands almost all of them, match after
    match, at any speed. Only a large sample counts. */
 export const PARRY = { minBlocks: 20, flagRate: 0.8, banRate: 0.95, banMinBlocks: 25 };
+/* Timing: how long before the ball arrived each block was pressed (clashes left
+   out -- their timing is forced). People are messy: over a match their spread is
+   40ms and up, however good they are. A script presses at the same moment every
+   time, even one that stays off "perfect" on purpose to dodge the check above.
+   A flag for a person to look at, never a ban on its own. */
+export const TIMING = { minN: 25, flagSd: 25, keep: 12 };
+/* One match rarely has enough timed blocks to judge, so each match's timing is
+   kept (the last few) and judged pooled. Pooling across matches only widens a
+   person's spread -- their timing drifts from match to match -- while a script's
+   stays tight. */
+export function timingAdd(st, n, mean, sd) {
+  n = Number(n) | 0; mean = Number(mean); sd = Number(sd);
+  if (n < 1 || n > 1000 || !isFinite(mean) || !isFinite(sd) || sd < 0) return;
+  st.tim = (Array.isArray(st.tim) ? st.tim : []).concat([[n, mean, sd]]).slice(-TIMING.keep);
+}
+export function timingPooled(st) {
+  let N = 0, S = 0, Q = 0;
+  for (const t of (st && Array.isArray(st.tim)) ? st.tim : []) { N += t[0]; S += t[0] * t[1]; Q += t[0] * (t[2] * t[2] + t[1] * t[1]); }
+  if (!N) return { n: 0, mean: 0, sd: 0 };
+  const m = S / N;
+  return { n: N, mean: m, sd: Math.sqrt(Math.max(0, Q / N - m * m)) };
+}
+export function timingVerdict(n, sd, mean) {
+  n = Number(n) | 0; sd = Number(sd); mean = Number(mean);
+  if (n < TIMING.minN || !isFinite(sd) || sd < 0) return null;
+  if (sd < TIMING.flagSd) return { sev: "flag", detail: "block timing spread " + Math.round(sd) + "ms over " + n + " blocks, pressed " + Math.round(mean) + "ms early on average (people are usually 40ms+)" };
+  return null;
+}
+/* Input the browser itself says no person made (a script sending key or click
+   events), and blocks with no input behind them at all (a script calling the
+   game directly). A few can be noise; several in one match is not. */
+export const FAKE = { flagAt: 5 };
+export function fakeInputVerdict(fk, gh) {
+  fk = Math.max(0, Number(fk) | 0); gh = Math.max(0, Number(gh) | 0);
+  if (fk < FAKE.flagAt && gh < FAKE.flagAt) return null;
+  return { sev: "flag", detail: (fk ? fk + " scripted inputs" : "") + (fk && gh ? ", " : "") + (gh ? gh + " blocks with no input behind them" : "") };
+}
 export function parryVerdict(blocks, perfects) {
   if (!(blocks >= PARRY.minBlocks)) return null;
   const rate = perfects / blocks;
@@ -516,6 +553,9 @@ export function applyAct(s, a, ctx) {
     // the blocks this game timed for itself
     const v = parryVerdict(int(a.blocks, 0, 100000), int(a.perfects, 0, 100000));
     if (v) flags.push({ kind: "autoparry", sev: v.sev, detail: Math.round(v.rate * 100) + "% perfect over " + a.blocks + " blocks (" + mode + ")" });
+    // whether a person made the inputs at all (timing is judged across matches, in the stats)
+    const fv = fakeInputVerdict(a.fk, a.gh);
+    if (fv) flags.push({ kind: "fakeinput", sev: fv.sev, detail: fv.detail + " (" + mode + ")" });
     return { ok: true, res: { coins, rp, ranked, pass, token, won, ...(tk ? { tk: 1 } : {}) } };
   }
 
@@ -608,6 +648,7 @@ export function recordAct(st, hist, ledger, kind, a, res, pre, post, now) {
     const bl = int(a.blocks, 0, 100000) || 0, pf = Math.min(bl, int(a.perfects, 0, 100000) || 0);
     const secs = Math.max(0, Math.min(MATCH.maxSecs, Number(a.secs) || 0));
     st.g++; day.g++; st.secs += secs; st.bl += bl; st.pf += pf;
+    if (a.tn) timingAdd(st, a.tn, a.tmean, a.tsd);       // the player's own game's timing (solo matches)
     if (won) { st.w++; day.w++; st.sk++; st.bsk = Math.max(st.bsk, st.sk); } else st.sk = 0;
     if (ranked) { st.rg++; if (won) { st.rw++; st.rsk++; st.rbsk = Math.max(st.rbsk, st.rsk); } else st.rsk = 0; }
     st.mt = st.mt.filter(t => now - t < 3600 * 1000).concat([now]);
@@ -643,6 +684,9 @@ export function watchFlags(st, hist, now) {
     out.push({ kind: "parry-rate", sev: "flag", detail: Math.round(rate * 100) + "% perfect over " + st.bl + " timed blocks, lifetime" });
   if (rec.bl >= WATCH.recentMin && rec.rate >= WATCH.recentFlag && once("pfr", DAY))
     out.push({ kind: "parry-recent", sev: "flag", detail: Math.round(rec.rate * 100) + "% perfect over the last " + Math.min(hist.length, WATCH.recentMatches) + " matches (" + rec.bl + " blocks)" });
+  const tp = timingPooled(st), tv = timingVerdict(tp.n, tp.sd, tp.mean);
+  if (tv && once("tim", DAY))
+    out.push({ kind: "timing", sev: "flag", detail: tv.detail + ", over the last " + st.tim.length + " matches" });
   if (st.sk >= WATCH.streakFlag && st.sk % WATCH.streakFlag === 0 && once("sk" + st.sk, DAY * 365))
     out.push({ kind: "streak", sev: "flag", detail: st.sk + " wins in a row" });
   if (st.g >= WATCH.wrMin && st.w / st.g >= WATCH.wrFlag && once("wr", DAY))
@@ -667,6 +711,8 @@ export function suspicion(st, hist, flags, now) {
   }
   const rec = recentRate(hist || []);
   if (rec.bl >= 40 && rec.rate >= 0.8) add(25, Math.round(rec.rate * 100) + "% perfect in recent matches");
+  const tp = timingPooled(st);
+  if (timingVerdict(tp.n, tp.sd, tp.mean)) add(30, "block timing too even (" + Math.round(tp.sd) + "ms spread over " + tp.n + " blocks)");
   if (st && st.sk >= 25) add(25, st.sk + " wins in a row");
   else if (st && st.sk >= 15) add(10, st.sk + " wins in a row");
   if (st && st.g >= WATCH.wrMin) {
