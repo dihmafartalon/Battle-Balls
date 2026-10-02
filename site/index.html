@@ -5106,8 +5106,7 @@ Fighter.prototype.strikeFx=function(){
     ringBurst(this.pos.x,this.y+.2,this.pos.z,QUAL>1?18:10,9,d.glow,1.4,.45);
   // the rap pack: the plaque says PARRY!, the fang lets the bats out
   if(d.id==="plaque"&&near)rapWord("PARRY!","#e8f4ff",tip.x,tip.y+.8,tip.z,1.3,.9);
-  if(d.id==="vampfang"&&near){rapBats(tip.x,tip.y,tip.z,QUAL>1?7:4,Math.sin(this.yaw),Math.cos(this.yaw));
-    burst(tip.x,tip.y,tip.z,QUAL>1?16:8,7,0xc8102a,1,.35,-6);}
+  if(d.id==="vampfang"&&near)vampFangFx(this,tip);
 };
 /* A signature swing's first cut lands when a plain swing's does: a tenth of
    the way in. It used to play its wind-up at full length first, so the cut, its
@@ -5334,6 +5333,11 @@ function swingSfx(d){
   if(d.shape==="fetus"){fetusSfx("swing");return;}
   if(SIG_SWING[d.swing]){sigSwingSfx(d);return;}
   var st=d.swing,heavy=(st==="hammer"||st==="overhead");
+  if(d.id==="vampfang"){
+    // a wet cut, a deep thud under it, and the swarm's screech
+    noiseHit(.22,.4,2400);tone(900,160,.22,"sawtooth",.16);tone(90,40,.4,"sine",.3);
+    setTimeout(function(){for(var b=0;b<4;b++)(function(b){setTimeout(function(){tone(4200+b*500,2600,.08,"square",.035);},b*55);})(b);},70);
+    setTimeout(function(){noiseHit(.4,.12,5200);},90);}
   var v=heavy?.30:.22;
   if(st==="stab"){
     noiseHit(.09,v*1.1,3200); tone(1500,520,.10,"sawtooth",v*.5);
@@ -11956,6 +11960,27 @@ function rapWord(txt,col,x,y,z,size,life){
       mesh.quaternion.copy(camera.quaternion);mesh.material.opacity=k<.7?1:1-(k-.7)/.3;return true;},
     done:function(){scene.remove(mesh);mesh.material.dispose();}});
 }
+/* THE VAMP FANG'S CUT: three red crescents crossing, blood sprayed across
+   the floor, a shockwave, a spray of droplets, and a whole swarm of bats
+   bursting out of the cut and wheeling away. */
+function vampFangFx(f,tip){
+  var X=f.pos.x,Y=f.y,Z=f.pos.z,fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),k,a,hi=QUAL>1;
+  spawnSlash(f,{span:4.8,tilt:.62,r:1.55,w:1.7},0xff1a34);
+  spawnSlash(f,{span:4.2,tilt:-.5,r:1.35,w:1.2},0x9a0010,true);
+  spawnSlash(f,{span:5.4,tilt:.2,r:1.95,w:.55,hot:true},0xff6a7a);
+  hwDecal(X+fx*2.6,Y+.07,Z+fz*2.6,"bloodsplat",0xc8101c,11,1.6,0,f.yaw);
+  hwBeam(X+fx*2,Y,Z+fz*2,0xff1a34,1.4,.45);
+  slashRing(X,Y+.5,Z,0xff1a34,0,0);slashRing(X,Y+1.2,Z,0x9a0010,.06,.15);slashRing(X,Y+.9,Z,0xff6a7a,.12,-.12);
+  ringBurst(tip.x,tip.y,tip.z,hi?34:16,13,0xff1a34,1.8,.6);
+  burst(tip.x,tip.y,tip.z,hi?34:14,11,0xc8102a,1.5,.45,-6);
+  // blood: heavy droplets thrown along the cut, falling hard
+  for(k=0;k<(hi?40:16);k++){a=f.yaw+hr(-1.1,1.1);
+    spark(tip.x,tip.y,tip.z,Math.sin(a)*hr(4,11),hr(1,6),Math.cos(a)*hr(4,11),hr(.6,.9),0,hr(0,.08),hr(.35,.7),hr(.5,.9),14);}
+  // the swarm: a ring of bats bursting out round you, and a stream off the blade
+  rapBats(X,Y+2,Z,hi?14:6,0,0,true);
+  rapBats(tip.x,tip.y,tip.z,hi?10:5,fx,fz);
+  if(f===player)shakeCam(.14);
+}
 /* Bats: little black silhouettes flapping up and away from a cut. */
 var RAP_BAT=null;
 function rapBatTex(){
@@ -11968,20 +11993,24 @@ function rapBatTex(){
   q.fillStyle="#ff2040";q.fillRect(59,28,3,3);q.fillRect(66,28,3,3);
   return RAP_BAT=mkTex(c);
 }
-function rapBats(x,y,z,n,dirx,dirz){
+function rapBats(x,y,z,n,dirx,dirz,ring){
   if(QUAL===0)return;
   var tex=rapBatTex();
-  for(var i=0;i<n;i++)(function(){
+  for(var i=0;i<n;i++)(function(i){
     var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
-    var sz=hr(.9,1.4),vx=dirx*hr(1.5,3.5)+hr(-2,2),vy=hr(1,2.6),vz=dirz*hr(1.5,3.5)+hr(-2,2),t=0,life=hr(.7,1.1),ph=hr(0,6);
+    var ra=i/n*TAU+hr(-.2,.2),sp=hr(6,10);
+    var sz=hr(1.3,2.3),vx=ring?Math.sin(ra)*sp:dirx*hr(4,8)+hr(-3,3),vy=ring?hr(.5,3):hr(1.5,4),vz=ring?Math.cos(ra)*sp:dirz*hr(4,8)+hr(-3,3),t=0,life=hr(1,1.5),ph=hr(0,6);
     m.position.set(x+hr(-.3,.3),y+hr(-.3,.3),z+hr(-.3,.3));scene.add(m);
     V4FX.push({tick:function(dt){t+=dt;if(t>=life)return false;
-        m.position.x+=vx*dt;m.position.y+=vy*dt;m.position.z+=vz*dt;vy+=1.5*dt;
+        m.position.x+=vx*dt;m.position.y+=vy*dt;m.position.z+=vz*dt;vy+=2.5*dt;vx*=1-dt*.9;vz*=1-dt*.9;
+        // they wheel as they go, and leave a red trail
+        var c=Math.cos(dt*2.2),sn=Math.sin(dt*2.2),ox=vx;vx=vx*c-vz*sn;vz=ox*sn+vz*c;
+        if(QUAL>1&&Math.random()<.5)spark(m.position.x,m.position.y,m.position.z,0,0,0,1,.1,.2,.35,.35,0);
         m.quaternion.copy(camera.quaternion);
         var fl=.45+.55*Math.abs(Math.sin(t*26+ph));m.scale.set(sz*fl,sz*.5,1);
         m.material.opacity=t/life<.7?1:1-(t/life-.7)/.3;return true;},
       done:function(){scene.remove(m);m.material.dispose();}});
-  })();
+  })(i);
 }
 // DIVINE RIGHT -- a silver-blue blade with a rune channel lit cyan, barbed
 // flanges near the guard, a gold guard spreading into two great glowing
