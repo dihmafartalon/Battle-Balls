@@ -11201,6 +11201,27 @@ function phBoom(f,p,dir,sz){
   for(var q=0;q<(hi?8:3)*sz;q++)(function(d){setTimeout(function(){if(f.mesh)phFlame(f,p.clone().add(new THREE.Vector3(rr(-.4,.4),rr(0,.4),rr(-.4,.4))),"dark",rr(1,1.6)*sz,rr(.6,.9),rr(.8,1.4));},d);})(80+q*30);
   if(me)shakeCam(.14*sz);
 }
+/* The muzzle flash: a big star of it, black-violet under bright purple, a
+   white-hot point in the middle, and a tongue of fire thrown out down the shot. */
+function phDarkPop(f,pos,col,size,life,rot,op){
+  var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({color:col,map:phStarTex(),transparent:true,depthWrite:false,side:THREE.DoubleSide,opacity:op}));
+  m.position.copy(pos);m.renderOrder=8;scene.add(m);var t=0;
+  phOwn(f,{tick:function(dt){t+=dt;var k=t/life;if(k>=1)return false;m.quaternion.copy(camera.quaternion);m.rotateZ(rot);
+      m.scale.setScalar(size*(k<.2?.5+2.5*k:1+(k-.2)*.3));m.material.opacity=op*Math.pow(1-k,1.3);return true;},
+    done:function(){scene.remove(m);m.material.dispose();}});
+}
+function phMuzzle(f,p,dir){
+  if(QUAL===0||!phNear(f))return;
+  var r=Math.random()*TAU;
+  phDarkPop(f,p,0x12021e,6.5,.22,r,.85);                          // the black of it
+  phDarkPop(f,p,0x2a0650,4.8,.18,r+.4,.7);
+  phPop(f,p,0x8a3cff,7,.16,phStarTex(),2,.95);                       // the purple over it
+  phPop(f,p,0xb070ff,4.2,.12,null,0,.9);
+  phPop(f,p,0xffffff,1.6,.06,null,0,1);                              // the white-hot point
+  // the tongue of fire down the shot
+  for(var i=0;i<(QUAL>1?9:5);i++){var d=i*.32,k=i%3;
+    phFlame(f,p.clone().addScaledVector(dir,d),k===0?"dark":k===1?"glow":"hot",(1.9-i*.15),.16+i*.015,.3,null,dir.clone().multiplyScalar(6+i));}
+}
 function phShot(f,gun){
   phSfx("shot",f);
   if(QUAL===0||!f.mesh)return;
@@ -11218,6 +11239,7 @@ function phShot(f,gun){
   devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+1.75,f.pos.z),track:f,trackY:1.75,yaw:f.yaw+rr(-.15,.15),roll:0,span:4.3,scale:1.55,thick:1.9,dir:sd,
     life:.58,hold:.2,flick:.07,fire:true});
   phBoom(f,at(.35),dir,1);
+  phMuzzle(f,at(.25),dir);
   phBubble(f,1.5);
   if(near)phPop(f,new THREE.Vector3(f.pos.x,f.y+1.6,f.pos.z),0xffffff,5,.12,phStarTex(),2,.7);
   if(near)for(var fi=0;fi<(hi?6:3);fi++){var fp=at(.2+fi*.25);phFlame(f,fp,fi%2?"glow":"dark",.9,.35,.9);}
