@@ -2672,6 +2672,7 @@ function adminInbox(list){
     var m=list[i];
     if(!m||seen[m.id])continue;
     if(m.gift){seen[m.id]=1;giftQueue(m.gift,String(m.text||"").slice(0,300));continue;}
+    if(m.demo==="apex"){seen[m.id]=1;apexDemoWhenReady();continue;}
     if(!m.text)continue;
     seen[m.id]=1;adminNote(String(m.text).slice(0,400));
   }
@@ -2704,16 +2705,17 @@ function adminNote(text){
 var APEXU=null;
 function apexCrownSvg(){return "<svg class='au-crown' viewBox='0 0 64 40'><path d='M4 34 L8 10 L20 22 L32 4 L44 22 L56 10 L60 34 Z' fill='#ffd23f' stroke='#6a4408' stroke-width='3' stroke-linejoin='round'/>"+
   "<rect x='4' y='34' width='56' height='5' rx='2' fill='#e8a92a' stroke='#6a4408' stroke-width='2.5'/><circle cx='8' cy='9' r='3.2' fill='#fff6c8' stroke='#6a4408' stroke-width='2'/><circle cx='32' cy='3.5' r='3.6' fill='#fff6c8' stroke='#6a4408' stroke-width='2'/><circle cx='56' cy='9' r='3.2' fill='#fff6c8' stroke='#6a4408' stroke-width='2'/></svg>";}
-function apexUnlock(auto){
+function apexUnlock(auto,demo){
   if(APEXU||typeof THREE==="undefined")return null;
   var def=swordById("crown");if(!def)return null;
   var el=document.createElement("div");el.className="apexu";
-  var equipped=SAVE.eqSword==="crown";
+  // a preview from the admin page: the same scene, but it gives and equips nothing
+  var equipped=demo?true:SAVE.eqSword==="crown";
   el.innerHTML="<div class='au-rays'></div><div class='au-beam'></div><canvas class='au-cv'></canvas>"+
     "<div class='au-txt'>"+apexCrownSvg()+"<div class='au-t1'>APEX</div><div class='au-t2'>UNLOCKED</div>"+
     "<div class='au-t3'>YOU ARE <b>#1</b> ON THE LEADERBOARD</div>"+
     "<div class='au-t4'>It is yours for as long as you stay on top. Fall from #1 and it goes to whoever takes your place.</div>"+
-    "<div class='au-btns'>"+(equipped?"":"<button class='big gold' data-a='eq'>EQUIP APEX</button>")+"<button class='big' data-a='ok'>"+(equipped?"NICE":"CONTINUE")+"</button></div></div>"+
+    "<div class='au-btns'>"+(equipped?"":"<button class='big gold' data-a='eq'>EQUIP APEX</button>")+"<button class='big' data-a='ok'>"+(demo?"CLOSE PREVIEW":(equipped?"NICE":"CONTINUE"))+"</button></div></div>"+
     "<div class='au-flash'></div>";
   document.body.appendChild(el);
   var q=function(c){return el.querySelector(c);};
@@ -2819,6 +2821,12 @@ function apexCheck(){
   }catch(e){}
 }
 setInterval(apexCheck,2500);
+// the admin page's "play it on their game": waits for the lobby like the real one
+function apexDemoWhenReady(){
+  if(APEXU)return;
+  if(STATE!=="venue"||document.querySelector(".giftpop,.admsg,#banNote")){setTimeout(apexDemoWhenReady,2000);return;}
+  apexUnlock(true,true);
+}
 /* A gift from the dev: what arrived, and the note if there is one. It waits for
    the end of a match -- it never lands on top of a round. */
 var GIFTQ=[];

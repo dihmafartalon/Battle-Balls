@@ -83,6 +83,7 @@ export async function handleAdmin(request, env, H) {
     return H.jsonRes(Object.assign({ acct: d && d.acct }, v));
   }
   if (b.op === "edit") return H.jsonRes(await vault({ op: "adm_edit", edits: b.edits, note: b.note, silent: !!b.silent }));
+  if (b.op === "demo") return H.jsonRes(await vault({ op: "adm_demo", demo: b.demo }));
   // kick / message: every room they were in lately is asked; only the one they are in has them
   if (b.op === "kick" || b.op === "msg") {
     const text = String(b.text || "").trim().slice(0, 500);
@@ -309,6 +310,11 @@ function draw(sub,j){
   R.appendChild(el("div",{class:"box"},[el("div",{class:"row"},[el("b",{text:"Suspicion "+sc+" / 100"}),el("span",{class:"mute",text:sc>=50?"look closely":(sc>=20?"worth a look":"looks normal")})]),
     (function(){var m=el("div",{class:"meter"});var i=el("i");i.style.width=sc+"%";i.style.background=col;m.appendChild(i);return m;})(),
     sus.why&&sus.why.length?el("ul",{style:"margin:6px 0 0 18px;padding:0"},sus.why.map(function(w){return el("li",{text:w});})):el("div",{class:"mute",text:"Nothing unusual in the numbers."})]));
+  // try a screen on their game
+  R.appendChild(el("h3",{text:"Test a screen"}));
+  R.appendChild(el("div",{class:"box"},[el("div",{class:"row"},[el("b",{text:"Apex unlock scene"}),el("span",{class:"grow"}),
+    el("button",{class:"good",text:"Play it on their game",on:function(){api("demo",{sub:sub,demo:"apex"}).then(function(r){say(r.ok?"Sent - it plays within about 15 seconds, once they are in the lobby":"Could not send",!r.ok);});}})]),
+    el("div",{class:"mute",style:"margin-top:6px",text:"Works for any account, #1 or not, and gives nothing. Open your own account here and press it with the game open on the lobby."})]));
   // actions
   R.appendChild(el("h3",{text:"Talk to them, kick, ban"}));
   var mt=el("textarea",{placeholder:"Message \\u2014 shows up on their screen right away if they are in a room, otherwise the next time they open the game"});
