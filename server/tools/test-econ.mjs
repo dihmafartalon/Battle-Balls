@@ -1,5 +1,5 @@
-import { applyAct, ensure, ultrasOf, newStats, timingAdd, timingPooled, timingVerdict, fakeInputVerdict, watchFlags } from "../src/econ.js";
-import { crownFix } from "../src/index.js";
+import { applyAct, ensure, ultrasOf, newStats, timingAdd, timingPooled, timingVerdict, fakeInputVerdict, watchFlags, limitedOn } from "../src/econ.js";
+import { crownFix, ownsSword, tamperVerdict } from "../src/index.js";
 import assert from "assert";
 const oct3 = Date.UTC(2026, 9, 3, 18), sep30 = Date.UTC(2026, 8, 30, 18), oct9 = Date.UTC(2026, 9, 9, 18);
 let s = ensure({ coins: 0, yen: 5000, rp: 12000, swords: { oak: 1 }, abils: {}, skins: {} });
@@ -138,4 +138,23 @@ console.log("currency split tests passed"); }
   applyAct(s2, { k: "match", mode: "classic", won: false, rp: 0, coins: 0, secs: 60, blocks: 10, perfects: 2, fk: 12, gh: 0 }, { now: Date.now(), flags, rnd: () => .5 });
   assert.ok(flags.some(f => f.kind === "fakeinput"), "scripted inputs flagged: " + JSON.stringify(flags));
   console.log("macro check tests passed");
+}
+
+// ---- Dev2: BOTH needs both; unreleased items have no worth and cannot be had ----
+{
+  assert.equal(ownsSword({ swords: { dev2sniper: 1 } }, "dev2both"), false, "BOTH needs the karambit too");
+  assert.equal(ownsSword({ swords: { dev2karambit: 1 } }, "dev2both"), false, "BOTH needs the sniper too");
+  assert.equal(ownsSword({ swords: { dev2sniper: 1, dev2karambit: 1 } }, "dev2both"), true);
+  assert.equal(ownsSword({ swords: { dev2sniper: 1 } }, "dev2sniper"), true);
+  assert.equal(ownsSword({ swords: {} }, "dev2sniper"), false);
+  const t = tamperVerdict([[["swords", "dev2sniper"], "=", 1]]);
+  assert.ok(t && t.sev === "ban", "a save that gives itself an unreleased blade is a ban");
+  const s = ensure({ coins: 0, swords: { dev2sniper: 1 }, eqSword: "trainer" });
+  const r = applyAct(s, { k: "sell", tab: "sword", id: "dev2sniper" }, { now: Date.now() });
+  assert.equal(r.ok, false, "unreleased cannot be sold");
+  for (let d = 1; d <= 60; d++) {
+    const day = new Date(Date.UTC(2026, 10, d)).toISOString().slice(0, 10);
+    for (const x of limitedOn(day)) assert.ok(!String(x[1]).startsWith("dev2"), "never on the Limited stall: " + day);
+  }
+  console.log("dev2 tests passed");
 }
