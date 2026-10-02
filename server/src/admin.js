@@ -230,9 +230,9 @@ function overview(){var L=document.getElementById("left");L.innerHTML="";L.appen
     L.appendChild(g);
     // who owns the ULTRAs: counted as people play; the recount reads every save once
     var ub=el("div",{class:"box"});L.appendChild(ub);
-    var udraw=function(o,note){ub.innerHTML="";ub.appendChild(el("b",{text:"ULTRA owners"}));
+    var udraw=function(o,note){ub.innerHTML="";ub.appendChild(el("b",{text:"ULTRA + Dev owners"}));
       var ug=el("div",{class:"grid",style:"margin-top:8px"});
-      ["sword","abil","skin"].forEach(function(t){(CAT[t]||[]).filter(function(x){return x.r==="ultra"&&x.id!=="crown";}).forEach(function(x){
+      ["sword","abil","skin"].forEach(function(t){(CAT[t]||[]).filter(function(x){return (x.r==="ultra"&&x.id!=="crown")||(t==="sword"&&x.id==="devblade");}).forEach(function(x){
         ug.appendChild(el("div",{class:"card"},[el("div",{class:"mute",text:x.n}),el("div",{class:"v",text:num((o||{})[t+":"+x.id]|0)})]));});});
       ub.appendChild(ug);
       ub.appendChild(el("div",{class:"row",style:"margin-top:8px"},[el("button",{text:"Recount from every save",on:function(){this.disabled=true;say("Recounting\u2026");

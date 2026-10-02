@@ -1,4 +1,4 @@
-import { applyAct, ensure } from "../src/econ.js";
+import { applyAct, ensure, ultrasOf } from "../src/econ.js";
 import { crownFix } from "../src/index.js";
 import assert from "assert";
 const oct3 = Date.UTC(2026, 9, 3, 18), sep30 = Date.UTC(2026, 8, 30, 18), oct9 = Date.UTC(2026, 9, 9, 18);
@@ -94,3 +94,13 @@ while (ctx.bj.inHand) applyAct(s, { k: "bj", m: "stand" }, ctx);
 const c1 = s.coins; r = applyAct(s, { k: "upgrade", tab: "sword", id: "frost" }, {}); assert.ok(r.ok, JSON.stringify(r)); assert.equal(s.yen, 900); assert.ok(s.coins === c1 - 300 || s.coins === c1, s.coins + " " + c1);
 const poor = ensure({ coins: 10, yen: 5000 }); r = applyAct(poor, { k: "slots", bet: 300 }, {}); assert.equal(r.ok, false); assert.equal(poor.yen, 5000);
 console.log("currency split tests passed"); }
+// the owner counter covers the ULTRAs and the Dev blade, and never Apex
+{
+  const s = ensure({ coins: 0, yen: 0, rp: 0, swords: { devblade: 1, crown: 1, wendigo: 1, trainer: 1 }, abils: {}, skins: {} });
+  const u = ultrasOf(s);
+  assert.ok(u.includes("sword:devblade"), "dev blade counted");
+  assert.ok(u.includes("sword:wendigo"), "ultras still counted");
+  assert.ok(!u.includes("sword:crown"), "apex never counted");
+  assert.ok(!u.includes("sword:trainer"), "common blades not counted");
+  console.log("owner counter tests passed");
+}
