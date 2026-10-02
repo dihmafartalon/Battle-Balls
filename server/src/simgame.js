@@ -288,6 +288,10 @@ var SWORDS=[
   desc:"Not a sword. A block is a shot: the ball is blown back the way you are aiming with a crack, a muzzle flash and a tracer across the arena."},
  {id:"portalgun",name:"Portal Gun",rarity:"mythic",event:"pack",price:-1,yen:345,portal:true,blade:0xe4e8ec,hilt:0x2a2e34,glow:0x6bff3a,shape:"portalgun",hold:"pistol",size:.64,swing:"gunshot",idle:"none",
   desc:"Grey, chunky and humming, with a tube of something green sloshing on top. A block is a shot: the ball goes back through a portal of green light."},
+ {id:"plaque",name:"Platinum Plaque",rarity:"mythic",event:"pack",price:-1,yen:345,blade:0xe8eef6,hilt:0x141416,glow:0xdfe8ff,shape:"plaque",hold:"two",swing:"hammer",idle:"none",size:.82,
+  desc:"A framed platinum record, swung like a bat. Every block lands with a flash of PARRY!"},
+ {id:"vampfang",name:"Vamp Fang",rarity:"mythic",event:"pack",secret:true,price:-1,yen:345,blade:0xf2ead8,hilt:0x141016,glow:0xff1a34,shape:"vampfang",hold:"one",swing:"slash",idle:"none",
+  desc:"The Rap Pack's secret. One long curved fang of ivory, a blood-red gem in a bat-wing guard. Every cut is red, and the bats come out."},
  {id:"divineright",name:"Divine Right",price:-1,rank:"god",blade:0xdce6f2,hilt:0xd8b050,glow:0x7ad8ff,shape:"divine",hold:"rhip",swing:"divine",idle:"orbit",
   desc:"The GOD rank's blade. Worn on the right hip and drawn in one stroke: the wings open, the runes light, and every cut sheds feathers of light."},
  {id:"crown",name:"Apex",rarity:"ultra",price:-1,ultra:true,code:true,top1:true,blade:0xfff0c0,hilt:0x0e0c0a,glow:0xffd27a,shape:"apex",hold:"back",size:.9,swing:"apex",idle:"none",
@@ -555,6 +559,10 @@ var SKINS=[
   desc:"Spiky blue hair, one long eyebrow and eyes that have seen everything. A black PLONE tee. Burps mid-sentence."},
  {id:"cucci",name:"Cucci",price:-1,yen:330,rarity:"mythic",event:"pack",style:"cucci",body:0x121214,limb:0x121214,skin:0xf2c9a0,glow:0x000000,
   desc:"Big head, bigger eyes, a black CUCCI tee and skinny jeans. Unbothered. Blinks slowly at whoever is about to lose."},
+ {id:"cartwheel",name:"Playboi Cartwheel",price:-1,yen:330,rarity:"mythic",event:"pack",style:"cartwheel",body:0x141416,limb:0x141416,skin:0x7b4a2d,glow:0x000000,
+  desc:"Black dreads, one red eye open and one winking, fangs in the grin. A black long-sleeve with red marks, a silver chain and cross, a red belt with a chain hanging off it."},
+ {id:"lilvertigo",name:"Lil Vertigo",price:-1,yen:330,rarity:"mythic",event:"pack",style:"vertigo",body:0x141416,limb:0x141416,skin:0x6e4228,glow:0x000000,
+  desc:"Purple dreads standing straight up, black shades, tongue out and fangs. A purple puffer with star camo, black cargos, chunky purple shoes."},
  {id:"wraith",name:"Wraith",price:0,yen:330,rarity:"mythic",style:"wraith",body:0x181422,limb:0x0a0810,skin:0x9a3aff,glow:0xb14aff,
   desc:"Curved horns, a ragged shroud and two violet embers where eyes should be."},
  // ranked path rewards
@@ -1201,6 +1209,51 @@ function apexDemoWhenReady(){
   if(APEXU)return;
   if(STATE!=="venue"||document.querySelector(".giftpop,.admsg,#banNote")){setTimeout(apexDemoWhenReady,2000);return;}
   apexUnlock(true,true);
+}
+/* THE PACK TRAILER: the first time you reach the lobby each session, while a
+   pack with a trailer is coming up (or on sale), it plays in a popup. Tick
+   "don't show this again" and it never pops up for that pack on this device;
+   it is always there from the WATCH THE TRAILER button at the stand. It waits
+   its turn behind the login calendar, a gift, or anything else already open. */
+var TRAILER_SHOWN=false;
+function trailerOff(key){try{return localStorage.getItem("bb_notrailer_"+key)==="1";}catch(e){return false;}}
+function trailerNudge(){
+  if(TRAILER_SHOWN)return;
+  // the soonest pack with a trailer that is not over: on sale, or still to come
+  var key=null,now=Date.now();
+  for(var k in PACKS){var Q=PACKS[k];if(Q.trailer&&now<Q.to&&(!key||Q.from<PACKS[key].from))key=k;}
+  var P=key&&PACKS[key];
+  if(!P||trailerOff(key))return;
+  if(packItems(P).every(function(q){return q.own;}))return;   // they have it all already
+  TRAILER_SHOWN=true;
+  (function wait(tries){
+    if(tries>90)return;
+    if(STATE!=="venue"||venueKind!=="lobby"||!$("evt").classList.contains("hide")||document.querySelector(".giftpop,.admsg,#banNote,.apexu")){
+      setTimeout(function(){wait(tries+1);},2000);return;}
+    trailerShow(key,false);
+  })(0);
+}
+function trailerShow(key,manual){
+  var P=PACKS[key];if(!P||!P.trailer||document.querySelector(".trailerpop"))return;
+  var now=Date.now(),when=now<P.from?"OPENS IN "+evtLeft(P.from-now).toUpperCase():now<P.to?"ON NOW · GONE IN "+evtLeft(P.to-now).toUpperCase():"";
+  var d=document.createElement("div");d.className="giftpop trailerpop";
+  d.innerHTML="<div class='gpcard'><div class='gpribbon'>"+(now<P.from?"COMING SOON":"NEW PACK")+"</div>"+
+    "<div class='tpsub'>"+P.name+" &middot; "+P.yen.toLocaleString()+" YEN"+(when?" &middot; "+when:"")+"</div>"+
+    "<video src='"+P.trailer+"'"+(P.poster?" poster='"+P.poster+"'":"")+" controls playsinline preload='auto'></video>"+
+    (manual?"":"<label><input type='checkbox' id='tpNo'> Don't show this again</label>")+
+    "<div class='gpbtns'>"+(now>=P.from&&now<P.to?"<button class='big gold' data-a='go'>GO TO THE STAND</button>":"")+"<button class='big' data-a='ok'>CLOSE</button></div></div>";
+  document.body.appendChild(d);
+  var v=d.querySelector("video"),wasMusic=!!(MUSIC.el&&!MUSIC.el.paused);
+  musicPause();
+  var pr=v.play();if(pr&&pr.catch)pr.catch(function(){v.muted=true;v.play().catch(function(){});});   // autoplay blocked: start it muted
+  var close=function(go){
+    var no=d.querySelector("#tpNo");if(no&&no.checked){try{localStorage.setItem("bb_notrailer_"+key,"1");}catch(e){}}
+    v.pause();if(d.parentNode)d.parentNode.removeChild(d);
+    if(wasMusic)musicPlay();
+    if(go&&PACKSTAND&&PACKSTAND.key===key)openPackStand();
+  };
+  d.addEventListener("click",function(e){var a=e.target.getAttribute&&e.target.getAttribute("data-a");
+    if(a==="ok")close(false);else if(a==="go")close(true);else if(e.target===d)close(false);});
 }
 /* A gift from the dev: what arrived, and the note if there is one. It waits for
    the end of a match -- it never lands on top of a round. */
@@ -3120,7 +3173,7 @@ function enterLobby(){
   $("vRank").textContent=currentRank().name.toUpperCase();
   $("vRankIco").innerHTML=rankIcon(currentRank(),28);
   refreshSaveWarn();
-  refreshLoginButton();loginNudge();
+  refreshLoginButton();loginNudge();trailerNudge();
 }
 function enterCasino(){
   clearFighters();clearWarn();
@@ -3458,14 +3511,19 @@ Fighter.prototype.strikeFx=function(){
   burst(tip.x,tip.y,tip.z,QUAL>1?16:10,9,d.glow,1.05,.28,-5);
   var near=this===player||!player||dist2(this.pos.x,this.pos.z,player.pos.x,player.pos.z)<60*60;
   if(near){
-    spawnSlash(this);
-    slashRing(this.pos.x,this.y+1.25,this.pos.z,d.glow,0,.12);
-    slashRing(this.pos.x,this.y+1.05,this.pos.z,d.glow,.07,-.08);
+    if(d.id!=="vampfang"){           // the fang draws its own cut, in black, and leaves the floor alone
+      spawnSlash(this);
+      slashRing(this.pos.x,this.y+1.25,this.pos.z,d.glow,0,.12);
+      slashRing(this.pos.x,this.y+1.05,this.pos.z,d.glow,.07,-.08);
+    }
   }
   if(d.rarity==="legendary"||d.rarity==="mythic")
     ringBurst(tip.x,tip.y,tip.z,QUAL>1?24:14,11,d.glow,1.5,.5);
   if(d.swing==="hammer"||d.swing==="overhead")
     ringBurst(this.pos.x,this.y+.2,this.pos.z,QUAL>1?18:10,9,d.glow,1.4,.45);
+  // the rap pack: the plaque says PARRY!, the fang lets the bats out
+  if(d.id==="plaque"&&near)rapWord("PARRY!","#e8f4ff",tip.x,tip.y+.8,tip.z,1.3,.9);
+  if(d.id==="vampfang"&&near)vampFangFx(this,tip);
 };
 /* A signature swing's first cut lands when a plain swing's does: a tenth of
    the way in. It used to play its wind-up at full length first, so the cut, its
@@ -3692,6 +3750,11 @@ function swingSfx(d){
   if(d.shape==="fetus"){fetusSfx("swing");return;}
   if(SIG_SWING[d.swing]){sigSwingSfx(d);return;}
   var st=d.swing,heavy=(st==="hammer"||st==="overhead");
+  if(d.id==="vampfang"){
+    // a wet cut, a deep thud under it, and the swarm's screech
+    noiseHit(.22,.4,2400);tone(900,160,.22,"sawtooth",.16);tone(90,40,.4,"sine",.3);
+    setTimeout(function(){for(var b=0;b<4;b++)(function(b){setTimeout(function(){tone(4200+b*500,2600,.08,"square",.035);},b*55);})(b);},70);
+    setTimeout(function(){noiseHit(.4,.12,5200);},90);}
   var v=heavy?.30:.22;
   if(st==="stab"){
     noiseHit(.09,v*1.1,3200); tone(1500,520,.10,"sawtooth",v*.5);
@@ -5722,7 +5785,10 @@ var TAUNTS=[
   {id:"yawn", e:"\ud83e\udd71",txt:"BORING...",   col:"#9fb4cc"},
   // the pack's emote: a portal opens behind you, a peace sign, and you lean back into it
   {id:"portal",e:"\u270c\ufe0f",txt:"PEACE OUT",col:"#6bff3a",pack:"interdim",fx:"portal",rarity:"mythic",
-  desc:"A green portal tears open behind you. Throw up the peace sign and lean back like you're about to dip. From the Interdimensional Pack."}
+  desc:"A green portal tears open behind you. Throw up the peace sign and lean back like you're about to dip. From the Interdimensional Pack."},
+  // the rap pack's: hype the crowd, dive, and there is no crowd
+  {id:"stagedive",e:"\ud83c\udfa4",txt:"STAGE DIVE",col:"#ff1a34",pack:"rap",fx:"stagedive",rarity:"mythic",
+  desc:"Hype the crowd up, dive off the stage... and land face first. Stars included. From the Rap Pack."}
 ];
 var TAUNT_DUR=2.2,TAUNT_GAP=2;
 var TAUNT_BASE=TAUNTS.filter(function(t){return !t.pack;}).map(function(t){return t.id;});      // the eight everyone has
@@ -5750,6 +5816,7 @@ Fighter.prototype.taunt=function(id){
     for(var pk=0;pk<(QUAL>1?24:10);pk++){var pa=Math.random()*TAU,pr=hr(.3,1.8);
       spark(this.pos.x-by*1.3+bz*Math.cos(pa)*pr,this.y+1.9+Math.sin(pa)*pr,this.pos.z-bz*1.3-by*Math.cos(pa)*pr,by*hr(.5,2),hr(-.3,.8),bz*hr(.5,2),.5,1,.4,hr(.25,.45),hr(.6,1.1),0);}
   }
+  if(tk.fx==="stagedive"&&this.mesh&&QUAL>=0)rapStageDiveFx(this);
   return true;
 };
 // the moves: arms[1] is the right (blade) arm, arms[0] the left
@@ -5767,6 +5834,23 @@ Fighter.prototype.tauntPose=function(dt){
     // the peace sign up by the face, the other hand on the hip, leaning back with a bounce
     s=Math.min(1,a/0.3);set(R,-2.5*s,0.5*s);set(L,0,-0.6*s);
     g.rotation.x=-0.22*s+Math.sin(a*10)*0.03;g.position.y+=Math.abs(Math.sin(a*5))*0.12*s;}
+  else if(k==="stagedive"){
+    // hype (arms up, bouncing), the dive (out and up, tipping over), the face-plant
+    var dx=Math.sin(this.yaw),dz=Math.cos(this.yaw),fw=0,u,LL=this.legs;
+    if(a<.7){s=Math.sin(a*14);set(R,0,2.75+s*.2);set(L,0,-2.75+s*.2);
+      g.position.y+=Math.abs(Math.sin(a*7))*.3;g.rotation.x=-.1;}
+    else if(a<1.2){u=(a-.7)/.5;set(R,-3,.25);set(L,-3,-.25);
+      fw=u*3.2;g.rotation.x=Math.sin(u*Math.PI/2)*1.5;g.position.y+=Math.sin(u*Math.PI)*1.6+u*.3;
+      LL[0].rotation.x=-.5*u;LL[1].rotation.x=-.3*u;}
+    else{u=Math.min(1,(a-1.2)/.12);s=Math.max(0,1-(a-1.2)*6);
+      set(R,-2.7,.9);set(L,-2.7,-.9);fw=3.2+u*.25;g.rotation.x=1.5+s*.12*Math.sin(a*40)+.06;g.position.y+=.32;
+      LL[0].rotation.x=-.25+Math.sin(a*9)*.15;LL[1].rotation.x=-.15-Math.sin(a*9)*.15;}
+    g.position.x+=dx*fw;g.position.z+=dz*fw;
+    // the rings at your feet stay flat on the floor
+    // the rings at your feet would go flying with you: off until you are up again
+    var me=this;if(a>=.7)g.children.forEach(function(r){if(r.visible&&r.geometry&&r.geometry.type==="RingGeometry"){r.visible=false;(me._sdHid=me._sdHid||[]).push(r);}});
+    // a weapon worn on the body would hang in the air through the dive: it waits out of sight
+    if(this.stowed&&this.sword)this.sword.visible=a<.7;}
   else if(k==="yawn"){s=Math.min(1,a/0.6);set(R,0,2.9*s);set(L,0,-2.9*s);g.rotation.x=-0.12*s;}
 };
 var tauntNext=0;
@@ -9401,6 +9485,14 @@ SWORD_ICON.portalgun="<path d='M15 25l-2 11h6l1-10z' fill='{H}' stroke='#0b1942'
   "<rect x='24' y='10' width='5' height='14' rx='2.4' fill='#7aff4a' stroke='#0b1942' stroke-width='1.3' opacity='.95'/>"+
   "<rect x='14' y='13' width='12' height='1.6' fill='#9aa2ac'/><rect x='14' y='19' width='12' height='1.6' fill='#9aa2ac'/>"+
   "<ellipse cx='20' cy='6' rx='5.5' ry='3.2' fill='#7aff4a' stroke='#0b1942' stroke-width='1.4'/><ellipse cx='20' cy='6' rx='2.4' ry='1.3' fill='#e8ffd8'/>";
+SWORD_ICON.plaque="<rect x='18.6' y='27' width='2.8' height='11' fill='{H}' stroke='#0b1942' stroke-width='1.2'/>"+
+  "<rect x='9' y='3' width='22' height='25' rx='1.5' fill='#141416' stroke='#0b1942' stroke-width='1.6'/><rect x='11.5' y='5.5' width='17' height='20' fill='#1c1c22'/>"+
+  "<circle cx='20' cy='13.5' r='6.8' fill='#e8eef6' stroke='#a8b0bc' stroke-width='.8'/><circle cx='20' cy='13.5' r='4.6' fill='none' stroke='#a8b0bc' stroke-width='.6'/>"+
+  "<circle cx='20' cy='13.5' r='2.2' fill='#d0142a'/><rect x='14' y='22' width='12' height='2.4' fill='#d8b050'/>";
+SWORD_ICON.vampfang="<rect x='17.8' y='27' width='4.4' height='9' rx='1' fill='{H}' stroke='#0b1942' stroke-width='1.2'/><path d='M18 29h4M18 31.5h4M18 34h4' stroke='#3a2a34' stroke-width='.8'/>"+
+  "<path d='M10 25l-4-5 7 2zM30 25l4-5-7 2z' fill='#141016' stroke='#0b1942' stroke-width='1'/><rect x='13' y='24' width='14' height='3.4' rx='1' fill='#141016' stroke='#0b1942' stroke-width='1.2'/>"+
+  "<path d='M16 24C16 15 21 8 31 3 27 10 24 17 24 24z' fill='{B}' stroke='#0b1942' stroke-width='1.6'/><path d='M16.6 23C17 15 21 9 29 4.5' stroke='#9a0a1c' stroke-width='1.1' fill='none'/>"+
+  "<path d='M20 23.2l1.8 1.8-1.8 1.8-1.8-1.8z' fill='#d0102a' stroke='#0b1942' stroke-width='.8'/><circle cx='20' cy='37.5' r='1.6' fill='#d0102a'/>";
 SWORD_ICON.chef="<path d='M17 23h6l1 13h-8z' fill='{H}' stroke='#0b1942' stroke-width='1.6'/><circle cx='20' cy='27' r='1.2' fill='#d8a83a'/><circle cx='20' cy='32' r='1.2' fill='#d8a83a'/>"+
   "<rect x='16' y='21' width='8' height='3' fill='#d8a83a' stroke='#0b1942' stroke-width='1.2'/>"+
   "<path d='M17 21V9C17 6 19 3 22 2c3 4 4 10 4 14v5z' fill='{B}' stroke='#0b1942' stroke-width='1.6'/><path d='M25.5 20V15c0-4-1-8-3-12' stroke='{G}' stroke-width='1.6' fill='none'/>";
@@ -9609,46 +9701,60 @@ function openWendigo(){
 var PACKSTAND=null;
 function packItems(P){return P.items.map(function(q){
   if(q[0]==="emote"){var tk=tauntById(q[1]);return {tab:"emote",id:q[1],name:tk.txt,own:emoteOwned(q[1]),
-    icon:"<svg viewBox='0 0 40 40' width='34' height='34'><circle cx='20' cy='20' r='17' fill='#163a12' stroke='#0b1942' stroke-width='2'/><text x='20' y='27' font-size='18' text-anchor='middle'>"+tk.e+"</text></svg>"};}
-  var d=shopData(q[0]),it=findId(d.list,q[1]);return {tab:q[0],id:q[1],name:it.name,own:!!d.own[q[1]],icon:d.icon(it)};});}
+    icon:"<svg viewBox='0 0 40 40' width='34' height='34'><circle cx='20' cy='20' r='17' fill='"+(P.col==="#ff1a34"?"#3a0a12":"#163a12")+"' stroke='#0b1942' stroke-width='2'/><text x='20' y='27' font-size='18' text-anchor='middle'>"+tk.e+"</text></svg>"};}
+  var d=shopData(q[0]),it=findId(d.list,q[1]),own=!!d.own[q[1]];
+  if(packSecret(P,q[0],q[1])&&!own)return {tab:q[0],id:q[1],name:"SECRET BONUS",own:false,secret:true,
+    icon:"<svg viewBox='0 0 40 40' width='34' height='34'><circle cx='20' cy='20' r='17' fill='#1a0a0e' stroke='#ff1a34' stroke-width='2'/><text x='20' y='28' font-size='22' font-weight='900' fill='#ff1a34' text-anchor='middle'>?</text></svg>"};
+  return {tab:q[0],id:q[1],name:it.name,own:own,icon:d.icon(it)};});}
+function packCount(P){var n=P.items.length-(P.secret?Object.keys(P.secret).reduce(function(a,t){return a+Object.keys(P.secret[t]).length;},0):0);
+  return n+" MYTHICS"+(P.secret?" + SECRET BONUS":"");}
 function packSignDraw(){
   if(!PACKSTAND)return;
-  var P=PACKS.interdim,now=Date.now(),g=PACKSTAND.sign.c.getContext("2d"),W=1024,H=PACKSTAND.sign.c.height;
+  var P=PACKS[PACKSTAND.key],now=Date.now(),g=PACKSTAND.sign.c.getContext("2d"),W=1024,H=PACKSTAND.sign.c.height,rap=PACKSTAND.key==="rap";
   g.clearRect(0,0,W,H);
-  g.fillStyle="rgba(6,18,8,.9)";if(g.roundRect){g.beginPath();g.roundRect(8,8,W-16,H-16,40);g.fill();}else g.fillRect(8,8,W-16,H-16);
-  g.strokeStyle="#6bff3a";g.lineWidth=10;if(g.roundRect){g.beginPath();g.roundRect(8,8,W-16,H-16,40);g.stroke();}
+  g.fillStyle=rap?"rgba(16,6,10,.92)":"rgba(6,18,8,.9)";if(g.roundRect){g.beginPath();g.roundRect(8,8,W-16,H-16,40);g.fill();}else g.fillRect(8,8,W-16,H-16);
+  g.strokeStyle=P.col;g.lineWidth=10;if(g.roundRect){g.beginPath();g.roundRect(8,8,W-16,H-16,40);g.stroke();}
   g.textAlign="center";g.lineJoin="round";
-  g.font="bold 86px Fredoka, Trebuchet MS, Arial";g.lineWidth=14;g.strokeStyle="#041004";
-  g.strokeText("INTERDIMENSIONAL PACK",W/2,116);g.fillStyle="#e8ffe0";g.fillText("INTERDIMENSIONAL PACK",W/2,116);
-  g.font="bold 64px Fredoka, Trebuchet MS, Arial";
-  var line=P.yen.toLocaleString()+" YEN  ·  4 MYTHICS";
+  g.font=(rap?"italic ":"")+"bold 86px Fredoka, Trebuchet MS, Arial";g.lineWidth=14;g.strokeStyle=rap?"#120408":"#041004";
+  g.strokeText(P.name,W/2,116);g.fillStyle=rap?"#ffffff":"#e8ffe0";g.fillText(P.name,W/2,116);
+  g.font="bold "+(rap?52:64)+"px Fredoka, Trebuchet MS, Arial";
+  var line=P.yen.toLocaleString()+" YEN  ·  "+packCount(P);
   g.strokeText(line,W/2,206);g.fillStyle="#ffd23f";g.fillText(line,W/2,206);
   g.font="600 50px Fredoka, Trebuchet MS, Arial";
   var t=now<P.from?"OPENS IN "+evtLeft(P.from-now):"ONE WEEK ONLY · GONE IN "+evtLeft(P.to-now);
-  g.lineWidth=10;g.strokeText(t,W/2,286);g.fillStyle="#9aff7a";g.fillText(t,W/2,286);
+  g.lineWidth=10;g.strokeText(t,W/2,286);g.fillStyle=rap?"#ff6a7a":"#9aff7a";g.fillText(t,W/2,286);
   PACKSTAND.sign.tex.needsUpdate=true;
 }
 function buildPackStand(x,z){
   PACKSTAND=null;
-  var P=PACKS.interdim;
-  if(Date.now()>=P.to)return;                      // gone with the shrine
+  var key=curPackKey();
+  if(!key)return;                                  // nothing on, nothing coming
+  var P=PACKS[key],rap=key==="rap";
   var st=new THREE.Group();st.position.set(x,0,z);st.rotation.y=Math.atan2(-x,-z);venue.add(st);
-  var METAL=0x2a2e34,TRIM=0x9aa2ac,GRN=0x6bff3a,sd;
+  var METAL=rap?0x141016:0x2a2e34,TRIM=rap?0xc8ccd4:0x9aa2ac,GRN=rap?0xff1a34:0x6bff3a,sd;
   // a low platform and a counter
   gPart(st,GEO.cyl8,0x1c2024,5.4,.4,5.4,0,.2,0);
   gPart(st,GEO.box,METAL,4.2,1.3,1.4,0,.95,.9);
   gPart(st,GEO.box,TRIM,4.4,.14,1.6,0,1.66,.9);
-  gPart(st,GEO.box,0x4cff1a,3.6,.08,.08,0,1.2,1.62);              // a green strip along the front
+  gPart(st,GEO.box,rap?0xff1a34:0x4cff1a,3.6,.08,.08,0,1.2,1.62);  // a strip of the pack's colour along the front
   // two posts holding a ring, and the portal swirling inside it
   for(sd=-1;sd<=1;sd+=2){gPart(st,GEO.box,METAL,.4,4.6,.4,sd*2.3,2.3,-1.1);gPart(st,GEO.cyl8,TRIM,.6,.3,.6,sd*2.3,4.7,-1.1);}
   var ringM=new THREE.Mesh(new THREE.TorusGeometry(2.1,.18,8,40),new THREE.MeshLambertMaterial({color:TRIM}));
   ringM.position.set(0,3.1,-1.15);st.add(ringM);
   var por=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:portalTex(),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
   por.scale.set(4.1,4.1,1);por.position.set(0,3.1,-1.15);st.add(por);
-  // the Portal Gun turning over the counter
-  var gun=buildSword(swordById("portalgun"));gun.position.set(0,2.6,.9);gun.scale.setScalar(.9);st.add(gun);
+  if(rap){
+    // the ring is a red spotlight, and a giant ? hangs in it: the secret
+    por.material.map=null;por.material.color.setHex(0x5a0010);por.material.opacity=.55;por.material.needsUpdate=true;
+    var qc=cvs(256,256),qx=qc.getContext("2d");qx.font="900 220px Arial Black, Arial";qx.textAlign="center";qx.textBaseline="middle";
+    qx.lineWidth=14;qx.strokeStyle="#120408";qx.strokeText("?",128,138);qx.fillStyle="#ff1a34";qx.fillText("?",128,138);
+    var qm=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(qc),transparent:true,depthWrite:false,side:THREE.DoubleSide,fog:false}));
+    qm.scale.set(2.6,2.6,1);qm.position.set(0,3.1,-1.05);st.add(qm);
+  }
+  // the pack's weapon turning over the counter
+  var gun=buildSword(swordById(rap?"plaque":"portalgun"));gun.position.set(0,2.6,.9);gun.scale.setScalar(rap?.7:.9);st.add(gun);
   var sign=evtBillboard(7.6,7.6*320/1024,x+(-x/Math.hypot(x,z))*3.2,1.2,z+(-z/Math.hypot(x,z))*3.2);
-  PACKSTAND={x:x,z:z,gun:gun,portal:por,sign:sign,t:0};
+  PACKSTAND={key:key,x:x,z:z,gun:gun,portal:por,sign:sign,t:0};
   packSignDraw();
   addObstacle(x,z,2.9,null);
   var fx=x-(x/Math.hypot(x,z))*5.6,fz=z-(z/Math.hypot(x,z))*5.6;
@@ -9661,34 +9767,38 @@ function packTick(dt,t){
   PACKSTAND.portal.rotation.z=-t*1.1;
   PACKSTAND.t+=dt;if(PACKSTAND.t>20){PACKSTAND.t=0;packSignDraw();}
   if(QUAL>0&&Math.random()<dt*12){var a=Math.random()*TAU,r=rr(.4,1.9);
-    spark(PACKSTAND.x+Math.cos(a)*r*.6,3.1+Math.sin(a)*r,PACKSTAND.z+Math.sin(a)*r*.3,rr(-.2,.2),rr(-.3,.6),rr(-.2,.2),.5,1,.4,rr(.25,.5),rr(.6,1.1),0);}
+    var rp=PACKSTAND.key==="rap";
+    spark(PACKSTAND.x+Math.cos(a)*r*.6,3.1+Math.sin(a)*r,PACKSTAND.z+Math.sin(a)*r*.3,rr(-.2,.2),rr(-.3,.6),rr(-.2,.2),rp?1:.5,rp?.1:1,rp?.2:.4,rr(.25,.5),rr(.6,1.1),0);}
 }
 function openPackStand(){
-  var P=PACKS.interdim,now=Date.now(),L=packItems(P),allOwn=L.every(function(q){return q.own;});
-  var h="<div class='evtgrid'><div class='well evtpic portal'><div class='packitems'>"+
-    L.map(function(q){return "<div class='pi'>"+q.icon.replace("width='34' height='34'","width='62' height='62'")+"<b>"+q.name+"</b>"+(q.own?"<span class='own'>OWNED</span>":"")+"</div>";}).join("")+
-    "</div></div><div class='well'><div class='dname'>INTERDIMENSIONAL PACK</div>"+
-    "<div><span class='dpill r-mythic'>PACK · 4 MYTHICS</span></div>"+
+  var key=(PACKSTAND&&PACKSTAND.key)||curPackKey();if(!key)return;
+  var P=PACKS[key],now=Date.now(),L=packItems(P),allOwn=L.every(function(q){return q.own;});
+  var h="<div class='evtgrid'><div class='well evtpic "+(key==="rap"?"rap":"portal")+"'><div class='packitems'>"+
+    L.map(function(q){return "<div class='pi"+(q.secret?" sec":"")+"'>"+q.icon.replace("width='34' height='34'","width='62' height='62'")+"<b>"+q.name+"</b>"+(q.own?"<span class='own'>OWNED</span>":"")+"</div>";}).join("")+
+    "</div></div><div class='well'><div class='dname'>"+P.name+"</div>"+
+    "<div><span class='dpill r-mythic'>PACK · "+packCount(P)+"</span></div>"+
     "<div class='ddesc'>"+P.desc+"</div>"+
-    "<div class='dprice ol1'>"+P.yen.toLocaleString()+" YEN</div>";
+    "<div class='dprice ol1'>"+P.yen.toLocaleString()+" YEN</div>"+
+    (P.trailer?"<button class='big ghost' id='evtTrailer'>&#9654; WATCH THE TRAILER</button>":"");
   if(allOwn)h+="<button class='big ghost' disabled>YOU OWN ALL OF IT</button>";
   else if(now<P.from)h+="<button class='big ghost' disabled>OPENS IN "+evtLeft(P.from-now).toUpperCase()+"</button>";
   else if(now>=P.to)h+="<button class='big ghost' disabled>GONE FOREVER</button>";
   else h+="<button class='big"+(SAVE.yen>=P.yen?"":" off")+"' id='evtBuy'>BUY FOR "+P.yen.toLocaleString()+" YEN</button>"+
-    "<div class='dnote'>On sale until the stand closes in "+evtLeft(P.to-now)+", the same time as the Wendigo shrine. After that, never again.</div>";
+    "<div class='dnote'>On sale until the stand closes in "+evtLeft(P.to-now)+". After that, never again.</div>";
   h+="<div class='dnote'>You have <b>"+SAVE.yen.toLocaleString()+"</b> yen.</div></div></div>";
   evtShow("THE PACK STAND","",h);
+  var tb=$("evtTrailer");if(tb)tb.addEventListener("click",function(){showScreen(null);trailerShow(key,true);});
   var b=$("evtBuy");
   if(b)b.addEventListener("click",function(){
     if(SAVE.yen<P.yen){evtSay("Not enough yen: you need "+(P.yen-SAVE.yen).toLocaleString()+" more.");sfx("tick");return;}
     function done(ok,why){
       if(!ok){evtSay(why);sfx("tick");return;}
       sfx("rank");writeSave();refreshCoins();updateChips();updateLobbyBar();
-      openPackStand();evtSay("The Interdimensional Pack is yours. Equip it all in your inventory.",true);
+      openPackStand();evtSay("The "+packTitle(P)+" is yours"+(P.secret?", secret and all":"")+". Equip it all in your inventory.",true);
     }
     if(econOn()){
       if(b.disabled)return;b.disabled=true;
-      econAct([{k:"pack",pack:"interdim"}],function(err,rs){var r0=rs&&rs[0];b.disabled=false;
+      econAct([{k:"pack",pack:key}],function(err,rs){var r0=rs&&rs[0];b.disabled=false;
         done(!err&&r0&&r0.ok,(r0&&r0.why)||econErr(err));});
       return;
     }
@@ -10205,6 +10315,186 @@ SIG_SHAPE.portalgun=function(g,seg,B,H,G){
   B.emissiveIntensity=.05;
   return 2.0;
 };
+// THE PLATINUM PLAQUE -- a framed platinum record: a black frame, a silver disc
+// with its grooves and a label, an engraved plate underneath; held by a short
+// black handle off the bottom of the frame. You hit people with it.
+SIG_SHAPE.plaque=function(g,seg,B,H,G){
+  var i,frame=v4Phong(0x111114,60),plat=v4Phong(0xe8eef6,160,0x3a4250,.35),gold=v4Phong(0xd8b050,120,0x4a3000,.4);
+  var matte=new THREE.MeshLambertMaterial({color:0x1c1c22});
+  function bx(m,w,h,d,x,y,z){var o=new THREE.Mesh(GEO.box,m);o.scale.set(w,h,d);o.position.set(x,y,z);g.add(o);return o;}
+  // the handle: wrapped black, a silver cap
+  seg(.2,1.0,.2,.2,0,H);
+  for(i=0;i<4;i++){var w=new THREE.Mesh(GEO.cyl8,matte);w.scale.set(.24,.05,.24);w.position.y=-.1+i*.24;g.add(w);}
+  var cp=new THREE.Mesh(GEO.cyl8,plat);cp.scale.set(.26,.1,.26);cp.position.y=-.32;g.add(cp);
+  // the frame: thick black border round a dark backing
+  var Y0=.75,W=1.5,HH=1.9,cy=Y0+HH/2;
+  var back=bx(matte,W-.1,HH-.1,.1,0,cy,-.02);
+  bx(frame,W,.14,.22,0,Y0,0);bx(frame,W,.14,.22,0,Y0+HH,0);bx(frame,.14,HH,.22,-W/2,cy,0);bx(frame,.14,HH,.22,W/2,cy,0);
+  // a thin silver inner edge
+  bx(plat,W-.26,.03,.04,0,Y0+.1,.06);bx(plat,W-.26,.03,.04,0,Y0+HH-.1,.06);
+  // the record: on both faces, so it reads from either side
+  for(var sd=-1;sd<=1;sd+=2){
+    var disc=new THREE.Mesh(GEO.cyl,plat);disc.scale.set(1.08,.03,1.08);disc.rotation.x=Math.PI/2;disc.position.set(0,cy+.18,sd*.06);g.add(disc);
+    disc.userData.core=true;
+    for(i=0;i<3;i++){var gr=new THREE.Mesh(new THREE.TorusGeometry(.26+i*.08,.008,4,30),v4Phong(0xa8b0bc,60));gr.position.set(0,cy+.18,sd*.08);g.add(gr);}
+    var lab=new THREE.Mesh(GEO.cyl,new THREE.MeshLambertMaterial({color:0xd0142a}));lab.scale.set(.32,.035,.32);lab.rotation.x=Math.PI/2;lab.position.set(0,cy+.18,sd*.075);g.add(lab);
+    var hole=new THREE.Mesh(GEO.cyl8,frame);hole.scale.set(.05,.04,.05);hole.rotation.x=Math.PI/2;hole.position.set(0,cy+.18,sd*.08);g.add(hole);
+    // the engraved plate
+    bx(gold,.9,.22,.03,0,Y0+.28,sd*.065);
+    bx(frame,.6,.03,.035,0,Y0+.3,sd*.07);bx(frame,.4,.025,.035,0,Y0+.24,sd*.07);
+  }
+  var shine=new THREE.Mesh(GEO.sphLo,v4Add(0xdfe8ff,.35));shine.scale.set(.9,.9,.2);shine.position.set(0,cy+.18,0);shine.userData.aura=true;g.add(shine);
+  g.userData.pulse=shine;g.userData.flareMul=.25;
+  B.emissiveIntensity=.05;
+  return Y0+HH;
+};
+// THE VAMP FANG -- one long curved fang of ivory, a blood-red gem set in a
+// black bat-wing guard, a ribbed black grip and a little gem at the pommel
+SIG_SHAPE.vampfang=function(g,seg,B,H,G){
+  var i,ivory=v4Phong(0xfff4dc,110,0x6a5a40,.35),black=v4Phong(0x141016,60),gem=v4Phong(0xd0102a,160,0x8a0010,.6);
+  // the grip, ribbed
+  seg(.2,.95,.2,.25,0,H);
+  for(i=0;i<6;i++){var r=new THREE.Mesh(GEO.cyl8,black);r.scale.set(.25,.05,.25);r.position.y=-.12+i*.16;g.add(r);}
+  var pg=new THREE.Mesh(new THREE.OctahedronGeometry(.13),gem);pg.position.y=-.32;g.add(pg);
+  // the guard: two swept bat wings and a gem at the heart
+  for(var sd=-1;sd<=1;sd+=2){
+    for(i=0;i<3;i++){var wg=new THREE.Mesh(GEO.cone,black);wg.scale.set(.16,.62-i*.12,.08);
+      wg.rotation.z=sd*(-1.25+i*.28);wg.position.set(sd*(.28+i*.06),.84+i*.08,0);g.add(wg);}}
+  bx2(black,.5,.16,.2,0,.8,0);
+  var gm=new THREE.Mesh(new THREE.OctahedronGeometry(.17),gem);gm.scale.set(1,1.25,.6);gm.position.set(0,.84,.08);g.add(gm);
+  var gb=gm.clone();gb.position.z=-.08;g.add(gb);
+  // the fang: a curve of segments thick at the root, thin and sharp at the tip
+  var y=.92,x=0,n=9,L=2.6;
+  for(i=0;i<n;i++){var t=i/(n-1),ang=t*t*.8,len=L/n*1.08,wd=.42*(1-t*.8);
+    var s=new THREE.Mesh(GEO.box,ivory);s.scale.set(wd,len,.16*(1-t*.6));
+    s.rotation.z=-ang;s.position.set(x+Math.sin(ang)*len/2,y+Math.cos(ang)*len/2,0);g.add(s);
+    x+=Math.sin(ang)*len*.94;y+=Math.cos(ang)*len*.94;}
+  var tipc=new THREE.Mesh(GEO.cone,ivory);tipc.scale.set(.1,.3,.06);tipc.rotation.z=-.85;tipc.position.set(x+.07,y+.08,0);g.add(tipc);
+  // a red edge down the inside of the curve, like it has been used
+  var edge=new THREE.MeshBasicMaterial({color:0x9a0a1c});
+  y=.92;x=0;for(i=0;i<n-1;i++){var t2=i/(n-1),a2=t2*t2*.8,l2=L/n*1.08,w2=.42*(1-t2*.8);
+    var e=new THREE.Mesh(GEO.box,edge);e.scale.set(.025,l2,.165*(1-t2*.6));e.rotation.z=-a2;
+    e.position.set(x+Math.sin(a2)*l2/2-Math.cos(a2)*w2/2,y+Math.cos(a2)*l2/2+Math.sin(a2)*w2/2,0);g.add(e);
+    x+=Math.sin(a2)*l2*.94;y+=Math.cos(a2)*l2*.94;}
+  var hot=new THREE.Mesh(GEO.sphLo,v4Add(0xff1a34,.5));hot.scale.setScalar(.36);hot.position.set(0,.84,0);hot.userData.aura=true;g.add(hot);
+  g.userData.pulse=hot;g.userData.flareMul=.3;
+  B.emissiveIntensity=.04;
+  function bx2(m,w,h,d,px,py,pz){var o=new THREE.Mesh(GEO.box,m);o.scale.set(w,h,d);o.position.set(px,py,pz);g.add(o);return o;}
+  return y+.3;
+};
+/* A word painted in the air that faces the camera, punches in and fades:
+   the plaque's PARRY!. */
+var RAP_WORDS={};
+function rapWord(txt,col,x,y,z,size,life){
+  if(QUAL===0)return;
+  var m=RAP_WORDS[txt+col];
+  if(!m){var c=cvs(512,160),q=c.getContext("2d");
+    q.font="italic 900 112px Arial Black, Impact, sans-serif";q.textAlign="center";q.textBaseline="middle";
+    q.lineWidth=18;q.strokeStyle="#0b0b10";q.strokeText(txt,256,84);
+    q.fillStyle=col;q.fillText(txt,256,84);
+    q.globalCompositeOperation="source-atop";var gr=q.createLinearGradient(0,30,0,140);gr.addColorStop(0,"rgba(255,255,255,.75)");gr.addColorStop(.5,"rgba(255,255,255,0)");q.fillStyle=gr;q.fillRect(0,0,512,160);
+    m=RAP_WORDS[txt+col]={tex:mkTex(c)};}
+  var mesh=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:m.tex,transparent:true,depthWrite:false,depthTest:false}));
+  mesh.renderOrder=20;mesh.position.set(x,y,z);scene.add(mesh);
+  var t=0;
+  V4FX.push({tick:function(dt){t+=dt;var k=t/life;if(k>=1)return false;
+      var pop=k<.12?k/.12*1.25:k<.22?1.25-(k-.12)/.1*.25:1;
+      mesh.scale.set(size*3.2*pop,size*pop,1);mesh.position.y=y+k*.8;mesh.rotation.z=-.08;
+      mesh.quaternion.copy(camera.quaternion);mesh.material.opacity=k<.7?1:1-(k-.7)/.3;return true;},
+    done:function(){scene.remove(mesh);mesh.material.dispose();}});
+}
+/* A thick black crescent with a red edge all the way round: the Vamp Fang's
+   cut. Drawn normally (not added as light) so the black reads as black. It
+   sweeps across in a few frames, then thins and fades. */
+function rapCrescentShape(mid,half,span,minW){
+  var sh=new THREE.Shape(),N=30,a0=-Math.PI/2-span/2,k,t,a,w;
+  for(k=0;k<=N;k++){t=k/N;a=a0+t*span;w=Math.max(minW,Math.pow(Math.sin(t*Math.PI),.7));
+    var r=mid+half*w;if(k)sh.lineTo(Math.cos(a)*r,Math.sin(a)*r);else sh.moveTo(Math.cos(a)*r,Math.sin(a)*r);}
+  for(k=N;k>=0;k--){t=k/N;a=a0+t*span;w=Math.max(minW,Math.pow(Math.sin(t*Math.PI),.7));
+    var r2=mid-half*w;sh.lineTo(Math.cos(a)*r2,Math.sin(a)*r2);}
+  return sh;
+}
+function rapCrescentGeo(mid,half,span,minW,depth,bev){
+  var g=new THREE.ExtrudeGeometry(rapCrescentShape(mid,half,span,minW),{depth:depth,bevelEnabled:true,bevelThickness:bev,bevelSize:bev*.8,bevelSegments:QUAL>1?3:1,curveSegments:4});
+  g.translate(0,0,-depth/2);return g;
+}
+var RAP_CRES={};
+function rapDarkSlash(f,tilt,span,scale){
+  if(QUAL===0)return;
+  /* A solid crescent with real thickness: black, bevelled so the light rolls
+     off its edges, inside a red shell drawn from the back (a toon outline, so
+     the red runs all the way round it from any angle). It swings in across the
+     cut, two black afterimages trailing it, then thins and fades. */
+  var k=span.toFixed(2);
+  if(!RAP_CRES[k])RAP_CRES[k]={blk:rapCrescentGeo(2.55,.9,span,.03,.18,.11),red:rapCrescentGeo(2.55,1.02,span*1.03,.08,.32,.14)};
+  var G0=RAP_CRES[k];
+  var grp=new THREE.Group(),sweep=new THREE.Group(),inner=new THREE.Group();grp.add(sweep);sweep.add(inner);
+  var parts=[];
+  function add(geo,mat,op,par,order){var m=new THREE.Mesh(geo,mat);m.rotation.x=-Math.PI/2;m.renderOrder=order;(par||inner).add(m);parts.push({m:m,op:op});return m;}
+  add(G0.red,new THREE.MeshBasicMaterial({color:0xff1a34,side:THREE.BackSide,transparent:true,toneMapped:false}),1,null,6);
+  add(G0.blk,new THREE.MeshPhongMaterial({color:0x040203,specular:0x6a1a28,shininess:110,transparent:true}),1,null,7);
+  if(QUAL>1)[[.28,.5],[.56,.25]].forEach(function(e){var eg=new THREE.Group();eg.rotation.y=-e[0];inner.add(eg);
+    add(G0.blk,new THREE.MeshBasicMaterial({color:0x0c070a,transparent:true,depthWrite:false}),e[1],eg,5);
+    add(G0.red,new THREE.MeshBasicMaterial({color:0xff1a34,side:THREE.BackSide,transparent:true,depthWrite:false,toneMapped:false}),e[1]*.6,eg,4);});
+  grp.position.set(f.pos.x,f.y+1.9,f.pos.z);grp.rotation.order="YZX";grp.rotation.y=f.yaw;grp.rotation.z=tilt;grp.scale.setScalar(scale*(1+Math.min(1.7,f.bladeReach||1)*.2));
+  scene.add(grp);
+  var t=0;
+  V4FX.push({tick:function(dt){t+=dt;
+      // the sweep: it comes round from behind the cut into place
+      var sw=Math.min(1,t/.1);sweep.rotation.y=-(1-sw)*(1-sw)*1.1;
+      var fade=t<.14?Math.min(1,t/.03):Math.max(0,1-(t-.14)/.3);
+      parts.forEach(function(p){p.m.material.opacity=p.op*fade;p.m.material.depthWrite=fade>.98&&p.op>=1;});
+      inner.scale.y=1-(1-Math.min(1,fade))*.6*(t>.14?1:0);inner.scale.z=1-(t>.14?(1-fade)*.4:0);
+      if(t>=.46)return false;return true;},
+    done:function(){scene.remove(grp);parts.forEach(function(p){p.m.material.dispose();});}});
+}
+/* THE VAMP FANG'S CUT: two thick black crescents edged in red, crossing;
+   a shockwave, a spray of droplets, and a few bats out of the cut. */
+function vampFangFx(f,tip){
+  var X=f.pos.x,Y=f.y,Z=f.pos.z,fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),k,a,hi=QUAL>1;
+  rapDarkSlash(f,.55,4.6,1.4);
+  rapDarkSlash(f,-.5,3.6,1.1);
+  ringBurst(tip.x,tip.y,tip.z,hi?34:16,13,0xff1a34,1.8,.6);
+  burst(tip.x,tip.y,tip.z,hi?34:14,11,0xc8102a,1.5,.45,-6);
+  // blood: heavy droplets thrown along the cut, falling hard
+  for(k=0;k<(hi?40:16);k++){a=f.yaw+hr(-1.1,1.1);
+    spark(tip.x,tip.y,tip.z,Math.sin(a)*hr(4,11),hr(1,6),Math.cos(a)*hr(4,11),hr(.6,.9),0,hr(0,.08),hr(.35,.7),hr(.5,.9),14);}
+  // the swarm: a ring of bats bursting out round you, and a stream off the blade
+  rapBats(X,Y+2,Z,hi?3:2,0,0,true);
+  rapBats(tip.x,tip.y,tip.z,hi?2:1,fx,fz);
+  if(f===player)shakeCam(.14);
+}
+/* Bats: little black silhouettes flapping up and away from a cut. */
+var RAP_BAT=null;
+function rapBatTex(){
+  if(RAP_BAT)return RAP_BAT;
+  var c=cvs(128,64),q=c.getContext("2d");q.fillStyle="#1a0c16";q.strokeStyle="#ff2a4a";q.lineWidth=5;q.lineJoin="round";
+  q.beginPath();q.moveTo(64,26);q.quadraticCurveTo(40,4,4,14);q.quadraticCurveTo(18,22,14,34);q.quadraticCurveTo(26,30,30,40);q.quadraticCurveTo(40,32,48,42);
+  q.quadraticCurveTo(56,38,64,46);q.quadraticCurveTo(72,38,80,42);q.quadraticCurveTo(88,32,98,40);q.quadraticCurveTo(102,30,114,34);q.quadraticCurveTo(110,22,124,14);q.quadraticCurveTo(88,4,64,26);q.stroke();q.fill();
+  q.beginPath();q.arc(64,30,8,0,Math.PI*2);q.fill();
+  q.beginPath();q.moveTo(58,24);q.lineTo(56,14);q.lineTo(62,22);q.moveTo(70,24);q.lineTo(72,14);q.lineTo(66,22);q.fill();
+  q.fillStyle="#ff2040";q.fillRect(59,28,3,3);q.fillRect(66,28,3,3);
+  return RAP_BAT=mkTex(c);
+}
+function rapBats(x,y,z,n,dirx,dirz,ring){
+  if(QUAL===0)return;
+  var tex=rapBatTex();
+  for(var i=0;i<n;i++)(function(i){
+    var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+    var ra=i/n*TAU+hr(-.2,.2),sp=hr(6,10);
+    var sz=hr(1.3,2.3),vx=ring?Math.sin(ra)*sp:dirx*hr(4,8)+hr(-3,3),vy=ring?hr(.5,3):hr(1.5,4),vz=ring?Math.cos(ra)*sp:dirz*hr(4,8)+hr(-3,3),t=0,life=hr(1,1.5),ph=hr(0,6);
+    m.position.set(x+hr(-.3,.3),y+hr(-.3,.3),z+hr(-.3,.3));scene.add(m);
+    V4FX.push({tick:function(dt){t+=dt;if(t>=life)return false;
+        m.position.x+=vx*dt;m.position.y+=vy*dt;m.position.z+=vz*dt;vy+=2.5*dt;vx*=1-dt*.9;vz*=1-dt*.9;
+        // they wheel as they go, and leave a red trail
+        var c=Math.cos(dt*2.2),sn=Math.sin(dt*2.2),ox=vx;vx=vx*c-vz*sn;vz=ox*sn+vz*c;
+        if(QUAL>1&&Math.random()<.5)spark(m.position.x,m.position.y,m.position.z,0,0,0,1,.1,.2,.35,.35,0);
+        m.quaternion.copy(camera.quaternion);
+        var fl=.45+.55*Math.abs(Math.sin(t*26+ph));m.scale.set(sz*fl,sz*.5,1);
+        m.material.opacity=t/life<.7?1:1-(t/life-.7)/.3;return true;},
+      done:function(){scene.remove(m);m.material.dispose();}});
+  })(i);
+}
 // DIVINE RIGHT -- a silver-blue blade with a rune channel lit cyan, barbed
 // flanges near the guard, a gold guard spreading into two great glowing
 // wings, a star-orb at the heart, a gold-wound grip and an orb pommel
@@ -11258,6 +11548,17 @@ Object.assign(SKIN_FX,{
   s1meatskin:{c:0xff2a4a,rate:8,vy:[-.3,.5],g:2,sz:.4,life:.7,r:.6}
 });
 Object.assign(SIG_SKIN_ICON,{
+  cartwheel:"<circle cx='20' cy='13' r='9.5' fill='#7b4a2d' stroke='#0b1942' stroke-width='1.6'/>"+
+    "<path d='M11 9v10M13.5 6v12M26.5 6v12M29 9v10M15 5.5l1 5M20 4v4M25 5.5l-1 5' stroke='#18120f' stroke-width='2.6' stroke-linecap='round'/>"+
+    "<circle cx='16.5' cy='13' r='2.6' fill='#fff'/><circle cx='16.6' cy='13' r='1.5' fill='#ff1a34'/><path d='M21.5 13.4q2-2 4 0' stroke='#140d0b' stroke-width='1.3' fill='none'/>"+
+    "<path d='M16 17.5q4 3 8 0z' fill='#5a0d14'/><path d='M17.6 17.8l.6 1.6.6-1.5M21.2 17.8l.6 1.6.6-1.5' fill='#fff'/>"+
+    "<rect x='10' y='23' width='20' height='13' rx='2' fill='#141416' stroke='#0b1942' stroke-width='1.6'/><path d='M14 24.5q6 4 12 0' stroke='#e4e8ee' stroke-width='1.2' fill='none'/>"+
+    "<path d='M20 27v5M18.2 28.4h3.6' stroke='#e4e8ee' stroke-width='1.2'/><rect x='10' y='33' width='20' height='2.4' fill='#d0142a'/>",
+  lilvertigo:"<circle cx='20' cy='14' r='9' fill='#6e4228' stroke='#0b1942' stroke-width='1.6'/>"+
+    "<path d='M14 7l-2-6M18 6l-1-6M22 6l1-6M26 7l2-6M12 10l-4 8M28 10l4 8' stroke='#9b3cff' stroke-width='2.6' stroke-linecap='round'/>"+
+    "<rect x='12' y='11' width='16' height='3.6' rx='1' fill='#0a0a10'/><path d='M17 18.5h6v1.2' stroke='#4a0c12' stroke-width='2'/><rect x='18.5' y='19' width='3' height='3' rx='1' fill='#f0607a'/>"+
+    "<rect x='9' y='24' width='22' height='13' rx='3' fill='#7a2ed8' stroke='#0b1942' stroke-width='1.6'/><rect x='18.5' y='24' width='3' height='13' fill='#141416'/>"+
+    "<path d='M13 28l.6 1.4 1.5.1-1.2.9.4 1.5-1.3-.9-1.3.9.4-1.5-1.2-.9 1.5-.1zM27 31l.6 1.4 1.5.1-1.2.9.4 1.5-1.3-.9-1.3.9.4-1.5-1.2-.9 1.5-.1z' fill='#a45cff'/>",
   plone:"<ellipse cx='20' cy='13' rx='8.5' ry='10.5' fill='#d9d6cc' stroke='#0b1942' stroke-width='1.6'/><path d='M12 9l-3-6 5 3 1-5 3 4 3-4 2 4 3-3v6' fill='#a6dcec' stroke='#0b1942' stroke-width='1.2'/>"+
     "<path d='M13 9q3.5-1.6 7 0t7 0' stroke='#8fc6d8' stroke-width='1.6' fill='none'/>"+
     "<circle cx='16.5' cy='12.5' r='3' fill='#fff' stroke='#101010' stroke-width='.9'/><circle cx='23.5' cy='12.5' r='3' fill='#fff' stroke='#101010' stroke-width='.9'/>"+
@@ -14368,14 +14669,229 @@ var EVENT_SHOPS={
   wendigo:{name:"THE WENDIGO SHRINE",tab:"sword",id:"wendigo",yen:2000,
     from:Date.UTC(2026,9,1,7,0,0),to:Date.UTC(2026,9,8,7,0,0)}
 };
+/* ---- THE RAP PACK ----
+   Two rappers who are definitely not anybody you have heard of, a platinum
+   plaque you hit people with, a vampire's fang, and a stage dive that goes
+   about as well as they usually do. */
+var RAP_CYL=null;
+function rapCyl(){return RAP_CYL||(RAP_CYL=new THREE.CylinderGeometry(.5,.42,1,6));}
+// the stock head goes; a big round cartoon one, ears, a neck
+function rapHead(f,g,box,skinCol){
+  (f.headParts||[]).forEach(function(m){m.visible=false;});
+  var skin=new THREE.MeshLambertMaterial({color:skinCol});
+  var hd=new THREE.Group();hd.position.set(0,3.2,0);g.add(hd);
+  var head=new THREE.Mesh(GEO.sph,skin);head.scale.set(1.18,1.1,1.08);hd.add(head);
+  box(.3,.3,.3,0,2.62,0,skin);
+  for(var sd=-1;sd<=1;sd+=2){var ear=new THREE.Mesh(GEO.sphLo,skin);ear.scale.set(.15,.24,.15);ear.position.set(sd*.58,-.04,0);hd.add(ear);}
+  return {hd:hd,skin:skin};
+}
+/* Dreads: each one a tapered six-sided rope rooted on the scalp. `droop`
+   bends it from straight out (0) to hanging straight down (1). The face is
+   kept clear except for a fringe over the forehead. */
+function rapDreads(hd,mat,o){
+  var Y=new THREE.Vector3(0,1,0),n=new THREE.Vector3(),q=new THREE.Quaternion(),tipMat=o.tip||mat;
+  var rows=o.rows;
+  for(var r=0;r<rows.length;r++){var R=rows[r];
+    for(var k=0;k<R.n;k++){
+      var th=(R.from+(R.to-R.from)*(R.n>1?k/(R.n-1):.5))*Math.PI/180,el=R.el*Math.PI/180;
+      var px=.59*Math.cos(el)*Math.sin(th),py=.55*Math.sin(el),pz=.54*Math.cos(el)*Math.cos(th);
+      n.set(px,py,pz).normalize();
+      var d=R.droop+(Math.sin(k*7.3+r)*.06);
+      n.multiplyScalar(1-d).add(new THREE.Vector3(0,-d,0)).normalize();
+      if(R.out)n.x+=Math.sign(px)*R.out,n.normalize();
+      var len=R.len*(.85+.3*((Math.sin(k*3.1+r*1.7)+1)/2)),rad=R.r||.075;
+      var m=new THREE.Mesh(rapCyl(),mat);m.scale.set(rad*2,len,rad*2);
+      q.setFromUnitVectors(Y,n);m.quaternion.copy(q);
+      m.position.set(px+n.x*len/2*.92,py+n.y*len/2*.92,pz+n.z*len/2*.92);hd.add(m);
+      if(o.beads&&r===0){var b=new THREE.Mesh(GEO.sphLo,tipMat);b.scale.setScalar(rad*1.9);
+        b.position.set(px+n.x*len*.95,py+n.y*len*.95,pz+n.z*len*.95);hd.add(b);}
+    }
+  }
+  // a cap of hair over the crown so the roots never show scalp
+  var cap=new THREE.Mesh(DRIP_LID.cap,mat);cap.scale.set(1.22,1.16,1.12);cap.rotation.x=-.12;hd.add(cap);
+}
+function rapChain(g,box){
+  var silver=v4Phong(0xe4e8ee,140,0x30343a,.25);
+  var ch=new THREE.Mesh(new THREE.TorusGeometry(.34,.03,6,22),silver);ch.position.set(0,2.4,.12);ch.rotation.x=-1.3;g.add(ch);
+  return silver;
+}
+function rapCanvasPlane(w,h,cw,ch,draw){
+  var c=cvs(cw,ch),x=c.getContext("2d");draw(x,cw,ch);
+  var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(c),transparent:true,depthWrite:false}));
+  m.scale.set(w,h,1);return m;
+}
+// a red sigil: jagged and hand-drawn, nobody's logo
+function rapSigil(x,w,h,col){
+  x.strokeStyle=col;x.fillStyle=col;x.lineCap="round";x.lineJoin="round";x.lineWidth=w*.07;
+  var cx=w/2,cy=h/2;
+  x.beginPath();x.moveTo(cx,h*.08);x.lineTo(cx,h*.92);x.stroke();
+  x.beginPath();x.moveTo(w*.18,h*.34);x.lineTo(w*.82,h*.34);x.stroke();
+  x.lineWidth=w*.05;
+  x.beginPath();x.moveTo(w*.22,h*.6);x.lineTo(w*.42,h*.5);x.lineTo(w*.58,h*.7);x.lineTo(w*.78,h*.58);x.stroke();
+  x.beginPath();x.moveTo(w*.24,h*.14);x.lineTo(w*.36,h*.24);x.moveTo(w*.76,h*.14);x.lineTo(w*.64,h*.24);x.stroke();
+  x.beginPath();x.moveTo(w*.3,h*.86);x.lineTo(w*.4,h*.76);x.moveTo(w*.7,h*.86);x.lineTo(w*.6,h*.76);x.stroke();
+}
+function rapFangs(hd,y,z,s){
+  var white=new THREE.MeshBasicMaterial({color:0xffffff});
+  for(var sd=-1;sd<=1;sd+=2){var fg=new THREE.Mesh(GEO.cone,white);fg.scale.set(.05*s,.1*s,.05*s);fg.rotation.x=Math.PI;fg.position.set(sd*.085*s,y,z);hd.add(fg);}
+}
+/* PLAYBOI CARTWHEEL: black dreads over a red-eyed, fanged grin (one eye winking),
+   a black long-sleeve with red marks, a silver chain and cross, a red belt
+   with a chain off it, baggy black pants, black-and-red sneakers. */
+SIG_SKIN.cartwheel=function(f,g,sk,box,glowM,darkM,bodyM){
+  var sd,H=rapHead(f,g,box,0x7b4a2d),hd=H.hd;
+  var ink=new THREE.MeshBasicMaterial({color:0x140d0b}),white=new THREE.MeshBasicMaterial({color:0xffffff});
+  var red=new THREE.MeshLambertMaterial({color:0xd0142a}),redGlow=new THREE.MeshBasicMaterial({color:0xff1a34});
+  var black=new THREE.MeshLambertMaterial({color:0x141416}),hair=new THREE.MeshLambertMaterial({color:0x18120f});
+  f.mLimb.color.setHex(0x141416);
+  // long sleeves: black down to the wrist
+  f.arms.forEach(function(a){a.children.forEach(function(c){if(c.position.y<-1.18)c.material=H.skin;else c.material=black;});});
+  // red marks down the sleeves
+  f.arms.forEach(function(a,i){var m=rapCanvasPlane(.22,.42,64,128,function(x,w,h){rapSigil(x,w,h,"#e0162e");});m.position.set(0,-.62,.17);a.add(m);});
+  // baggy black pants with a red stripe; black sneakers with red soles and toe caps
+  f.legs.forEach(function(l,i){var s=i?1:-1;
+    l.children.forEach(function(c){c.material=c.position.y<-1.25?black:black;if(c.position.y>-1.2)c.scale.x*=1.12,c.scale.z*=1.1;});
+    var st=new THREE.Mesh(GEO.box,red);st.scale.set(.03,1.0,.12);st.position.set(s*.225,-.6,0);l.add(st);
+    var so=new THREE.Mesh(GEO.box,red);so.scale.set(.38,.07,.58);so.position.set(0,-1.37,.11);l.add(so);
+    var toe=new THREE.Mesh(GEO.box,red);toe.scale.set(.3,.1,.12);toe.position.set(0,-1.27,.38);l.add(toe);});
+  // the dreads: a fringe over the forehead, the rest hanging to the shoulders
+  rapDreads(hd,hair,{rows:[
+    {n:9,from:-70,to:70,el:62,len:.24,droop:.55,r:.07},          // fringe, short, over the brow
+    {n:7,from:55,to:180,el:38,len:.62,droop:.72},{n:7,from:-180,to:-55,el:38,len:.62,droop:.72},
+    {n:6,from:-48,to:48,el:44,len:.22,droop:.5,r:.07},
+    {n:10,from:95,to:265,el:10,len:.72,droop:.8},
+    {n:4,from:52,to:84,el:16,len:.58,droop:.82},{n:4,from:-84,to:-52,el:16,len:.58,droop:.82}]});
+  // the face: one red eye open, the other winking; blush; a grin with fangs
+  var ew=new THREE.Mesh(GEO.sph,white);ew.scale.set(.2,.17,.06);ew.position.set(-.2,.06,.5);hd.add(ew);
+  var ir=new THREE.Mesh(GEO.sphLo,redGlow);ir.scale.set(.1,.11,.03);ir.position.set(-.19,.05,.53);hd.add(ir);
+  var pu=new THREE.Mesh(GEO.sphLo,ink);pu.scale.set(.045,.05,.02);pu.position.set(-.19,.05,.545);hd.add(pu);
+  var wink=new THREE.Mesh(new THREE.TorusGeometry(.085,.022,4,10,Math.PI),ink);wink.position.set(.2,.03,.52);hd.add(wink);
+  var brow=new THREE.Mesh(GEO.box,ink);brow.scale.set(.18,.03,.03);brow.position.set(-.2,.2,.52);brow.rotation.z=-.15;hd.add(brow);
+  var blush=new THREE.MeshBasicMaterial({color:0xff5a6a,transparent:true,opacity:.55,depthWrite:false});
+  for(sd=-1;sd<=1;sd+=2){var bl=new THREE.Mesh(GEO.sphLo,blush);bl.scale.set(.12,.06,.02);bl.position.set(sd*.3,-.1,.48);hd.add(bl);}
+  var mouth=new THREE.Mesh(GEO.sph,new THREE.MeshBasicMaterial({color:0x5a0d14}));mouth.scale.set(.3,.15,.06);mouth.position.set(0,-.22,.48);hd.add(mouth);
+  var teeth=new THREE.Mesh(GEO.box,white);teeth.scale.set(.24,.04,.03);teeth.position.set(0,-.17,.515);hd.add(teeth);
+  rapFangs(hd,-.215,.525,1);
+  var tongue=new THREE.Mesh(GEO.sphLo,new THREE.MeshBasicMaterial({color:0xe85a6a}));tongue.scale.set(.14,.06,.03);tongue.position.set(0,-.26,.5);hd.add(tongue);
+  for(sd=-1;sd<=1;sd+=2){var stud=new THREE.Mesh(new THREE.OctahedronGeometry(.05),white);stud.position.set(sd*.6,-.16,.04);hd.add(stud);}
+  // the shirt's red sigil
+  var em=rapCanvasPlane(.5,.5,128,128,function(x,w,h){rapSigil(x,w,h,"#e0162e");});em.position.set(0,2.18,.366);g.add(em);
+  // chain and a cross
+  var silver=rapChain(g,box);
+  box(.06,.3,.04,0,2.02,.36,silver);box(.18,.06,.04,0,2.08,.36,silver);
+  // a red belt, a silver buckle, and a chain looping off the hip
+  box(.98,.16,.58,0,1.46,0,red);box(.2,.12,.05,0,1.46,.3,silver);
+  for(var i=0;i<6;i++){var a=i/5,l=new THREE.Mesh(new THREE.TorusGeometry(.055,.018,4,8),silver);
+    l.position.set(-.18-a*.3,1.4-Math.sin(a*Math.PI)*.28,.3-a*.06);l.rotation.y=i%2?Math.PI/2:0;g.add(l);}
+  f.sig={kind:"cartwheel",hd:hd,wink:wink,ew:ew,ir:ir,pu:pu};
+};
+/* LIL VERTIGO: purple dreads standing up and spilling over, black shades,
+   tongue out with fangs, a purple puffer over a black tee, a silver chain,
+   black cargo pants and chunky purple shoes. */
+SIG_SKIN.vertigo=function(f,g,sk,box,glowM,darkM,bodyM){
+  var sd,i,H=rapHead(f,g,box,0x6e4228),hd=H.hd;
+  var ink=new THREE.MeshBasicMaterial({color:0x0c0a0e}),white=new THREE.MeshBasicMaterial({color:0xffffff});
+  var purple=new THREE.MeshLambertMaterial({color:0x7a2ed8}),purple2=new THREE.MeshLambertMaterial({color:0x5a1fa8});
+  var hairM=new THREE.MeshLambertMaterial({color:0x9b3cff,emissive:0x3a0a6a,emissiveIntensity:.45});
+  var black=new THREE.MeshLambertMaterial({color:0x141416}),grey=new THREE.MeshLambertMaterial({color:0x26262c});
+  f.mLimb.color.setHex(0x141416);
+  // puffy purple sleeves, quilted: the arm parts go purple and swell, the hands stay hands
+  f.arms.forEach(function(a){a.children.forEach(function(c){if(c.position.y<-1.18)c.material=H.skin;else{c.material=purple;c.scale.x*=1.25;c.scale.z*=1.25;}});
+    for(var k=0;k<3;k++){var p=new THREE.Mesh(GEO.sph,k%2?purple2:purple);p.scale.set(.46,.3,.46);p.position.set(0,-.22-k*.32,0);a.add(p);}});
+  // cargo pants with a pocket on each thigh; chunky purple shoes on white soles
+  f.legs.forEach(function(l,i){var s=i?1:-1;
+    l.children.forEach(function(c){c.material=black;if(c.position.y>-1.2)c.scale.x*=1.1,c.scale.z*=1.08;});
+    var pk=new THREE.Mesh(GEO.box,grey);pk.scale.set(.06,.3,.26);pk.position.set(s*.23,-.5,0);l.add(pk);
+    var sh=new THREE.Mesh(GEO.box,purple);sh.scale.set(.42,.2,.62);sh.position.set(0,-1.26,.12);l.add(sh);
+    var so=new THREE.Mesh(GEO.box,new THREE.MeshLambertMaterial({color:0xf0eef6}));so.scale.set(.44,.07,.64);so.position.set(0,-1.38,.12);l.add(so);});
+  // the puffer: two quilted panels open over the black tee, a high collar
+  for(sd=-1;sd<=1;sd+=2){
+    var pn=new THREE.Mesh(GEO.box,purple);pn.scale.set(.36,1.02,.68);pn.position.set(sd*.37,1.98,0);g.add(pn);
+    for(i=0;i<3;i++){var q=new THREE.Mesh(GEO.box,purple2);q.scale.set(.37,.04,.69);q.position.set(sd*.37,1.66+i*.3,0);g.add(q);}
+    // camo stars: lighter purple, scattered
+    var cm=rapCanvasPlane(.32,.9,64,160,function(x,w,h){x.fillStyle="#a45cff";
+      [[.3,.15],[.7,.4],[.35,.62],[.72,.85]].forEach(function(p,j){var cx=p[0]*w,cy=p[1]*h,r=w*(.16+(j%2)*.06);x.beginPath();
+        for(var t=0;t<10;t++){var a=t*Math.PI/5-Math.PI/2,rr2=t%2?r*.45:r;x.lineTo(cx+Math.cos(a)*rr2,cy+Math.sin(a)*rr2);}x.closePath();x.fill();});});
+    cm.position.set(sd*.37,1.98,.345);g.add(cm);
+  }
+  box(.9,.18,.66,0,2.56,0,purple);
+  // the dreads: standing up off the crown and spilling down the sides and back
+  rapDreads(hd,hairM,{beads:true,tip:new THREE.MeshLambertMaterial({color:0xc58aff}),rows:[
+    {n:7,from:-150,to:150,el:80,len:.55,droop:.0,r:.085},
+    {n:8,from:-150,to:150,el:66,len:.5,droop:.3},
+    {n:12,from:-170,to:170,el:44,len:.62,droop:.86},
+    {n:9,from:-60,to:60,el:58,len:.24,droop:.5,r:.07},                // a short fringe
+    {n:10,from:90,to:270,el:16,len:.66,droop:.88},
+    {n:3,from:58,to:82,el:18,len:.5,droop:.9},{n:3,from:-82,to:-58,el:18,len:.5,droop:.9}]});
+  // the shades: black, wide, with a glint
+  var gl=v4Phong(0x0a0a10,160,0x000000,0);
+  var bar=new THREE.Mesh(GEO.box,gl);bar.scale.set(.66,.07,.05);bar.position.set(0,.12,.53);hd.add(bar);
+  for(sd=-1;sd<=1;sd+=2){var ln=new THREE.Mesh(GEO.box,gl);ln.scale.set(.26,.17,.06);ln.position.set(sd*.17,.05,.535);hd.add(ln);
+    var gt=new THREE.Mesh(GEO.box,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.75}));gt.scale.set(.06,.03,.01);gt.position.set(sd*.17-.06,.1,.57);gt.rotation.z=.6;hd.add(gt);}
+  // tongue out, fangs
+  var mouth=new THREE.Mesh(GEO.sph,new THREE.MeshBasicMaterial({color:0x4a0c12}));mouth.scale.set(.24,.14,.06);mouth.position.set(0,-.22,.48);hd.add(mouth);
+  rapFangs(hd,-.19,.525,.9);
+  var tongue=new THREE.Mesh(GEO.box,new THREE.MeshLambertMaterial({color:0xf0607a}));tongue.scale.set(.13,.16,.05);tongue.position.set(0,-.33,.53);tongue.rotation.x=.35;hd.add(tongue);
+  for(sd=-1;sd<=1;sd+=2){var stud=new THREE.Mesh(new THREE.OctahedronGeometry(.05),white);stud.position.set(sd*.6,-.16,.04);hd.add(stud);}
+  rapChain(g,box);
+  f.sig={kind:"vertigo",hd:hd,tongue:tongue};
+};
+
+// the stage dive: hype the crowd, dive, and there is no crowd. Dust when you
+// land, then cartoon stars circling your head while you lie there
+var RAP_STAR=null;
+function rapStarTex(){
+  if(RAP_STAR)return RAP_STAR;
+  var c=cvs(64,64),q=c.getContext("2d");q.beginPath();
+  for(var t=0;t<10;t++){var a=t*Math.PI/5-Math.PI/2,r=t%2?11:28;q.lineTo(32+Math.cos(a)*r,32+Math.sin(a)*r);}
+  q.closePath();q.fillStyle="#ffe14a";q.fill();q.lineWidth=4;q.strokeStyle="#0b0b10";q.stroke();
+  return RAP_STAR=mkTex(c);
+}
+function rapStageDiveFx(f){
+  var t=0,landed=false,stars=[],tex=rapStarTex(),fx=Math.sin(f.yaw),fz=Math.cos(f.yaw);
+  try{tone(300,900,.5,"square",.05);}catch(e){}
+  V4FX.push({tick:function(dt){t+=dt;
+      if(!f.alive||!(f.tauntT>0)||f.tauntK!=="stagedive")return false;
+      if(t>.7&&f.bubT>.05)f.bubT=.05;                // the bubble would flip over with you
+      if(!landed&&t>=1.18){landed=true;
+        var X=f.pos.x+fx*5,Z=f.pos.z+fz*5;
+        try{noiseHit(.25,.4,500);tone(140,50,.3,"sine",.25);}catch(e){}
+        for(var k=0;k<(QUAL>1?22:10);k++){var a=Math.random()*TAU;
+          spark(X+Math.cos(a)*hr(.2,1.4),f.y+.2,Z+Math.sin(a)*hr(.2,1.4),Math.cos(a)*hr(1,3),hr(.5,2),Math.sin(a)*hr(1,3),.75,.68,.6,hr(.5,.9),hr(.4,.7),3);}
+        for(var s=0;s<3;s++){var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false}));
+          m.scale.setScalar(.55);scene.add(m);stars.push(m);}
+        try{setTimeout(function(){tone(1400,1900,.12,"triangle",.04);setTimeout(function(){tone(1700,2300,.12,"triangle",.04);},140);},150);}catch(e){}
+      }
+      if(landed){var hx=f.pos.x+fx*6.4,hz=f.pos.z+fz*6.4,hy=f.y+1.25;
+        for(var i=0;i<stars.length;i++){var a2=t*5+i*TAU/3;
+          stars[i].position.set(hx+Math.cos(a2)*.8,hy+Math.sin(a2*2)*.1,hz+Math.sin(a2)*.8);
+          stars[i].quaternion.copy(camera.quaternion);stars[i].rotateZ(t*6+i);}}
+      return true;},
+    done:function(){if(f.sword)f.sword.visible=true;(f._sdHid||[]).forEach(function(r){r.visible=true;});f._sdHid=null;stars.forEach(function(m){scene.remove(m);m.material.dispose();});}});
+}
 /* ---- PACKS: several items for one price, only from the pack ---- */
 var PACKS={
   interdim:{name:"INTERDIMENSIONAL PACK",yen:1500,col:"#6bff3a",
     items:[["skin","cucci"],["skin","plone"],["sword","portalgun"],["emote","portal"]],
     desc:"Cucci and Plone (skins), the Portal Gun (blade) and the Peace Out emote. Only in this pack, and only for one week.",
     // the stand opens and closes with the Wendigo shrine
-    from:EVENT_SHOPS.wendigo.from,to:EVENT_SHOPS.wendigo.to}
+    from:EVENT_SHOPS.wendigo.from,to:EVENT_SHOPS.wendigo.to},
+  // the week after: the stand turns over to the Rap Pack. The fifth thing in it
+  // is a secret: a ? on the stand until you own it
+  rap:{name:"RAP PACK",yen:1800,col:"#ff1a34",trailer:"rap_trailer.mp4",poster:"rap_trailer.jpg",
+    items:[["skin","cartwheel"],["skin","lilvertigo"],["sword","plaque"],["emote","stagedive"],["sword","vampfang"]],
+    secret:{sword:{vampfang:1}},
+    desc:"Playboi Cartwheel and Lil Vertigo (skins), the Platinum Plaque (blade), the Stage Dive emote... and a secret bonus. Only in this pack, and only for one week.",
+    from:EVENT_SHOPS.wendigo.to,to:EVENT_SHOPS.wendigo.to+7*864e5}
 };
+// the pack the stand is showing: the one on sale, or the next to open
+function curPackKey(){var now=Date.now(),best=null;
+  for(var k in PACKS){var P=PACKS[k];if(now>=P.to)continue;if(!best||P.from<PACKS[best].from)best=k;}
+  return best;}
+// which pack an item comes from
+function packOf(tab,id){for(var k in PACKS)if(PACKS[k].items.some(function(q){return q[0]===tab&&q[1]===id;}))return k;return null;}
+function packTitle(P){return P.name.toLowerCase().replace(/(^|\s)\S/g,function(c){return c.toUpperCase();});}
+function packSecret(P,tab,id){return !!(P.secret&&P.secret[tab]&&P.secret[tab][id]);}
 
 // Rodriga: one item a month, for a Rodriga token. A token is a one in ten thousand
 // drop from any match, of any kind
@@ -14798,7 +15314,8 @@ function renderPicker(fresh){
   // secret code items stay secret until you have them, and pass items you
   // never got go once the season is over
   // everything is listed, owned or not: what you do not have shows locked
-  var list=d.list.slice();
+  // (a pack's secret bonus is the exception: not listed until it is yours)
+  var list=d.list.filter(function(it){if(it.secret&&!d.own[it.id]){var pk=packOf(tab,it.id);return !(pk&&packSecret(PACKS[pk],tab,it.id));}return true;});
   var owned=list.filter(function(it){return d.own[it.id];});
   list=owned.concat(list.filter(function(it){return !d.own[it.id];}));
   $("pickSub").textContent=owned.length+" / "+list.length+" OWNED";
@@ -14841,9 +15358,9 @@ function renderPickDetail(it){
   else if(it.event==="wendigo"){var EW=EVENT_SHOPS.wendigo,nw=Date.now();
     btn=nw>=EW.to?"<button class='big ghost' disabled>GONE FOREVER</button><div class='dnote'>It was only at the Wendigo shrine for one week.</div>":
       "<button class='big' id='pdAct'>WENDIGO SHRINE &middot; "+EW.yen.toLocaleString()+" YEN</button><div class='dnote'>"+(nw<EW.from?"The shrine beside Gnorman opens in "+evtLeft(EW.from-nw)+".":"At the shrine beside Gnorman for "+evtLeft(EW.to-nw)+" more.")+"</div>";}
-  else if(it.event==="pack"){var PK=PACKS.interdim,pn=Date.now();
-    btn=pn>=PK.to?"<button class='big ghost' disabled>GONE FOREVER</button><div class='dnote'>It was only in the Interdimensional Pack.</div>":
-      "<button class='big' id='pdAct'>PACK STAND &middot; "+PK.yen.toLocaleString()+" YEN</button><div class='dnote'>Only in the Interdimensional Pack, at the stand beside Gnorman. "+(pn<PK.from?"Opens in "+evtLeft(PK.from-pn)+".":"Gone in "+evtLeft(PK.to-pn)+".")+"</div>";}
+  else if(it.event==="pack"){var PK=PACKS[packOf(tab,it.id)||"interdim"],pn=Date.now();
+    btn=pn>=PK.to?"<button class='big ghost' disabled>GONE FOREVER</button><div class='dnote'>It was only in the "+packTitle(PK)+".</div>":
+      "<button class='big' id='pdAct'>PACK STAND &middot; "+PK.yen.toLocaleString()+" YEN</button><div class='dnote'>Only in the "+packTitle(PK)+", at the stand beside Gnorman. "+(pn<PK.from?"Opens in "+evtLeft(PK.from-pn)+".":"Gone in "+evtLeft(PK.to-pn)+".")+"</div>";}
   else if(it.event==="rodriga")
     btn="<button class='big' id='pdAct'>RODRIGA'S SHACK &middot; 1 TOKEN</button><div class='dnote'>Rodriga sells it for a Rodriga token, behind where you come into the lobby.</div>";
   else if(it.season===0)
@@ -14912,7 +15429,7 @@ function renderEmoteDetail(){
     h+="</div><div class='dnote'>Hold <b>"+keyName(bindKey("emote"))+"</b> (or the TAUNT button) in a match, point, and let go.</div>";
   } else if(tk.pack){
     var PK=PACKS[tk.pack],pn=Date.now();
-    h+=pn>=PK.to?"<button class='big ghost' disabled>GONE FOREVER</button>":"<button class='big' id='pdAct'>PACK STAND &middot; "+PK.yen.toLocaleString()+" YEN</button><div class='dnote'>Only in the Interdimensional Pack.</div>";
+    h+=pn>=PK.to?"<button class='big ghost' disabled>GONE FOREVER</button>":"<button class='big' id='pdAct'>PACK STAND &middot; "+PK.yen.toLocaleString()+" YEN</button><div class='dnote'>Only in the "+packTitle(PK)+".</div>";
   }
   box.innerHTML=h;
   [].forEach.call(box.querySelectorAll(".emslot"),function(b){b.addEventListener("click",function(){

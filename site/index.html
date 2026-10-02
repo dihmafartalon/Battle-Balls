@@ -665,6 +665,14 @@ details.move[open] summary::before{transform:rotate(90deg)}
 @media (max-width:640px){.evtgrid{grid-template-columns:1fr}}
 .evtpic{display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px;text-align:center}
 .evtpic.portal{background:radial-gradient(90% 70% at 50% 40%,#1e5a1a 0%,#081a0a 70%)}
+.evtpic.rap{background:radial-gradient(90% 70% at 50% 40%,#4a0a16 0%,#12060a 70%)}
+.packitems .pi.sec{box-shadow:inset 0 0 0 2px #ff1a34}.packitems .pi.sec b{color:#ff6a7a}
+/* the trailer for the pack that's coming */
+.trailerpop .gpcard{--gc:#ff1a34;width:min(760px,100%);padding:30px 16px 16px}
+.trailerpop video{width:100%;border-radius:12px;border:3px solid var(--nv);background:#000;display:block;aspect-ratio:16/9}
+.trailerpop .tpsub{margin:2px 0 10px;font-weight:800;color:var(--y1);letter-spacing:.03em}
+.trailerpop label{display:inline-flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;cursor:pointer;opacity:.9}
+.trailerpop label input{width:18px;height:18px;accent-color:#ff1a34}
 .packitems{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%}
 .packitems .pi{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:12px;background:rgba(0,0,0,.25)}
 .packitems .pi svg{width:62px;height:62px}.packitems .pi b{font-size:13px}.packitems .pi .own{font-size:10px;color:#b8ff8f;font-weight:700}
@@ -2840,6 +2848,51 @@ function apexDemoWhenReady(){
   if(STATE!=="venue"||document.querySelector(".giftpop,.admsg,#banNote")){setTimeout(apexDemoWhenReady,2000);return;}
   apexUnlock(true,true);
 }
+/* THE PACK TRAILER: the first time you reach the lobby each session, while a
+   pack with a trailer is coming up (or on sale), it plays in a popup. Tick
+   "don't show this again" and it never pops up for that pack on this device;
+   it is always there from the WATCH THE TRAILER button at the stand. It waits
+   its turn behind the login calendar, a gift, or anything else already open. */
+var TRAILER_SHOWN=false;
+function trailerOff(key){try{return localStorage.getItem("bb_notrailer_"+key)==="1";}catch(e){return false;}}
+function trailerNudge(){
+  if(TRAILER_SHOWN)return;
+  // the soonest pack with a trailer that is not over: on sale, or still to come
+  var key=null,now=Date.now();
+  for(var k in PACKS){var Q=PACKS[k];if(Q.trailer&&now<Q.to&&(!key||Q.from<PACKS[key].from))key=k;}
+  var P=key&&PACKS[key];
+  if(!P||trailerOff(key))return;
+  if(packItems(P).every(function(q){return q.own;}))return;   // they have it all already
+  TRAILER_SHOWN=true;
+  (function wait(tries){
+    if(tries>90)return;
+    if(STATE!=="venue"||venueKind!=="lobby"||!$("evt").classList.contains("hide")||document.querySelector(".giftpop,.admsg,#banNote,.apexu")){
+      setTimeout(function(){wait(tries+1);},2000);return;}
+    trailerShow(key,false);
+  })(0);
+}
+function trailerShow(key,manual){
+  var P=PACKS[key];if(!P||!P.trailer||document.querySelector(".trailerpop"))return;
+  var now=Date.now(),when=now<P.from?"OPENS IN "+evtLeft(P.from-now).toUpperCase():now<P.to?"ON NOW · GONE IN "+evtLeft(P.to-now).toUpperCase():"";
+  var d=document.createElement("div");d.className="giftpop trailerpop";
+  d.innerHTML="<div class='gpcard'><div class='gpribbon'>"+(now<P.from?"COMING SOON":"NEW PACK")+"</div>"+
+    "<div class='tpsub'>"+P.name+" &middot; "+P.yen.toLocaleString()+" YEN"+(when?" &middot; "+when:"")+"</div>"+
+    "<video src='"+P.trailer+"'"+(P.poster?" poster='"+P.poster+"'":"")+" controls playsinline preload='auto'></video>"+
+    (manual?"":"<label><input type='checkbox' id='tpNo'> Don't show this again</label>")+
+    "<div class='gpbtns'>"+(now>=P.from&&now<P.to?"<button class='big gold' data-a='go'>GO TO THE STAND</button>":"")+"<button class='big' data-a='ok'>CLOSE</button></div></div>";
+  document.body.appendChild(d);
+  var v=d.querySelector("video"),wasMusic=!!(MUSIC.el&&!MUSIC.el.paused);
+  musicPause();
+  var pr=v.play();if(pr&&pr.catch)pr.catch(function(){v.muted=true;v.play().catch(function(){});});   // autoplay blocked: start it muted
+  var close=function(go){
+    var no=d.querySelector("#tpNo");if(no&&no.checked){try{localStorage.setItem("bb_notrailer_"+key,"1");}catch(e){}}
+    v.pause();if(d.parentNode)d.parentNode.removeChild(d);
+    if(wasMusic)musicPlay();
+    if(go&&PACKSTAND&&PACKSTAND.key===key)openPackStand();
+  };
+  d.addEventListener("click",function(e){var a=e.target.getAttribute&&e.target.getAttribute("data-a");
+    if(a==="ok")close(false);else if(a==="go")close(true);else if(e.target===d)close(false);});
+}
 /* A gift from the dev: what arrived, and the note if there is one. It waits for
    the end of a match -- it never lands on top of a round. */
 var GIFTQ=[];
@@ -4758,7 +4811,7 @@ function enterLobby(){
   $("vRank").textContent=currentRank().name.toUpperCase();
   $("vRankIco").innerHTML=rankIcon(currentRank(),28);
   refreshSaveWarn();
-  refreshLoginButton();loginNudge();
+  refreshLoginButton();loginNudge();trailerNudge();
 }
 function enterCasino(){
   clearFighters();clearWarn();
@@ -11070,6 +11123,14 @@ SWORD_ICON.portalgun="<path d='M15 25l-2 11h6l1-10z' fill='{H}' stroke='#0b1942'
   "<rect x='24' y='10' width='5' height='14' rx='2.4' fill='#7aff4a' stroke='#0b1942' stroke-width='1.3' opacity='.95'/>"+
   "<rect x='14' y='13' width='12' height='1.6' fill='#9aa2ac'/><rect x='14' y='19' width='12' height='1.6' fill='#9aa2ac'/>"+
   "<ellipse cx='20' cy='6' rx='5.5' ry='3.2' fill='#7aff4a' stroke='#0b1942' stroke-width='1.4'/><ellipse cx='20' cy='6' rx='2.4' ry='1.3' fill='#e8ffd8'/>";
+SWORD_ICON.plaque="<rect x='18.6' y='27' width='2.8' height='11' fill='{H}' stroke='#0b1942' stroke-width='1.2'/>"+
+  "<rect x='9' y='3' width='22' height='25' rx='1.5' fill='#141416' stroke='#0b1942' stroke-width='1.6'/><rect x='11.5' y='5.5' width='17' height='20' fill='#1c1c22'/>"+
+  "<circle cx='20' cy='13.5' r='6.8' fill='#e8eef6' stroke='#a8b0bc' stroke-width='.8'/><circle cx='20' cy='13.5' r='4.6' fill='none' stroke='#a8b0bc' stroke-width='.6'/>"+
+  "<circle cx='20' cy='13.5' r='2.2' fill='#d0142a'/><rect x='14' y='22' width='12' height='2.4' fill='#d8b050'/>";
+SWORD_ICON.vampfang="<rect x='17.8' y='27' width='4.4' height='9' rx='1' fill='{H}' stroke='#0b1942' stroke-width='1.2'/><path d='M18 29h4M18 31.5h4M18 34h4' stroke='#3a2a34' stroke-width='.8'/>"+
+  "<path d='M10 25l-4-5 7 2zM30 25l4-5-7 2z' fill='#141016' stroke='#0b1942' stroke-width='1'/><rect x='13' y='24' width='14' height='3.4' rx='1' fill='#141016' stroke='#0b1942' stroke-width='1.2'/>"+
+  "<path d='M16 24C16 15 21 8 31 3 27 10 24 17 24 24z' fill='{B}' stroke='#0b1942' stroke-width='1.6'/><path d='M16.6 23C17 15 21 9 29 4.5' stroke='#9a0a1c' stroke-width='1.1' fill='none'/>"+
+  "<path d='M20 23.2l1.8 1.8-1.8 1.8-1.8-1.8z' fill='#d0102a' stroke='#0b1942' stroke-width='.8'/><circle cx='20' cy='37.5' r='1.6' fill='#d0102a'/>";
 SWORD_ICON.chef="<path d='M17 23h6l1 13h-8z' fill='{H}' stroke='#0b1942' stroke-width='1.6'/><circle cx='20' cy='27' r='1.2' fill='#d8a83a'/><circle cx='20' cy='32' r='1.2' fill='#d8a83a'/>"+
   "<rect x='16' y='21' width='8' height='3' fill='#d8a83a' stroke='#0b1942' stroke-width='1.2'/>"+
   "<path d='M17 21V9C17 6 19 3 22 2c3 4 4 10 4 14v5z' fill='{B}' stroke='#0b1942' stroke-width='1.6'/><path d='M25.5 20V15c0-4-1-8-3-12' stroke='{G}' stroke-width='1.6' fill='none'/>";
@@ -11278,46 +11339,60 @@ function openWendigo(){
 var PACKSTAND=null;
 function packItems(P){return P.items.map(function(q){
   if(q[0]==="emote"){var tk=tauntById(q[1]);return {tab:"emote",id:q[1],name:tk.txt,own:emoteOwned(q[1]),
-    icon:"<svg viewBox='0 0 40 40' width='34' height='34'><circle cx='20' cy='20' r='17' fill='#163a12' stroke='#0b1942' stroke-width='2'/><text x='20' y='27' font-size='18' text-anchor='middle'>"+tk.e+"</text></svg>"};}
-  var d=shopData(q[0]),it=findId(d.list,q[1]);return {tab:q[0],id:q[1],name:it.name,own:!!d.own[q[1]],icon:d.icon(it)};});}
+    icon:"<svg viewBox='0 0 40 40' width='34' height='34'><circle cx='20' cy='20' r='17' fill='"+(P.col==="#ff1a34"?"#3a0a12":"#163a12")+"' stroke='#0b1942' stroke-width='2'/><text x='20' y='27' font-size='18' text-anchor='middle'>"+tk.e+"</text></svg>"};}
+  var d=shopData(q[0]),it=findId(d.list,q[1]),own=!!d.own[q[1]];
+  if(packSecret(P,q[0],q[1])&&!own)return {tab:q[0],id:q[1],name:"SECRET BONUS",own:false,secret:true,
+    icon:"<svg viewBox='0 0 40 40' width='34' height='34'><circle cx='20' cy='20' r='17' fill='#1a0a0e' stroke='#ff1a34' stroke-width='2'/><text x='20' y='28' font-size='22' font-weight='900' fill='#ff1a34' text-anchor='middle'>?</text></svg>"};
+  return {tab:q[0],id:q[1],name:it.name,own:own,icon:d.icon(it)};});}
+function packCount(P){var n=P.items.length-(P.secret?Object.keys(P.secret).reduce(function(a,t){return a+Object.keys(P.secret[t]).length;},0):0);
+  return n+" MYTHICS"+(P.secret?" + SECRET BONUS":"");}
 function packSignDraw(){
   if(!PACKSTAND)return;
-  var P=PACKS.interdim,now=Date.now(),g=PACKSTAND.sign.c.getContext("2d"),W=1024,H=PACKSTAND.sign.c.height;
+  var P=PACKS[PACKSTAND.key],now=Date.now(),g=PACKSTAND.sign.c.getContext("2d"),W=1024,H=PACKSTAND.sign.c.height,rap=PACKSTAND.key==="rap";
   g.clearRect(0,0,W,H);
-  g.fillStyle="rgba(6,18,8,.9)";if(g.roundRect){g.beginPath();g.roundRect(8,8,W-16,H-16,40);g.fill();}else g.fillRect(8,8,W-16,H-16);
-  g.strokeStyle="#6bff3a";g.lineWidth=10;if(g.roundRect){g.beginPath();g.roundRect(8,8,W-16,H-16,40);g.stroke();}
+  g.fillStyle=rap?"rgba(16,6,10,.92)":"rgba(6,18,8,.9)";if(g.roundRect){g.beginPath();g.roundRect(8,8,W-16,H-16,40);g.fill();}else g.fillRect(8,8,W-16,H-16);
+  g.strokeStyle=P.col;g.lineWidth=10;if(g.roundRect){g.beginPath();g.roundRect(8,8,W-16,H-16,40);g.stroke();}
   g.textAlign="center";g.lineJoin="round";
-  g.font="bold 86px Fredoka, Trebuchet MS, Arial";g.lineWidth=14;g.strokeStyle="#041004";
-  g.strokeText("INTERDIMENSIONAL PACK",W/2,116);g.fillStyle="#e8ffe0";g.fillText("INTERDIMENSIONAL PACK",W/2,116);
-  g.font="bold 64px Fredoka, Trebuchet MS, Arial";
-  var line=P.yen.toLocaleString()+" YEN  ·  4 MYTHICS";
+  g.font=(rap?"italic ":"")+"bold 86px Fredoka, Trebuchet MS, Arial";g.lineWidth=14;g.strokeStyle=rap?"#120408":"#041004";
+  g.strokeText(P.name,W/2,116);g.fillStyle=rap?"#ffffff":"#e8ffe0";g.fillText(P.name,W/2,116);
+  g.font="bold "+(rap?52:64)+"px Fredoka, Trebuchet MS, Arial";
+  var line=P.yen.toLocaleString()+" YEN  ·  "+packCount(P);
   g.strokeText(line,W/2,206);g.fillStyle="#ffd23f";g.fillText(line,W/2,206);
   g.font="600 50px Fredoka, Trebuchet MS, Arial";
   var t=now<P.from?"OPENS IN "+evtLeft(P.from-now):"ONE WEEK ONLY · GONE IN "+evtLeft(P.to-now);
-  g.lineWidth=10;g.strokeText(t,W/2,286);g.fillStyle="#9aff7a";g.fillText(t,W/2,286);
+  g.lineWidth=10;g.strokeText(t,W/2,286);g.fillStyle=rap?"#ff6a7a":"#9aff7a";g.fillText(t,W/2,286);
   PACKSTAND.sign.tex.needsUpdate=true;
 }
 function buildPackStand(x,z){
   PACKSTAND=null;
-  var P=PACKS.interdim;
-  if(Date.now()>=P.to)return;                      // gone with the shrine
+  var key=curPackKey();
+  if(!key)return;                                  // nothing on, nothing coming
+  var P=PACKS[key],rap=key==="rap";
   var st=new THREE.Group();st.position.set(x,0,z);st.rotation.y=Math.atan2(-x,-z);venue.add(st);
-  var METAL=0x2a2e34,TRIM=0x9aa2ac,GRN=0x6bff3a,sd;
+  var METAL=rap?0x141016:0x2a2e34,TRIM=rap?0xc8ccd4:0x9aa2ac,GRN=rap?0xff1a34:0x6bff3a,sd;
   // a low platform and a counter
   gPart(st,GEO.cyl8,0x1c2024,5.4,.4,5.4,0,.2,0);
   gPart(st,GEO.box,METAL,4.2,1.3,1.4,0,.95,.9);
   gPart(st,GEO.box,TRIM,4.4,.14,1.6,0,1.66,.9);
-  gPart(st,GEO.box,0x4cff1a,3.6,.08,.08,0,1.2,1.62);              // a green strip along the front
+  gPart(st,GEO.box,rap?0xff1a34:0x4cff1a,3.6,.08,.08,0,1.2,1.62);  // a strip of the pack's colour along the front
   // two posts holding a ring, and the portal swirling inside it
   for(sd=-1;sd<=1;sd+=2){gPart(st,GEO.box,METAL,.4,4.6,.4,sd*2.3,2.3,-1.1);gPart(st,GEO.cyl8,TRIM,.6,.3,.6,sd*2.3,4.7,-1.1);}
   var ringM=new THREE.Mesh(new THREE.TorusGeometry(2.1,.18,8,40),new THREE.MeshLambertMaterial({color:TRIM}));
   ringM.position.set(0,3.1,-1.15);st.add(ringM);
   var por=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:portalTex(),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
   por.scale.set(4.1,4.1,1);por.position.set(0,3.1,-1.15);st.add(por);
-  // the Portal Gun turning over the counter
-  var gun=buildSword(swordById("portalgun"));gun.position.set(0,2.6,.9);gun.scale.setScalar(.9);st.add(gun);
+  if(rap){
+    // the ring is a red spotlight, and a giant ? hangs in it: the secret
+    por.material.map=null;por.material.color.setHex(0x5a0010);por.material.opacity=.55;por.material.needsUpdate=true;
+    var qc=cvs(256,256),qx=qc.getContext("2d");qx.font="900 220px Arial Black, Arial";qx.textAlign="center";qx.textBaseline="middle";
+    qx.lineWidth=14;qx.strokeStyle="#120408";qx.strokeText("?",128,138);qx.fillStyle="#ff1a34";qx.fillText("?",128,138);
+    var qm=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(qc),transparent:true,depthWrite:false,side:THREE.DoubleSide,fog:false}));
+    qm.scale.set(2.6,2.6,1);qm.position.set(0,3.1,-1.05);st.add(qm);
+  }
+  // the pack's weapon turning over the counter
+  var gun=buildSword(swordById(rap?"plaque":"portalgun"));gun.position.set(0,2.6,.9);gun.scale.setScalar(rap?.7:.9);st.add(gun);
   var sign=evtBillboard(7.6,7.6*320/1024,x+(-x/Math.hypot(x,z))*3.2,1.2,z+(-z/Math.hypot(x,z))*3.2);
-  PACKSTAND={x:x,z:z,gun:gun,portal:por,sign:sign,t:0};
+  PACKSTAND={key:key,x:x,z:z,gun:gun,portal:por,sign:sign,t:0};
   packSignDraw();
   addObstacle(x,z,2.9,null);
   var fx=x-(x/Math.hypot(x,z))*5.6,fz=z-(z/Math.hypot(x,z))*5.6;
@@ -11330,34 +11405,38 @@ function packTick(dt,t){
   PACKSTAND.portal.rotation.z=-t*1.1;
   PACKSTAND.t+=dt;if(PACKSTAND.t>20){PACKSTAND.t=0;packSignDraw();}
   if(QUAL>0&&Math.random()<dt*12){var a=Math.random()*TAU,r=rr(.4,1.9);
-    spark(PACKSTAND.x+Math.cos(a)*r*.6,3.1+Math.sin(a)*r,PACKSTAND.z+Math.sin(a)*r*.3,rr(-.2,.2),rr(-.3,.6),rr(-.2,.2),.5,1,.4,rr(.25,.5),rr(.6,1.1),0);}
+    var rp=PACKSTAND.key==="rap";
+    spark(PACKSTAND.x+Math.cos(a)*r*.6,3.1+Math.sin(a)*r,PACKSTAND.z+Math.sin(a)*r*.3,rr(-.2,.2),rr(-.3,.6),rr(-.2,.2),rp?1:.5,rp?.1:1,rp?.2:.4,rr(.25,.5),rr(.6,1.1),0);}
 }
 function openPackStand(){
-  var P=PACKS.interdim,now=Date.now(),L=packItems(P),allOwn=L.every(function(q){return q.own;});
-  var h="<div class='evtgrid'><div class='well evtpic portal'><div class='packitems'>"+
-    L.map(function(q){return "<div class='pi'>"+q.icon.replace("width='34' height='34'","width='62' height='62'")+"<b>"+q.name+"</b>"+(q.own?"<span class='own'>OWNED</span>":"")+"</div>";}).join("")+
-    "</div></div><div class='well'><div class='dname'>INTERDIMENSIONAL PACK</div>"+
-    "<div><span class='dpill r-mythic'>PACK · 4 MYTHICS</span></div>"+
+  var key=(PACKSTAND&&PACKSTAND.key)||curPackKey();if(!key)return;
+  var P=PACKS[key],now=Date.now(),L=packItems(P),allOwn=L.every(function(q){return q.own;});
+  var h="<div class='evtgrid'><div class='well evtpic "+(key==="rap"?"rap":"portal")+"'><div class='packitems'>"+
+    L.map(function(q){return "<div class='pi"+(q.secret?" sec":"")+"'>"+q.icon.replace("width='34' height='34'","width='62' height='62'")+"<b>"+q.name+"</b>"+(q.own?"<span class='own'>OWNED</span>":"")+"</div>";}).join("")+
+    "</div></div><div class='well'><div class='dname'>"+P.name+"</div>"+
+    "<div><span class='dpill r-mythic'>PACK · "+packCount(P)+"</span></div>"+
     "<div class='ddesc'>"+P.desc+"</div>"+
-    "<div class='dprice ol1'>"+P.yen.toLocaleString()+" YEN</div>";
+    "<div class='dprice ol1'>"+P.yen.toLocaleString()+" YEN</div>"+
+    (P.trailer?"<button class='big ghost' id='evtTrailer'>&#9654; WATCH THE TRAILER</button>":"");
   if(allOwn)h+="<button class='big ghost' disabled>YOU OWN ALL OF IT</button>";
   else if(now<P.from)h+="<button class='big ghost' disabled>OPENS IN "+evtLeft(P.from-now).toUpperCase()+"</button>";
   else if(now>=P.to)h+="<button class='big ghost' disabled>GONE FOREVER</button>";
   else h+="<button class='big"+(SAVE.yen>=P.yen?"":" off")+"' id='evtBuy'>BUY FOR "+P.yen.toLocaleString()+" YEN</button>"+
-    "<div class='dnote'>On sale until the stand closes in "+evtLeft(P.to-now)+", the same time as the Wendigo shrine. After that, never again.</div>";
+    "<div class='dnote'>On sale until the stand closes in "+evtLeft(P.to-now)+". After that, never again.</div>";
   h+="<div class='dnote'>You have <b>"+SAVE.yen.toLocaleString()+"</b> yen.</div></div></div>";
   evtShow("THE PACK STAND","",h);
+  var tb=$("evtTrailer");if(tb)tb.addEventListener("click",function(){showScreen(null);trailerShow(key,true);});
   var b=$("evtBuy");
   if(b)b.addEventListener("click",function(){
     if(SAVE.yen<P.yen){evtSay("Not enough yen: you need "+(P.yen-SAVE.yen).toLocaleString()+" more.");sfx("tick");return;}
     function done(ok,why){
       if(!ok){evtSay(why);sfx("tick");return;}
       sfx("rank");writeSave();refreshCoins();updateChips();updateLobbyBar();
-      openPackStand();evtSay("The Interdimensional Pack is yours. Equip it all in your inventory.",true);
+      openPackStand();evtSay("The "+packTitle(P)+" is yours"+(P.secret?", secret and all":"")+". Equip it all in your inventory.",true);
     }
     if(econOn()){
       if(b.disabled)return;b.disabled=true;
-      econAct([{k:"pack",pack:"interdim"}],function(err,rs){var r0=rs&&rs[0];b.disabled=false;
+      econAct([{k:"pack",pack:key}],function(err,rs){var r0=rs&&rs[0];b.disabled=false;
         done(!err&&r0&&r0.ok,(r0&&r0.why)||econErr(err));});
       return;
     }
@@ -13107,6 +13186,17 @@ Object.assign(SKIN_FX,{
   s1meatskin:{c:0xff2a4a,rate:8,vy:[-.3,.5],g:2,sz:.4,life:.7,r:.6}
 });
 Object.assign(SIG_SKIN_ICON,{
+  cartwheel:"<circle cx='20' cy='13' r='9.5' fill='#7b4a2d' stroke='#0b1942' stroke-width='1.6'/>"+
+    "<path d='M11 9v10M13.5 6v12M26.5 6v12M29 9v10M15 5.5l1 5M20 4v4M25 5.5l-1 5' stroke='#18120f' stroke-width='2.6' stroke-linecap='round'/>"+
+    "<circle cx='16.5' cy='13' r='2.6' fill='#fff'/><circle cx='16.6' cy='13' r='1.5' fill='#ff1a34'/><path d='M21.5 13.4q2-2 4 0' stroke='#140d0b' stroke-width='1.3' fill='none'/>"+
+    "<path d='M16 17.5q4 3 8 0z' fill='#5a0d14'/><path d='M17.6 17.8l.6 1.6.6-1.5M21.2 17.8l.6 1.6.6-1.5' fill='#fff'/>"+
+    "<rect x='10' y='23' width='20' height='13' rx='2' fill='#141416' stroke='#0b1942' stroke-width='1.6'/><path d='M14 24.5q6 4 12 0' stroke='#e4e8ee' stroke-width='1.2' fill='none'/>"+
+    "<path d='M20 27v5M18.2 28.4h3.6' stroke='#e4e8ee' stroke-width='1.2'/><rect x='10' y='33' width='20' height='2.4' fill='#d0142a'/>",
+  lilvertigo:"<circle cx='20' cy='14' r='9' fill='#6e4228' stroke='#0b1942' stroke-width='1.6'/>"+
+    "<path d='M14 7l-2-6M18 6l-1-6M22 6l1-6M26 7l2-6M12 10l-4 8M28 10l4 8' stroke='#9b3cff' stroke-width='2.6' stroke-linecap='round'/>"+
+    "<rect x='12' y='11' width='16' height='3.6' rx='1' fill='#0a0a10'/><path d='M17 18.5h6v1.2' stroke='#4a0c12' stroke-width='2'/><rect x='18.5' y='19' width='3' height='3' rx='1' fill='#f0607a'/>"+
+    "<rect x='9' y='24' width='22' height='13' rx='3' fill='#7a2ed8' stroke='#0b1942' stroke-width='1.6'/><rect x='18.5' y='24' width='3' height='13' fill='#141416'/>"+
+    "<path d='M13 28l.6 1.4 1.5.1-1.2.9.4 1.5-1.3-.9-1.3.9.4-1.5-1.2-.9 1.5-.1zM27 31l.6 1.4 1.5.1-1.2.9.4 1.5-1.3-.9-1.3.9.4-1.5-1.2-.9 1.5-.1z' fill='#a45cff'/>",
   plone:"<ellipse cx='20' cy='13' rx='8.5' ry='10.5' fill='#d9d6cc' stroke='#0b1942' stroke-width='1.6'/><path d='M12 9l-3-6 5 3 1-5 3 4 3-4 2 4 3-3v6' fill='#a6dcec' stroke='#0b1942' stroke-width='1.2'/>"+
     "<path d='M13 9q3.5-1.6 7 0t7 0' stroke='#8fc6d8' stroke-width='1.6' fill='none'/>"+
     "<circle cx='16.5' cy='12.5' r='3' fill='#fff' stroke='#101010' stroke-width='.9'/><circle cx='23.5' cy='12.5' r='3' fill='#fff' stroke='#101010' stroke-width='.9'/>"+
@@ -16423,8 +16513,23 @@ var PACKS={
     items:[["skin","cucci"],["skin","plone"],["sword","portalgun"],["emote","portal"]],
     desc:"Cucci and Plone (skins), the Portal Gun (blade) and the Peace Out emote. Only in this pack, and only for one week.",
     // the stand opens and closes with the Wendigo shrine
-    from:EVENT_SHOPS.wendigo.from,to:EVENT_SHOPS.wendigo.to}
+    from:EVENT_SHOPS.wendigo.from,to:EVENT_SHOPS.wendigo.to},
+  // the week after: the stand turns over to the Rap Pack. The fifth thing in it
+  // is a secret: a ? on the stand until you own it
+  rap:{name:"RAP PACK",yen:1800,col:"#ff1a34",trailer:"rap_trailer.mp4",poster:"rap_trailer.jpg",
+    items:[["skin","cartwheel"],["skin","lilvertigo"],["sword","plaque"],["emote","stagedive"],["sword","vampfang"]],
+    secret:{sword:{vampfang:1}},
+    desc:"Playboi Cartwheel and Lil Vertigo (skins), the Platinum Plaque (blade), the Stage Dive emote... and a secret bonus. Only in this pack, and only for one week.",
+    from:EVENT_SHOPS.wendigo.to,to:EVENT_SHOPS.wendigo.to+7*864e5}
 };
+// the pack the stand is showing: the one on sale, or the next to open
+function curPackKey(){var now=Date.now(),best=null;
+  for(var k in PACKS){var P=PACKS[k];if(now>=P.to)continue;if(!best||P.from<PACKS[best].from)best=k;}
+  return best;}
+// which pack an item comes from
+function packOf(tab,id){for(var k in PACKS)if(PACKS[k].items.some(function(q){return q[0]===tab&&q[1]===id;}))return k;return null;}
+function packTitle(P){return P.name.toLowerCase().replace(/(^|\s)\S/g,function(c){return c.toUpperCase();});}
+function packSecret(P,tab,id){return !!(P.secret&&P.secret[tab]&&P.secret[tab][id]);}
 
 // Rodriga: one item a month, for a Rodriga token. A token is a one in ten thousand
 // drop from any match, of any kind
@@ -16847,7 +16952,8 @@ function renderPicker(fresh){
   // secret code items stay secret until you have them, and pass items you
   // never got go once the season is over
   // everything is listed, owned or not: what you do not have shows locked
-  var list=d.list.slice();
+  // (a pack's secret bonus is the exception: not listed until it is yours)
+  var list=d.list.filter(function(it){if(it.secret&&!d.own[it.id]){var pk=packOf(tab,it.id);return !(pk&&packSecret(PACKS[pk],tab,it.id));}return true;});
   var owned=list.filter(function(it){return d.own[it.id];});
   list=owned.concat(list.filter(function(it){return !d.own[it.id];}));
   $("pickSub").textContent=owned.length+" / "+list.length+" OWNED";
@@ -16890,9 +16996,9 @@ function renderPickDetail(it){
   else if(it.event==="wendigo"){var EW=EVENT_SHOPS.wendigo,nw=Date.now();
     btn=nw>=EW.to?"<button class='big ghost' disabled>GONE FOREVER</button><div class='dnote'>It was only at the Wendigo shrine for one week.</div>":
       "<button class='big' id='pdAct'>WENDIGO SHRINE &middot; "+EW.yen.toLocaleString()+" YEN</button><div class='dnote'>"+(nw<EW.from?"The shrine beside Gnorman opens in "+evtLeft(EW.from-nw)+".":"At the shrine beside Gnorman for "+evtLeft(EW.to-nw)+" more.")+"</div>";}
-  else if(it.event==="pack"){var PK=PACKS.interdim,pn=Date.now();
-    btn=pn>=PK.to?"<button class='big ghost' disabled>GONE FOREVER</button><div class='dnote'>It was only in the Interdimensional Pack.</div>":
-      "<button class='big' id='pdAct'>PACK STAND &middot; "+PK.yen.toLocaleString()+" YEN</button><div class='dnote'>Only in the Interdimensional Pack, at the stand beside Gnorman. "+(pn<PK.from?"Opens in "+evtLeft(PK.from-pn)+".":"Gone in "+evtLeft(PK.to-pn)+".")+"</div>";}
+  else if(it.event==="pack"){var PK=PACKS[packOf(tab,it.id)||"interdim"],pn=Date.now();
+    btn=pn>=PK.to?"<button class='big ghost' disabled>GONE FOREVER</button><div class='dnote'>It was only in the "+packTitle(PK)+".</div>":
+      "<button class='big' id='pdAct'>PACK STAND &middot; "+PK.yen.toLocaleString()+" YEN</button><div class='dnote'>Only in the "+packTitle(PK)+", at the stand beside Gnorman. "+(pn<PK.from?"Opens in "+evtLeft(PK.from-pn)+".":"Gone in "+evtLeft(PK.to-pn)+".")+"</div>";}
   else if(it.event==="rodriga")
     btn="<button class='big' id='pdAct'>RODRIGA'S SHACK &middot; 1 TOKEN</button><div class='dnote'>Rodriga sells it for a Rodriga token, behind where you come into the lobby.</div>";
   else if(it.season===0)
@@ -16961,7 +17067,7 @@ function renderEmoteDetail(){
     h+="</div><div class='dnote'>Hold <b>"+keyName(bindKey("emote"))+"</b> (or the TAUNT button) in a match, point, and let go.</div>";
   } else if(tk.pack){
     var PK=PACKS[tk.pack],pn=Date.now();
-    h+=pn>=PK.to?"<button class='big ghost' disabled>GONE FOREVER</button>":"<button class='big' id='pdAct'>PACK STAND &middot; "+PK.yen.toLocaleString()+" YEN</button><div class='dnote'>Only in the Interdimensional Pack.</div>";
+    h+=pn>=PK.to?"<button class='big ghost' disabled>GONE FOREVER</button>":"<button class='big' id='pdAct'>PACK STAND &middot; "+PK.yen.toLocaleString()+" YEN</button><div class='dnote'>Only in the "+packTitle(PK)+".</div>";
   }
   box.innerHTML=h;
   [].forEach.call(box.querySelectorAll(".emslot"),function(b){b.addEventListener("click",function(){
