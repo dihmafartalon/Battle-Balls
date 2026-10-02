@@ -274,7 +274,7 @@ var SWORDS=[
  {id:"omega",name:"Season 0 Omega Blade",season:0,price:-1,rank:"omega",blade:0xffffff,hilt:0x101018,glow:0x00ffe0,shape:"glaive",hold:"float",swing:"spin",idle:"orbit",
   desc:"Season 0 ranked reward (Omega). The last blade on the old path. It hums."},
  // Halloween Pass: only ever from the pass, never chests, shops, codes or selling
- {id:"carver",name:"Carving Knife",rarity:"halloween",pass:15,price:-1,blade:0xe4eaf2,hilt:0x121016,glow:0xff4a1a,shape:"chef",hold:"one",swing:"frenzy",idle:"none",
+ {id:"carver",name:"Carving Knife",rarity:"halloween",pass:15,price:-1,blade:0xe4eaf2,hilt:0x121016,glow:0xff4a1a,shape:"chef",hold:"icepick",size:.78,swing:"frenzy",idle:"none",
   desc:"A kitchen knife that has carved more than pumpkins. Cuts an X and drives the point home."},
  {id:"harvester",name:"Harvester",rarity:"halloween",pass:30,price:-1,blade:0x16100e,hilt:0x1a0e06,glow:0xff7a12,shape:"harvest",hold:"staff",swing:"reap",idle:"drift",
   desc:"A scythe with a lit jack-o'-lantern where the blade meets the shaft. Reaps a full circle of fire."},
@@ -3336,12 +3336,27 @@ var SIG_LEAD=0.10;
 function sigWarp(p,w0){return p<SIG_LEAD?p/SIG_LEAD*w0:w0+(p-SIG_LEAD)/(1-SIG_LEAD)*(1-w0);}
 Fighter.prototype.swingFrame=function(p,dt){
   var S=SIG_SWING[this.swordDef.swing];
-  if(S){var w=sigWarp(p,S.beats[0].w);this._rawP=p;this.animateSwing(w);sigSwingFx(this,w);return;}
+  if(S){var w=sigWarp(p,S.beats[0].w);this._rawP=p;this.animateSwing(w);this.drawFrame(p);
+    // the Dev blade: remember where the tip goes through the cut, for its rift
+    if(this.swordDef.swing==="riftslash"){
+      if(w<.2)this._rpath=[];
+      else if(w<=.48&&this._rpath){var tp=this.swordTip();this._rpath.push([tp.x,tp.y,tp.z]);}
+    }
+    sigSwingFx(this,w);return;}
   var w=swingWarp(p);
   this.animateSwing(w);
+  this.drawFrame(p);
   if(w>=.3)this.strikeFx();              // the instant the cut starts moving
 };
 
+// the start of a swing that drew the weapon: the hand is on the grip at the
+// hip, and the weapon comes out into the swing
+Fighter.prototype.drawFrame=function(p){
+  if(!this._drawing)return;
+  var u=clamp(p/STOW.draw,0,1);
+  if(u>=1){this._drawing=false;return;}
+  this.stowBlend(1-u*u*(3-2*u));
+};
 function ringBurst(x,y,z,n,spd,hex,size,life){
   var c=hex2rgb(hex);
   for(var i=0;i<n;i++){
@@ -3933,6 +3948,116 @@ var HOLD={
   hip:     {sp:[1.78,1.02,-0.64],sr:[0.12,0.10,Math.PI/2], ra:[-0.24,0,0.12], la:null}
 };
 
+/* ---- carried, not held ----
+   A weapon is worn until it is used: at the hip, across the back, or for the
+   floating ones beside you. A swing draws it -- the hand goes to the grip and
+   brings it out -- and a moment after the last swing it goes back. Only the
+   weapons named in IN_HAND are held at rest. */
+var IN_HAND={carver:1,pbfetus:1};       // the knife, point-down in the fist; PB Fetus dangling on its cord
+var STOW={drawnFor:1.1,sheathe:.30,draw:.24,hilt:[0.86,1.32,-0.30],floor:.30,
+  arm:[-0.06,0,0.10],                   // the sword arm hangs easy beside the hip
+  hipMax:2.2,                           // longer than this and it goes on the back
+  back:[0.50,2.62,-0.46]};              // over the right shoulder, drawn straight up and out
+// how a weapon is carried: "side" (worn at the hip, drawn into the hand),
+// "body" (lives on the body even mid-swing: the sling/back carries), or null
+function carryOf(d){
+  if(!d||IN_HAND[d.id]||d.hold==="float")return null;
+  if(d.hold==="hip"||d.hold==="rhip"||d.hold==="back")return "body";
+  return "side";
+}
+var _cq1=new THREE.Quaternion(),_cq2=new THREE.Quaternion(),_cq3=new THREE.Quaternion(),
+    _cv1=new THREE.Vector3(),_cv2=new THREE.Vector3(),_cm=new THREE.Matrix4(),_ce=new THREE.Euler();
+var _RY=new THREE.Vector3(0,1,0),_cq4=new THREE.Quaternion(),_cq2Raise=new THREE.Quaternion();
+var _cSpin=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI/2);
+/* Worn at the hip: the grip forward and up by the belt, the weapon hanging
+   down and back behind the leg, its flat to the side. The longer it is, the
+   further back it leans, so the tip never digs into the floor. */
+Fighter.prototype.stowPose=function(left){
+  var sw=this.sword,L=(sw&&sw.userData.len1)||3;
+  L*=(sw?sw.scale.y:1);                         // in the body's units, as big as it is right now
+  var m=left?-1:1;
+  /* Too long for the hip -- it either hit the floor or stuck straight out
+     behind like a tail -- so it is slung across the back instead: the grip up
+     over the sword shoulder, the weapon running down across the back to the
+     other hip, as far over as it needs to clear the floor. */
+  if(L>STOW.hipMax&&this.swordDef.hold!=="pistol"){   // a gun is always holstered at the hip
+    var B=STOW.back,cb=clamp((B[1]-STOW.floor)/L,.35,.94),ab=Math.acos(cb);
+    _ce.set(Math.PI+0.10,0,ab*m);                  // pointing down, leaned across to the far side
+    _cq1.setFromEuler(_ce);
+    return {p:_cv1.set(B[0]*m,B[1],B[2]),q:_cq1};
+  }
+  var H=STOW.hilt,c=clamp((H[1]-STOW.floor)/Math.max(.5,L),0,.97),a=Math.acos(c);
+  _ce.set(Math.PI+a,0,-0.14*m);
+  _cq1.setFromEuler(_ce).multiply(_cSpin);
+  return {p:_cv1.set(H[0]*m,H[1],H[2]),q:_cq1};
+};
+function ballHeldBy(f){for(var i=0;i<balls.length;i++)if(balls[i].held>0&&balls[i].heldBy===f)return true;return false;}
+// point an arm so the hand lands on mesh-space point `pt`
+function armAim(arm,pt,out){
+  var dx=pt.x-arm.position.x,dy=pt.y-arm.position.y,dz=pt.z-arm.position.z,l=Math.hypot(dx,dy,dz)||1;
+  dx/=l;dy/=l;dz/=l;
+  out.z=Math.asin(clamp(dx,-1,1));out.x=Math.atan2(-dz,-dy);out.y=0;
+  return l;
+}
+/* Blend a drawn weapon toward where it is worn: s=0 leaves the animated pose
+   alone, s=1 is the hand on the grip with the weapon still in its place. Used
+   both ways -- coming out on the draw, going back on the sheathe. */
+var _cAim={x:0,y:0,z:0};
+Fighter.prototype.stowBlend=function(s){
+  if(s<=0)return;
+  var pairs=[[this.arms[1],this.sword,false]];
+  if(this.sword2)pairs.push([this.arms[0],this.sword2,true]);
+  for(var i=0;i<pairs.length;i++){
+    var arm=pairs[i][0],sw=pairs[i][1];
+    if(!sw||sw.parent!==arm)continue;
+    var st=this.stowPose(pairs[i][2]);
+    // where the animation has the weapon, in the body's frame
+    arm.updateMatrix();
+    _cq2.copy(arm.quaternion).multiply(sw.quaternion);           // mesh-space orientation
+    var lp=_cv2.copy(sw.position);
+    armAim(arm,st.p,_cAim);
+    arm.rotation.x=lerp(arm.rotation.x,_cAim.x,s);
+    arm.rotation.y=lerp(arm.rotation.y,0,s);
+    arm.rotation.z=lerp(arm.rotation.z,_cAim.z,s);
+    arm.updateMatrix();
+    // orientation: turn from the animated one toward the worn one
+    _cq2.slerp(st.q,s);
+    _cq3.copy(arm.quaternion).invert();
+    sw.quaternion.copy(_cq3.multiply(_cq2));
+    // position: from the fist toward the scabbard
+    _cm.copy(arm.matrix).invert();
+    var sp=st.p.clone().applyMatrix4(_cm);
+    sw.position.set(lerp(lp.x,sp.x,s),lerp(lp.y,sp.y,s),lerp(lp.z,sp.z,s));
+  }
+};
+Fighter.prototype.stowNow=function(){
+  if(carryOf(this.swordDef)!=="side")return;
+  if(this.sword.parent!==this.mesh)this.mesh.add(this.sword);
+  if(this.sword2&&this.sword2.parent!==this.mesh)this.mesh.add(this.sword2);
+  this.stowed=true;this.drawnT=0;this.sheatheT=0;
+};
+Fighter.prototype.drawNow=function(){
+  if(!this.stowed)return;
+  this.arms[1].add(this.sword);
+  if(this.sword2)this.arms[0].add(this.sword2);
+  this.stowed=false;
+};
+/* The body-carried weapons (the sling and back carries) stay on the body and
+   are placed by their own choreography. The arm used to swing on its own
+   beside them and never touched the grip; now it reaches for it and keeps
+   hold of it, `w` of the way (0 = its own pose, 1 = on the grip). If the grip
+   is further than an arm can reach, the weapon comes to the hand instead. */
+function handOnGrip(f,arm,sw,w){
+  if(w<=0||!sw)return;
+  var reach=1.24,dx=sw.position.x-arm.position.x,dy=sw.position.y-arm.position.y,dz=sw.position.z-arm.position.z;
+  var l=Math.hypot(dx,dy,dz)||1;
+  if(l>reach){var k=lerp(1,reach/l,w);sw.position.set(arm.position.x+dx*k,arm.position.y+dy*k,arm.position.z+dz*k);}
+  armAim(arm,sw.position,_cAim);
+  arm.rotation.x=lerp(arm.rotation.x,_cAim.x,w);
+  arm.rotation.y=lerp(arm.rotation.y,0,w);
+  arm.rotation.z=lerp(arm.rotation.z,_cAim.z,w);
+}
+
 /* ============================================================
    8. FIGHTERS
    ============================================================ */
@@ -4479,6 +4604,12 @@ Fighter.prototype.setSword=function(id){
   var len=(this.sword.userData.tipY||3.5)*(this.sword.scale.y||1);
   this.bladeReach=clamp(len/3.1,0.62,1.85);
   this.bladeHeft=clamp(Math.pow(bbm.sx*bbm.sz*bbm.sy/0.9,0.34),0.70,1.55);
+  // the weapon's real extent along its length, for where it can be worn
+  var _bx=new THREE.Box3();this.sword.updateMatrixWorld(true);
+  this.sword.traverse(function(o){if(o.isMesh&&!o.userData.aura)_bx.expandByObject(o);});
+  this.sword.userData.len1=isFinite(_bx.max.y)?_bx.max.y/(this.sword.scale.y||1):3;
+  this.stowed=false;this.drawnT=0;this.sheatheT=0;
+  this.stowNow();
   this.restSword();
   apexCrown(this);
 };
@@ -4490,6 +4621,12 @@ Fighter.prototype.scaleSword=function(mul){
   if(this.sword2)this.sword2.scale.setScalar(s);
 };
 Fighter.prototype.restSword=function(){
+  if(this.stowed){
+    var st=this.stowPose(false);
+    this.sword.position.copy(st.p);this.sword.quaternion.copy(st.q);
+    if(this.sword2){st=this.stowPose(true);this.sword2.position.copy(st.p);this.sword2.quaternion.copy(st.q);}
+    return;
+  }
   var h=HOLD[this.swordDef.hold]||HOLD.one;
   this.sword.position.set(h.sp[0],h.sp[1],h.sp[2]);
   this.sword.rotation.set(h.sr[0],h.sr[1],h.sr[2]);
@@ -4518,6 +4655,10 @@ Fighter.prototype.swing=function(){
       ax:a0.rotation.x,az:a0.rotation.z,pz:a0.position.z,tw:this.mesh.rotation.y-this.yaw};
   } else this._from=null;
   this.swingT=this.swingDur;
+  // worn at the hip: this swing draws it, and it stays out a moment after
+  if(this.stowed){this.drawNow();this._drawing=true;}
+  else if(this.sheatheT>0){this.sheatheT=0;}
+  if(carryOf(this.swordDef)==="side")this.drawnT=STOW.drawnFor;
   var d=this.swordDef;
   if(this===player||QUAL>1)swingSfx(d);
   // the burst, the rings and the crescent all wait for the strike itself
@@ -4770,9 +4911,9 @@ Fighter.prototype.idleWeapon=function(dt,t){
   if(sw.userData.dangle||sw.userData.frags||sw.userData.wings)v4SwordIdle(this,sw,t,dt);
   if(sw.userData.spinY)sw.userData.spinY.rotation.y=t*1.6;
   if(sw.userData.pulse2)sw.userData.pulse2.material.opacity=.18+.2*(.5+.5*Math.sin(t*3.1));
-  else if(k==="drift")
+  else if(k==="drift"&&!this.stowed)
     sw.rotation.z=(HOLD[d.hold]||HOLD.one).sr[2]+Math.sin(t*1.5)*0.09;
-  else if(k==="swing")
+  else if(k==="swing"&&!this.stowed)
     sw.rotation.z=(HOLD[d.hold]||HOLD.one).sr[2]+Math.sin(t*2.6)*0.22;
   // ---- the aura: emitter + sheath pulse + orbiting motes ----
   var FX=sw.userData.fx,boost=sw.userData.fxBoost||1;
@@ -5061,8 +5202,23 @@ Fighter.prototype.update=function(dt,t){
   } else {
     this._lastTip=null;
     var arm=this.arms[1],la=this.arms[0];
+    this._drawing=false;
+    // a ball held on the blade (or a catch waiting for one) needs it out
+    if(carryOf(this.swordDef)==="side"&&(this.catchArmT>0||this.holdT>0||ballHeldBy(this))){
+      if(this.stowed)this.drawNow();
+      this.sheatheT=0;this.drawnT=Math.max(this.drawnT,STOW.drawnFor);
+    }
+    // drawn, and nothing swung for a while: put it away
+    if(!this.stowed&&carryOf(this.swordDef)==="side"&&!(this.tauntT>0)){
+      if(this.sheatheT>0){
+        this.sheatheT-=dt;
+        if(this.sheatheT<=0)this.stowNow();
+      } else if((this.drawnT-=dt)<=0)this.sheatheT=STOW.sheathe;
+    }
+    // worn, not held: the arms hang free and swing with the stride
+    if(this.stowed&&!(this.tauntT>0))h={ra:[STOW.arm[0],STOW.arm[1],STOW.arm[2]],la:null};
     if(this.tauntT>0)this.tauntPose(dt);else{
-    arm.rotation.x=damp(arm.rotation.x,h.ra[0]+swk*.2,12,dt);
+    arm.rotation.x=damp(arm.rotation.x,h.ra[0]+swk*(this.stowed?.55:.2),12,dt);
     arm.rotation.y=damp(arm.rotation.y,h.ra[1],12,dt);
     arm.rotation.z=damp(arm.rotation.z,h.ra[2],12,dt);
     arm.position.z=damp(arm.position.z,arm.userData.baseZ,12,dt);
@@ -5075,6 +5231,7 @@ Fighter.prototype.update=function(dt,t){
     }
     }
     this.restSword();
+    if(this.sheatheT>0)this.stowBlend(1-clamp(this.sheatheT/STOW.sheathe,0,1));
     this.idleWeapon(dt,t);
   }
   this.skinTick(dt,t);
@@ -7914,7 +8071,7 @@ var SIG_SWING={
     {w:.55,st:{span:5.6,tilt:.26,r:1.25,w:.8,hot:1},col:0xffd84a}]},
   // the Dev blade: one draw-and-cut off the back, and the cut tears the world open
   riftslash:{dur:.60,col:0x9a4bff,beats:[
-    {w:.40,st:{span:3.6,tilt:.62,r:1.2,w:1.0,hot:1},col:0xb06aff,tear:true}]},
+    {w:.47,st:{span:3.6,tilt:.62,r:1.2,w:1.0,hot:1},col:0xb06aff,tear:true}]},
   // the Wendigo: one draw off the hip. The cut throws frost all the way round
   // the body, and halfway through it the Wendigo itself looks out over you
   wendigo:{dur:.62,col:0x4ab8ff,beats:[
@@ -7941,6 +8098,7 @@ function sigAnimate(f,p,arm,la,sw,h,bx,by,bz){
     f.legs[1].rotation.x=k(p,[[0,0],[.60,.32],[.72,-.62],[1,0]]);
     f.legs[0].rotation.x=k(p,[[0,0],[.60,-.2],[.72,.44],[1,0]]);
     tw=k(p,[[0,0],[.10,.45],[.19,-.45],[.33,-.4],[.43,.42],[.60,.1],[.70,-.12],[1,0]]);
+    if(f.swordDef.hold==="icepick")E+=Math.PI;       // point down out of the fist the whole way
   } else if(style==="reap"){
     // coiled up and back, then a full turn of the body with the blade held
     // out level, then round to face front again
@@ -7979,7 +8137,29 @@ function sigAnimate(f,p,arm,la,sw,h,bx,by,bz){
     f.legs[1].rotation.x=k(p,[[0,0],[.3,.3],[.44,-.5],[1,0]]);
     f.legs[0].rotation.x=k(p,[[0,0],[.3,-.2],[.44,.35],[1,0]]);
     tw=k(p,[[0,0],[.26,.4],[.44,-.5],[1,0]]);
-  } else if(style==="riftslash"||style==="wendigo"||style==="divine"||style==="apex"){
+  } else if(style==="riftslash"){
+    /* The Dev blade: off the back and up over the sword shoulder, then one
+       diagonal cut down across the front of the body -- the same line the rift
+       then tears open along (the rift is traced from where the tip went). It
+       used to chop straight down out at the side, nowhere near its rift. */
+    var sm2=function(t){t=t<0?0:(t>1?1:t);return t*t*t*(t*(t*6-15)+10);};
+    var up=sm2(p/.24),cut=sm2((p-.27)/.19),home=sm2((p-.62)/.38);
+    var G1=[.85,3.45,.30],G2=[.05,1.85,1.05];
+    var gx=lerp(lerp(h.sp[0],G1[0],up),G2[0],cut),gy=lerp(lerp(h.sp[1],G1[1],up),G2[1],cut)+Math.sin(cut*Math.PI)*.25,
+        gz=lerp(lerp(h.sp[2],G1[2],up),G2[2],cut)+Math.sin(cut*Math.PI)*.45;
+    _ce.set(h.sr[0],h.sr[1],h.sr[2]);_cq1.setFromEuler(_ce);                    // worn
+    _cq2Raise.setFromUnitVectors(_RY,_cv2.set(.35,.9,-.25).normalize());        // raised
+    _cq3.setFromUnitVectors(_RY,_cv2.set(-.85,-.35,.40).normalize());           // cut through
+    _cq2.copy(_cq1).slerp(_cq4.copy(_cq2Raise),up);_cq2.slerp(_cq3,cut);
+    sw.quaternion.copy(_cq2).slerp(_cq1,home);
+    sw.position.set(lerp(gx,h.sp[0],home),lerp(gy,h.sp[1],home),lerp(gz,h.sp[2],home));
+    handOnGrip(f,arm,sw,sm2(p/.10)*(1-sm2((p-.86)/.14)));
+    var sc2=Math.sin(cut*Math.PI);
+    f.legs[1].rotation.x+=-.36*(cut-home)*1;f.legs[0].rotation.x+=.28*(cut-home);
+    tw=(.38*up-.80*cut)*(1-home);
+    if(f.mesh)f.mesh.rotation.y=f.yaw+tw;
+    return;
+  } else if(style==="wendigo"||style==="divine"||style==="apex"){
     /* The sling's own draw and cut, made fluid: the draw, the cut and the
        return home overlap, each easing in and out (smootherstep), so the blade
        is never stopped and never snaps -- it comes off the back, goes through,
@@ -8007,6 +8187,8 @@ function sigAnimate(f,p,arm,la,sw,h,bx,by,bz){
         arm.rotation.x=lerp(arm.rotation.x,F.ax,bl);arm.rotation.z=lerp(arm.rotation.z,F.az,bl);
         arm.position.z=lerp(arm.position.z,F.pz,bl);tw=lerp(tw,F.tw,bl);}
     }
+    // the hand goes to the grip on the back and keeps hold of it until it is home
+    handOnGrip(f,arm,sw,sm(p/.12)*(1-sm((p-.84)/.16)));
     if(f.mesh)f.mesh.rotation.y=f.yaw+tw;
     return;                          // placed, not swung from the arm
   } else {
@@ -8093,7 +8275,24 @@ function sigBeat(f,S,b,i){
   } else if(st==="riftslash"){
     // the cut opens a hole in the world in front of you: dark, full of stars,
     // rimmed in violet fire; loose light is pulled into it, and it zips shut
-    var fxw=Math.sin(f.yaw),fzw=Math.cos(f.yaw),cx=X+fxw*2.4,cy=Y+2.25,cz=Z+fzw*2.4,roll=-.62,len=7.5;
+    var fxw=Math.sin(f.yaw),fzw=Math.cos(f.yaw),cx=X+fxw*2.4,cy=Y+2.25,cz=Z+fzw*2.4,roll=.62,len=7.5;
+    /* Along the line the tip actually cut, in the plane in front of you: from
+       where it started down to where it finished, drawn a little longer than
+       the cut so the tear runs past both ends of it. */
+    var RP=f._rpath;
+    if(RP&&RP.length>=2){
+      var rxl=Math.cos(f.yaw),rzl=-Math.sin(f.yaw),P0=RP[0],P1=RP[RP.length-1];
+      var lx0=(P0[0]-X)*rxl+(P0[2]-Z)*rzl,lx1=(P1[0]-X)*rxl+(P1[2]-Z)*rzl;
+      var lz0=(P0[0]-X)*fxw+(P0[2]-Z)*fzw,lz1=(P1[0]-X)*fxw+(P1[2]-Z)*fzw;
+      var ddx=lx1-lx0,ddy=P1[1]-P0[1];
+      if(ddx<0){ddx=-ddx;ddy=-ddy;}
+      if(Math.hypot(ddx,ddy)>1){
+        roll=Math.atan2(ddy,ddx);len=clamp(Math.hypot(ddx,ddy)*1.3,5,9);
+        var lxm=(lx0+lx1)/2,lzm=Math.max(2.0,(lz0+lz1)/2);
+        cx=X+rxl*lxm+fxw*lzm;cz=Z+rzl*lxm+fzw*lzm;cy=clamp((P0[1]+P1[1])/2,Y+1.4,Y+3.6);
+      }
+    }
+    f._rpath=null;
     hwTear(cx,cy,cz,f.yaw,roll,len,3.0,.95);
     var rxw=Math.cos(f.yaw),rzw=-Math.sin(f.yaw),dxw=rxw*Math.cos(roll),dyw=Math.sin(roll),dzw=rzw*Math.cos(roll);
     for(k=0;k<(QUAL>1?20:10);k++){var t=Math.random()-.5,up=Math.random()<.5?1:-1,wv=Math.random()<.4;
@@ -9498,6 +9697,9 @@ HOLD.rhip={sp:[0.64,2.07,1.02],sr:[-1.875,Math.PI/2,-0.1],ra:[-0.24,0,0.12],la:n
 // side, the shaft leaning a little back and away from the head
 HOLD.glaive={sp:[0,-1.95,0.02],sr:[0.1,0,-0.22],ra:[-0.35,0,0.14],la:null};  // same easy carry, gripped further up the shaft
 // reverse grip: the blade runs back from the fist and trails behind the leg
+// the knife: point down out of the bottom of the fist, held up in a guard (hung
+// from a lowered arm, a blade this long went through the floor)
+HOLD.icepick={sp:[0,-1.24,.04],sr:[3.85,0,0.10],ra:[-1.28,0,0.22],la:null};   // fist up in a guard, point down and a little forward
 HOLD.rgrip={sp:[0,-1.22,.02],sr:[-1.62,0,0.08],ra:[-0.26,0,0.16],la:null};
 // slung across the back, point up over the left shoulder, like the Dev blade
 // is carried: drawn off the back in one stroke
@@ -10047,7 +10249,7 @@ SIG_SKIN.cucci=function(f,g,sk,box,glowM,darkM,bodyM){
   (f.headParts||[]).forEach(function(m){m.visible=false;});
   f.mLimb.color.setHex(0x121214);
   // arms: short black sleeves, bare from the elbow down
-  f.arms.forEach(function(a){a.children.forEach(function(c,ix){if(ix>0)c.material=skin;});});
+  f.arms.forEach(function(a){a.children.forEach(function(c){if(c.position.y<-.45)c.material=skin;});});   // sleeve down to the elbow (by where a part is: on high detail the second piece is the shoulder band, which came out bare)
   // legs: skinny jeans, white sneakers
   f.legs.forEach(function(l){l.children.forEach(function(c){c.material=c.position.y<-1.25?shoe:jeans;});
     var sole=new THREE.Mesh(GEO.box,shoe);sole.scale.set(.38,.08,.58);sole.position.set(0,-1.36,.12);l.add(sole);});
@@ -10097,7 +10299,7 @@ SIG_SKIN.plone=function(f,g,sk,box,glowM,darkM,bodyM){
   var line=new THREE.MeshBasicMaterial({color:0x8a8478});
   (f.headParts||[]).forEach(function(m){m.visible=false;});
   f.mLimb.color.setHex(0x121214);
-  f.arms.forEach(function(a){a.children.forEach(function(c,ix){if(ix>0)c.material=skin;});});
+  f.arms.forEach(function(a){a.children.forEach(function(c){if(c.position.y<-.45)c.material=skin;});});   // sleeve down to the elbow (by where a part is: on high detail the second piece is the shoulder band, which came out bare)
   f.legs.forEach(function(l){l.children.forEach(function(c){c.material=c.position.y<-1.25?shoe:pants;});});
   // the head: long, a little narrow, with a chin
   var hd=new THREE.Group();hd.position.set(0,3.32,0);g.add(hd);
