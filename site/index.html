@@ -1832,7 +1832,7 @@ function rankIcon(r,size){
 // swing: slash | overhead | stab | spin | uppercut | twirl | hammer
 var SWORDS=[
  {id:"devblade",name:"Dev",price:-1,rank:"dev",code:true,blade:0x1a1428,hilt:0x1a1030,glow:0x9a4bff,shape:"rift",hold:"hip",swing:"riftslash",idle:"hum",
-  desc:"Slung across the back and drawn in one motion. The cut tears a hole in the world that hangs open for a moment, full of stars, before it zips itself shut."},
+  desc:"i luv u dev"},
  {id:"auroralance",name:"Aurora Lance",rarity:"mythic",price:12000,yen:355,blade:0xbff4ff,hilt:0x16224a,glow:0x7afcff,shape:"aurora",hold:"float",swing:"spin",idle:"orbit",
   desc:"A lance of standing light. Three ribbons turn around a core that never stops."},
  {id:"meatcleaver",name:"Season 0 Prime Cut",season:0,price:-1,rank:"meat",blade:0xff5e6e,hilt:0x2a0810,glow:0xff2a4a,shape:"cleaver",hold:"shoulder",swing:"overhead",idle:"ember",
@@ -2053,7 +2053,8 @@ function fetchOwners(){
   fetch(b+"/owners").then(function(r){return r.json();}).then(function(j){if(j&&j.owners&&typeof j.owners==="object")ULTRA_OWNERS=j.owners;}).catch(function(){});
 }
 function ownersLine(it,tab){
-  if(!it||!it.ultra||it.top1)return "";      // Apex is always exactly one player
+  // the ULTRAs and the Dev blade; Apex is always exactly one player
+  if(!it||it.top1||!(it.ultra||(tab==="sword"&&it.id==="devblade")))return "";
   var n=ULTRA_OWNERS[tab+":"+it.id];
   if(typeof n!=="number")return "";
   return "<div class='owners'><svg viewBox='0 0 20 20' width='14' height='14'><circle cx='10' cy='10' r='8' fill='none' stroke='currentColor' stroke-width='1.8'/><ellipse cx='10' cy='10' rx='3.6' ry='8' fill='none' stroke='currentColor' stroke-width='1.5'/><path d='M2.5 7.5h15M2.5 12.5h15' stroke='currentColor' stroke-width='1.5'/></svg>"+n.toLocaleString()+" owned</div>";
