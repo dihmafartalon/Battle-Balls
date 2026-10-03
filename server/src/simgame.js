@@ -72,7 +72,7 @@ function ri(a,b){return Math.floor(a+RNG()*(b-a+1));}
 function pick(a){return a[Math.floor(RNG()*a.length)];}
 // bots never carry something that is not out yet
 // never the #1's Crown, an event's one-off, GOD's blade or anything code-only
-function BOT_SWORDS(){return SWORDS.filter(function(w){return w.rarity!=="unreleased"&&!w.ultra&&!w.top1&&!w.event&&!w.code&&w.rank!=="god";});}
+function BOT_SWORDS(){return SWORDS.filter(function(w){return w.rarity!=="unreleased"&&w.rarity!=="secret"&&!w.ultra&&!w.top1&&!w.event&&!w.code&&w.rank!=="god";});}
 function dist2(ax,az,bx,bz){var dx=ax-bx,dz=az-bz;return dx*dx+dz*dz;}
 function hex2rgb(h){return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255];}
 // hue in 0..1 -> packed hex, for prismatic cosmetics that cycle colour
@@ -293,7 +293,7 @@ var SWORDS=[
  {id:"vampfang",name:"Vamp Fang",rarity:"mythic",event:"pack",secret:true,price:-1,yen:345,blade:0xf2ead8,hilt:0x141016,glow:0xff1a34,shape:"vampfang",hold:"one",swing:"slash",idle:"none",
   desc:"The Rap Pack's secret. One long curved fang of ivory, a blood-red gem in a bat-wing guard. Every cut is red, and the bats come out."},
  // DEV2: price, rarity and how you get them are not decided yet
- {id:"dev2sniper",name:"Dev2",rarity:"unreleased",price:-1,phantom:"sniper",set:"DEV2",blade:0xc8ccd6,hilt:0x141418,glow:0xb46bff,shape:"dev2sniper",hold:"phantom",swing:"phantom",idle:"none",size:.9,
+ {id:"dev2sniper",name:"Dev2",rarity:"secret",price:-1,phantom:"sniper",set:"DEV2",blade:0xc8ccd6,hilt:0x141418,glow:0xb46bff,shape:"dev2sniper",hold:"phantom",swing:"phantom",idle:"none",size:.9,
   desc:"One weapon, three ways to carry it. A skeletal black-and-silver sniper with a long suppressor, and a hooked karambit with a glowing purple edge: carry the SNIPER, the KARAMBIT, or BOTH -- choose in your inventory. A shot is a flash and a slash of light; a cut is a crescent and a spin."},
  {id:"divineright",name:"Divine Right",price:-1,rank:"god",blade:0xdce6f2,hilt:0xd8b050,glow:0x7ad8ff,shape:"divine",hold:"rhip",swing:"divine",idle:"orbit",
   desc:"The GOD rank's blade. Worn on the right hip and drawn in one stroke: the wings open, the runes light, and every cut sheds feathers of light."},
@@ -443,7 +443,8 @@ function fetchAbilOff(){
 }
 function abilityAllowed(id){
   var a=abilById(id);
-  if(a.notReady||ABIL_OFF[a.id])return false;      // switched off from the admin page: plays as Dash
+  if(a.notReady||ABIL_OFF[a.id])return false;
+  if(MODE&&MODE.boss&&BOSS_BAD[a.id])return false;   // sits out of Boss Rally (a replacement is picked before the fight)      // switched off from the admin page: plays as Dash
   if(a.hides&&isDuel())return false;
   if(!a.no1v1)return true;
   // These sit out of 1v1 because they are a guaranteed kill with one opponent.
@@ -500,6 +501,7 @@ function chronoTick(f,t){
 }
 // down to the last two in any mode, it is a 1v1 now: what sits out of a 1v1 sits out
 function lastTwoBan(a){
+  if(MODE&&MODE.boss)return false;            // the players are all on one side
   if(!(a.no1v1||a.hides)||isDuel()||STATE!=="playing")return false;
   return livingFighters(false).length<=2;
 }
@@ -731,9 +733,9 @@ function swordById(id){if(id==="dev2both")return PH_BOTH;if(id==="dev2karambit")
    together, the sniper in the right hand, the knife in the left. Never listed,
    never sold; it is what you carry when that mode is chosen and you own both. */
 // the karambit on its own: Dev2 carried as the knife (also not an item)
-var PH_KNIFE={id:"dev2karambit",name:"Dev2",virtual:true,rarity:"unreleased",price:-1,phantom:"karambit",set:"DEV2",blade:0xd8dce6,hilt:0x141418,glow:0xb46bff,shape:"dev2karambit",hold:"phantom",swing:"phantom",idle:"none",
+var PH_KNIFE={id:"dev2karambit",name:"Dev2",virtual:true,rarity:"secret",price:-1,phantom:"karambit",set:"DEV2",blade:0xd8dce6,hilt:0x141418,glow:0xb46bff,shape:"dev2karambit",hold:"phantom",swing:"phantom",idle:"none",
   desc:"Dev2. A hooked silver-black karambit with a finger ring and a glowing purple edge. A parry is a quick cut and a white-purple crescent. Carry it with the Dev2 Sniper for BOTH."};
-var PH_BOTH={id:"dev2both",name:"Dev2",rarity:"unreleased",price:-1,phantom:"both",virtual:true,set:"DEV2",
+var PH_BOTH={id:"dev2both",name:"Dev2",rarity:"secret",price:-1,phantom:"both",virtual:true,set:"DEV2",
   blade:0xc8ccd6,hilt:0x141418,glow:0xb46bff,shape:"dev2sniper",hold:"phantom",swing:"phantom",idle:"none",size:.9,
   desc:"Dev2, both at once: the sniper in the right hand, the karambit in the left, the parries taking turns."};
 function phOwnsBoth(){return !!(SAVE.swords&&SAVE.swords.dev2sniper);}   // Dev2 is one item: owning it is owning all three
@@ -784,11 +786,11 @@ var STORE_OK=true,SAVEKEY="battleballs_v1",LAST_SAVE=0;
    save on the way out -- and before START that wrote the blank starting save
    over your real one. That is what "logged in, but everything is gone" was. */
 var SAVE_LOADED=false;
-var VERSION="4.0";
+var VERSION="4.1";
 // what an item is worth in yen, by rarity
 var SELL={common:15,rare:40,epic:85,legendary:190,mythic:465};
 function itemValue(it){
-  if(!it||it.rank||it.rarity==="rank"||it.ultra||it.pass||it.event||it.rarity==="unreleased")return 0;   // unreleased: no price yet, so no worth
+  if(!it||it.rank||it.rarity==="rank"||it.ultra||it.pass||it.event||it.rarity==="unreleased"||it.rarity==="secret")return 0;   // unreleased/secret: no price, so no worth
   // every item carries its own worth; the rarity table is only a fallback
   if(typeof it.yen==="number")return it.yen;
   return SELL[it.rarity||"common"]||15;
@@ -895,13 +897,14 @@ function cloudLoadMeta(){
       // (base); anything changed since then becomes the first change sent
       CLOUD.view=o.view||(o.base?cloudStrip(o.base):null);
       CLOUD.dirty=CLOUD.pending.length>0||!!o.dirty;
-      CLOUD.ec=!!o.ec;CLOUD.econMarked=!!o.em;CLOUD.acts=Array.isArray(o.acts)?o.acts:[];}
+      CLOUD.ec=!!o.ec;CLOUD.econMarked=!!o.em;CLOUD.acts=Array.isArray(o.acts)?o.acts:[];
+      CLOUD.pendingMids=Array.isArray(o.pm)?o.pm.filter(function(x){return typeof x==="string";}).slice(-20):[];}
   }catch(e){}
 }
 function cloudKeepMeta(){
   try{
     if(CLOUD.tok)window.localStorage.setItem(CLOUDKEY,JSON.stringify({tok:CLOUD.tok,rev:CLOUD.rev,name:CLOUD.name,at:CLOUD.at,
-      view:CLOUD.view,pending:CLOUD.pending,dirty:CLOUD.dirty,ec:!!CLOUD.ec,em:!!CLOUD.econMarked,acts:CLOUD.acts||[]}));
+      view:CLOUD.view,pending:CLOUD.pending,dirty:CLOUD.dirty,ec:!!CLOUD.ec,em:!!CLOUD.econMarked,acts:CLOUD.acts||[],pm:CLOUD.pendingMids||[]}));
     else window.localStorage.removeItem(CLOUDKEY);
   }catch(e){}
 }
@@ -1418,6 +1421,8 @@ function cloudSync(keepalive){
     if(r.status===429)cloudSchedule(Math.max(1,(r.j.retry||1000)/1000));
     else if(CLOUD.dirty)cloudSchedule(CLOUD_T.gap);
     econFlush();
+    // results the server was still settling last time: once per session, ask again
+    if(!CLOUD.resumed&&(CLOUD.pendingMids||[]).length){CLOUD.resumed=true;netSettleResume();}
     renderCloud();
   },function(){
     CLOUD.busy=false;
@@ -2236,6 +2241,7 @@ function buildArena(map){
   hemi.groundColor.setHex(map.hemiGnd);
   sun.color.setHex(map.sun);
   rimLight.color.setHex(map.accentB);
+  if(map.boss){buildBossArena(map);return;}
 
   var frep=Math.round(ARENA_R/6.5);
   var floorMat=new THREE.MeshLambertMaterial({map:mkTex(floorCanvas(map),frep,frep)});
@@ -2520,6 +2526,96 @@ function clearVenue(){
 }
 // anything in a venue that animates registers itself here
 var VFX=[],SHOWCASE=null;
+/* ---- LOBBY BATCHING ----
+   The lobby is built from about 1,400 little meshes -- every wall stone,
+   pumpkin, grave, candle and lamp post is its own object with its own
+   material, and each one was its own draw call. Once it is built, everything
+   that never moves is welded together: one mesh for each look (material,
+   colour, texture). Anything that animates, faces the camera, fades as you
+   near it, or belongs to a stall with its own behaviour is left exactly as it
+   was. The lobby looks the same; it is drawn in far fewer calls. */
+var VBATCH={merged:0,from:0};
+function venueDyn(fn){var n=venue.children.length;fn();for(var i=n;i<venue.children.length;i++)venue.children[i].userData.dyn=true;}
+function matSig(m){
+  if(!m||m.isShaderMaterial||Array.isArray(m))return null;
+  var c=m.color?m.color.getHexString():"",e=m.emissive?m.emissive.getHexString():"";
+  return [m.type,c,e,m.emissiveIntensity||0,m.map?m.map.uuid:"",m.transparent?1:0,m.transparent?m.opacity.toFixed(3):"",m.side,m.blending,
+    m.depthWrite?1:0,m.depthTest?1:0,m.fog?1:0,m.vertexColors?1:0,m.flatShading?1:0,m.shininess||0,m.specular?m.specular.getHexString():"",m.alphaTest||0,m.toneMapped===false?0:1].join("|");
+}
+function venueBatch(){
+  if(!venue.children.length)return;
+  var keep=new Set();
+  function protect(o){if(o&&o.traverse)o.traverse(function(x){keep.add(x);});}
+  for(var i=0;i<VFX.length;i++){protect(VFX[i].m);if(VFX[i].arm)protect(VFX[i].arm);}
+  for(i=0;i<VENUE_BB.length;i++)protect(VENUE_BB[i]);
+  for(i=0;i<ZONES.length;i++){protect(ZONES[i].ring);protect(ZONES[i].beam);}
+  if(SHOWCASE)protect(SHOWCASE.mesh);
+  // the stalls' own ticks move, light and redraw parts of them: whatever they hold on to stays as it is
+  var matKeep=new Set();
+  function refs(v,depth){
+    if(!v||depth>3)return;
+    if(v.isObject3D){
+      // a stall's root is only read (its turn), never moved: keep the root, its parts can still weld
+      if(v.parent===venue&&v.userData.dyn)keep.add(v);else protect(v);
+      return;
+    }
+    if(v.isMaterial){matKeep.add(v);return;}
+    if(v.isTexture||typeof v!=="object")return;
+    if(Array.isArray(v)){for(var q=0;q<v.length;q++)refs(v[q],depth+1);return;}
+    for(var key in v)if(Object.prototype.hasOwnProperty.call(v,key))refs(v[key],depth+1);
+  }
+  [typeof SHRINE!=="undefined"?SHRINE:null,typeof PACKSTAND!=="undefined"?PACKSTAND:null,typeof RODSHACK!=="undefined"?RODSHACK:null,
+   typeof RANGE!=="undefined"?RANGE:null,typeof LB!=="undefined"?LB:null].forEach(function(S){refs(S,0);});
+  venue.traverse(function(o){
+    if(o.material&&matKeep.has(o.material))protect(o);
+    if(o.userData&&(o.userData.fadeNear||o.userData.billboard||o.userData.keep))protect(o);
+  });
+  venue.traverse(function(o){if(o.material&&matKeep.has(o.material))protect(o);});
+  venue.updateMatrixWorld(true);
+  var inv=new THREE.Matrix4().copy(venue.matrixWorld).invert(),groups={},order=[];
+  venue.traverse(function(o){
+    if(!o.isMesh||keep.has(o)||!o.visible||!o.geometry||!o.geometry.attributes||!o.geometry.attributes.position)return;
+    for(var p=o.parent;p&&p!==venue;p=p.parent)if(!p.visible)return;
+    var sig=matSig(o.material);if(!sig)return;
+    if(!groups[sig]){groups[sig]=[];order.push(sig);}
+    groups[sig].push(o);
+  });
+  var made=0,from=0,mtx=new THREE.Matrix4();
+  for(var gi=0;gi<order.length;gi++){
+    var list=groups[order[gi]];
+    if(list.length<2)continue;
+    var useUv=!!list[0].material.map,pos=[],nor=[],uvs=[],cast=false,recv=false,ok=true;
+    for(i=0;i<list.length;i++){
+      var o=list[i],g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();
+      if(!g.attributes.normal)g.computeVertexNormals();
+      if(useUv&&!g.attributes.uv){ok=false;g.dispose();break;}
+      mtx.multiplyMatrices(inv,o.matrixWorld);g.applyMatrix4(mtx);
+      var pa=g.attributes.position.array,na=g.attributes.normal.array;
+      for(var k=0;k<pa.length;k++){pos.push(pa[k]);nor.push(na[k]);}
+      if(useUv){var ua=g.attributes.uv.array;for(k=0;k<ua.length;k++)uvs.push(ua[k]);}
+      g.dispose();cast=cast||o.castShadow;recv=recv||o.receiveShadow;
+    }
+    if(!ok)continue;
+    var mg=new THREE.BufferGeometry();
+    mg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));
+    mg.setAttribute("normal",new THREE.Float32BufferAttribute(nor,3));
+    if(useUv)mg.setAttribute("uv",new THREE.Float32BufferAttribute(uvs,2));
+    mg.computeBoundingSphere();
+    var mesh=new THREE.Mesh(mg,list[0].material);
+    mesh.castShadow=cast;mesh.receiveShadow=recv;mesh.userData.batched=true;mesh.renderOrder=list[0].renderOrder||0;
+    venue.add(mesh);made++;from+=list.length;
+    // the originals go, and anything only they used
+    var usedMat=new Set([list[0].material]);
+    for(i=0;i<list.length;i++){
+      var x=list[i];if(x.parent)x.parent.remove(x);
+      if(x.geometry&&!isSharedAsset(x.geometry))x.geometry.dispose();
+      if(x.material&&!usedMat.has(x.material)&&!isSharedAsset(x.material)){if(x.material.map&&x.material.map!==list[0].material.map&&!isSharedAsset(x.material.map))x.material.map.dispose();x.material.dispose();}
+    }
+  }
+  // groups left with nothing in them
+  for(i=venue.children.length-1;i>=0;i--){var c=venue.children[i];if(!c.isMesh&&!keep.has(c)&&c.children.length===0&&!(c.isLight))venue.remove(c);}
+  VBATCH.merged=made;VBATCH.from=from;
+}
 function vAnim(mesh,kind,opts){
   var o=opts||{};o.m=mesh;o.kind=kind;VFX.push(o);return mesh;
 }
@@ -2805,12 +2901,16 @@ function hwSky(){
   return c;
 }
 function hwWeb(x,y,z,rot,s){
+  // one web texture for every web (it used to paint a new canvas for each)
+  if(!TEX.web){
   var c=cvs(256,256),g=c.getContext("2d");
   g.strokeStyle="rgba(235,235,255,.55)";g.lineWidth=2;
   for(var k=0;k<7;k++){var a=k/6*Math.PI/2;g.beginPath();g.moveTo(0,0);g.lineTo(Math.cos(a)*256,Math.sin(a)*256);g.stroke();}
   for(var r=40;r<260;r+=42){g.beginPath();for(var k2=0;k2<=6;k2++){var a2=k2/6*Math.PI/2,rr2=r*(k2%2?0.9:1);
     if(k2===0)g.moveTo(Math.cos(a2)*rr2,Math.sin(a2)*rr2);else g.quadraticCurveTo(Math.cos(a2-.13)*rr2*.93,Math.sin(a2-.13)*rr2*.93,Math.cos(a2)*rr2,Math.sin(a2)*rr2);}g.stroke();}
-  var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(c,1,1),transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+  TEX.web=mkTex(c,1,1);
+  }
+  var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:TEX.web,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
   m.scale.set(s,s,1);m.position.set(x,y,z);m.rotation.set(0,rot,0);venue.add(m);return m;
 }
 function buildLobby(){
@@ -2859,12 +2959,15 @@ function buildLobby(){
     function(){openMPScreen();});
   vPad(Math.cos(PAD0+4.712)*R,Math.sin(PAD0+4.712)*R,0xff8a3c,"CASINO","BLACKJACK · SLOTS · UPGRADER",
     function(){enterCasino();});
-  buildStall(0,-27);
-  buildWendigoShrine(-13,-27);
-  buildPackStand(13,-27);
-  buildLbBoard(-29,0);
-  buildRange(22,0);
-  buildRodrigaShack(0,31);
+  // these have behaviour of their own (ticks that move, light or redraw them): never batched
+  venueDyn(function(){
+    buildStall(0,-27);
+    buildWendigoShrine(-13,-27);
+    buildPackStand(13,-27);
+    buildLbBoard(-29,0);
+    buildRange(22,0);
+    buildRodrigaShack(0,31);
+  });
   // ---- pillars become dead trees' worth of lamp posts: orange and violet lanterns ----
   for(i=0;i<8;i++){
     var aa=(i/8)*TAU+0.4;
@@ -2877,10 +2980,13 @@ function buildLobby(){
     vBox(2.2,.5,2.2,px,12.1,pz,0x33203f);
     var lampC=i%2?HW.PURPLE:HW.ORANGE;
     vGlow(1.9,.5,1.9,px,12.3,pz,lampC);
-    vAnim(vBeam(1.1,9,px,5.5,pz,lampC,.05,[0,aa,0]),"pulse",{lo:.03,hi:.07,sp:1.1,ph:i});
-    var lamp=vGlow(.7,.7,.7,px*0.8,9.4,pz*0.8,lampC);
-    vAnim(lamp,"bob",{y0:9.4,amp:.35,sp:.9,ph:i*1.3});
-    hwWeb(px,11,pz,-aa+Math.PI/2,3.2);
+    // Low quality (school iPads): the lantern posts stay, the light shafts, floating lamps and webs do not
+    if(QUAL>0){
+      vAnim(vBeam(1.1,9,px,5.5,pz,lampC,.05,[0,aa,0]),"pulse",{lo:.03,hi:.07,sp:1.1,ph:i});
+      var lamp=vGlow(.7,.7,.7,px*0.8,9.4,pz*0.8,lampC);
+      vAnim(lamp,"bob",{y0:9.4,amp:.35,sp:.9,ph:i*1.3});
+      hwWeb(px,11,pz,-aa+Math.PI/2,3.2);
+    }
   }
   // ---- the centre: the podium showing off what you have equipped. It is solid now ----
   var tier1=new THREE.Mesh(new THREE.CylinderGeometry(5.2,5.7,.55,36),new THREE.MeshLambertMaterial({color:0x22122e}));
@@ -2925,17 +3031,17 @@ function buildLobby(){
     if(i%2===0)hwCandles(gv[0]+rr(-1.6,1.6),gv[1]+rr(-1.6,1.6),3);
   }
   // ---- three slow rings high overhead, now orange, violet and green ----
-  for(i=0;i<3;i++){
+  for(i=0;i<(QUAL>0?3:0);i++){
     var hr2=vRing(12+i*5,.16,0,16+i*2.2,0,[HW.ORANGE,HW.PURPLE,HW.GREEN][i],.28);
     vAnim(hr2,"spinz",{sp:(i%2?1:-1)*(0.16+i*0.05)});
   }
-  // bats circling the room
-  for(i=0;i<9;i++){
+  // bats circling the room (a few on Low)
+  for(i=0;i<(QUAL>0?9:3);i++){
     var bat=hwBat(0,14,0);
     vAnim(bat,"bat",{r:rr(14,30),y0:rr(11,20),sp:rr(.25,.5)*(i%2?1:-1),ph:rr(0,TAU)});
   }
-  // ground fog drifting over the floor
-  for(i=0;i<14;i++){
+  // ground fog drifting over the floor (none on Low: fourteen full-screen additive layers)
+  for(i=0;i<(QUAL>1?14:QUAL>0?7:0);i++){
     var fg=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:mkTex(TEX.glow,1,1),color:0x9a7ac8,transparent:true,opacity:.1,
       depthWrite:false,blending:THREE.AdditiveBlending}));
     fg.rotation.x=-Math.PI/2;fg.scale.set(rr(12,20),rr(8,14),1);fg.position.set(0,.25+i*.02,0);venue.add(fg);
@@ -2946,6 +3052,7 @@ function buildLobby(){
   glowDisc.rotation.x=-Math.PI/2;glowDisc.position.y=.06;glowDisc.scale.setScalar(30);
   venue.add(glowDisc);
   vAnim(glowDisc,"pulse",{lo:.08,hi:.2,sp:1.0});
+  venueBatch();
 }
 
 /* ---- THE TARGET RANGE ----
@@ -3017,8 +3124,8 @@ function buildRange(x,z){
 }
 // a press in the lobby: the practice ball if it's in reach, else whatever you're
 // standing at, else just a swing -- so you can see your blade (and Dev2's modes) anywhere
-function venuePress(){if(rangeSwing())return;if(nearZone){interact();return;}venueSwing();}
-function venueSwing(){if(!player||!player.alive||player.swingT>0)return;phStep(player);player.swing();}
+function venuePress(){if(MODAL_NOW||modalOpen())return;if(rangeSwing())return;if(nearZone){interact();return;}venueSwing();}
+function venueSwing(){if(MODAL_NOW||modalOpen())return;if(!player||!player.alive||player.swingT>0)return;phStep(player);player.swing();}
 // a press in the lobby: hit the practice ball if it is close enough, and say so
 function rangeSwing(){
   if(!RANGE.on||!RANGE.ball||!player||!player.alive)return false;
@@ -3192,6 +3299,7 @@ function enterLobby(){
   $("lobbyBar").classList.add("on");
   $("slots").style.display="none";
   updateChips();refreshCoins();updateLobbyBar();
+  setTimeout(function(){if(STATE==="venue"&&!NET.srv)tutOffer();},1800);
   $("vRank").textContent=currentRank().name.toUpperCase();
   $("vRankIco").innerHTML=rankIcon(currentRank(),28);
   refreshSaveWarn();
@@ -3263,6 +3371,7 @@ function updateVenue(dt,t){
   $("vCoins").textContent=SAVE.coins.toLocaleString();
   $("vYen").textContent=SAVE.yen.toLocaleString();
 }
+var VFX_TICK=0;
 function updateVenueFX(dt,t){
   // additive panels closer than a few metres are what caused the white-out
   for(var fi2=0;fi2<venue.children.length;fi2++){
@@ -3271,8 +3380,12 @@ function updateVenueFX(dt,t){
     var fd=Math.sqrt(dist2(fm.position.x,fm.position.z,camera.position.x,camera.position.z));
     fm.userData.nearK=clamp((fd-2.5)/6,0,1);
   }
+  VFX_TICK=(VFX_TICK+1)|0;
+  var cpx=camera.position.x,cpz=camera.position.z;
   for(var i=0;i<VFX.length;i++){
     var v=VFX[i],m=v.m;
+    // far from the camera, an animation runs every other frame (on Low, every third): nobody can tell at that distance
+    if(m.position&&((i+VFX_TICK)%(QUAL>0?2:3))!==0&&dist2(m.position.x,m.position.z,cpx,cpz)>45*45)continue;
     if(v.kind==="spin")      m.rotation.y=t*v.sp;
     else if(v.kind==="spinz")m.rotation.z=t*v.sp;
     else if(v.kind==="bob")  m.position.y=v.y0+Math.sin(t*v.sp+(v.ph||0))*v.amp;
@@ -3694,7 +3807,7 @@ var SKIN_FX={
   clockwork:{c:0xffd88a,rate:8,vy:[-.4,.6],  g:1.0, sz:.42,life:.8, r:.7},
   bert:    {c:0xffe14a,rate:14,vy:[-.2,.5],  g:.6,  sz:.40,life:.35,r:.55}
 };
-var RARE_BOOST={common:.65,rare:.85,epic:1.0,legendary:1.25,mythic:1.5,halloween:1.5,unreleased:1.5,ultra:1.5};
+var RARE_BOOST={common:.65,rare:.85,epic:1.0,legendary:1.25,mythic:1.5,halloween:1.5,unreleased:1.5,secret:1.5,ultra:1.5};
 function fxLerpCol(f,t){
   var a=hex2rgb(f.c1),b=hex2rgb(f.c2);
   return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
@@ -5674,6 +5787,7 @@ Fighter.prototype.update=function(dt,t){
   }
   // terrain obstacles
   for(var oi=0;oi<OBST.length;oi++)pushOutObstacle(this,OBST[oi]);
+  if(BOSS.on){var bcl=bossArenaClamp(this.pos.x,this.pos.z);this.pos.x=bcl.x;this.pos.z=bcl.z;}
   var d=Math.sqrt(this.pos.x*this.pos.x+this.pos.z*this.pos.z);
   var edge=ARENA_R-1.3;
   if(d>edge){
@@ -5756,7 +5870,9 @@ Fighter.prototype.update=function(dt,t){
     this.idleWeapon(dt,t);
   }
   this.skinTick(dt,t);
-  if(this.tauntT>0)this.tauntT=Math.max(0,this.tauntT-dt);
+  if(this.tauntT>0){this.tauntT=Math.max(0,this.tauntT-dt);
+    // walked off: the emote stops there, bubble and all
+    if(this.tauntX!=null&&dist2(this.pos.x,this.pos.z,this.tauntX,this.tauntZ)>TAUNT_RANGE*TAUNT_RANGE){this.tauntT=0;if(this.bub){this.bubT=0;this.bub.visible=false;}}}
   var locked=isTargeted(this);
   if(locked){
     var pulse=0.45+Math.abs(Math.sin(t*9))*0.55;
@@ -5824,7 +5940,7 @@ var TAUNTS=[
   {id:"stagedive",e:"\ud83c\udfa4",txt:"STAGE DIVE",col:"#ff1a34",pack:"rap",fx:"stagedive",rarity:"mythic",
   desc:"Hype the crowd up, dive off the stage... and land face first. Stars included. From the Rap Pack."}
 ];
-var TAUNT_DUR=2.2,TAUNT_GAP=2;
+var TAUNT_DUR=2.2,TAUNT_GAP=2,TAUNT_RANGE=3.5;   // walk this far from where an emote started and it ends
 var TAUNT_BASE=TAUNTS.filter(function(t){return !t.pack;}).map(function(t){return t.id;});      // the eight everyone has
 function emoteOwned(id){return TAUNT_BASE.indexOf(id)>=0||!!(SAVE.emotes&&SAVE.emotes[id]);}
 // what is in your wheel: the eight you equipped (anything not yours drops back to a default)
@@ -5840,7 +5956,7 @@ function tauntById(id){for(var i=0;i<TAUNTS.length;i++)if(TAUNTS[i].id===id)retu
 Fighter.prototype.taunt=function(id){
   var tk=tauntById(id);
   if(!tk||!this.alive)return false;
-  this.tauntK=tk.id;this.tauntT=TAUNT_DUR;
+  this.tauntK=tk.id;this.tauntT=TAUNT_DUR;this.tauntX=this.pos.x;this.tauntZ=this.pos.z;
   this.say(tk.e+" "+tk.txt,tk.col,TAUNT_DUR);
   if(tk.fx==="portal"&&this.mesh&&QUAL>=0){
     // the portal stands just behind you, facing the way you face
@@ -5890,6 +6006,7 @@ Fighter.prototype.tauntPose=function(dt){
 var tauntNext=0;
 function doTaunt(id){
   if(!player||!player.alive)return false;
+  if(MODAL_NOW||modalOpen())return false;
   if(!emoteOwned(id))return false;
   if(STATE!=="venue"&&STATE!=="playing"&&STATE!=="countdown"&&STATE!=="over")return false;
   if(gameT<tauntNext)return false;
@@ -5920,6 +6037,7 @@ var TAUNT_OPEN=false,TAUNT_AIM={x:0,y:0,sel:-1,sx:0,sy:0};
 function tauntWheelOpen(){return TAUNT_OPEN;}
 function openTauntWheel(touch){
   if(!player||STATE==="menu"||STATE==="boot")return;
+  if(MODAL_NOW||modalOpen())return;
   buildTauntWheel();$("tauntWheel").classList.remove("hide");TAUNT_OPEN=true;
   TAUNT_AIM.x=0;TAUNT_AIM.y=0;wheelPick(-1);
 }
@@ -6036,6 +6154,7 @@ function livingFighters(includeDecoy){
   return out;
 }
 function pickTarget(b,exclude,avoidTeam){
+  if(MODE&&MODE.boss&&avoidTeam===0)return bossTargetObj();     // Boss Rally: the players' side sends it to him
   if(RIFT.phase==="duel")return riftPick(b,exclude);
   var pool=[],i,f,all=livingFighters(true);
   for(i=0;i<all.length;i++){
@@ -6060,6 +6179,7 @@ function pickTarget(b,exclude,avoidTeam){
   return pool.length?pool[Math.floor(Math.random()*pool.length)]:null;
 }
 function aimPick(b,hitter,aimYaw){
+  if(MODE&&MODE.boss&&hitter&&hitter.team===0)return bossTargetObj();
   if(RIFT.phase==="duel")return riftPick(b,hitter);
   var ax=Math.sin(aimYaw),az=Math.cos(aimYaw);
   var best=null,bestScore=-2,all=livingFighters(true);
@@ -6118,6 +6238,8 @@ function blockActive(f){return BLOCK.active*((f&&f.windowMul)||1);}
 function missCd(f){return BLOCK.cd*((f&&f.halfWhiffT>0)?0.5:1);}
 // distance from a point to the SURFACE of a fighter's body
 function bodyGap(f,x,y,z){
+  // the boss: a sphere round his chest
+  if(f.isBoss){var bx=x-f.pos.x,by=y-(f.y+AIM_Y),bz=z-f.pos.z;return Math.sqrt(bx*bx+by*by+bz*bz)-f.hbr;}
   var y0=f.y+HB.r,y1=f.y+HB.h-HB.r;
   var cy=y<y0?y0:(y>y1?y1:y);
   var dx=x-f.pos.x,dy=y-cy,dz=z-f.pos.z;
@@ -6688,6 +6810,7 @@ function ballChase(b,dt){
 }
 function ballIsOnPlayer(b){return b.target&&b.target.isPlayer;}
 function launchBall(b,from){
+  if(MODE&&MODE.boss&&BOSS.on){bossServe(b);return;}
   b.target=pickTarget(b,from);
   b.freeze=0;b.respawn=0;
   if(from){b.lastHit=from;setupFlight(b,from.pos.x,from.y+2.2,from.pos.z);}
@@ -6698,8 +6821,10 @@ function resetBall(b,delay){
   b.respawn=delay===undefined?1.15:delay;
   b.pos.set(0,7,0);
   // a new ball starts a new rally: back to full reaction time for everyone
-  b.mult=1;b.judged=0;
-  b.speed=BALL_BASE*MODE.speed;
+  // Boss Rally keeps the rally's speed through everything: only a new fight resets it
+  var keepM=(MODE&&MODE.boss)?(b.mult||1):1;
+  b.mult=keepM;b.judged=0;b.bossBreak=false;
+  b.speed=clamp(BALL_BASE*keepM*MODE.speed,4,BALL_SPEED_MAX);
   b.flightSpeed=b.speed;
   b.slow=0;b.freeze=0;
   if(b.core&&b.core.material)b.core.material.color.setHex(ballColorHex());
@@ -6729,7 +6854,7 @@ function deflect(b,by,perfect,timed){
   // back up at whoever called it down.
   if(b.judged){b.mult=Math.max(1,b.mult-b.judged);b.judged=0;}
   var gained=quick?1:Math.round((perfect?10:5)*MODE.mult);
-  by.deflects++;
+  by.deflects++;by.runC=(by.runC|0)+gained;      // what this block earned, counted for everyone (the server pays from it)
   if(perfect)by.perfects++;
   swingOnce(by);
   b.mult+=rampStep()*(perfect?1.25:1);       // no ceiling, but a steady climb
@@ -6743,6 +6868,7 @@ function deflect(b,by,perfect,timed){
   sfx(perfect?"perfect":"parry");
   var aim=by.isPlayer?camYaw:(by.isRemote&&by.netAimAt!==undefined&&gameT-by.netAimAt<2?by.netAim:by.yaw);
   b.target=aimPick(b,by,aim);
+  if(MODE.boss&&by.team===0)bossParried(b,by);           // Boss Rally: a player parry counts on his guard
   if(!by.isPlayer&&!by.isRemote&&b.target){
     by.yaw=Math.atan2(b.target.pos.x-by.pos.x,b.target.pos.z-by.pos.z);
     aim=by.yaw;
@@ -6754,7 +6880,8 @@ function deflect(b,by,perfect,timed){
   // Ricky's .9: the block is a shot, and the tracer goes where the ball is going
   if(by.swordDef&&by.swordDef.swing==="gunshot"&&b.target)gunTracer(by,b.target.pos.x,b.target.y+AIM_Y,b.target.pos.z);
   if(NET.on&&NET.isHost)netBroadcastBall();
-  if(by.isPlayer){
+  if(MODE.tut&&by.isPlayer){tutEvent("parry");if(!quick)feed(perfect?"PERFECT":"Blocked",perfect?"gold":"good");}
+  else if(by.isPlayer){
     addCoins(gained);run.coins+=gained;
     if(!quick)feed(perfect?("PERFECT  +"+gained):("Blocked  +"+gained),perfect?"gold":"good");
     if(perfect&&!quick)flashWarn("PERFECT",0.45,"#ffd23f");
@@ -6762,6 +6889,7 @@ function deflect(b,by,perfect,timed){
   if(!b.target)endRound();
 }
 function ballHits(b,f,forced){
+  if(f.isBoss){bossContact(b);return;}
   // it touched a block that was up
   if(!forced&&f.blockT>0&&!f.isRemote){
     var pf=f.blockAge<=BLOCK.perfect;
@@ -6770,6 +6898,7 @@ function ballHits(b,f,forced){
   }
   // a player on the network: did they press in time? If we have not heard yet,
   // give them one round trip to say so
+  if(MODE.tut&&tutHit(b,f))return;
   if(!forced&&NET.on&&NET.isHost&&f.isRemote&&f.alive){
     var cNow=netNow(),use=netPressFor(f,cNow);
     if(use){use.used=true;f.blockVis=0;f.blockFlash=1;acLead(f,cNow-use.t,b.age);deflect(b,f,cNow-use.t<=BLOCK.perfect*1000+40,true);return;}
@@ -6804,7 +6933,7 @@ function ballHits(b,f,forced){
     return;
   }
   var killer=b.lastHit;
-  if(killer&&killer!==f)f.killedBy=killer;     // so the dead can watch their killer
+  if(killer&&killer!==f&&!killer.isBoss)f.killedBy=killer;     // so the dead can watch their killer
   var saved=f.guardian;
   f.eliminate();
   if(saved&&f.alive)return;                    // Guardian: eliminate() already reset the ball
@@ -6818,7 +6947,7 @@ function ballHits(b,f,forced){
     if(f.isPlayer){flashVig();flashWarn("ELIMINATED",1.2,"#ff3ca8");}
     if(f.decoy)feed(killer?(killer.name+" fell for the decoy"):"The decoy took it","good");
     else feed(f.name+" was eliminated"+(killer&&killer!==f?" by "+killer.name:""),"ko");
-    if(killer&&killer!==f&&killer.alive&&!f.decoy){
+    if(killer&&killer!==f&&killer.alive&&!f.decoy&&!killer.isBoss){
       killer.kos++;
       if(abilById(killer.ability).id==="bloodlust"){
         killer.bloodlust=Math.min(0.6,killer.bloodlust+0.2);
@@ -6827,15 +6956,17 @@ function ballHits(b,f,forced){
         ringBurst(killer.pos.x,killer.y+.4,killer.pos.z,20+bn*6,6+bn*2,0x9e1b32,1.4,.6);
         if(killer.isPlayer)feed("Bloodlust: +"+Math.round(killer.bloodlust*100)+"% speed","gold");
       }
+      var kbonus=Math.round(60*MODE.mult);killer.runC=(killer.runC|0)+kbonus;
       if(killer.isPlayer){
-        var bonus=Math.round(60*MODE.mult);
+        var bonus=kbonus;
         addCoins(bonus);run.coins+=bonus;
         feed("Elimination  +"+bonus,"gold");
       }
     }
+    if(MODE.boss)bossOnKo(f,true);
     if(!f.decoy&&checkEnd())return;
-    // fresh ball after every death, from the centre
-    resetBall(b,1.15);
+    // fresh ball after every death, from the centre (Boss Rally: from him)
+    resetBall(b,MODE.boss?BOSS_CFG.serve:1.15);
     return;
   }
   b.target=pickTarget(b,f);
@@ -7253,6 +7384,7 @@ function launchFrom(b,f,tg){
 function capSpeed(b,v){b.speed=Math.min(BALL_SPEED_MAX,Math.max(b.speed,v));b.flightSpeed=b.speed;}
 // who an aimed ability sends the ball to: whoever you look at, never you or your side
 function aimTarget(f,aim,b){
+  if(MODE&&MODE.boss&&f&&f.team===0)return bossTargetObj();
   var o=lookTarget(f,aim,999);
   if(o&&!(o.untarget>0))return o;
   var best=null,bd=1e9,all=livingFighters(true);
@@ -12780,6 +12912,76 @@ function godQueuePoll(){
     setTimeout(godQueuePoll,2000);
   },function(){GODQ.on=false;godSay("Could not reach the server.",false);});
 }
+/* ---- SERVER-RUN SOLO MATCHES ----
+   Signed in, a ranked match (and Boss Rally) is played in a room of your own
+   on the server: the same game, run there, so what it pays is what the server
+   saw -- never what this page says. The page only moves you and presses your
+   buttons, exactly as in an online match. */
+var SOLO_NAMES={sranked1:"RANKED 1v1",sranked2:"RANKED 2v2",boss:"BOSS RALLY"};
+function soloCode(){var A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",c="S";for(var i=0;i<7;i++)c+=A[Math.floor(Math.random()*A.length)];return c;}
+function soloSay(t,bad){
+  if(typeof notify==="function")notify({kind:bad?"error":"info",title:SOLO_NAMES[NET.solo]||"MATCH",text:t,ttl:bad?7:4});
+  else feed(t,bad?"ko":"good");
+}
+function soloServerStart(kind){
+  if(!econOn()||!serverBase()){soloSay(kind==="boss"?"Boss Rally rewards need you to be signed in.":"Ranked is played on the server. Sign in with Google on your Profile first.",true);return false;}
+  netDisconnect(true);
+  NET.solo=kind;NET.queue=false;NET.soloAt=Date.now();
+  var tok=NET.soloTok=(NET.soloTok||0)+1;
+  soloSay("Connecting to the server\u2026");
+  netConnect(soloCode());
+  setTimeout(function(){
+    if(NET.soloTok!==tok||!NET.solo)return;
+    if(STATE!=="playing"&&STATE!=="countdown"&&STATE!=="over"){
+      var why=NET.err||"The server did not start the match.";
+      netDisconnect();NET.solo="";soloSay(why+" Try again.",true);
+    }
+  },15000);
+  return true;
+}
+function soloLeave(){netDisconnect();NET.solo="";clearFighters();clearBalls();enterLobby();}
+/* What a server-run match paid, asked for until the server has it. The
+   server settles every match the moment it ends; a slow or lost write stays
+   pending there and is retried, so a result is never lost -- and never
+   counted as a loss while it is on its way. */
+function netSettleFetch(mid,tries){
+  if(!mid||!econOn())return;
+  tries=tries|0;
+  cloudPost("/cloud",{token:CLOUD.tok,op:"matchres",mid:mid}).then(function(r){
+    var j=r&&r.j||{};
+    if(r.status===200&&j.res){
+      econTake(j.save);
+      CLOUD.pendingMids=(CLOUD.pendingMids||[]).filter(function(x){return x!==mid;});cloudKeepMeta();
+      NET._settled={mid:mid,res:j.res,mode:j.mode};
+      netShowSettled(mid,j.res,j.mode);return;
+    }
+    if(r.status===200&&j.pending){
+      if((CLOUD.pendingMids||[]).indexOf(mid)<0){CLOUD.pendingMids=(CLOUD.pendingMids||[]).concat([mid]).slice(-20);cloudKeepMeta();}
+      if(tries<20){setTimeout(function(){netSettleFetch(mid,tries+1);},Math.min(8000,1200+tries*600));return;}
+      netShowSettled(mid,null);return;
+    }
+    if(tries<20)setTimeout(function(){netSettleFetch(mid,tries+1);},4000);
+  },function(){if(tries<20)setTimeout(function(){netSettleFetch(mid,tries+1);},5000);});
+}
+// results that were still pending last time: asked for again once signed in
+function netSettleResume(){(CLOUD.pendingMids||[]).slice().forEach(function(m){netSettleFetch(m,10);});}
+function netShowSettled(mid,res,mode){
+  var onScreen=(NET.lastMid===mid&&!$("results").classList.contains("hide"));
+  if(!res){if(onScreen)$("rpline").innerHTML="<span style='opacity:.7'>RESULT PENDING \u00b7 IT WILL BE ADDED WHEN THE SERVER CONFIRMS IT</span>";return;}
+  if(!onScreen){
+    if(NET.lastMid!==mid&&typeof notify==="function")notify({kind:"info",title:"MATCH CONFIRMED",text:(res.rp?((res.rp>0?"+":"")+res.rp+" RP, "):"")+"+"+(res.coins|0)+" coins",ttl:5});
+    return;
+  }
+  $("rCoins").textContent=res.coins|0;
+  if(MODE&&MODE.boss){$("rpline").innerHTML=bossResultLine(res);return;}
+  if(MODE&&MODE.ranked)
+    $("rpline").innerHTML=((res.rp|0)>=0?"<b>+"+(res.rp|0)+" RP</b>":"<b class='neg'>"+(res.rp|0)+" RP</b>")+
+      " &nbsp;&middot;&nbsp; "+currentRank().name.toUpperCase()+((res.ranked&&res.ranked.length)?" &nbsp;&middot;&nbsp; <b>RANK UP!</b>":"")+
+      " &nbsp;&middot;&nbsp; <span style='opacity:.45'>CONFIRMED BY THE SERVER</span>";
+  if(res.ranked&&res.ranked.length)sfx("rank");
+  if(res.pass){$("rPass").innerHTML=passResultHtml(res.pass);$("rPass").classList.toggle("hide",!res.pass);}
+  if(res.token)setTimeout(rodrigaTokenFx,600);
+}
 function godMatch(code){
   sfx("rank");
   godSay("<b>OPPONENT FOUND</b><br>Connecting&hellip;");
@@ -12938,6 +13140,7 @@ function trickBotSteer(f){
 /* ==== 4.0 END ==== */
 
 function useAbility(f,remoteCast){
+  if(f&&f.isPlayer&&!remoteCast&&(MODAL_NOW||modalOpen()))return;
   if(f&&f.isPlayer&&f.stdT>0&&!remoteCast){stdChoose("dark");return;}
   var a=abilById(f.ability);
   // bots only ever get here from the frame loop, which is already stopped while
@@ -12947,6 +13150,9 @@ function useAbility(f,remoteCast){
   if(a.passive||f.abilCd>0||!f.alive||f.stun>0||f.frozen>0)return;
   if(lastTwoBan(a)&&!remoteCast){if(f.isPlayer)flashWarn(a.name.toUpperCase()+" IS OFF \u2014 LAST TWO",0.9,"#ff6b6b");return;}
   f.abilCd=a.cd;
+  if(MODE.tut&&f.isPlayer)tutEvent("ability");
+  // the server's movement check: whoever casts may move fast for a moment
+  if(NET.on&&NET.isHost&&NET.srv)mvGrant(f);
   // Jordan was a free win one on one (ranked 1v1 above all): it comes round far
   // less often when there is only one person to bring it down on
   if(a.id==="jordan"&&oneOnOne(f))f.abilCd=a.cd*1.6;
@@ -13771,7 +13977,7 @@ function wsUrlFor(code){
   var ws=b.replace(/^http:/,"ws:").replace(/^https:/,"wss:");
   if(NET.specTok&&NET.specWatch)return ws+"/live/"+encodeURIComponent(NET.specWatch)+"?spectate="+encodeURIComponent(NET.specTok);
   if(NET.specTok)return ws+"/room/"+code+"?spectate="+encodeURIComponent(NET.specTok);
-  var q=(NET.queue?"?q=1&":"?")+"name="+encodeURIComponent((SAVE.netName||"Player").slice(0,14))+
+  var q=(NET.queue?"?q=1&":"?")+(NET.solo?"solo="+encodeURIComponent(NET.solo)+"&":"")+"name="+encodeURIComponent((SAVE.netName||"Player").slice(0,14))+
         "&sword="+encodeURIComponent(eqBlade())+
         "&skin="+encodeURIComponent(SAVE.eqSkin)+
         "&abil="+encodeURIComponent(SAVE.eqAbil)+
@@ -13836,6 +14042,7 @@ function netHandle(m){
     NET.status="error";
     NET.err=m.why==="banned"?("This account is banned"+(m.reason?": "+m.reason:".")):
       m.why==="kicked"?(m.reason||"You were removed from that room."):
+      m.why==="full"?(m.reason||"That lobby is full."):
       m.why==="spec"?(m.reason||"That spectate link has expired."):
       "Online play needs a Google account. Sign in on your Profile, then try again.";
     if(m.why==="banned")cloudBanned(m.reason);
@@ -13920,6 +14127,9 @@ function netHandle(m){
   }
   if(!NET.on)return;
   if(m.t==="state")   {netRemoteState(m);return;}
+  // the server says we cannot be where we said: we are where it says
+  if(m.t==="corr"){if(player&&player.alive&&!player.isRemote&&typeof m.x==="number"&&isFinite(m.x)&&isFinite(m.z)){
+    player.pos.x=m.x;player.pos.z=m.z;if(typeof m.y==="number"&&isFinite(m.y)&&player.y>m.y){player.y=m.y;player.vy=Math.min(player.vy,0);}player.vel.set(0,0,0);}return;}
   if(m.t==="swing")   {netRemoteSwing(m);return;}
   if(m.t==="ability") {netRemoteAbility(m);return;}
   if(m.t==="parry")   {netHostParryClaim(m);return;}
@@ -13964,6 +14174,7 @@ function netHandle(m){
   if(m.t==="botstate"){if(!NET.isHost)netApplyBots(m);return;}
   if(m.t==="ball")    {if(!NET.isHost)netApplyBall(m);return;}
   if(m.t==="hit")     {if(!NET.isHost)netApplyHit(m);return;}
+  if(m.t==="boss")    {bossApply(m);return;}
   if(m.t==="guard")   {if(!NET.isHost){var gf=fighterByNetId(m.w);if(gf&&gf.alive){gf.guardian=true;gf.eliminate();}}return;}
   if(m.t==="roundover"){if(!NET.isHost)netApplyRoundOver(m);return;}
 }
@@ -14013,6 +14224,8 @@ function disposeTree(root){
   });
 }
 function clearFighters(){
+  if(BOSS.on||BOSS.model)bossStop();
+  if(TUT.on){TUT.on=false;tutPaint();}
   v4Clear();
   for(var si=0;si<fighters.length;si++)dropShell(fighters[si]);
   if(typeof clearSlashes==="function")clearSlashes();
@@ -14137,6 +14350,1409 @@ function startMatch(modeId){
   // a solo ranked match can be watched from the admin page: the game streams it only while someone does
   if(MODE.ranked){liveOpen();liveIds();if(LIVE.n)liveStart();}
 }
+/* ============================================================
+   BOSS RALLY -- one to four players against The Broken Champion
+   ------------------------------------------------------------
+   Everybody has ONE heart and there is ONE ball. The boss serves it at a
+   living player (the normal red warning). Parry it and it goes back to him;
+   he returns it at somebody. Five PLAYER parries break his guard (his own
+   returns never count) and the fifth ball strikes his chest for one segment
+   of health. Then the guard resets and the next rally starts. Every guard
+   break revives the teammate who has been down longest. A ball that gets
+   through to anyone knocks them out and resets the guard; everybody down
+   loses the fight.
+
+   The ball's speed is the game's ordinary fixed climb, one step per player
+   parry. Nothing resets it -- not damage, not a new rally, not a phase, not a
+   knockout. Only a new fight starts it from the beginning.
+
+   Phase 1 is plain rallies. Phase 2 bends his returns, and says so: a teal
+   trail of the whole path and a CURVED tag. Phase 3 adds a dodge attack every
+   so often, telegraphed on the floor well before it lands. Nothing is thrown
+   during a guard break or a phase change.
+
+   Whoever runs the match (the server's copy of the game online, your own game
+   in practice) decides everything: the ball, the guard, the health, the
+   knockouts, the revives, the attacks and the phases. Everyone else draws what
+   it says.
+   ============================================================ */
+var BOSSMODE={id:"boss",name:"Boss Rally",bots:0,speed:1.0,ramp:1.10,window:0.30,mult:1,minFlight:0.8,rp:0,
+  teams:true,boss:true,net:true,desc:"Co-op, 1–4 players: rally the ball off The Broken Champion and break his guard."};
+var BOSS_CFG={
+  hp:[6,8,10,12],           // health segments for 1, 2, 3 and 4 players
+  guard:5,                  // player parries that break the guard
+  serve:1.6,                // a new rally after a knockout
+  breakT:2.0,               // the guard-break recoil: nothing attacks during it
+  phaseT:2.8,               // the phase change
+  curve:[0.75,1.15],        // how far a phase 2+ return leaves off the straight line (radians)
+  atkGap:[9,14],            // phase 3: seconds between dodge attacks
+  atkWarn:1.8,              // how long the floor shows where it will land
+  rainR:4.6,                // the sword-rain circles
+  sweepHalf:0.44,           // half the sweep's width (about 25 degrees)
+  sweepH:1.6,               // jump higher than this and the sweep passes under you
+  bz:-7.5,                  // he stands this far behind the straight edge
+  chestY:7.8,               // where a guard-breaking ball strikes him (his model's chest, at his scale)
+  scale:1.3,                // he is built 1.3x the size of the model below
+  bodyR:2.8                 // his hitbox, a sphere round the chest
+};
+var BOSS_MAP={id:"keep",name:"The Champion's Keep",r:20,floor:0x2c2a30,line:0xff8a3c,pillar:0x3a3540,
+  accentA:0xff8a3c,accentB:0x2ad4c4,skyTop:"#1a0c12",skyMid:"#3a1a1a",skyBot:"#0c0608",fog:0x1c0f12,
+  hemiSky:0xffb08a,hemiGnd:0x2a1a1c,sun:0xffd2a8,deco:"none",obst:"none",boss:true,
+  desc:"A ruined keep. The arena is the half-circle in front of him."};
+/* Abilities that cannot work in a fight with one enemy who never moves, or
+   that would break the rally. Saved loadouts are never touched: the pick made
+   for Boss Rally is used for Boss Rally only. */
+var BOSS_BAD={
+  bloodrift:"opens a duel between two fighters",
+  jordan:"slams a target the boss can't be",
+  swap:"swaps places with an enemy",
+  ramenhair:"reels in an enemy",
+  gravity:"pulls enemies together",
+  mirror:"a decoy would steal the boss's serves",
+  drone:"strikes a target on the floor",
+  guardian:"a second heart breaks the one-heart rule",
+  lightskin:"blinds enemies who aren't there",
+  grey:"needs an enemy to grab",
+  divine:"slams the ball down on an enemy fighter",
+  "throw":"needs an enemy to hit",
+  beckon:"would pull the ball off the boss and fake guard hits",
+  cursed:"marks enemies who aren't there"
+};
+function bossAbilOk(id){return !BOSS_BAD[id];}
+var BOSS={on:false,hp:0,max:0,guard:0,phase:1,busyT:0,atk:null,atkT:0,endT:0,victory:false,down:[],
+  t0:0,n:0,model:null,hud:null,fx:[],tell:[],seq:0};
+var BOSS_F=null;
+function bossPhaseOf(hp,max){var f=hp/Math.max(1,max);return f>2/3+1e-9?1:(f>1/3+1e-9?2:3);}
+function bossHpFor(n){var t=BOSS_CFG.hp;return t[clamp(n,1,t.length)-1];}
+// the boss as far as the ball is concerned: a target with a big chest and no feet
+function bossTargetObj(){
+  if(!BOSS_F)BOSS_F={isBoss:true,netId:"boss",name:"The Broken Champion",team:1,alive:true,untarget:0,
+    isPlayer:false,isRemote:false,isBot:false,decoy:false,deflects:0,perfects:0,kos:0,ability:"dash",
+    windowMul:1,swingT:0,pos:new THREE.Vector3(0,0,BOSS_CFG.bz),y:BOSS_CFG.chestY-AIM_Y,hbr:BOSS_CFG.bodyR,
+    swing:function(){bossAnim("swing");}};
+  BOSS_F.alive=true;BOSS_F.pos.set(0,0,BOSS_CFG.bz);BOSS_F.y=BOSS_CFG.chestY-AIM_Y;
+  return BOSS_F;
+}
+// the half-disc: inside the curve, and in front of the straight edge
+function bossArenaClamp(x,z){
+  var R=ARENA_R-1.3,zMin=1.3;
+  if(z<zMin)z=zMin;
+  var d=Math.sqrt(x*x+z*z);
+  if(d>R){x*=R/d;z*=R/d;if(z<zMin)z=zMin;}
+  return {x:x,z:z};
+}
+function bossAngWrap(a){while(a>Math.PI)a-=TAU;while(a<-Math.PI)a+=TAU;return a;}
+// where the players stand at the start: a fan across the half-disc, facing him
+function bossSpawnSpot(i,n){
+  var t=(i-(n-1)/2)*0.5;
+  return {x:Math.sin(t)*ARENA_R*0.52,z:Math.cos(t)*ARENA_R*0.52+1.5};
+}
+
+/* ---- the fight, run by whoever runs the match ---- */
+function bossBegin(nPlayers){
+  BOSS.on=true;BOSS.n=nPlayers;
+  BOSS.max=BOSS.hp=bossHpFor(nPlayers);
+  BOSS.guard=0;BOSS.phase=1;BOSS.busyT=0;BOSS.atk=null;BOSS.endT=0;BOSS.victory=false;BOSS.down=[];
+  BOSS.atkT=rr(BOSS_CFG.atkGap[0],BOSS_CFG.atkGap[1]);BOSS.t0=gameT;BOSS.seq=0;
+  bossTargetObj();
+  bossHudShow(true);bossHudPaint();
+}
+function bossRuns(){return !NET.on||NET.isHost;}
+function bossState(){return {hp:BOSS.hp,mx:BOSS.max,gd:BOSS.guard,ph:BOSS.phase};}
+// tell everyone, and do it here too
+function bossEvent(ev){
+  BOSS.seq++;
+  var m={t:"boss",s:BOSS.seq,hp:BOSS.hp,mx:BOSS.max,gd:BOSS.guard,ph:BOSS.phase,ev:ev||null};
+  if(NET.on&&NET.isHost)netSend(m);
+  bossShow(m);
+}
+// what the server reports for this fight, once it is over
+function bossInfo(){
+  if(!MODE||!MODE.boss)return null;
+  return {dealt:Math.max(0,BOSS.max-BOSS.hp),total:BOSS.max,victory:!!BOSS.victory};
+}
+// a player's parry sent the ball at him
+function bossParried(b,by){
+  if(!bossRuns())return;
+  BOSS.guard=Math.min(BOSS_CFG.guard,BOSS.guard+1);
+  b.bossBreak=BOSS.guard>=BOSS_CFG.guard;
+  bossEvent({k:"gd",by:netIdOf(by)});
+}
+// the serve: from his sword hand, at a living player
+function bossServe(b){
+  b.freeze=0;b.respawn=0;b.bossBreak=false;
+  b.target=pickTarget(b,null);
+  b.lastHit=bossTargetObj();
+  setupFlight(b,rr(-1.5,1.5),BOSS_CFG.chestY+0.6,BOSS_CFG.bz+3.2);
+  bossEvent({k:"srv"});
+}
+// the ball reached him
+function bossContact(b){
+  var B=bossTargetObj();
+  if(!bossRuns())return;
+  if(b.bossBreak){
+    b.bossBreak=false;
+    BOSS.hp=Math.max(0,BOSS.hp-1);BOSS.guard=0;
+    var was=BOSS.phase;BOSS.phase=bossPhaseOf(BOSS.hp,BOSS.max);
+    var phased=BOSS.phase!==was&&BOSS.hp>0;
+    // the rally is over: the ball rests through the recoil (and the phase
+    // change), then he serves again. Its speed is kept.
+    b.active=false;b.mesh.visible=false;b.target=null;b.freeze=0;
+    b.respawn=BOSS_CFG.breakT+(phased?BOSS_CFG.phaseT:0);
+    BOSS.busyT=b.respawn;
+    if(BOSS.atk){BOSS.atk=null;bossEvent({k:"cx"});}
+    var rv=bossReviveOne();
+    bossEvent({k:"brk",x:+b.pos.x.toFixed(2),y:+b.pos.y.toFixed(2),z:+b.pos.z.toFixed(2),rv:rv});
+    if(phased){bossEvent({k:"ph",p:BOSS.phase});BOSS.atkT=rr(3.5,5.5);}
+    if(BOSS.hp<=0){BOSS.victory=true;BOSS.endT=1.6;b.respawn=99;bossEvent({k:"win"});}
+    if(NET.on&&NET.isHost)netBroadcastBall();
+    return;
+  }
+  // his return: at a living player, bent in phase 2 and up
+  b.lastHit=B;b.freeze=0;
+  b.target=pickTarget(b,null);
+  if(!b.target){resetBall(b,BOSS_CFG.serve);return;}
+  var aim;
+  if(BOSS.phase>=2){
+    var straight=Math.atan2(b.target.pos.x-b.pos.x,b.target.pos.z-b.pos.z);
+    aim=straight+(Math.random()<0.5?-1:1)*rr(BOSS_CFG.curve[0],BOSS_CFG.curve[1]);
+  }
+  setupFlight(b,undefined,undefined,undefined,aim);
+  bossEvent({k:"ret",c:aim!==undefined?1:0});
+  if(NET.on&&NET.isHost)netBroadcastBall();
+}
+// a player went down
+function bossOnKo(f,byBall){
+  if(!bossRuns())return;
+  BOSS.down.push(f);
+  if(byBall){BOSS.guard=0;for(var i=0;i<balls.length;i++)balls[i].bossBreak=false;}
+  bossEvent({k:"ko",w:netIdOf(f)});
+}
+// the teammate who has been down longest gets up
+function bossReviveOne(){
+  for(var i=0;i<BOSS.down.length;i++){
+    var f=BOSS.down[i];
+    if(f.alive||fighters.indexOf(f)<0)continue;
+    if(f.netId&&NET.on&&!NET.players.some(function(p){return p.id===f.netId;}))continue;   // left the room
+    BOSS.down.splice(i,1);
+    var x=rr(-6,6),z=ARENA_R*rr(0.55,0.68);
+    fighterRevive(f,x,z);
+    return [netIdOf(f),+x.toFixed(2),+z.toFixed(2)];
+  }
+  return null;
+}
+function fighterRevive(f,x,z){
+  f.alive=true;f.pos.set(x,0,z);f.y=0;f.vy=0;f.vel.set(0,0,0);
+  f.untarget=1.6;f.stun=0;f.frozen=0;f.blockT=0;f.blockCd=0;f.hitPending=null;f.killedBy=null;f.mv=null;
+  f.guardian=false;
+  var g=f.mesh;g.visible=true;g.scale.setScalar(f._sc0||1);g.rotation.set(0,0,0);
+  f.yaw=Math.atan2(-x,BOSS_CFG.bz-z);
+  if(f.ring)f.ring.visible=true;
+  if(typeof mvGrant==="function")mvGrant(f,3);
+  ringBurst(x,0.4,z,40,9,0x6bffb0,1.8,.8);
+  burst(x,1.6,z,40,10,0xd8fff0,1.6,.8,4);
+  if(f.isPlayer){hudC.dead=false;stopSpectating();flashWarn("REVIVED",1.1,"#6bffb0");
+    camYaw=Math.PI;}
+  feed(f.name+" is back up","good");
+  setAlive();
+}
+// phase 3: a dodge attack, never during a recoil or a phase change
+function bossAttackStart(){
+  var all=livingFighters(false).filter(function(f){return f.team===0;});
+  if(!all.length)return;
+  var k=Math.random()<0.5?"rain":"sweep",atk={k:k,t:BOSS_CFG.atkWarn};
+  if(k==="rain"){
+    atk.p=[];
+    for(var i=0;i<all.length&&i<4;i++){
+      var c=bossArenaClamp(all[i].pos.x+rr(-1,1),all[i].pos.z+rr(-1,1));
+      atk.p.push([+c.x.toFixed(2),+c.z.toFixed(2)]);
+    }
+  } else {
+    var cx=0,cz=0;for(var j=0;j<all.length;j++){cx+=all[j].pos.x;cz+=all[j].pos.z;}
+    cx/=all.length;cz/=all.length;
+    atk.a=+(Math.atan2(cx,cz-BOSS_CFG.bz)+rr(-0.25,0.25)).toFixed(3);
+  }
+  BOSS.atk=atk;
+  bossEvent({k:"atk",a:atk});
+}
+function bossAttackHits(atk,f){
+  if(!f.alive||f.team!==0||f.untarget>0)return false;
+  if(atk.k==="rain"){
+    for(var i=0;i<atk.p.length;i++)
+      if(dist2(f.pos.x,f.pos.z,atk.p[i][0],atk.p[i][1])<BOSS_CFG.rainR*BOSS_CFG.rainR)return true;
+    return false;
+  }
+  if(f.y>BOSS_CFG.sweepH)return false;
+  var a=Math.atan2(f.pos.x,f.pos.z-BOSS_CFG.bz);
+  return Math.abs(bossAngWrap(a-atk.a))<BOSS_CFG.sweepHalf;
+}
+function bossAttackLand(){
+  var atk=BOSS.atk;BOSS.atk=null;
+  if(!atk)return;
+  bossEvent({k:"land",a:atk});
+  var all=livingFighters(false);
+  for(var i=0;i<all.length;i++){
+    var f=all[i];
+    if(!bossAttackHits(atk,f))continue;
+    f.eliminate();
+    if(f.alive)continue;
+    if(NET.on&&NET.isHost)netSend({t:"hit",w:netIdOf(f),by:"boss"});
+    sfx("ko");
+    if(f.isPlayer){flashVig();flashWarn("ELIMINATED",1.2,"#ff3ca8");}
+    feed(f.name+(atk.k==="rain"?" was caught by the falling swords":" was cut down by the sweep"),"ko");
+    bossOnKo(f,false);
+  }
+  checkEnd();
+  BOSS.atkT=rr(BOSS_CFG.atkGap[0],BOSS_CFG.atkGap[1]);
+}
+function bossTick(dt){
+  if(!BOSS.on||!MODE||!MODE.boss)return;
+  bossVisTick(dt);
+  if(!bossRuns()||STATE!=="playing")return;
+  if(BOSS.endT>0){BOSS.endT-=dt;if(BOSS.endT<=0){BOSS.endT=0;endRound();}return;}
+  BOSS.busyT=Math.max(0,BOSS.busyT-dt);
+  if(BOSS.atk){
+    if(BOSS.busyT>0){BOSS.atk=null;bossEvent({k:"cx"});}
+    else{BOSS.atk.t-=dt;if(BOSS.atk.t<=0)bossAttackLand();}
+    return;
+  }
+  if(BOSS.phase>=3&&BOSS.busyT<=0){
+    BOSS.atkT-=dt;
+    if(BOSS.atkT<=0)bossAttackStart();
+  }
+}
+function bossStop(){
+  BOSS.on=false;BOSS.atk=null;
+  bossHudShow(false);
+  bossTellClear();
+  if(BOSS.model){disposeTree(BOSS.model.root);scene.remove(BOSS.model.root);BOSS.model=null;}
+  for(var i=0;i<BOSS.fx.length;i++){var o=BOSS.fx[i].m;if(o&&o.parent)o.parent.remove(o);if(o)disposeTree(o);}
+  BOSS.fx.length=0;
+}
+
+/* ---- what everyone sees ---- */
+// a boss message, from the host -- or from ourselves when we are the host
+function bossShow(m){
+  if(!MODE||!MODE.boss)return;
+  if(typeof m.hp==="number"){BOSS.hp=m.hp;BOSS.max=m.mx;BOSS.guard=m.gd;BOSS.phase=m.ph;}
+  var ev=m.ev;
+  if(ev){
+    if(ev.k==="gd"){sfx("parry");bossAnim("guard");}
+    else if(ev.k==="srv"||ev.k==="ret"){
+      bossAnim("swing");
+      if(ev.c){BOSS.curveFx=0.9;}
+    } else if(ev.k==="brk"){bossGuardBreakFx(ev);}
+    else if(ev.k==="ph"){bossPhaseFx(ev.p);}
+    else if(ev.k==="ko"){bossHudFlash("GUARD RESET","#ff6b6b");}
+    else if(ev.k==="atk"){bossTellStart(ev.a);}
+    else if(ev.k==="land"){bossTellLand(ev.a);}
+    else if(ev.k==="cx"){bossTellClear();}
+    else if(ev.k==="win"){bossDefeatFx();}
+    // a revive that came with the guard break: the host already stood them up
+    if(ev.k==="brk"&&ev.rv&&!bossRuns()){
+      var rf=fighterByNetId(ev.rv[0]);
+      if(rf&&!rf.alive)fighterRevive(rf,ev.rv[1],ev.rv[2]);
+    }
+  }
+  bossHudPaint();
+}
+function bossApply(m){if(NET.on&&!NET.isHost)bossShow(m);}
+// a curved return draws its whole path in teal as it leaves, and says so
+function bossCurveTell(b){
+  if(!b||!b.target||!b.c0)return;
+  pathTell(b,1,[0.16,0.85,0.78]);
+  if(b.target===player)flashWarn("CURVED!",0.6,"#2ad4c4");
+  bossHudFlash("CURVED RETURN","#2ad4c4");
+}
+
+/* ---- the HUD: his health in segments, the guard, the phase ---- */
+function bossHudEl(){
+  var el=document.getElementById("bossHud");
+  if(el)return el;
+  el=document.createElement("div");el.id="bossHud";el.className="bossHud hide";
+  el.innerHTML="<div class='bhName'>THE BROKEN CHAMPION <span id='bhPhase'>PHASE 1</span></div>"+
+    "<div class='bhBar' id='bhBar'></div>"+
+    "<div class='bhGuard'><span class='bhLbl'>GUARD</span><span id='bhPips'></span><span id='bhTag' class='bhTag'></span></div>";
+  var ui=document.getElementById("ui");(ui||document.body).appendChild(el);
+  return el;
+}
+function bossHudShow(on){
+  if(typeof document==="undefined"||!document.createElement||NET.srv)return;
+  var el=bossHudEl();el.classList.toggle("hide",!on);
+}
+var _bhKey="";
+function bossHudPaint(){
+  if(NET.srv||typeof document==="undefined"||!document.getElementById)return;
+  var el=document.getElementById("bossHud");if(!el)return;
+  var key=BOSS.hp+"/"+BOSS.max+"/"+BOSS.guard+"/"+BOSS.phase;
+  if(key===_bhKey)return;_bhKey=key;
+  var s="";for(var i=0;i<BOSS.max;i++)s+="<i class='"+(i<BOSS.hp?"on":"")+"'></i>";
+  $("bhBar").innerHTML=s;
+  var p="";for(i=0;i<BOSS_CFG.guard;i++)p+="<i class='"+(i<BOSS.guard?"on":"")+"'></i>";
+  $("bhPips").innerHTML=p;
+  $("bhPhase").textContent="PHASE "+BOSS.phase;
+  $("bhPhase").className="ph"+BOSS.phase;
+}
+var _bhTagT=0;
+function bossHudFlash(txt,col){
+  if(NET.srv||typeof document==="undefined"||!document.getElementById)return;
+  var t=document.getElementById("bhTag");if(!t)return;
+  t.textContent=txt;t.style.color=col||"#fff";t.classList.add("on");_bhTagT=1.4;
+}
+
+/* ---- the arena: a half-disc of floor in front of a ruined keep ---- */
+// weld every plain mesh under root that shares a material into one, for the iPad
+function mergeByMat(root){
+  root.updateMatrixWorld(true);
+  var inv=new THREE.Matrix4().copy(root.matrixWorld).invert(),groups={},order=[],mtx=new THREE.Matrix4();
+  root.traverse(function(o){
+    if(!o.isMesh||o.userData.keep||!o.geometry||!o.geometry.attributes||!o.geometry.attributes.position)return;
+    for(var p=o.parent;p&&p!==root;p=p.parent)if(p.userData.keep)return;
+    var sig=matSig(o.material);if(!sig)return;
+    if(!groups[sig]){groups[sig]=[];order.push(sig);}
+    groups[sig].push(o);
+  });
+  for(var gi=0;gi<order.length;gi++){
+    var list=groups[order[gi]];if(list.length<2)continue;
+    var useUv=!!list[0].material.map,pos=[],nor=[],uvs=[],ok=true,i;
+    for(i=0;i<list.length;i++){
+      var o=list[i],g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();
+      if(!g.attributes.normal)g.computeVertexNormals();
+      if(useUv&&!g.attributes.uv){ok=false;g.dispose();break;}
+      mtx.multiplyMatrices(inv,o.matrixWorld);g.applyMatrix4(mtx);
+      var pa=g.attributes.position.array,na=g.attributes.normal.array;
+      for(var k=0;k<pa.length;k++){pos.push(pa[k]);nor.push(na[k]);}
+      if(useUv){var ua=g.attributes.uv.array;for(k=0;k<ua.length;k++)uvs.push(ua[k]);}
+      g.dispose();
+    }
+    if(!ok)continue;
+    var mg=new THREE.BufferGeometry();
+    mg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));
+    mg.setAttribute("normal",new THREE.Float32BufferAttribute(nor,3));
+    if(useUv)mg.setAttribute("uv",new THREE.Float32BufferAttribute(uvs,2));
+    mg.computeBoundingSphere();
+    var mesh=new THREE.Mesh(mg,list[0].material);mesh.receiveShadow=QUAL>0;
+    root.add(mesh);
+    for(i=0;i<list.length;i++){var x=list[i];if(x.parent)x.parent.remove(x);if(x.geometry&&!isSharedAsset(x.geometry))x.geometry.dispose();}
+  }
+}
+function buildBossArena(map){
+  var R=ARENA_R,H=Math.PI/2;
+  var frep=Math.round(R/6.5);
+  var floorMat=new THREE.MeshLambertMaterial({map:mkTex(floorCanvas(map),frep,frep)});
+  // the half-disc: theta runs from +x round through +z to -x
+  var disc=new THREE.Mesh(new THREE.CylinderGeometry(R,R*0.94,2.2,40,1,false,-H,Math.PI),floorMat);
+  disc.position.y=-1.1;disc.receiveShadow=true;arena.add(disc);
+  var stone=new THREE.MeshLambertMaterial({color:0x2a2630}),dark=new THREE.MeshLambertMaterial({color:0x121016});
+  var brass=new THREE.MeshLambertMaterial({color:0xa07a34,emissive:0x2a1a04,emissiveIntensity:.4});
+  var teal=new THREE.MeshLambertMaterial({color:0x1d6a68,side:THREE.DoubleSide});
+  var crim=new THREE.MeshLambertMaterial({color:0x6a1a20,side:THREE.DoubleSide});
+  var iron=new THREE.MeshLambertMaterial({color:0x4a4850});
+  var flame=new THREE.MeshBasicMaterial({color:0xffa040});
+  var S=new THREE.Group();arena.add(S);
+  function bx(m,w,h,d,x,y,z,ry){var q=new THREE.Mesh(GEO.box,m);q.scale.set(w,h,d);q.position.set(x,y,z);if(ry)q.rotation.y=ry;S.add(q);return q;}
+  // the straight edge's face, and a low lip of broken parapet along it
+  bx(dark,R*2,2.2,0.6,0,-1.1,-0.3);
+  for(var px=-R+1.5;px<R-1;px+=3.2){if(Math.random()<0.18)continue;bx(stone,2.6,rr(0.6,1.1),0.9,px,0.3,-0.7);}
+  // the pit he stands in, and the keep's wall behind him
+  bx(dark,R*2.8,1,24,0,-16,-12);
+  // embers glowing up out of the pit he stands in
+  var pitGlow=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:glowTex(),color:0xff5a1a,transparent:true,opacity:.55,
+    blending:THREE.AdditiveBlending,depthWrite:false}));
+  pitGlow.userData.keep=true;pitGlow.rotation.x=-Math.PI/2;pitGlow.scale.set(R*1.6,18,1);pitGlow.position.set(0,-9,-8);arena.add(pitGlow);
+  bx(stone,R*2.6,18,2,0,4,-24);
+  for(var cr=-R*1.3;cr<R*1.3;cr+=3.4)bx(stone,2.2,2.2,2,cr,14,-24);   // battlements
+  for(var tw=-1;tw<=1;tw+=2){bx(stone,6,24,6,tw*(R*0.95),9,-21);bx(dark,6.6,1,6.6,tw*(R*0.95),21.5,-21);}
+  // great banners down the wall
+  for(var bn=-2;bn<=2;bn++){if(bn===0)continue;
+    var bm=new THREE.Mesh(GEO.plane,bn%2?teal:crim);bm.scale.set(3.4,9,1);bm.position.set(bn*8.5,7.5,-22.9);S.add(bm);
+    bx(brass,4,0.3,0.3,bn*8.5,12.1,-22.8);}
+  // chains hanging from the wall into the pit
+  for(var ch=-3;ch<=3;ch++){if(ch===0)continue;
+    for(var lk=0;lk<8;lk++)bx(iron,0.25,0.9,0.25,ch*5.2+(lk%2)*0.06,11-lk*1.0,-22.4+lk*0.5);}
+  // pillars, torches and banners round the curve, outside the floor
+  for(var i=0;i<=8;i++){
+    var a=-H+(i/8)*Math.PI,x=Math.sin(a)*(R+3.4),z=Math.cos(a)*(R+3.4);
+    var h=rr(8,13);
+    bx(stone,2.2,h,2.2,x,h/2-1.5,z);
+    bx(dark,2.8,0.6,2.8,x,h-1.4,z);
+    if(i%2===0){                                          // a torch on a bracket
+      var tx=Math.sin(a)*(R+2.1),tz=Math.cos(a)*(R+2.1);
+      bx(iron,0.3,1.2,0.3,tx,4.2,tz);
+      var fl=new THREE.Mesh(GEO.cone,flame);fl.scale.set(0.5,0.9,0.5);fl.position.set(tx,5.2,tz);S.add(fl);
+      if(QUAL>0){
+        var halo=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:glowTex(),color:0xff8a3c,transparent:true,
+          blending:THREE.AdditiveBlending,depthWrite:false}));
+        halo.userData.keep=true;halo.userData.billboard=true;halo.scale.setScalar(4.2);halo.position.set(tx,5.3,tz);
+        arena.add(halo);BILLBOARDS.push(halo);
+      }
+    } else {                                              // a banner between pillars
+      var bb=new THREE.Mesh(GEO.plane,i%4===1?teal:crim);bb.scale.set(2.2,5,1);
+      bb.position.set(Math.sin(a)*(R+2.2),5.5,Math.cos(a)*(R+2.2));bb.rotation.y=a+Math.PI;S.add(bb);
+    }
+  }
+  // a fringe of fallen stone outside the floor
+  for(var rk=0;rk<(QUAL>0?14:6);rk++){
+    var ra=-H+Math.random()*Math.PI,rd=R+rr(1,5);
+    bx(stone,rr(0.8,2),rr(0.5,1.4),rr(0.8,2),Math.sin(ra)*rd,0,Math.cos(ra)*rd,rr(0,3));
+  }
+  mergeByMat(S);
+  // the edge band and rings, as on any arena: the band reddens while the ball hunts you
+  bandMat=new THREE.MeshBasicMaterial({map:mkTex(TEX.band,13,1),transparent:true,
+    blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,color:map.accentA});
+  var band=new THREE.Mesh(new THREE.CylinderGeometry(R+.15,R+.15,1.6,40,1,true,-H,Math.PI),bandMat);
+  band.position.y=.35;arena.add(band);
+  for(var r=1;r<=3;r++){
+    var rm=new THREE.Mesh(new THREE.TorusGeometry(R*(r/4),0.09,6,30,Math.PI),
+      new THREE.MeshBasicMaterial({color:r===2?map.accentB:map.accentA,transparent:true,opacity:.4}));
+    rm.rotation.x=Math.PI/2;rm.position.y=0.06;arena.add(rm);ringMeshes.push(rm);
+  }
+  sun.intensity=0.8;rimLight.intensity=0.6;
+}
+
+/* ---- The Broken Champion ----
+   Medium-sized and seen from the waist up over the edge of the pit: a round,
+   cracked dark head with ember eyes and a broken brass crown; battered steel
+   armour under a torn teal mantle, chains and the medallions of champions he
+   beat; a glowing core in his chest; a chipped broadsword; and a fan of the
+   swords he took from them floating behind him. Built from plain shapes and
+   welded by material, so he costs a handful of draw calls. */
+function bossModelBuild(){
+  if(NET.srv||BOSS.model)return;
+  var root=new THREE.Group();root.position.set(0,-0.6,BOSS_CFG.bz);root.scale.setScalar(BOSS_CFG.scale);
+  var CY=(BOSS_CFG.chestY+0.6)/BOSS_CFG.scale;          // the chest, in the model's own units
+  var steel=new THREE.MeshLambertMaterial({color:0x9aa0aa,emissive:0x1a1c22,emissiveIntensity:.6}),steelD=new THREE.MeshLambertMaterial({color:0x50545c});
+  var headM=new THREE.MeshLambertMaterial({color:0x1c1820}),brass=new THREE.MeshLambertMaterial({color:0xb48a3a,emissive:0x3a2406,emissiveIntensity:.5});
+  var teal=new THREE.MeshLambertMaterial({color:0x1e6f6a,side:THREE.DoubleSide}),iron=new THREE.MeshLambertMaterial({color:0x4a4a52});
+  var gold=new THREE.MeshLambertMaterial({color:0xd8b04a,emissive:0x4a3008,emissiveIntensity:.5});
+  var ember=new THREE.MeshBasicMaterial({color:0xff7a2a}),crack=new THREE.MeshBasicMaterial({color:0xff5a1a});
+  var blade=new THREE.MeshLambertMaterial({color:0xa8acb4}),grip=new THREE.MeshLambertMaterial({color:0x3a2418});
+  var coreM=new THREE.MeshBasicMaterial({color:0xff9a3a});
+  function part(parent,geo,m,sx,sy,sz,x,y,z,rx,ry,rz){
+    var q=new THREE.Mesh(geo,m);q.scale.set(sx,sy,sz);q.position.set(x,y,z);
+    q.rotation.set(rx||0,ry||0,rz||0);parent.add(q);return q;}
+  var body=new THREE.Group();root.add(body);
+  var torso=new THREE.Group();body.add(torso);
+  // waist and armoured chest
+  part(torso,GEO.box,steelD,4.2,2.0,2.6,0,2.2,0);
+  part(torso,GEO.box,steel,5.6,3.4,3.0,0,5.0,0);
+  part(torso,GEO.box,steelD,4.6,0.5,3.2,0,3.3,0);                  // belt of plate
+  for(var rb=0;rb<3;rb++)part(torso,GEO.box,steelD,4.8-rb*0.5,0.35,0.3,0,4.0+rb*0.6,1.55);   // ribbed plates
+  // dents and scratches
+  for(var dn=0;dn<6;dn++)part(torso,GEO.box,steelD,rr(.3,.8),rr(.08,.14),.1,rr(-2.3,2.3),rr(3.8,6.4),1.52,0,0,rr(-.6,.6));
+  // the mantle: a torn teal cape over the shoulders, ragged at the hem
+  part(torso,GEO.box,teal,6.4,0.5,3.4,0,6.9,-0.2);
+  for(var mt=0;mt<9;mt++){var mx=-2.8+mt*0.7,ml=rr(3,6);part(torso,GEO.plane,teal,0.72,ml,1,mx,6.8-ml/2,-1.75,0.12,Math.PI,rr(-.08,.08));}
+  // chains across the chest, and the medallions of the champions he beat
+  var linkG=new THREE.TorusGeometry(0.2,0.06,4,8);
+  for(var cl=0;cl<10;cl++){var s=cl/9;part(torso,linkG,iron,1,1,1,-2.4+s*4.8,6.4-s*2.8+Math.sin(s*Math.PI)*0.3,1.62,0,cl%2?Math.PI/2:0,0.6);}
+  for(var md=0;md<3;md++)part(torso,GEO.cyl,gold,0.6,0.12,0.6,-1.2+md*1.25,5.9-md*0.75+(md===1?-0.2:0),1.7,Math.PI/2,0,0);
+  // the core in his chest
+  var core=part(root,GEO.sph,coreM,1.3,1.3,1.3,0,CY,1.45);core.userData.keep=true;
+  var coreHalo=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:glowTex(),color:0xff7a2a,transparent:true,
+    blending:THREE.AdditiveBlending,depthWrite:false}));
+  coreHalo.scale.setScalar(5);coreHalo.position.set(0,CY,1.7);coreHalo.userData.keep=true;root.add(coreHalo);
+  // the guard: a ring of plates in front of the core that closes as it fills
+  var guard=new THREE.Group();guard.position.set(0,CY,1.9);guard.userData.keep=true;root.add(guard);
+  var gPl=[];
+  for(var gp=0;gp<5;gp++){
+    var gm=new THREE.Mesh(GEO.box,new THREE.MeshBasicMaterial({color:0x2ad4c4,transparent:true,opacity:.18,depthWrite:false}));
+    var ga=(gp/5)*TAU;gm.scale.set(0.9,0.45,0.08);gm.position.set(Math.sin(ga)*1.45,Math.cos(ga)*1.45,0);gm.rotation.z=-ga;
+    guard.add(gm);gPl.push(gm);
+  }
+  // pauldrons, each a lump of plate with a spike, and the damage they take
+  var lose={2:[],3:[]};
+  for(var sd=-1;sd<=1;sd+=2){
+    var pd=part(torso,GEO.sph,steel,2.4,1.7,2.4,sd*3.3,6.9,0);
+    var sp=part(torso,GEO.cone,steelD,0.5,1.4,0.5,sd*3.8,7.9,0,0,0,-sd*0.5);
+    if(sd<0){lose[2].push(pd,sp);}
+  }
+  // the chest plate that comes off in the last phase
+  var cp=part(torso,GEO.box,steel,3.0,1.2,0.3,0,6.6,1.6);lose[3].push(cp);
+  var cp2=part(torso,GEO.box,steel,1.2,2.6,0.3,-2.0,5.0,1.6,0,0,0.1);lose[2].push(cp2);
+  for(var lp in lose)for(var lq=0;lq<lose[lp].length;lq++)lose[lp][lq].userData.keep=true;
+  // arms: the left braced on the parapet, the right holding the broadsword
+  part(torso,GEO.box,steelD,1.3,2.6,1.3,-3.6,4.8,0.6,0.5,0,0.2);
+  part(torso,GEO.box,steel,1.4,2.4,1.4,-3.4,2.6,2.0,1.2,0,0.1);
+  part(torso,GEO.box,steelD,1.5,0.9,1.6,-3.2,1.4,3.0);
+  var arm=new THREE.Group();arm.position.set(3.4,6.6,0.2);body.add(arm);
+  part(arm,GEO.box,steelD,1.3,2.8,1.3,0.3,-1.4,0.3,0.3,0,-0.15);
+  part(arm,GEO.box,steel,1.4,2.4,1.4,0.5,-3.4,1.3,1.0,0,0);
+  var hand=new THREE.Group();hand.position.set(0.5,-3.6,2.6);arm.add(hand);
+  part(hand,GEO.box,steelD,1.4,1.0,1.3,0,0,0);
+  // the chipped broadsword
+  var sw=new THREE.Group();sw.rotation.set(-0.35,0,-0.55);hand.add(sw);
+  part(sw,GEO.box,grip,0.3,1.6,0.3,0,-0.2,0);
+  part(sw,GEO.box,brass,2.0,0.3,0.45,0,0.7,0);
+  part(sw,GEO.box,blade,0.7,6.8,0.14,0,4.3,0);
+  part(sw,GEO.cone,blade,0.5,0.8,0.14,0,8.1,0);
+  for(var ck=0;ck<4;ck++)part(sw,GEO.box,headM,0.2,0.3,0.16,(ck%2?0.33:-0.33),2.2+ck*1.4,0,0,0,0.6);   // the chips
+  // the head: round, cracked, with ember eyes
+  var head=new THREE.Group();head.position.set(0,8.9,0.3);root.add(head);
+  part(head,GEO.sph,headM,3.0,2.9,3.0,0,0,0);
+  for(var ey=-1;ey<=1;ey+=2){var e=part(head,GEO.box,ember,0.55,0.22,0.1,ey*0.62,0.05,1.43,0,0,ey*0.18);e.userData.keep=true;}
+  part(head,GEO.box,crack,0.06,1.1,0.06,-0.45,0.6,1.3,0.2,0,0.4);
+  part(head,GEO.box,crack,0.06,0.8,0.06,0.7,0.75,1.15,0.3,0,-0.6);
+  part(head,GEO.box,crack,0.06,0.7,0.06,0.2,-0.85,1.3,-0.3,0,0.3);
+  // the broken crown: a band, most of its points, one snapped and leaning
+  part(head,GEO.cyl,brass,2.6,0.45,2.6,0,1.3,0,0.12,0,-0.08);
+  for(var cpn=0;cpn<8;cpn++){
+    if(cpn===2||cpn===5)continue;
+    var ca=(cpn/8)*TAU;
+    part(head,GEO.cone,brass,0.38,cpn===6?0.5:0.9,0.38,Math.sin(ca)*1.22,1.85-(cpn===6?0.2:0)+Math.cos(ca)*0.12,Math.cos(ca)*1.22,0.12,0,cpn===6?0.7:-0.08);
+  }
+  var crownBit=part(head,GEO.cone,brass,0.38,0.9,0.38,1.25,1.7,0.6,0,0,-0.9);lose[3].push(crownBit);crownBit.userData.keep=true;
+  // the fan of stolen swords behind him
+  var fan=new THREE.Group();fan.position.set(0,8.5,-2.4);root.add(fan);
+  var fanSw=[];
+  var cols=[0x9ad8ff,0xffd23f,0xff6b9a,0x8affd8,0xc890ff,0xffa060,0xe8e8f0];
+  for(var fs=0;fs<7;fs++){
+    var fa=-1.25+fs*(2.5/6);
+    var piv=new THREE.Group();piv.rotation.z=-fa;fan.add(piv);
+    var s1=new THREE.Group();s1.position.set(0,5.2,0);piv.add(s1);
+    var gm2=new THREE.MeshLambertMaterial({color:cols[fs],emissive:cols[fs],emissiveIntensity:.25});
+    part(s1,GEO.box,gm2,0.32,3.6,0.08,0,0.8,0);
+    part(s1,GEO.box,brass,1.0,0.18,0.25,0,-1.1,0);
+    part(s1,GEO.box,grip,0.16,0.9,0.16,0,-1.6,0);
+    mergeByMat(s1);
+    fanSw.push({g:s1,piv:piv,a:fa,ph:fs*0.9});
+  }
+  mergeByMat(torso);mergeByMat(head);mergeByMat(hand);
+  scene.add(root);
+  BOSS.model={root:root,body:body,torso:torso,arm:arm,hand:hand,sword:sw,head:head,fan:fan,fanSw:fanSw,core:core,
+    coreHalo:coreHalo,guard:guard,gPl:gPl,lose:lose,anim:null,animT:0,recoil:0,t:0,flash:0};
+}
+function bossAnim(k){var M=BOSS.model;if(!M)return;
+  if(k==="swing"){M.anim="swing";M.animT=0;}
+  else if(k==="guard"){M.flash=1;}
+}
+function bossVisTick(dt){
+  var M=BOSS.model;
+  if(_bhTagT>0){_bhTagT-=dt;if(_bhTagT<=0){var tg=document.getElementById("bhTag");if(tg)tg.classList.remove("on");}}
+  // a curved return: once the ball's new path is known, draw it
+  if(BOSS.curveFx>0){
+    BOSS.curveFx-=dt;
+    for(var bi=0;bi<balls.length;bi++){var bb=balls[bi];
+      if(bb.active&&bb.c0&&(bb.lastHit===BOSS_F||bb.lastHitBoss)&&bb.target&&bb._ctN!==bb.launchN){bb._ctN=bb.launchN;bossCurveTell(bb);BOSS.curveFx=0;}}
+  }
+  bossTellTick(dt);
+  for(var i=BOSS.fx.length-1;i>=0;i--){
+    var f=BOSS.fx[i];f.t-=dt;
+    if(f.v){f.v.y-=22*dt;f.m.position.x+=f.v.x*dt;f.m.position.y+=f.v.y*dt;f.m.position.z+=f.v.z*dt;
+      f.m.rotation.x+=dt*f.spin;f.m.rotation.z+=dt*f.spin*0.7;}
+    if(f.t<=0||(f.m.position.y<-8)){if(f.m.parent)f.m.parent.remove(f.m);BOSS.fx.splice(i,1);}
+  }
+  if(!M)return;
+  M.t+=dt;var t=M.t;
+  // breathing, and the head turning to watch the ball
+  M.body.position.y=Math.sin(t*1.6)*0.12;
+  var watch=0;for(var w=0;w<balls.length;w++)if(balls[w].active){watch=clamp(Math.atan2(balls[w].pos.x,balls[w].pos.z-BOSS_CFG.bz),-0.6,0.6);break;}
+  M.head.rotation.y=damp(M.head.rotation.y,watch,4,dt);
+  M.head.position.y=8.9+Math.sin(t*1.6+0.4)*0.14;
+  // the recoil when his guard breaks
+  if(M.recoil>0){M.recoil=Math.max(0,M.recoil-dt*1.4);}
+  var rk=Math.sin(Math.min(1,M.recoil)*Math.PI)*0.35;
+  M.body.rotation.x=-rk;M.head.rotation.x=-rk*1.3;
+  // the sword arm: a swing when he serves or returns
+  var sa=0;
+  if(M.anim==="swing"){M.animT+=dt;var p=M.animT/0.45;if(p>=1)M.anim=null;else sa=Math.sin(p*Math.PI);}
+  M.arm.rotation.x=-sa*1.1;M.arm.rotation.z=sa*0.5;
+  // the fan drifts
+  for(var k=0;k<M.fanSw.length;k++){var s=M.fanSw[k];s.g.position.y=5.2+Math.sin(t*1.3+s.ph)*0.25;s.g.rotation.y=Math.sin(t*0.8+s.ph)*0.3;}
+  // the core: brighter as he weakens, and flaring with each parry that cracks his guard
+  M.flash=Math.max(0,M.flash-dt*3);
+  var hurt=1-BOSS.hp/Math.max(1,BOSS.max),pulse=0.85+Math.sin(t*(3+hurt*5))*0.15;
+  M.core.scale.setScalar(1.2+hurt*0.5+M.flash*0.3);
+  M.coreHalo.scale.setScalar((4.5+hurt*3)*pulse+M.flash*3);
+  M.coreHalo.material.opacity=0.6+M.flash*0.4;
+  for(var g=0;g<M.gPl.length;g++){var on=g<BOSS.guard;var gm=M.gPl[g].material;
+    gm.color.setHex(on?(BOSS.guard>=BOSS_CFG.guard-1?0xff5a3a:0xffb040):0x2ad4c4);gm.opacity=on?0.9:0.18;}
+  M.guard.rotation.z+=dt*(0.4+BOSS.guard*0.3);
+}
+function bossDebris(n,x,y,z,mat,sz){
+  if(NET.srv)return;
+  for(var i=0;i<n;i++){
+    var m=new THREE.Mesh(GEO.box,mat);m.scale.set(rr(.3,.8)*sz,rr(.2,.6)*sz,rr(.1,.3)*sz);m.position.set(x+rr(-1,1),y+rr(-1,1),z+rr(-.4,.4));
+    scene.add(m);BOSS.fx.push({m:m,t:2.4,v:new THREE.Vector3(rr(-5,5),rr(3,9),rr(1,7)),spin:rr(4,10)});
+  }
+}
+// the fifth ball hits him in the chest: recoil, the guard shatters, armour falls
+function bossGuardBreakFx(ev){
+  var M=BOSS.model,cz=BOSS_CFG.bz+1.6,cy=BOSS_CFG.chestY;
+  sfx("ko");sfx("perfect");
+  slowmoT=Math.max(slowmoT,0.35);
+  flashWarn("GUARD BROKEN!",1.2,"#ffb040");
+  if(NET.srv)return;
+  burst(0,cy,cz,70,22,0xffb040,2.2,.8,-4);
+  ringBurst(0,cy,cz,48,16,0xff7a2a,1.8,.7);
+  ringBurst(0,cy,cz,30,9,0xffffff,1.4,.5);
+  if(M){M.recoil=1.6;M.flash=1;
+    bossDebris(QUAL>0?10:5,0,cy,cz,M.gPl[0].material,1);
+    bossDebris(QUAL>0?6:3,0,cy-0.5,cz,new THREE.MeshLambertMaterial({color:0x6c7078}),1.2);}
+}
+function bossPhaseFx(p){
+  var M=BOSS.model;
+  flashWarn(p===2?"PHASE 2 — HIS RETURNS CURVE":"PHASE 3 — DODGE HIS ATTACKS",2.0,p===2?"#2ad4c4":"#ff6b6b");
+  feed(p===2?"The Broken Champion's returns bend now — watch the teal trail":"The Broken Champion is desperate: watch the floor","ko");
+  sfx("ko");
+  if(!M)return;
+  var list=M.lose[p]||[];
+  for(var i=0;i<list.length;i++){
+    var o=list[i];if(!o.parent)continue;
+    var wp=new THREE.Vector3();o.getWorldPosition(wp);
+    var wq=new THREE.Quaternion();o.getWorldQuaternion(wq);
+    var ws=new THREE.Vector3();o.getWorldScale(ws);
+    o.parent.remove(o);o.position.copy(wp);o.quaternion.copy(wq);o.scale.copy(ws);scene.add(o);
+    BOSS.fx.push({m:o,t:3,v:new THREE.Vector3(rr(-3,3),rr(2,6),rr(2,6)),spin:rr(2,5)});
+    burst(wp.x,wp.y,wp.z,24,8,0xffb040,1.4,.6,-6);
+  }
+  // deeper cracks glow through as he breaks
+  var crack=new THREE.MeshBasicMaterial({color:p===2?0xff7a2a:0xff3a1a});
+  for(var c=0;c<(p===2?4:7);c++){var q=new THREE.Mesh(GEO.box,crack);q.scale.set(.08,rr(.6,1.4),.08);
+    q.position.set(rr(-2.4,2.4),rr(3.8,6.8),1.56);q.rotation.z=rr(-1,1);M.torso.add(q);}
+  M.recoil=1.2;
+}
+function bossDefeatFx(){
+  var M=BOSS.model;
+  flashWarn("THE CHAMPION FALLS",2.2,"#ffd23f");sfx("win");
+  if(!M||NET.srv)return;
+  M.recoil=2;
+  for(var i=0;i<M.fanSw.length;i++){
+    var s=M.fanSw[i].g,wp=new THREE.Vector3();s.getWorldPosition(wp);
+    s.parent.remove(s);s.position.copy(wp);scene.add(s);
+    BOSS.fx.push({m:s,t:3,v:new THREE.Vector3(rr(-6,6),rr(2,8),rr(0,6)),spin:rr(2,6)});
+  }
+  burst(0,BOSS_CFG.chestY,BOSS_CFG.bz+1.6,120,26,0xffd23f,2.4,1.1,-3);
+  ringBurst(0,BOSS_CFG.chestY,BOSS_CFG.bz+1.6,60,24,0xffffff,2.0,.9);
+}
+
+/* ---- the dodge attacks, drawn on the floor before they land ---- */
+function bossTellClear(){
+  for(var i=0;i<BOSS.tell.length;i++){var m=BOSS.tell[i].m;if(m.parent)m.parent.remove(m);disposeTree(m);}
+  BOSS.tell.length=0;
+}
+function bossTellStart(atk){
+  bossTellClear();
+  if(!atk)return;
+  bossHudFlash(atk.k==="rain"?"SWORDS INCOMING — MOVE":"SWEEP — JUMP OR MOVE","#ff6b6b");
+  if(atk.k==="rain"&&player&&player.alive)
+    for(var j=0;j<atk.p.length;j++)if(dist2(player.pos.x,player.pos.z,atk.p[j][0],atk.p[j][1])<BOSS_CFG.rainR*BOSS_CFG.rainR*1.4){flashWarn("MOVE!",0.8,"#ff6b6b");break;}
+  if(atk.k==="sweep")flashWarn("SWEEP — JUMP!",0.8,"#ff6b6b");
+  sfx("tick");
+  if(NET.srv)return;
+  var dur=atk.t||BOSS_CFG.atkWarn,i,g,fill,rim;
+  if(atk.k==="rain"){
+    for(i=0;i<atk.p.length;i++){
+      g=new THREE.Group();g.position.set(atk.p[i][0],0.09,atk.p[i][1]);
+      fill=new THREE.Mesh(new THREE.CircleGeometry(BOSS_CFG.rainR,28),new THREE.MeshBasicMaterial({color:0xff3a2a,transparent:true,opacity:.3,depthWrite:false}));
+      fill.rotation.x=-Math.PI/2;g.add(fill);
+      rim=new THREE.Mesh(new THREE.RingGeometry(BOSS_CFG.rainR*0.92,BOSS_CFG.rainR,40),new THREE.MeshBasicMaterial({color:0xff5a3a,transparent:true,opacity:.9,depthWrite:false,side:THREE.DoubleSide}));
+      rim.rotation.x=-Math.PI/2;g.add(rim);
+      var shrink=new THREE.Mesh(new THREE.RingGeometry(0.9,1,40),new THREE.MeshBasicMaterial({color:0xffd0a0,transparent:true,opacity:.8,depthWrite:false,side:THREE.DoubleSide}));
+      shrink.rotation.x=-Math.PI/2;g.add(shrink);
+      scene.add(g);BOSS.tell.push({m:g,t:dur,max:dur,fill:fill,shrink:shrink,k:"rain"});
+    }
+  } else {
+    g=new THREE.Group();g.position.set(0,0.09,BOSS_CFG.bz);
+    var th=atk.a-Math.PI/2-BOSS_CFG.sweepHalf;
+    fill=new THREE.Mesh(new THREE.CircleGeometry(ARENA_R-BOSS_CFG.bz,32,th,BOSS_CFG.sweepHalf*2),new THREE.MeshBasicMaterial({color:0xff3a2a,transparent:true,opacity:.2,depthWrite:false,side:THREE.DoubleSide}));
+    fill.rotation.x=-Math.PI/2;g.add(fill);
+    var edge=new THREE.Mesh(new THREE.RingGeometry(ARENA_R-BOSS_CFG.bz-0.6,ARENA_R-BOSS_CFG.bz,32,1,th,BOSS_CFG.sweepHalf*2),new THREE.MeshBasicMaterial({color:0xff5a3a,transparent:true,opacity:.9,depthWrite:false,side:THREE.DoubleSide}));
+    edge.rotation.x=-Math.PI/2;g.add(edge);
+    scene.add(g);BOSS.tell.push({m:g,t:dur,max:dur,fill:fill,k:"sweep"});
+  }
+}
+function bossTellTick(dt){
+  for(var i=0;i<BOSS.tell.length;i++){
+    var T=BOSS.tell[i];T.t=Math.max(0,T.t-dt);
+    var p=1-T.t/T.max;
+    T.fill.material.opacity=0.28+p*0.35+Math.sin(p*p*40)*0.08;
+    if(T.shrink){var r=lerp(BOSS_CFG.rainR,0.4,p);T.shrink.scale.set(r,r,1);}
+    // a sword hovering over the circle, dropping in the last moment
+    if(T.k==="rain"&&QUAL>0&&Math.random()<0.3)spark(T.m.position.x+rr(-1,1),rr(6,9),T.m.position.z+rr(-1,1),0,-4,0,1,.5,.3,.5,.4,0);
+  }
+}
+function bossTellLand(atk){
+  bossTellClear();
+  if(!atk||NET.srv)return;
+  sfx("ko");
+  if(atk.k==="rain"){
+    for(var i=0;i<atk.p.length;i++){var x=atk.p[i][0],z=atk.p[i][1];
+      burst(x,0.6,z,40,14,0xff7a2a,1.8,.6,-6);ringBurst(x,0.3,z,30,BOSS_CFG.rainR,0xffd0a0,1.5,.5);
+      if(typeof hwBeam==="function")hwBeam(x,0,z,0xffa060,1.2,.5);
+      var M=BOSS.model;
+      if(M){var sw=new THREE.Mesh(GEO.box,new THREE.MeshLambertMaterial({color:0xc8ccd4}));sw.scale.set(0.35,3.6,0.1);
+        sw.position.set(x,1.4,z);sw.rotation.z=rr(-.2,.2);scene.add(sw);BOSS.fx.push({m:sw,t:1.4});}
+    }
+  } else {
+    for(var s=0;s<14;s++){var a=atk.a-BOSS_CFG.sweepHalf+s/13*BOSS_CFG.sweepHalf*2,d=rr(4,ARENA_R-BOSS_CFG.bz);
+      burst(Math.sin(a)*d,0.8,BOSS_CFG.bz+Math.cos(a)*d,10,10,0xff7a2a,1.5,.5,-4);}
+    bossAnim("swing");
+  }
+}
+
+/* ---- starting a fight ---- */
+// the ability a player takes into Boss Rally: their pick for it if they made one, else their usual
+function bossAbilFor(abil,babil){
+  if(babil&&bossAbilOk(babil))return babil;
+  return bossAbilOk(abil||"dash")?(abil||"dash"):"dash";
+}
+// online (the server runs it) and practice share this: players along the curve, him at the edge
+function bossBuildFight(list){
+  var n=list.length;
+  for(var i=0;i<n;i++){
+    var p=list[i],sp=bossSpawnSpot(i,n);
+    var f=new Fighter({name:p.mine?"YOU":(p.name||"Player"),isPlayer:!!p.mine,team:0,x:sp.x,z:sp.z,
+      sword:p.sword||"trainer",ability:resolveAbility(bossAbilFor(p.abil,p.babil)),skinDef:skinById(p.skin||"rookie")});
+    f.yaw=Math.atan2(-sp.x,BOSS_CFG.bz-sp.z);
+    f.netId=p.id||null;f.isRemote=!!p.remote;f.guardian=false;f._sc0=f.mesh.scale.x;
+    if(p.mine)player=f;
+    else if(p.id)NET.remote[p.id]=f;
+    fighters.push(f);
+  }
+  var bb=new Ball();bb.mult=1;bb.speed=clamp(BALL_BASE*MODE.speed,4,BALL_SPEED_MAX);balls.push(bb);
+  bossBegin(n);
+  bossModelBuild();
+}
+function bossMatchTail(cdLate,label){
+  camYaw=Math.PI;camPitch=-0.14;camDist=prefCamDist();
+  if(player)camLook.set(player.pos.x,player.y+2.6,player.pos.z);
+  STATE="countdown";countdown=3.2-(cdLate||0);gameT=0;
+  showScreen(null);$("ui").classList.add("on");
+  $("ui").classList.remove("venuemode");
+  $("lobbyBar").classList.remove("on");
+  $("venueHud").classList.remove("on");
+  $("slots").style.display="";
+  $("rankhud").style.display="flex";
+  $("rankhudIcon").innerHTML="";
+  $("rankhudName").textContent=label;
+  _aliveShown=-1;
+  updateSlotIcons();setAlive();
+  if(player&&player.ability&&SAVE.eqAbil&&!bossAbilOk(SAVE.eqAbil)&&player.isPlayer)
+    feed(abilById(SAVE.eqAbil).name+" sits out of Boss Rally — using "+abilById(player.ability).name,"ko");
+}
+function bossNetBuild(m,roster){
+  var list=[];
+  for(var i=0;i<roster.length&&list.length<4;i++){
+    var p=roster[i],mine=(p.id===NET.you);
+    list.push({id:p.id,name:p.name,mine:mine,remote:!mine,sword:p.sword,skin:p.skin,abil:p.abil,babil:p.babil});
+  }
+  bossBuildFight(list);
+  if(!player&&NET.spec){
+    player=new Fighter({name:"SPECTATOR",isPlayer:true,x:0,z:ARENA_R*0.5,sword:"trainer",ability:"dash",skinDef:skinById("rookie")});
+    scene.remove(player.mesh);player.alive=false;player.isRemote=true;
+    SPEC.on=true;
+  } else if(!player)player=fighters[0];
+  var cdLate=(typeof m.at==="number")?clamp((netNow()-m.at)/1000,0,2.6):0;
+  NET.rematch=false;NET.startingRematch=false;
+  mpSendLoadout(false);
+  bossMatchTail(cdLate,"BOSS RALLY · "+list.length+(list.length===1?" PLAYER":" PLAYERS")+" · SERVER");
+  feed("The server is running this fight","good");
+}
+// practice: no account or no server -- the same fight, run by this game, for no rewards
+function bossLocalStart(){
+  riftAbort();
+  NET.matchSeq=(NET.matchSeq||0)+1;
+  MODE=copyMode(BOSSMODE);MODE.practice=true;
+  RANKF=0;
+  buildArena(BOSS_MAP);
+  venueKind=null;
+  if(showcase){scene.remove(showcase.mesh);showcase=null;}
+  clearFighters();clearBalls();
+  venue.visible=false;arena.visible=true;
+  slowmoT=0;run={coins:0,at:Date.now()};hudC={};stopSpectating();
+  paused=false;$("pause").classList.add("hide");
+  bossBuildFight([{mine:true,name:"YOU",sword:eqBlade(),skin:SAVE.eqSkin,abil:SAVE.eqAbil,babil:SAVE.bossAbil}]);
+  bossMatchTail(0,"BOSS RALLY · PRACTICE");
+  feed("Practice: no rewards. Sign in to fight on the server for coins.","good");
+}
+// the end of a practice fight
+function bossLocalOver(won){
+  STATE="over";
+  for(var i=0;i<balls.length;i++){balls[i].active=false;balls[i].mesh.visible=false;}
+  sfx(won?"win":"lose");
+  var endTok=NET.matchSeq=(NET.matchSeq||0)+1;
+  setTimeout(function(){
+    if(endTok!==NET.matchSeq||STATE!=="over")return;
+    $("place").textContent=won?"CHAMPION DEFEATED":"THE CHAMPION STANDS";
+    $("place").className=won?"win":"lose";
+    $("rpline").innerHTML="<span style='opacity:.6'>PRACTICE — "+(BOSS.max-BOSS.hp)+"/"+BOSS.max+" DAMAGE · NO REWARDS</span>";
+    $("rDeflect").textContent=player?player.deflects:0;
+    $("rPerfect").textContent=player?player.perfects:0;
+    $("rKO").textContent=player?player.kos:0;
+    $("rCoins").textContent=0;
+    $("rPass").classList.add("hide");
+    $("ui").classList.remove("on");
+    showScreen("results");refreshCoins();
+  },1500);
+}
+// the server's word on a fight: what it paid, and why
+function bossResultLine(res){
+  var b=res&&res.boss;
+  var s=(b?"<b>"+b.milestones+"/4 DAMAGE MILESTONES</b>":"<b>BOSS RALLY</b>")+
+    (b&&b.victory?" &nbsp;&middot;&nbsp; <b>VICTORY BONUS</b>":"")+
+    " &nbsp;&middot;&nbsp; <b>+"+(res.coins|0)+" COINS</b>";
+  if(b&&b.capped)s+=" &nbsp;&middot;&nbsp; <span style='opacity:.6'>TODAY'S BOSS COIN CAP REACHED</span>";
+  return s+" &nbsp;&middot;&nbsp; <span style='opacity:.45'>CONFIRMED BY THE SERVER</span>";
+}
+
+/* ---- getting into a fight ----
+   An ability that sits Boss Rally out is caught here, before anything starts:
+   pick one of your own for Boss Rally instead. The pick is remembered for
+   Boss Rally only -- your saved loadout and what you own are never touched. */
+function bossAbilReady(){
+  if(bossAbilOk(SAVE.eqAbil))return true;
+  var b=SAVE.bossAbil;
+  return !!(b&&bossAbilOk(b)&&SAVE.abils[b]);
+}
+function bossAbilPicker(then){
+  var old=document.getElementById("bossPick");if(old)old.remove();
+  var cur=abilById(SAVE.eqAbil);
+  var el=document.createElement("div");el.id="bossPick";el.className="giftpop";el.setAttribute("data-modal","1");
+  var h="<div class='gpcard' style='--gc:#2ad4c4'><div class='gpribbon'>BOSS RALLY</div>"+
+    "<div class='gpnote' style='font-style:normal;margin-top:0'><b>"+cur.name+"</b> sits out of Boss Rally: it "+(BOSS_BAD[cur.id]||"doesn't work here")+".<br>"+
+    "Pick one of yours to use in Boss Rally. Your saved loadout stays as it is.</div><div class='bpGrid'>";
+  var any=false;
+  for(var i=0;i<ABILITIES.length;i++){var a=ABILITIES[i];
+    if(!SAVE.abils[a.id]||!bossAbilOk(a.id)||a.notReady)continue;any=true;
+    h+="<button class='bpIt"+(SAVE.bossAbil===a.id?" sel":"")+"' data-a='"+a.id+"'>"+abilIcon(a,34)+"<span>"+a.name+"</span></button>";}
+  h+="</div>"+(any?"":"<div class='gpnote'>You'll use Dash.</div>")+
+    "<div class='gpbtns'><button class='big sm' id='bpCancel'>CANCEL</button>"+(any?"":"<button class='big gold sm' id='bpDash'>USE DASH</button>")+"</div></div>";
+  el.innerHTML=h;document.body.appendChild(el);
+  function close(){el.remove();}
+  el.querySelector("#bpCancel").addEventListener("click",close);
+  if(!any)el.querySelector("#bpDash").addEventListener("click",function(){SAVE.bossAbil="dash";writeSave();close();if(then)then();});
+  var bs=el.querySelectorAll(".bpIt");
+  for(var j=0;j<bs.length;j++)bs[j].addEventListener("click",function(){
+    SAVE.bossAbil=this.getAttribute("data-a");writeSave();sfx("coin");close();
+    if(NET.on)mpSendLoadout();
+    if(then)then();
+  });
+}
+// from the modes screen: on the server when signed in (rewards), practice otherwise
+function bossEntry(){
+  if(!bossAbilReady()){bossAbilPicker(bossEntry);return;}
+  if(econOn()&&serverBase())soloServerStart("boss");
+  else bossLocalStart();
+}
+// a room's leader starting Boss Rally for everyone in it (up to four)
+function bossRoomStart(){
+  if(NET.players.length>4){NET.err="Boss Rally takes up to 4 players — this room has "+NET.players.length+".";NET.status="lobby";lobbyRender();return;}
+  if(!bossAbilReady()){bossAbilPicker(bossRoomStart);return;}
+  netSend({t:"start",mode:"boss",map:"sky"});
+}
+
+/* ============================================================
+   SOCIAL: friends, parties, messages -- and the notifications
+   ------------------------------------------------------------
+   The signed-in game keeps one socket to its account's Hub on the server,
+   which decides everything: who you are friends with, who may see you online,
+   whose messages and invites reach you. This side only draws it and asks.
+   Everything anyone else typed is put on the page as text, never as markup.
+   ============================================================ */
+var SOCIAL={ws:null,st:null,open:false,tab:"friends",conv:{},chat:"",rq:0,cb:{},retry:0,timer:0,beat:0,lastSt:"",
+  pend:{},found:null,err:"",busy:false};
+function socialOn(){return !!(cloudOn()&&serverBase()&&CLOUD.tok);}
+function socialConnect(){
+  SOCIAL.timer=0;
+  if(!socialOn()||SOCIAL.ws)return;
+  var b=serverBase().replace(/^http:/,"ws:").replace(/^https:/,"wss:");
+  var ws;
+  try{ws=new WebSocket(b+"/social?tok="+encodeURIComponent(CLOUD.tok)+"&name="+encodeURIComponent((SAVE.netName||CLOUD.name||"Player").slice(0,14)));}
+  catch(e){socialRetry();return;}
+  SOCIAL.ws=ws;
+  ws.onopen=function(){SOCIAL.retry=0;SOCIAL.lastSt="";socialStatus(true);};
+  ws.onmessage=function(ev){var m;try{m=JSON.parse(ev.data);}catch(e){return;}socialHandle(m);};
+  ws.onclose=function(){if(SOCIAL.ws===ws){SOCIAL.ws=null;socialRetry();}};
+  ws.onerror=function(){};
+}
+function socialRetry(){
+  clearTimeout(SOCIAL.timer);
+  if(!socialOn())return;
+  var d=Math.min(30000,2000*Math.pow(2,SOCIAL.retry++));
+  SOCIAL.timer=setTimeout(socialConnect,d);
+}
+function socialStop(){clearTimeout(SOCIAL.timer);SOCIAL.timer=0;if(SOCIAL.ws){try{SOCIAL.ws.onclose=null;SOCIAL.ws.close();}catch(e){}}SOCIAL.ws=null;SOCIAL.st=null;socialBadge();}
+function socialSend(m,cb){
+  if(!SOCIAL.ws||SOCIAL.ws.readyState!==1){if(cb)cb({err:"Not connected. Trying again…"});return false;}
+  if(cb){m.rq=++SOCIAL.rq;SOCIAL.cb[m.rq]=cb;}
+  try{SOCIAL.ws.send(JSON.stringify(m));return true;}catch(e){if(cb)cb({err:"Not connected."});return false;}
+}
+// where this game is, for friends: in a match, in a lobby, or just around
+function socialWhere(){
+  var inMatch=(STATE==="playing"||STATE==="countdown"||STATE==="over");
+  var room=(NET.ws&&NET.code&&!NET.solo&&!NET.queue)?NET.code:"";
+  return {s:inMatch?"match":(room||STATE==="venue")?"lobby":"online",room:room};
+}
+function socialStatus(force){
+  if(!SOCIAL.ws||SOCIAL.ws.readyState!==1)return;
+  var w=socialWhere(),k=w.s+"|"+w.room;
+  if(force||k!==SOCIAL.lastSt){SOCIAL.lastSt=k;socialSend({t:"st",s:w.s,room:w.room});}
+}
+setInterval(function(){if(NET.srv)return;
+  if(!socialOn()){if(SOCIAL.ws||SOCIAL.st)socialStop();return;}
+  if(!SOCIAL.ws&&!SOCIAL.timer)socialConnect();
+  socialStatus(false);
+  // the heartbeat: the server lets a silent socket go
+  if(Date.now()-SOCIAL.beat>20000){SOCIAL.beat=Date.now();socialSend({t:"ping"});}
+},1000);
+function socialHandle(m){
+  if(m.t==="re"){var cb=SOCIAL.cb[m.rq];delete SOCIAL.cb[m.rq];if(cb)cb(m);return;}
+  if(m.t==="state"){SOCIAL.timer=0;SOCIAL.st=m;socialAutoParty();socialBadge();socialRender();return;}
+  var st=SOCIAL.st;if(!st)return;
+  if(m.t==="pres"){for(var i=0;i<st.friends.length;i++)if(st.friends[i].sub===m.sub){st.friends[i].pres=m.pres;st.friends[i].name=m.name||st.friends[i].name;}socialRender();return;}
+  if(m.t==="dm"){
+    var c=socialConvOf(m.with);c.msgs.push(m.msg);
+    for(var j=0;j<st.friends.length;j++)if(st.friends[j].sub===m.with)st.friends[j].unread=m.unread|0;
+    if(SOCIAL.open&&SOCIAL.tab==="msgs"&&SOCIAL.chat===m.with){socialSend({t:"read",with:m.with});socialSetUnread(m.with,0);}
+    socialBadge();socialRender();return;
+  }
+  if(m.t==="note"){socialNote(m.n);return;}
+  if(m.t==="noteGone"){notifyDrop(m.id);return;}
+}
+function socialConvOf(sub){return SOCIAL.conv[sub]||(SOCIAL.conv[sub]={msgs:[],more:true,loaded:false,busy:false});}
+function socialSetUnread(sub,n){var st=SOCIAL.st;if(!st)return;for(var i=0;i<st.friends.length;i++)if(st.friends[i].sub===sub)st.friends[i].unread=n;socialBadge();}
+function socialFriend(sub){var st=SOCIAL.st;if(!st)return null;for(var i=0;i<st.friends.length;i++)if(st.friends[i].sub===sub)return st.friends[i];return null;}
+// how many things want you: unread messages, requests, invites
+function socialCount(){
+  var st=SOCIAL.st;if(!st)return 0;
+  var n=st.reqIn.length+st.pinv.length+st.linvIn.length;
+  for(var i=0;i<st.friends.length;i++)n+=st.friends[i].unread?1:0;
+  return n;
+}
+function socialBadge(){
+  var b=$("lbFriendsN");if(!b)return;
+  var n=socialCount();b.textContent=n>9?"9+":String(n);b.style.display=n?"":"none";
+  var btn=$("lbFriends");if(btn)btn.style.opacity=socialOn()?"1":".55";
+}
+// a party member is taken into the leader's lobby -- unless they are in a match: then it waits for them
+function socialAutoParty(){
+  var st=SOCIAL.st;if(!st)return;
+  for(var i=0;i<st.linvIn.length;i++){var v=st.linvIn[i];
+    if(!v.party||SOCIAL.pend["auto"+v.id])continue;
+    if(STATE==="playing"||STATE==="countdown")continue;
+    if(NET.ws&&NET.code===v.code)continue;
+    SOCIAL.pend["auto"+v.id]=1;socialJoinInvite(v.id);
+  }
+}
+setInterval(function(){if(NET.srv)return;if(SOCIAL.st&&STATE!=="playing"&&STATE!=="countdown")socialAutoParty();},2000);
+function socialJoinInvite(id){
+  if(STATE==="playing"||STATE==="countdown"){notify({kind:"info",id:"busy",title:"IN A MATCH",text:"Finish your match first — the invite will wait.",ttl:4});return;}
+  socialSend({t:"lacc",id:id},function(r){
+    if(r.err){notify({kind:"info",id:"lerr",title:"LOBBY INVITE",text:r.err,ttl:5});return;}
+    if(r.go)socialJoinRoom(r.go);
+  });
+}
+// into a friend's lobby: the same as typing the code in, after the server said yes
+function socialJoinRoom(code){
+  socialClose();
+  if(NET.solo){NET.solo="";}
+  if(typeof openMPScreen==="function")openMPScreen();
+  SAVE.netName=(SAVE.netName||CLOUD.name||"Player").slice(0,14);
+  netConnect(code,function(){mpSendLoadout(false);});
+}
+
+/* ---- the panel ---- */
+function socialEl(){
+  var el=$("social");if(el)return el;
+  el=document.createElement("div");el.id="social";el.className="screen hide";
+  el.innerHTML="<div class='wnd mid socwnd'><div class='win-title'>FRIENDS</div><button class='win-x' id='socX' aria-label='Close'>BACK</button>"+
+    "<div class='win-tabs' id='socTabs'><button class='tab sel' data-t='friends'>FRIENDS<span class='socN' id='socNf'></span></button>"+
+    "<button class='tab' data-t='party'>PARTY<span class='socN' id='socNp'></span></button>"+
+    "<button class='tab' data-t='msgs'>MESSAGES<span class='socN' id='socNm'></span></button></div>"+
+    "<div id='socBody' class='socbody'></div></div>";
+  document.body.appendChild(el);
+  $("socX").addEventListener("click",socialClose);
+  var ts=el.querySelectorAll("#socTabs .tab");
+  for(var i=0;i<ts.length;i++)ts[i].addEventListener("click",function(){SOCIAL.tab=this.getAttribute("data-t");socialRender();});
+  return el;
+}
+function socialOpenNow(){return SOCIAL.open;}
+function socialOpen(tab,chat){
+  var el=socialEl();
+  if(tab)SOCIAL.tab=tab;if(chat)SOCIAL.chat=chat;
+  SOCIAL.open=true;el.classList.remove("hide");el.setAttribute("data-modal","1");
+  if(!SOCIAL.ws&&socialOn())socialConnect();
+  socialRender();
+}
+function socialClose(){SOCIAL.open=false;var el=$("social");if(el){el.classList.add("hide");el.removeAttribute("data-modal");}}
+function sh(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
+function shBtn(label,cls,fn,dis){var b=sh("button","big sm "+(cls||""),label);if(dis){b.disabled=true;b.style.opacity=".45";}b.addEventListener("click",fn);return b;}
+var PRES_TXT={online:"ONLINE",lobby:"IN LOBBY",match:"IN MATCH",offline:"OFFLINE"};
+function socialAct(m,okText){
+  socialSend(m,function(r){if(r.err){SOCIAL.err=r.err;socialRender();}else{SOCIAL.err="";if(okText)notify({kind:"info",id:"ok"+m.t,title:"FRIENDS",text:okText,ttl:3});socialRender();}});
+}
+function socialRender(){
+  socialBadge();
+  if(!SOCIAL.open)return;
+  var body=$("socBody");if(!body)return;
+  var ts=document.querySelectorAll("#socTabs .tab");
+  for(var i=0;i<ts.length;i++)ts[i].classList.toggle("sel",ts[i].getAttribute("data-t")===SOCIAL.tab);
+  body.innerHTML="";
+  var st=SOCIAL.st;
+  if(!socialOn()){body.appendChild(sh("div","fine","Sign in with Google on your Profile to add friends, make parties and send messages."));return;}
+  if(!st){body.appendChild(sh("div","fine","Connecting…"));return;}
+  var nm=0;for(i=0;i<st.friends.length;i++)nm+=st.friends[i].unread?1:0;
+  $("socNf").textContent=(st.reqIn.length+st.linvIn.length)?String(st.reqIn.length+st.linvIn.length):"";
+  $("socNp").textContent=st.pinv.length?String(st.pinv.length):"";
+  $("socNm").textContent=nm?String(nm):"";
+  if(SOCIAL.err){var er=sh("div","socerr",SOCIAL.err);body.appendChild(er);}
+  if(SOCIAL.tab==="friends")socialFriends(body,st);
+  else if(SOCIAL.tab==="party")socialParty(body,st);
+  else socialMsgs(body,st);
+}
+function socialRow(name,sub,dot){
+  var r=sh("div","socrow");
+  if(dot){var d=sh("span","socdot "+dot);r.appendChild(d);}
+  var t=sh("div","socwho");t.appendChild(sh("b","",name));if(sub)t.appendChild(sh("span","",sub));r.appendChild(t);
+  var a=sh("div","socacts");r.appendChild(a);r._a=a;return r;
+}
+function socialFriends(body,st){
+  // your tag, to give to friends
+  var me=sh("div","socme");me.appendChild(sh("span","","YOUR TAG"));var tg=sh("b","",st.me.tag||"…");me.appendChild(tg);
+  me.appendChild(shBtn("COPY","",function(){try{navigator.clipboard.writeText(st.me.tag);}catch(e){}notify({kind:"info",id:"copy",title:"COPIED",text:st.me.tag,ttl:2});}));
+  body.appendChild(me);
+  // find by tag
+  var f=sh("div","socfind");var inp=sh("input","");inp.placeholder="Friend's tag, e.g. NAME#1234";inp.maxLength=16;inp.id="socFindIn";inp.autocomplete="off";
+  f.appendChild(inp);
+  var go=shBtn("ADD","gold",function(){var v=inp.value.trim();if(!v)return;socialAct({t:"freq",tag:v},"Friend request sent");inp.value="";});
+  f.appendChild(go);
+  inp.addEventListener("keydown",function(e){e.stopPropagation();if(e.key==="Enter")go.click();});
+  body.appendChild(f);
+  var i,r;
+  // invites waiting for you
+  if(st.linvIn.length||st.pinv.length){
+    body.appendChild(sh("div","sechead","INVITES"));
+    st.linvIn.forEach(function(v){
+      r=socialRow(v.name,(v.party?"Party → their lobby":"Lobby invite")+" · "+v.code,"lobby");
+      r._a.appendChild(shBtn("JOIN","gold",function(){socialJoinInvite(v.id);}));
+      r._a.appendChild(shBtn("DECLINE","",function(){socialAct({t:"ldec",id:v.id});}));
+      body.appendChild(r);
+    });
+    st.pinv.forEach(function(v){
+      r=socialRow(v.name,"Party invite","online");
+      r._a.appendChild(shBtn("ACCEPT","gold",function(){socialAct({t:"pacc",pid:v.pid},"You joined the party");SOCIAL.tab="party";}));
+      r._a.appendChild(shBtn("DECLINE","",function(){socialAct({t:"pdec",pid:v.pid});}));
+      body.appendChild(r);
+    });
+  }
+  if(st.reqIn.length){
+    body.appendChild(sh("div","sechead","FRIEND REQUESTS"));
+    st.reqIn.forEach(function(q){r=socialRow(q.name,q.tag);
+      r._a.appendChild(shBtn("ACCEPT","gold",function(){socialAct({t:"facc",sub:q.sub},"You're now friends with "+q.name);}));
+      r._a.appendChild(shBtn("DECLINE","",function(){socialAct({t:"fdec",sub:q.sub});}));
+      r._a.appendChild(shBtn("BLOCK","red",function(){socialAct({t:"block",sub:q.sub});}));
+      body.appendChild(r);});
+  }
+  // friends: online first
+  var order={match:0,lobby:1,online:2,offline:3};
+  var fr=st.friends.slice().sort(function(a,b){return (order[a.pres]-order[b.pres])||String(a.name).localeCompare(b.name);});
+  body.appendChild(sh("div","sechead","FRIENDS ("+fr.length+")"));
+  if(!fr.length)body.appendChild(sh("div","fine","No friends yet. Share your tag, or add someone by theirs."));
+  // can you invite people to where you are? only from a real online lobby
+  var inRoom=NET.ws&&NET.code&&!NET.solo&&!NET.queue&&NET.status==="lobby";
+  var invited={};st.linvOut.forEach(function(o){invited[o.to]=o.id;});
+  fr.forEach(function(x){
+    r=socialRow(x.name,x.tag+" · "+(PRES_TXT[x.pres]||"OFFLINE"),x.pres);
+    var on=x.pres!=="offline";
+    r._a.appendChild(shBtn("MESSAGE"+(x.unread?" ("+x.unread+")":""),x.unread?"gold":"",function(){socialOpen("msgs",x.sub);}));
+    if(on&&inRoom){
+      if(invited[x.sub])r._a.appendChild(shBtn("CANCEL INVITE","",function(){socialAct({t:"lcan",id:invited[x.sub]});}));
+      else r._a.appendChild(shBtn("INVITE TO LOBBY","gold",function(){socialAct({t:"linv",to:x.sub,room:NET.code},"Invited "+x.name+" to your lobby");}));
+    }
+    if(on)r._a.appendChild(shBtn("PARTY","",function(){socialAct({t:"pinv",sub:x.sub},"Party invite sent");}));
+    r._a.appendChild(shBtn("⋯","",function(){socialMore(x);}));
+    body.appendChild(r);
+  });
+  if(st.reqOut.length){
+    body.appendChild(sh("div","sechead","SENT"));
+    st.reqOut.forEach(function(q){r=socialRow(q.name,q.tag);r._a.appendChild(shBtn("CANCEL","",function(){socialAct({t:"fcan",sub:q.sub});}));body.appendChild(r);});
+  }
+  if(st.blocked.length){
+    body.appendChild(sh("div","sechead","BLOCKED"));
+    st.blocked.forEach(function(q){r=socialRow(q.name,q.tag);r._a.appendChild(shBtn("UNBLOCK","",function(){socialAct({t:"unblock",sub:q.sub});}));body.appendChild(r);});
+  }
+  // notification settings
+  body.appendChild(sh("div","sechead","NOTIFICATIONS"));
+  var sets=sh("div","socsets");
+  [["sound","Sounds"],["prev","Message previews"],["online","Friend online alerts"]].forEach(function(p){
+    var on=!!(st.set&&st.set[p[0]]);
+    sets.appendChild(shBtn(p[1]+": "+(on?"ON":"OFF"),on?"gold":"",function(){var o={t:"set"};o[p[0]]=!on;socialSend(o);}));
+  });
+  body.appendChild(sets);
+}
+function socialMore(x){
+  var body=$("socBody");body.innerHTML="";
+  body.appendChild(sh("div","sechead",x.name+" · "+x.tag));
+  var r=sh("div","socsets");
+  r.appendChild(shBtn("REMOVE FRIEND","",function(){socialAct({t:"frem",sub:x.sub},"Removed "+x.name);}));
+  r.appendChild(shBtn("BLOCK","red",function(){socialAct({t:"block",sub:x.sub},"Blocked "+x.name);}));
+  r.appendChild(shBtn("BACK","",function(){socialRender();}));
+  body.appendChild(r);
+  body.appendChild(sh("div","fine","Blocking removes them as a friend and stops their requests, messages and invites."));
+}
+function socialParty(body,st){
+  var p=st.party,me=st.me.sub;
+  if(st.pinv.length){
+    body.appendChild(sh("div","sechead","PARTY INVITES"));
+    st.pinv.forEach(function(v){var r=socialRow(v.name,"wants you in their party","online");
+      r._a.appendChild(shBtn("ACCEPT","gold",function(){socialAct({t:"pacc",pid:v.pid},"You joined the party");}));
+      r._a.appendChild(shBtn("DECLINE","",function(){socialAct({t:"pdec",pid:v.pid});}));body.appendChild(r);});
+  }
+  if(!p){
+    body.appendChild(sh("div","fine","Not in a party. Invite a friend from the Friends tab, or start one here. A party holds 6 — Boss Rally takes up to 4."));
+    var row=sh("div","socsets");row.appendChild(shBtn("START A PARTY","gold",function(){socialAct({t:"pnew"});}));body.appendChild(row);return;
+  }
+  var lead=p.leader===me;
+  body.appendChild(sh("div","sechead","YOUR PARTY ("+p.members.length+"/"+p.max+")"));
+  p.members.forEach(function(m){
+    var r=socialRow((m.sub===p.leader?"♛ ":"")+m.name+(m.sub===me?" (you)":""),(m.on?"HERE":"AWAY")+" · "+(m.ready?"READY":"NOT READY"),m.on?(m.ready?"lobby":"online"):"offline");
+    if(lead&&m.sub!==me){
+      r._a.appendChild(shBtn("MAKE LEADER","",function(){socialAct({t:"plead",sub:m.sub});}));
+      r._a.appendChild(shBtn("REMOVE","red",function(){socialAct({t:"pkick",sub:m.sub});}));
+    }
+    body.appendChild(r);
+  });
+  p.inv.forEach(function(v){body.appendChild(socialRow(v.name,"invited · waiting","offline"));});
+  var mine=null;for(var i=0;i<p.members.length;i++)if(p.members[i].sub===me)mine=p.members[i];
+  var row2=sh("div","socsets");
+  row2.appendChild(shBtn(mine&&mine.ready?"NOT READY":"READY",mine&&mine.ready?"":"gold",function(){socialAct({t:"pready",r:!(mine&&mine.ready)});}));
+  if(lead){
+    var inRoom=NET.ws&&NET.code&&!NET.solo&&!NET.queue&&NET.status==="lobby";
+    row2.appendChild(shBtn("BRING PARTY TO MY LOBBY","gold",function(){socialAct({t:"pgo",room:NET.code},"Bringing the party in");},!inRoom));
+    row2.appendChild(shBtn("DISBAND","red",function(){socialAct({t:"pdisband"});}));
+  }
+  row2.appendChild(shBtn("LEAVE","",function(){socialAct({t:"pleave"});}));
+  body.appendChild(row2);
+  if(lead)body.appendChild(sh("div","fine",(NET.ws&&NET.code?"":"Host or join a lobby first, then bring everyone in. ")+
+    (p.members.length>4?"Boss Rally takes up to 4 — your party has "+p.members.length+".":"")));
+}
+function socialMsgs(body,st){
+  var wrap=sh("div","socmsgs"),list=sh("div","soclist"),pane=sh("div","socpane");
+  wrap.appendChild(list);wrap.appendChild(pane);body.appendChild(wrap);
+  var fr=st.friends.slice().sort(function(a,b){return (b.unread|0)-(a.unread|0)||String(a.name).localeCompare(b.name);});
+  if(!fr.length){pane.appendChild(sh("div","fine","Messages are for friends. Add one from the Friends tab."));return;}
+  if(!SOCIAL.chat||!socialFriend(SOCIAL.chat))SOCIAL.chat=fr[0].sub;
+  fr.forEach(function(x){
+    var b=sh("button","socconv"+(x.sub===SOCIAL.chat?" sel":""));b.appendChild(sh("span","socdot "+x.pres));b.appendChild(sh("span","",x.name));
+    if(x.unread)b.appendChild(sh("i","socN",String(x.unread)));
+    b.addEventListener("click",function(){SOCIAL.chat=x.sub;socialRender();});list.appendChild(b);
+  });
+  var who=socialFriend(SOCIAL.chat),c=socialConvOf(SOCIAL.chat);
+  if(who.unread){socialSend({t:"read",with:who.sub});who.unread=0;socialBadge();}
+  if(!c.loaded&&!c.busy)socialHist(who.sub,false);
+  pane.appendChild(sh("div","sechead",who.name+" · "+(PRES_TXT[who.pres]||"")));
+  var log=sh("div","soclog");
+  if(c.more&&c.loaded)log.appendChild(shBtn("LOAD OLDER","",function(){socialHist(who.sub,true);}));
+  c.msgs.forEach(function(m){
+    var mine=m.from===st.me.sub;
+    var d=sh("div","socmsg"+(mine?" me":"")+(m.state?" "+m.state:""));
+    d.appendChild(sh("span","",m.text));          // plain text, always
+    if(m.state==="fail"){d.appendChild(shBtn("RETRY","",function(){c.msgs.splice(c.msgs.indexOf(m),1);socialSay(who.sub,m.text);}));}
+    log.appendChild(d);
+  });
+  pane.appendChild(log);
+  var form=sh("div","socfind"),inp=sh("input","");inp.maxLength=280;inp.placeholder="Message "+who.name;inp.id="socMsgIn";inp.autocomplete="off";
+  var send=shBtn("SEND","gold",function(){var v=inp.value;if(!v.trim())return;socialSay(who.sub,v);inp.value="";});
+  inp.addEventListener("keydown",function(e){e.stopPropagation();if(e.key==="Enter")send.click();});
+  form.appendChild(inp);form.appendChild(send);pane.appendChild(form);
+  setTimeout(function(){log.scrollTop=log.scrollHeight;try{if(!touchMode)inp.focus();}catch(e){}},0);
+}
+function socialHist(sub,older){
+  var c=socialConvOf(sub);if(c.busy)return;c.busy=true;
+  var first=null;for(var i=0;i<c.msgs.length;i++)if(c.msgs[i].k){first=c.msgs[i].k;break;}
+  socialSend({t:"hist",with:sub,before:older&&first?first:""},function(r){
+    c.busy=false;
+    if(r.err)return;
+    var have={};c.msgs.forEach(function(m){have[m.id]=1;});
+    var add=(r.msgs||[]).filter(function(m){return !have[m.id];});
+    c.msgs=older?add.concat(c.msgs):add.concat(c.msgs.filter(function(m){return !m.k||true;}));
+    if(!older){c.msgs.sort(function(a,b){return (a.at-b.at);});}
+    c.more=!!r.more;c.loaded=true;socialRender();
+  });
+}
+// a message goes out as "sending", then is "sent" or "failed" with a retry
+function socialSay(to,text){
+  var c=socialConvOf(to),cid="c"+(++SOCIAL.rq);
+  var m={id:cid,at:Date.now(),from:SOCIAL.st.me.sub,text:String(text).slice(0,280),state:"sending"};
+  c.msgs.push(m);socialRender();
+  socialSend({t:"dm",to:to,text:m.text,cid:cid},function(r){
+    if(r.err){m.state="fail";SOCIAL.err=r.err;}
+    else{m.state="";m.id=r.msg.id;m.at=r.msg.at;m.k=r.msg.k;m.text=r.msg.text;SOCIAL.err="";}
+    socialRender();
+  });
+}
+
+/* ---- notifications, top right ----
+   At most three at once; the rest fold into "+N more", which opens the
+   panel. The same thing twice is one notification. Anything you can act on
+   (a request, an invite) also stays in the panel after its toast goes. */
+var NOTES={list:[],more:0};
+function notesEl(){
+  var el=$("notes");if(el)return el;
+  el=document.createElement("div");el.id="notes";document.body.appendChild(el);return el;
+}
+function socialNote(n){
+  var st=SOCIAL.st;
+  var acts=[];
+  if(n.kind==="freq")acts=[["ACCEPT",function(){socialAct({t:"facc",sub:n.from},"You're now friends");}],["DECLINE",function(){socialAct({t:"fdec",sub:n.from});}]];
+  else if(n.kind==="pinv")acts=[["ACCEPT",function(){socialAct({t:"pacc",pid:n.pid},"You joined the party");}],["DECLINE",function(){socialAct({t:"pdec",pid:n.pid});}]];
+  else if(n.kind==="linv"&&!n.party)acts=[["JOIN",function(){socialJoinInvite(n.inv);}],["DECLINE",function(){socialAct({t:"ldec",id:n.inv});}]];
+  else if(n.kind==="dm")acts=[["REPLY",function(){socialOpen("msgs",n.from);}]];
+  notify({kind:n.kind,id:n.id,title:n.title,text:n.text,acts:acts,ttl:acts.length?9:5,
+    sound:!st||!st.set||st.set.sound!==false});
+}
+function notify(o){
+  if(typeof document==="undefined"||NET.srv)return;
+  var el=notesEl(),id=o.id||("n"+Date.now()+Math.random());
+  notifyDrop(id,true);
+  var d=document.createElement("div");d.className="note k-"+(o.kind||"info");d._id=id;
+  var t=document.createElement("b");t.textContent=o.title||"";d.appendChild(t);
+  var p=document.createElement("span");p.textContent=o.text||"";d.appendChild(p);
+  if(o.acts&&o.acts.length){var a=document.createElement("div");a.className="nacts";
+    o.acts.forEach(function(x){var b=document.createElement("button");b.textContent=x[0];b.addEventListener("click",function(e){e.stopPropagation();x[1]();notifyDrop(id);});a.appendChild(b);});
+    d.appendChild(a);}
+  d.addEventListener("click",function(){notifyDrop(id);if(o.kind&&o.kind!=="info")socialOpen(o.kind==="dm"?"msgs":o.kind==="pinv"?"party":"friends",o.kind==="dm"?o.from:null);});
+  NOTES.list.push({id:id,el:d,until:Date.now()+(o.ttl||5)*1000});
+  el.appendChild(d);
+  if(o.sound!==false){try{tone(880,1320,.09,"sine",.08);setTimeout(function(){tone(1320,1760,.08,"sine",.06);},70);}catch(e){}}
+  notesLay();
+}
+function notifyDrop(id,quiet){
+  for(var i=NOTES.list.length-1;i>=0;i--)if(NOTES.list[i].id===id){var n=NOTES.list[i];NOTES.list.splice(i,1);if(n.el.parentNode)n.el.parentNode.removeChild(n.el);}
+  if(!quiet)notesLay();
+}
+function notesLay(){
+  var el=notesEl(),n=NOTES.list.length;
+  el.classList.toggle("compact",STATE==="playing"||STATE==="countdown");
+  for(var i=0;i<n;i++)NOTES.list[i].el.style.display=i>=n-3?"":"none";
+  var more=$("notesMore");
+  if(n>3){if(!more){more=document.createElement("button");more.id="notesMore";more.addEventListener("click",function(){socialOpen("friends");});}
+    more.textContent="+"+(n-3)+" MORE";el.insertBefore(more,el.firstChild);}
+  else if(more)more.remove();
+}
+setInterval(function(){if(NET.srv)return;
+  var now=Date.now(),ch=false;
+  for(var i=NOTES.list.length-1;i>=0;i--)if(NOTES.list[i].until<now){var n=NOTES.list[i];n.el.classList.add("out");NOTES.list.splice(i,1);ch=true;
+    (function(e){setTimeout(function(){if(e.parentNode)e.parentNode.removeChild(e);},300);})(n.el);}
+  if(ch||NOTES.list.length)notesLay();
+},500);
+
+/* ============================================================
+   THE TUTORIAL -- a minute, skippable, and replayable from How to Play
+   ------------------------------------------------------------
+   A slow ball and a training dummy that always sends it back. Three things
+   to do: block it, let one through (and see what that costs), use your
+   ability. Nothing is paid or counted: no coins, no RP, no stats, no ranked.
+   ============================================================ */
+var TUTMODE={id:"tutorial",name:"Tutorial",bots:1,speed:0.55,ramp:1.0,window:0.40,mult:0,minFlight:1.2,rp:0,tut:true,
+  desc:"Learn to block, see what a miss costs, and use your ability."};
+var TUT={on:false,step:0,wait:0,parries:0};
+function tutKey(a){return (lastTouch||touchMode)?(a==="block"?"the BLOCK button":"the ability button"):keyName(bindKey(a))+(a==="block"?" (or click)":"");}
+var TUT_STEPS=[
+  function(){return "<b>1 · BLOCK</b>When the ball turns <span style='color:#ff6b6b'>red</span> it's coming for you. Press <kbd>"+tutKey("block")+"</kbd> just before it touches you.";},
+  function(){return "<b>2 · A MISS</b>Now let one through — don't press anything. See what happens.";},
+  function(){return "<b>3 · YOUR ABILITY</b>Every fighter has one. Press <kbd>"+tutKey("ability")+"</kbd> to use it.";},
+  function(){return "<b>YOU'RE READY</b>Blocks send the ball back, a miss knocks you out, and abilities turn rallies. Have fun!";}
+];
+function tutBox(){
+  var el=$("tutBox");if(el)return el;
+  el=document.createElement("div");el.id="tutBox";el.className="hide";
+  el.innerHTML="<div id='tutDots'></div><div id='tutText'></div><div id='tutBtns'></div>";
+  (document.getElementById("ui")||document.body).appendChild(el);
+  return el;
+}
+function tutPaint(){
+  var el=tutBox();el.classList.toggle("hide",!TUT.on);
+  if(!TUT.on)return;
+  var d="";for(var i=0;i<3;i++)d+="<i class='"+(i<TUT.step?"done":i===TUT.step?"now":"")+"'></i>";
+  $("tutDots").innerHTML=d;
+  $("tutText").innerHTML=TUT_STEPS[Math.min(TUT.step,3)]();
+  var b=$("tutBtns");b.innerHTML="";
+  function btn(t,cls,fn){var x=document.createElement("button");x.className="big sm "+(cls||"");x.textContent=t;x.addEventListener("click",fn);b.appendChild(x);}
+  if(TUT.step<3)btn("SKIP TUTORIAL","",function(){tutEnd(false);});
+  else{btn("PLAY A MATCH","gold",function(){tutEnd(true);});btn("BACK TO LOBBY","",function(){tutEnd(false);});}
+}
+function tutStart(){
+  riftAbort();
+  NET.matchSeq=(NET.matchSeq||0)+1;
+  MODE=copyMode(TUTMODE);RANKF=0;
+  buildArena(mapById("sky"));
+  venueKind=null;
+  if(showcase){scene.remove(showcase.mesh);showcase=null;}
+  clearFighters();clearBalls();
+  venue.visible=false;arena.visible=true;
+  slowmoT=0;run={coins:0,at:Date.now()};hudC={};stopSpectating();
+  paused=false;$("pause").classList.add("hide");
+  player=new Fighter({name:"YOU",isPlayer:true,x:0,z:ARENA_R*0.32,team:0,sword:eqBlade(),ability:"dash",skinDef:skinById(SAVE.eqSkin)});
+  fighters.push(player);
+  var dummy=new Fighter({name:"Training Dummy",x:0,z:-ARENA_R*0.32,team:1,sword:"trainer",ability:"dash",skill:0.999,react:0.05,
+    skinDef:{body:0xd8b070,limb:0x6a4a2a,skin:0xe8d0a0,glow:0}});
+  dummy.isBot=true;dummy.botIndex=0;dummy.tutDummy=true;fighters.push(dummy);
+  var bb=new Ball();bb.speed=BALL_BASE*MODE.speed;bb.mult=1;bb.judged=0;balls.push(bb);
+  camYaw=Math.PI;camPitch=-0.14;camDist=prefCamDist();
+  camLook.set(player.pos.x,player.y+2.6,player.pos.z);
+  STATE="countdown";countdown=2.2;gameT=0;
+  showScreen(null);$("ui").classList.add("on");
+  $("ui").classList.remove("venuemode");
+  $("lobbyBar").classList.remove("on");$("venueHud").classList.remove("on");
+  $("slots").style.display="";
+  $("rankhud").style.display="flex";$("rankhudIcon").innerHTML="";$("rankhudName").textContent="TUTORIAL · NO REWARDS";
+  _aliveShown=-1;updateSlotIcons();setAlive();
+  TUT.on=true;TUT.step=0;TUT.wait=0;TUT.parries=0;
+  tutPaint();
+}
+function tutNext(){TUT.step++;TUT.wait=0;sfx("rank");tutPaint();}
+// what the player just did, as the tutorial sees it
+function tutEvent(k){
+  if(!TUT.on||TUT.wait>0)return;
+  if(k==="parry"){
+    if(TUT.step===0){flashWarn("NICE BLOCK!",1.0,"#6bffb0");TUT.wait=1.2;TUT.after=tutNext;}
+    else if(TUT.step===1)flashWarn("THAT WAS A BLOCK — LET ONE THROUGH",1.4,"#ffd23f");
+  }
+  if(k==="ability"&&TUT.step===2){flashWarn("THAT'S YOUR ABILITY!",1.0,"#6bffb0");TUT.wait=1.4;TUT.after=function(){tutNext();SAVE.tutDone=true;writeSave();};}
+}
+/* the ball reached somebody in the tutorial: the dummy always sends it back;
+   you are never really knocked out, only shown what a miss would do */
+function tutHit(b,f){
+  if(!MODE||!MODE.tut)return false;
+  if(f.tutDummy){deflect(b,f,false);return true;}
+  if(!f.isPlayer)return false;
+  flashVig();sfx("ko");
+  if(TUT.step===1&&TUT.wait<=0){
+    flashWarn("KNOCKED OUT",1.6,"#ff3ca8");
+    feed("A missed block knocks you out — in a real match that's your round over","ko");
+    TUT.wait=2.2;TUT.after=tutNext;
+  } else flashWarn("MISSED — BLOCK A LITTLE EARLIER",1.2,"#ff6b6b");
+  burst(f.pos.x,f.y+2,f.pos.z,24,9,0xff3ca8,1.4,.6,-4);
+  resetBall(b,1.4);
+  return true;
+}
+function tutTick(dt){
+  if(!TUT.on)return;
+  if(TUT.wait>0){TUT.wait-=dt;if(TUT.wait<=0&&TUT.after){var a=TUT.after;TUT.after=null;a();}}
+}
+function tutEnd(play){
+  var was=TUT.on;TUT.on=false;tutPaint();
+  if(!was)return;
+  SAVE.tutDone=true;SAVE.tutAsked=true;writeSave();
+  clearFighters();clearBalls();
+  $("ui").classList.remove("on");
+  enterLobby();
+  if(play){buildModeCards();showScreen("modes");}
+}
+// a first visit: offer it once
+function tutOffer(){
+  if(SAVE.tutDone||SAVE.tutAsked||(SAVE.games|0)>0||document.querySelector(".giftpop"))return;
+  SAVE.tutAsked=true;writeSave();
+  var el=document.createElement("div");el.className="giftpop";el.setAttribute("data-modal","1");
+  el.innerHTML="<div class='gpcard'><div class='gpribbon'>NEW HERE?</div><div class='gpnote' style='font-style:normal;margin-top:0'>A one-minute tutorial: block the ball, see what a miss costs, use your ability. No rewards, no ranked — replay it any time from How to Play.</div>"+
+    "<div class='gpbtns'><button class='big gold' id='tutGo'>PLAY TUTORIAL</button><button class='big' id='tutNo'>SKIP</button></div></div>";
+  document.body.appendChild(el);
+  el.querySelector("#tutGo").addEventListener("click",function(){el.remove();tutStart();});
+  el.querySelector("#tutNo").addEventListener("click",function(){el.remove();});
+}
+
 /* ---------------- networked matches ----------------
    The host's browser is authoritative: it runs the ball, the bots, hit
    detection and round end, and broadcasts snapshots. Everyone simulates
@@ -14158,7 +15774,9 @@ var NETGAMES=[
   {id:"swarm", name:"Swarm",        desc:"Three balls at once.",
    over:{swarm:true,speed:1.10,window:0.28,ramp:1.07,mult:1.4}},
   {id:"sudden",name:"Sudden Death", desc:"One ball, already flying, already fast.",
-   over:{speed:1.0,window:0.26,ramp:1.20,mult:3.2}}
+   over:{speed:1.0,window:0.26,ramp:1.20,mult:3.2}},
+  {id:"boss",  name:"Boss Rally",   desc:"Co-op, up to 4 of you against The Broken Champion. One heart each, no bots; coins for the damage you deal.",
+   over:{},boss:true}
 ];
 function netGameById(id){
   for(var i=0;i<NETGAMES.length;i++)if(NETGAMES[i].id===id)return NETGAMES[i];
@@ -14188,13 +15806,17 @@ function startNetMatch(m){
   if(Array.isArray(m.off))applyAbilOff(m.off);          // the room's kill switches, the same for everyone
   NET.matchSeq=(NET.matchSeq||0)+1;
   var ranked2=(m.mode==="ranked2"),god=(m.mode==="god1");
+  // server-run solo ranked: one player and rank-tuned bots, built from the seed on both sides
+  var sranked=(m.mode==="sranked1"||m.mode==="sranked2"),boss=(m.mode==="boss");
+  NET.lastMid=typeof m.mid==="string"?m.mid.slice(0,64):"";
   // a rematch has to run the SAME match back. It used to always send "mp",
   // so pressing PLAY AGAIN after a Ranked 2v2 quietly dropped you into casual.
   NET.lastMode=m.mode||"mp"; NET.lastRf=(m.rf===undefined?0:m.rf);
   NET.lastBots=_netBots=clamp(Math.round(m.bots||0),0,8);
   NET.lastGm=m.gm||"ffa";
-  MODE=copyMode(god?NETMODE_GOD:(ranked2?NETMODE2:NETMODE));
-  if(!ranked2&&!god){
+  MODE=copyMode(god?NETMODE_GOD:ranked2?NETMODE2:sranked?modeById(m.mode==="sranked1"?"ranked1":"ranked2"):boss?BOSSMODE:NETMODE);
+  if(sranked||boss)MODE.net=true;
+  if(!ranked2&&!god&&!sranked&&!boss){
     // the host's gamemode choice, applied identically on every client
     var gmDef=netGameById(m.gm||"ffa");
     for(var ok2 in gmDef.over)MODE[ok2]=gmDef.over[ok2];
@@ -14203,17 +15825,19 @@ function startNetMatch(m){
     NETPICK.gm=gmDef.id;NETPICK.bots=_netBots;
   }
   RANKF=0;
-  if(ranked2){
+  if(ranked2||sranked){
     // both clients must tune the bots identically, so difficulty comes from
     // the HOST's rank, sent with the start message
     MODE._tune=rankedTuning(clamp(m.rf===undefined?0:m.rf,0,1));
     RANKF=m.rf||0;
+    // solo ranked feels exactly as it did on this device: the whole ranked tuning
+    if(sranked){MODE.speed=MODE._tune.speed;MODE.window=MODE._tune.window;MODE.ramp=MODE._tune.ramp;MODE.minFlight=MODE._tune.minFlight;}
   }
   NET.on=true;NET.status="playing";
   NET.hist.length=0;NET.remote={};NET.seq=0;NET.mid="";
   // every client builds the identical arena from the host's seed
   seedWorld(m.seed);
-  buildArena(mapById(m.map||"sky"));
+  buildArena(boss?BOSS_MAP:mapById(m.map||"sky"));
   unseedWorld();
   venueKind=null;
   if(showcase){scene.remove(showcase.mesh);showcase=null;}
@@ -14223,8 +15847,9 @@ function startNetMatch(m){
   paused=false;$("pause").classList.add("hide");
 
   var roster=NET.players.slice();
-  var total=ranked2?roster.length:Math.max(roster.length+netFill(),1);
-  MODE.duelNet=!ranked2&&total===2;
+  if(boss){bossNetBuild(m,roster);return;}
+  var total=ranked2?roster.length:sranked?(MODE.bots+1):Math.max(roster.length+netFill(),1);
+  MODE.duelNet=!ranked2&&!(m.mode==="sranked2")&&total===2;
   var myAb=null;for(var ri=0;ri<roster.length;ri++)if(roster[ri].id===NET.you)myAb=roster[ri].abil;
   var idx=0;
   for(var i=0;i<roster.length;i++){
@@ -14232,9 +15857,9 @@ function startNetMatch(m){
     var a=(idx/total)*TAU;
     var mine=(p.id===NET.you);
     var f=new Fighter({name:mine?"YOU":(p.name||"Player"),isPlayer:mine,
-      team:ranked2?0:(MODE.teams?(i%2):1),
-      x:Math.cos(ranked2?(a*0.25-0.6):a)*(ARENA_R*0.55),
-      z:Math.sin(ranked2?(a*0.25-0.6):a)*(ARENA_R*0.55),
+      team:(ranked2||sranked)?0:(MODE.teams?(i%2):1),
+      x:sranked?ARENA_R*0.5:Math.cos(ranked2?(a*0.25-0.6):a)*(ARENA_R*0.55),
+      z:sranked?0:Math.sin(ranked2?(a*0.25-0.6):a)*(ARENA_R*0.55),
       sword:p.sword||"trainer",ability:resolveAbility(p.abil||"dash"),
       skinDef:skinById(p.skin||"rookie")});
     f.netId=p.id;
@@ -14250,23 +15875,28 @@ function startNetMatch(m){
   // and the guest moves them from the host's snapshots.
   var names=BOTNAMES.slice();
   var botSeed=mulberry32(m.seed^0x5bf03635);
-  var nBots=ranked2?2:Math.max(0,total-roster.length);
+  var nBots=ranked2?2:sranked?MODE.bots:Math.max(0,total-roster.length);
   for(i=0;i<nBots;i++){
-    var a2=ranked2?(0.6+i*0.5):((idx/Math.max(1,total))*TAU);
+    var a2=ranked2?(0.6+i*0.5):sranked?(((i+1)/total)*TAU):((idx/Math.max(1,total))*TAU);
     var nm=names[Math.floor(botSeed()*names.length)]||("Bot"+i);
-    var bSkill,bReact;
-    if(ranked2){
+    var bSkill,bReact,sAlly=sranked&&MODE.teams&&i===0;
+    if(sranked){
+      // the same opponents a solo ranked match always had: tuned to your rank, an ally a shade weaker
+      var jit=0.03*(1-RANKF*0.85);
+      bSkill=clamp(MODE._tune.skill*(sAlly?0.94:1)+(botSeed()*2-1)*jit,0.3,0.999);
+      bReact=clamp(MODE._tune.react*(sAlly?1.15:1)+(botSeed()*2-1)*0.02,0.03,0.5);
+    } else if(ranked2){
       bSkill=clamp(MODE._tune.skill+(botSeed()-0.5)*0.06,0.3,0.998);
       bReact=clamp(MODE._tune.react+(botSeed()-0.5)*0.04,0.03,0.5);
     } else {
       bSkill=0.72+botSeed()*0.12;bReact=0.14+botSeed()*0.14;
     }
-    var bf=new Fighter({name:nm,team:ranked2?1:(MODE.teams?((roster.length+i)%2):1),
-      x:Math.cos(a2)*(ARENA_R*0.55),z:Math.sin(a2)*(ARENA_R*0.55),
+    var bf=new Fighter({name:sAlly?nm+" (ally)":nm,team:ranked2?1:sranked?(sAlly?0:1):(MODE.teams?((roster.length+i)%2):1),
+      x:Math.cos(a2)*(ARENA_R*(sranked?0.5:0.55)),z:Math.sin(a2)*(ARENA_R*(sranked?0.5:0.55)),
       sword:BOT_SWORDS()[Math.floor(botSeed()*BOT_SWORDS().length)].id,
       ability:botAbility(botSeed),
       skill:bSkill,react:bReact,
-      skinDef:{body:ranked2?0xff5470:BOTCOLORS[i%BOTCOLORS.length],
+      skinDef:{body:sranked?(MODE.teams?(sAlly?0x4ad991:0xff5470):BOTCOLORS[i%BOTCOLORS.length]):ranked2?0xff5470:BOTCOLORS[i%BOTCOLORS.length],
         limb:0x2a2f45,skin:0xf0c89a,glow:0}});
     bf.netId=null;bf.isBot=true;bf.botIndex=i;
     // on the guest these are puppets: no AI, driven by botstate snapshots
@@ -14306,14 +15936,16 @@ function startNetMatch(m){
   $("slots").style.display="";
   $("rankhud").style.display="flex";
   $("rankhudIcon").innerHTML="";
-  $("rankhudName").textContent=(NET.isHost?"HOST \u00b7 ":"")+"ROOM "+NET.code+
+  if(sranked){$("rankhudIcon").innerHTML=rankIcon(currentRank(),26);
+    $("rankhudName").textContent=currentRank().name.toUpperCase()+" "+(MODE.teams?"2v2":"1v1")+" \u00b7 SERVER";}
+  else $("rankhudName").textContent=(NET.isHost?"HOST \u00b7 ":"")+"ROOM "+NET.code+
     " \u00b7 "+(ranked2?"RANKED 2v2":String(MODE.name||"").toUpperCase());
   _aliveShown=-1;
   NET.rematch=false;NET.startingRematch=false;
   if(myAb&&!abilityAllowed(myAb))feed(abilById(myAb).name+" is disabled in 1v1 \u2014 using Dash","ko");
   mpSendLoadout(false);          // clear the ready flags for the next vote
   updateSlotIcons();setAlive();
-  feed(NET.isHost?"You are hosting this match":(NET.srvHost?"The server is running this match":"Connected to "+NET.code),"good");
+  feed(sranked?"Ranked: the server is running this match":NET.isHost?"You are hosting this match":(NET.srvHost?"The server is running this match":"Connected to "+NET.code),"good");
 }
 // somebody joined or left mid-match
 function netSyncRoster(wasHost){
@@ -14351,9 +15983,75 @@ function netSyncRoster(wasHost){
     if(STATE==="playing")checkEnd();
   }
 }
+/* ---- MOVEMENT, CHECKED BY THE SERVER ----
+   Each player moves themselves and says where they are; the room's own copy
+   of the game (the server) holds every report to what that fighter could
+   really have done since the last one it accepted: its top speed right now
+   (sprint, Overdrive, Bloodlust and friends included), the time that passed,
+   with room for network jitter and a lag spike, how high a double jump goes,
+   and the edge of the arena. Anything an ability can do -- a Dash, a Switch,
+   a pull, a knockback, a rift -- opens a short grace window for whoever it can
+   move. A report that is not a number is dropped; one that goes further than
+   possible is cut back to the furthest legal point and the player is told
+   where they really are. One bad report is a lag spike and costs nothing;
+   only a run of them is noted for the admin to look at -- never a ban. */
+var MV={jitter:0.25,slack:1.2,maxGap:2.0,yMax:9.6,yMaxBurst:28,graceS:2.6,graceDist:46,
+  strikeAt:2.5,flagStrikes:6,decayS:5,corrGap:0.4,flagGap:60};
+function mvNow(){return (typeof performance!=="undefined"&&performance.now?performance.now():Date.now())/1000;}
+function mvTop(f){return RUN_BASE*RUN_SPRINT*Math.max(1,f.speedMul||1)*(1+Math.max(0,f.bloodlust||0))*1.18;}
+function mvGrant(f,secs){if(f)f.mvGrace=Math.max(f.mvGrace||0,mvNow()+(secs||MV.graceS));}
+function mvGrantAll(secs){for(var i=0;i<fighters.length;i++)if(fighters[i].alive)mvGrant(fighters[i],secs);}
+// anything the server says that can move a player opens a grace window (see setSend in buildsim)
+function mvSeenOut(o){
+  if(!o||!NET.srv)return;
+  if(o.t==="ability")mvGrantAll(o.only==="pull"||o.only==="rift"||o.only==="riftsnap"?MV.graceS+0.6:1.8);
+  else if(o.t==="start")for(var i=0;i<fighters.length;i++)fighters[i].mv=null;
+}
+// where the arena ends for a fighter: the circle (or Boss Rally's half-disc)
+function mvArena(x,z){
+  if(MODE&&MODE.boss&&typeof bossArenaClamp==="function")return bossArenaClamp(x,z);
+  var d=Math.sqrt(x*x+z*z),edge=ARENA_R-1.3;
+  if(d<=edge)return {x:x,z:z,out:0};
+  return {x:x/d*edge,z:z/d*edge,out:d-edge};
+}
+function mvAccept(f,m){
+  var k,keys=["x","z","y","r","vx","vz"];
+  for(var i=0;i<keys.length;i++){k=keys[i];if(m[k]!==undefined&&!(typeof m[k]==="number"&&isFinite(m[k]))){mvStrike(f,"sent a position that is not a number",1);return false;}}
+  if(typeof m.x!=="number"||typeof m.z!=="number")return false;
+  if(typeof m.y!=="number")m.y=0;
+  var now=mvNow(),L=f.mv;
+  if(!L)L=f.mv={x:f.pos.x,z:f.pos.z,y:f.y||0,t:now-0.05,s:0,sAt:now,corrAt:0,flagAt:-1e9};
+  var dt=Math.min(Math.max(0,now-L.t),MV.maxGap);
+  var grace=(f.mvGrace||0)>now;
+  var allow=mvTop(f)*(dt+MV.jitter)+MV.slack+(grace?MV.graceDist:0);
+  var dx=m.x-L.x,dz=m.z-L.z,d=Math.sqrt(dx*dx+dz*dz),cx=m.x,cz=m.z,cy=m.y,excess=0;
+  if(d>allow){excess=d-allow;cx=L.x+dx*allow/d;cz=L.z+dz*allow/d;}
+  var A=mvArena(cx,cz);
+  if(A.out>0.6)excess=Math.max(excess,A.out);
+  cx=A.x;cz=A.z;
+  var ymax=grace?MV.yMaxBurst:MV.yMax;
+  if(cy>ymax){excess=Math.max(excess,cy-ymax);cy=ymax;}
+  if(cy<-1){excess=Math.max(excess,-cy);cy=0;}
+  // strikes fade with time: a lag spike now and then never adds up
+  L.s=Math.max(0,L.s-(now-L.sAt)/MV.decayS);L.sAt=now;
+  if(excess>MV.strikeAt){
+    mvStrike(f,"moved "+excess.toFixed(1)+" units further than possible",1);
+    if(now-L.corrAt>MV.corrGap){L.corrAt=now;netSend({t:"corr",to:f.netId,x:+cx.toFixed(2),z:+cz.toFixed(2),y:+cy.toFixed(2)});}
+  }
+  m.x=cx;m.z=cz;m.y=cy;
+  L.x=cx;L.z=cz;L.y=cy;L.t=now;
+  return true;
+}
+function mvStrike(f,why,n){
+  var L=f.mv||(f.mv={x:f.pos.x,z:f.pos.z,y:f.y||0,t:mvNow(),s:0,sAt:mvNow(),corrAt:0,flagAt:-1e9});
+  L.s+=n||1;
+  var now=mvNow();
+  if(L.s>=MV.flagStrikes&&now-L.flagAt>MV.flagGap){L.flagAt=now;netSend({t:"mvflag",who:f.netId,detail:why+" ("+Math.round(L.s)+" times in a row)"});}
+}
 function netRemoteState(m){
   var f=NET.remote[m.from];
   if(!f||!f.alive)return;
+  if(NET.isHost&&NET.srv&&!mvAccept(f,m))return;
   f.netTarget=f.netTarget||{x:f.pos.x,z:f.pos.z,y:0,yaw:f.yaw};
   f.netTarget.x=m.x;f.netTarget.z=m.z;f.netTarget.y=m.y;f.netTarget.yaw=m.r;
   f.vel.x=m.vx||0;f.vel.z=m.vz||0;
@@ -14536,6 +16234,7 @@ function netBallMsg(){
 }
 function fighterByNetId(id){
   if(id===null||id===undefined)return null;
+  if(id==="boss")return (MODE&&MODE.boss)?bossTargetObj():null;
   if(String(id).indexOf("bot")===0){
     var bi=parseInt(String(id).slice(3),10);
     for(var i=0;i<fighters.length;i++)if(fighters[i].isBot&&fighters[i].botIndex===bi)return fighters[i];
@@ -14607,7 +16306,8 @@ function netApplyBall(m){
     if(relaunched)b.whip=0.3;
     if(relaunched||!wasActive){
       var hitter=fighterByNetId(s.lh);
-      if(hitter&&relaunched&&s.ln!==b.launchN){
+      if(hitter&&hitter.isBoss){}
+      else if(hitter&&relaunched&&s.ln!==b.launchN){
         if(hitter===player){
           // the host counted our block: whatever we saw, no cooldown
           if(b._predN!==b.launchN)blockLanded(player);
@@ -14633,7 +16333,7 @@ function netApplyBall(m){
     if(s.ln!==undefined){if(s.ln!==b.launchN)b._predN=null;b.launchN=s.ln;}
     b._ttiF=-1;
     b.flightSpeed=s.sp;b.speed=s.sp;b.mult=s.m;
-    b.target=newTarget;
+    b.target=newTarget;b.lastHitBoss=(s.lh==="boss");
     var wasMine=b.held>0&&b.heldBy===player;
     b.held=s.hl||0;b.heldBy=s.hb?fighterByNetId(s.hb):null;
     if(b.held>0&&b.heldBy){b.heldBy.catchArmT=0;b.heldBy.catchArm=null;}
@@ -14687,7 +16387,7 @@ function netApplyHit(m){
   if(f&&f.alive){
     f.guardian=false;
     var by=m.by?fighterByNetId(m.by):null;
-    if(by&&by!==f)f.killedBy=by;
+    if(by&&by!==f&&!by.isBoss)f.killedBy=by;
     f.eliminate();
     sfx("ko");
     if(by&&by!==f&&by.swordDef&&by.swordDef.shape==="fetus"){fetusSfx("kill");fetusSplash(by,{x:f.pos.x,y:f.y+1.6,z:f.pos.z},true);}
@@ -14738,6 +16438,7 @@ function netRematchCount(){
 }
 function netRenderRematch(){
   if(!NET.ws||$("results").classList.contains("hide"))return;
+  if(NET.solo){$("rAgain").textContent="PLAY AGAIN";$("rAgain").classList.remove("ghost");$("rMenu").textContent="LOBBY";return;}
   var n=netRematchCount(),total=NET.players.length;
   var btn=$("rAgain");
   btn.textContent=NET.rematch
@@ -14767,26 +16468,28 @@ function netFinish(won){
   STATE="over";
   NET.rematch=false;NET.startingRematch=false;
   for(var i=0;i<balls.length;i++){balls[i].active=false;balls[i].mesh.visible=false;}
+  // signed in to a server that ran this match: it settles coins, RP and the pass; this page only shows them
+  var srvPaid=NET.srvHost&&econOn()&&!!NET.mid;
   var bonus=won?260:40;
-  addCoins(bonus);run.coins+=bonus;
+  if(!srvPaid){addCoins(bonus);run.coins+=bonus;}
   SAVE.games++;
-  var passRes=passAward(won);
+  var passRes=srvPaid?null:passAward(won);
   // Ranked 2v2 is a ranked mode that happens to run over the network, so it
   // finishes here rather than in endRound -- and this branch used to skip RP
   // altogether, so neither player ever gained or lost any.
   var rpGain=0;
-  if(MODE.ranked){
+  if(MODE.ranked&&!srvPaid){
     var perf=player?(player.deflects*2.5+player.perfects*3+player.kos*8):0;
     rpGain=rankedRp(won,perf,!!MODE.teams);
   }
-  rodrigaRoll();
+  if(!srvPaid)rodrigaRoll();
   if(won){
     SAVE.wins++;SAVE.streak++;
     if(SAVE.streak>SAVE.bestStreak)SAVE.bestStreak=SAVE.streak;
   } else SAVE.streak=0;
-  var newRank=addRP(rpGain);
+  var newRank=srvPaid?false:addRP(rpGain);
   writeSave();
-  econMatch(won,rpGain);
+  if(srvPaid)netSettleFetch(NET.mid);else econMatch(won,rpGain);
   // the host timed every guest's blocks: those go to the server's anticheat (never to the other players)
   if(NET.isHost)for(var ri=0;ri<fighters.length;ri++){var rf=fighters[ri];
     if(rf.isRemote&&rf.netId&&(rf.tBlocks|0)>0){var at=acTiming(rf);netSend({t:"acrep",who:rf.netId,blocks:rf.tBlocks|0,perfects:rf.tPerfects|0,tn:at.n,tsd:at.sd,tmean:at.mean});}}
@@ -14797,9 +16500,11 @@ function netFinish(won){
        left for the room -- or a new match has started -- it must not pull the
        results screen back over the top of it. */
     if(tok!==NET.matchSeq||STATE!=="over")return;
-    $("place").textContent=won?"VICTORY":"ELIMINATED";
+    $("place").textContent=MODE.boss?(won?"CHAMPION BROKEN":"DEFEATED"):(won?"VICTORY":"ELIMINATED");
     $("place").className=won?"win":"lose";
-    if(MODE.ranked)
+    if(srvPaid)
+      $("rpline").innerHTML="<span style='opacity:.7'>CONFIRMING WITH THE SERVER\u2026</span>";
+    else if(MODE.ranked)
       $("rpline").innerHTML=(rpGain>=0?"<b>+"+rpGain+" RP</b>":"<b class='neg'>"+rpGain+" RP</b>")+
         " &nbsp;&middot;&nbsp; "+currentRank().name.toUpperCase()+
         (newRank?" &nbsp;&middot;&nbsp; <b>RANK UP!</b>":"")+
@@ -14810,10 +16515,12 @@ function netFinish(won){
     $("rDeflect").textContent=player?player.deflects:0;
     $("rPerfect").textContent=player?player.perfects:0;
     $("rKO").textContent=player?player.kos:0;
-    $("rCoins").textContent=run.coins;
+    $("rCoins").textContent=srvPaid?"\u2026":run.coins;
     $("rPass").innerHTML=passResultHtml(passRes);$("rPass").classList.toggle("hide",!passRes);
     $("ui").classList.remove("on");
     showScreen("results");refreshCoins();
+    // the server's answer may have come back already: show it now that the screen is up
+    if(srvPaid&&NET._settled&&NET._settled.mid===NET.mid)netShowSettled(NET.mid,NET._settled.res,NET._settled.mode);
     // votes only count once the results are up
     if(NET.ws){mpSendLoadout(false);netRenderRematch();}
   },1500);
@@ -14847,6 +16554,8 @@ function teamAlive(t){
 }
 function checkEnd(){
   setAlive();
+  // Boss Rally: lost when everybody is down; won only by his last segment (bossContact)
+  if(MODE.boss){if(teamAlive(0)===0){endRound();return true;}return false;}
   if(MODE.teams){
     if(teamAlive(0)===0||teamAlive(1)===0){endRound();return true;}
     return false;
@@ -14872,6 +16581,7 @@ function endRound(){
     netFinish(MODE.teams?!!(player&&wt>=0&&wt===player.team):!!(w&&w.isPlayer));
     return;
   }
+  if(MODE.boss){bossLocalOver(!!BOSS.victory);return;}
   STATE="over";
   for(var i=0;i<balls.length;i++){balls[i].active=false;balls[i].mesh.visible=false;}
   var won=MODE.teams?(teamAlive(0)>0):(player&&player.alive);
@@ -14938,9 +16648,37 @@ function setShiftLock(on){
   writeSave();
 }
 var moveIn={x:0,y:0},lookD={x:0,y:0};
+/* ---- MODALS ----
+   While any screen or popup is up over the world -- the shop, the inventory,
+   a gift, the pack trailer, the social panel, the pause menu -- the world does
+   not hear you: no moving, jumping, blocking, abilities or emotes. Whatever
+   was held when it opened (or closed) is let go, so nothing sticks. Typing,
+   scrolling, buttons and taps inside it work as normal: only the game's own
+   handlers stand down. Online, a menu never pauses the shared match. */
+var MODAL_SEL=".giftpop,.admsg,#banNote,.apexu,[data-modal]",MODAL_NOW=false;
+function modalOpen(){
+  for(var i=0;i<SCREENS.length;i++){var id=SCREENS[i];if(id==="boot")continue;var el=document.getElementById(id);if(el&&!el.classList.contains("hide"))return true;}
+  return !!document.querySelector(MODAL_SEL);
+}
+function inputReset(){
+  keys={};moveIn.x=0;moveIn.y=0;lookD.x=0;lookD.y=0;
+  try{joyId=null;lookId=null;joyEl.classList.remove("act");}catch(e){}
+  dragging=false;rightLook=false;
+  try{if(tauntWheelOpen())closeTauntWheel();}catch(e){}
+  // in the lobby, a popup stops you where you stand rather than letting you coast
+  try{if(STATE==="venue"&&player&&!player.isRemote){player.vel.x=0;player.vel.z=0;}}catch(e){}
+  try{var dn=document.querySelectorAll("#touch .down");for(var i=0;i<dn.length;i++)dn[i].classList.remove("down");}catch(e){}
+  try{if(!shiftLock&&pointerLocked())unlockPointer();refreshCursor();}catch(e){}
+}
+// run every frame: notices a modal opening or closing, however it happened
+function modalTick(){
+  var m=modalOpen();
+  if(m!==MODAL_NOW){MODAL_NOW=m;inputReset();}
+  return m;
+}
 // after a long rally the window closes on everyone equally, so a stalemate
 // between two good fighters always breaks eventually
-function pressure(){return clamp((gameT-60)/95,0,1);}
+function pressure(){return (MODE&&MODE.boss)?0:clamp((gameT-60)/95,0,1);}
 // Whose window? Defaults to the player, but a bot must be graded on its OWN
 // Colossus -- reading the player's meant your legendary ability widened every
 // opponent's perfect window along with yours.
@@ -14985,6 +16723,7 @@ function acTiming(f){
   return {n:n,sd:Math.round(Math.sqrt(v/n)*10)/10,mean:Math.round(m)};
 }
 function tryParry(){
+  if(MODAL_NOW||modalOpen())return;
   if(player&&player.alive&&player.stdT>0){stdChoose("light");return;}
   if(player&&player.alive&&player.ds){if(dsPress())return;}
   // holding the ball: the press throws it rather than swinging at it
@@ -15016,6 +16755,7 @@ function tryParry(){
    gets there, it becomes the miss it always was. */
 function resolveParryBuffer(dt){}
 function tryJump(){
+  if(MODAL_NOW||modalOpen())return;
   if(!player||!player.alive||(STATE!=="playing"&&STATE!=="venue"))return;
   if(paused)return;
   if(player.stun>0||player.frozen>0)return;
@@ -15033,11 +16773,13 @@ function updatePlayer(dt){
   if(!f.alive)return;
   var sprint=bindHeld("sprint")?RUN_SPRINT:1;
   var ix=0,iz=0;
+  if(!MODAL_NOW){                      // a screen is up: no steering, you coast to a stop
   if(bindHeld("fwd"))iz+=1;
   if(bindHeld("back"))iz-=1;
   if(bindHeld("left"))ix-=1;
   if(bindHeld("right"))ix+=1;
   if(touchMode){ix+=moveIn.x;iz-=moveIn.y;}
+  }
   var mag=Math.sqrt(ix*ix+iz*iz);
   if(mag>1){ix/=mag;iz/=mag;mag=1;}
   var fx=Math.sin(camYaw),fz=Math.cos(camYaw);
@@ -15149,6 +16891,16 @@ window.addEventListener("keydown",function(e){
   if(typingInField(e)){keys={};return;}
   setLastTouch(false);
   var k=keyNorm(e.code);
+  if(modalOpen()){
+    keys={};
+    // Esc still closes what Esc closed: the pause menu, or a screen opened from the lobby
+    if(e.code==="Escape"||isBind(k,"pause")){
+      if(!$("pause").classList.contains("hide"))togglePause();
+      else if(STATE==="venue"&&!document.querySelector(MODAL_SEL)&&typeof socialOpenNow==="function"&&socialOpenNow())socialClose();
+      else if(STATE==="venue"&&!document.querySelector(MODAL_SEL))backToVenue();
+    }
+    return;
+  }
   keys[k]=true;
   if(isBind(k,"jump")){tryJump();e.preventDefault();}
   if(isBind(k,"block")){if(STATE==="venue")venuePress();else tryParry();}
@@ -15202,6 +16954,7 @@ function unlockPointer(){
 }
 function pointerLocked(){return document.pointerLockElement===canvas;}
 canvas.addEventListener("mousedown",function(e){
+  if(modalOpen())return;
   if(e.button===0&&STATE==="playing")tryParry();
   if(e.button===0&&STATE==="venue"&&!rangeSwing())venueSwing();
   if(e.button===2){
@@ -15243,6 +16996,7 @@ var joyEl=$("joy"),ringEl=$("joyring"),nubEl=$("joynub"),lookEl=$("look");
 var joyId=null,joyOX=0,joyOY=0,lookId=null,lookLX=0,lookLY=0;
 joyEl.addEventListener("touchstart",function(e){
   e.preventDefault();
+  if(modalOpen())return;
   var t=e.changedTouches[0];
   joyId=t.identifier;joyOX=t.clientX;joyOY=t.clientY;
   ringEl.style.left=joyOX+"px";ringEl.style.top=joyOY+"px";
@@ -15254,6 +17008,7 @@ joyEl.addEventListener("touchmove",function(e){
   for(var i=0;i<e.changedTouches.length;i++){
     var t=e.changedTouches[i];
     if(t.identifier!==joyId)continue;
+    if(MODAL_NOW){moveIn.x=0;moveIn.y=0;continue;}
     var dx=t.clientX-joyOX,dy=t.clientY-joyOY;
     var d=Math.sqrt(dx*dx+dy*dy),max=56;
     if(d>max){dx*=max/d;dy*=max/d;}
@@ -15286,7 +17041,7 @@ function lookEnd(e){
 lookEl.addEventListener("touchend",lookEnd);lookEl.addEventListener("touchcancel",lookEnd);
 function bindTouch(id,fn){
   var el=$(id);
-  function down(e){e.preventDefault();e.stopPropagation();el.classList.add("down");fn();}
+  function down(e){e.preventDefault();e.stopPropagation();if(modalOpen())return;el.classList.add("down");fn();}
   function up(e){e.preventDefault();e.stopPropagation();el.classList.remove("down");}
   el.addEventListener("touchstart",down,{passive:false});
   el.addEventListener("touchend",up,{passive:false});
@@ -15508,6 +17263,11 @@ function updateChips(){
 }
 function buildModeCards(){
   var host=$("modeGrid");host.innerHTML="";
+  // Boss Rally first: co-op against The Broken Champion
+  var be=document.createElement("div");be.className="mode bossmode";
+  be.innerHTML="<h3>Boss Rally</h3><p>"+BOSSMODE.desc+" One heart each, one ball: five parries break his guard.</p><div class='meta'>1\u20134 PLAYERS &middot; "+
+    (econOn()&&serverBase()?"COINS FOR DAMAGE &middot; NO RP":"PRACTICE &middot; SIGN IN FOR REWARDS")+"</div>";
+  be.addEventListener("click",bossEntry);host.appendChild(be);
   MODES.forEach(function(m){
     if(m.ranked)return;
     if(m.halloween&&!trickLive())return;
@@ -15545,7 +17305,8 @@ var RARITY={common:{w:59,c:0x9aa3ad,n:"COMMON"},rare:{w:24.6,c:0x5fd8ff,n:"RARE"
   mythic:{w:2,c:0xff3ca8,n:"MYTHIC"},
   ultra:{w:0,c:0xd0102a,n:"ULTRA"},            // never rolled: ULTRA items only come from codes
   halloween:{w:0,c:0xff7a12,n:"HALLOWEEN"},    // never rolled: only from the Halloween Pass
-  unreleased:{w:0,c:0x9fdcff,n:"UNRELEASED"}}; // never rolled: test items before they launch
+  unreleased:{w:0,c:0x9fdcff,n:"UNRELEASED"},  // never rolled: test items before they launch
+  secret:{w:0,c:0x8a3cff,n:"UNRELEASED"}};     // dev items, Dev2: never rolled, sold or shown until yours          // never rolled, never sold, never shown until it's yours // never rolled: test items before they launch
 var RARORDER=["mythic","legendary","epic","rare","common"];
 var shopTab="sword";
 /* ---- the Limited shop ----
@@ -15902,11 +17663,11 @@ function buildLimited(){
    written in the file, so a mythic could sit between two commons and the good
    things were impossible to find. Rank rewards and code items lead, then mythic
    down to common, and within a tier the more expensive one first. */
-var RARITY_ORDER={ultra:-1,halloween:-.5,rank:0,mythic:1,legendary:2,epic:3,rare:4,common:5};
+var RARITY_ORDER={secret:-1.5,ultra:-1,halloween:-.5,rank:0,mythic:1,legendary:2,epic:3,rare:4,common:5};
 function byRarityDesc(list){
   return list.slice().sort(function(a,b){
-    var ra=a.ultra?-1:(a.rank||a.code)?0:(RARITY_ORDER[a.rarity]===undefined?5:RARITY_ORDER[a.rarity]);
-    var rb=b.ultra?-1:(b.rank||b.code)?0:(RARITY_ORDER[b.rarity]===undefined?5:RARITY_ORDER[b.rarity]);
+    var ra=isSecretTier(a)?-1.5:a.ultra?-1:(a.rank||a.code)?0:(RARITY_ORDER[a.rarity]===undefined?5:RARITY_ORDER[a.rarity]);
+    var rb=isSecretTier(b)?-1.5:b.ultra?-1:(b.rank||b.code)?0:(RARITY_ORDER[b.rarity]===undefined?5:RARITY_ORDER[b.rarity]);
     if(ra!==rb)return ra-rb;
     var pa=a.price<0?1e9:(a.price||0), pb=b.price<0?1e9:(b.price||0);
     if(pa!==pb)return pb-pa;
@@ -16145,9 +17906,12 @@ var UI_ICO={"LOCK": "<svg viewBox='0 0 20 20'><path d='M6 9V6.5a4 4 0 0 1 8 0V9'
 /* ---- tiles and the detail panel: one look for every item grid ---- */
 var LIMSEL=null;
 var pickSel={sword:null,abil:null,skin:null};
-function itemTier(it){return (it.rank||it.rarity==="rank")?"rank":(it.rarity||"common");}
+// dev items, secret items and unreleased ones are one tier, shown as UNRELEASED
+function isSecretTier(it){return it&&(it.rarity==="secret"||it.rarity==="unreleased"||it.rank==="dev");}
+function itemTier(it){return isSecretTier(it)?"secret":(it.rank||it.rarity==="rank")?"rank":(it.rarity||"common");}
 function tierLabel(it){
   if(it.rarity==="unreleased")return "UNRELEASED";
+  if(isSecretTier(it))return "UNRELEASED";
   if(it.top1)return "#1 ONLY";
   if(it.ultra)return "ULTRA";
   if(it.season===0)return "SEASON 0";
@@ -16158,7 +17922,7 @@ function tierLabel(it){
   if(it.free)return "FREE";
   return (RARITY[it.rarity]||RARITY.common).n;
 }
-function tierColor(it){var t=itemTier(it);return t==="rank"?"#7dffc4":hexStr((RARITY[t]||RARITY.common).c);}
+function tierColor(it){var t=itemTier(it);return t==="rank"?"#4ee88a":hexStr((RARITY[t]||RARITY.common).c);}
 function itemTile(it,d,o){
   o=o||{};
   var el=document.createElement("div");
@@ -16218,7 +17982,7 @@ function renderPicker(fresh){
   // everything is listed, owned or not: what you do not have shows locked
   // (a pack's secret bonus is the exception: not listed until it is yours)
   // (and nothing unreleased shows to anyone who has not been given it)
-  var list=d.list.filter(function(it){if(it.rarity==="unreleased"&&!d.own[it.id])return false;
+  var list=d.list.filter(function(it){if((it.rarity==="unreleased"||isSecretTier(it))&&!d.own[it.id])return false;
     if(it.secret&&!d.own[it.id]){var pk=packOf(tab,it.id);return !(pk&&packSecret(PACKS[pk],tab,it.id));}return true;});
   var owned=list.filter(function(it){return d.own[it.id];});
   list=owned.concat(list.filter(function(it){return !d.own[it.id];}));
@@ -17197,8 +18961,17 @@ function renderNetSetup(){
     (NETPICK.bots?("  Plus "+NETPICK.bots+" bot"+(NETPICK.bots===1?"":"s")+"."):"");
   if($("mpBotsN"))$("mpBotsN").textContent=String(NETPICK.bots);
   var up=$("mpBotsUp"),dn=$("mpBotsDown");
-  if(up)up.style.display=host?"":"none";
-  if(dn)dn.style.display=host?"":"none";
+  var bossy=NETPICK.gm==="boss";
+  if(up)up.style.display=host&&!bossy?"":"none";
+  if(dn)dn.style.display=host&&!bossy?"":"none";
+  // Boss Rally: explain the limit before anyone queues, and catch an ability that sits it out
+  if(bossy&&$("mpGameDesc")){
+    var bd=$("mpGameDesc");
+    bd.textContent=G2.desc+(NET.players.length>4?"  This room has "+NET.players.length+" \u2014 Boss Rally takes 4 at most.":"");
+    if(!bossAbilReady()){var pk=document.createElement("button");pk.className="big sm";pk.style.marginTop="6px";
+      pk.textContent=abilById(SAVE.eqAbil).name.toUpperCase()+" SITS OUT \u2014 PICK A REPLACEMENT";
+      pk.addEventListener("click",function(){bossAbilPicker(renderNetSetup);});bd.appendChild(document.createElement("br"));bd.appendChild(pk);}
+  }
 }
 /* ---- public lobbies: every open room, with a JOIN button ---- */
 var PUB={at:0,busy:false,list:null,err:false};
@@ -17275,7 +19048,7 @@ function lobbyRender(){
   var me=null;
   for(i=0;i<NET.players.length;i++)if(NET.players[i].id===NET.you)me=NET.players[i];
   $("mpReady").textContent=(me&&me.ready)?"NOT READY":"READY";
-  var canStart=netLeads()&&NET.players.length>=2&&readyCount===NET.players.length;
+  var canStart=netLeads()&&(NETPICK.gm==="boss"?NET.players.length<=4:NET.players.length>=2&&readyCount===NET.players.length);
   $("mpStart").style.display=netLeads()?"":"none";
   $("mpStart").style.opacity=canStart?"1":".45";
   // ranked 2v2 needs exactly the two of you, both ready
@@ -17297,7 +19070,7 @@ function lobbyRender(){
 }
 function mpSendLoadout(ready){
   netSend({t:"loadout",name:(SAVE.netName||"Player").slice(0,14),
-    sword:eqBlade(),skin:SAVE.eqSkin,abil:SAVE.eqAbil,
+    sword:eqBlade(),skin:SAVE.eqSkin,abil:SAVE.eqAbil,babil:SAVE.bossAbil||undefined,
     ready:ready===undefined?undefined:!!ready});
 }
 function wireMP(){
@@ -17336,6 +19109,7 @@ function wireMP(){
   });
   $("mpStart").addEventListener("click",function(){
     if(!netLeads())return;
+    if(NETPICK.gm==="boss"){bossRoomStart();return;}
     if(NET.players.length<2){NET.err="You need another player.";NET.status="lobby";lobbyRender();return;}
     var allReady=true;
     for(var i=0;i<NET.players.length;i++)if(!NET.players[i].ready)allReady=false;
@@ -17595,6 +19369,7 @@ function frame(ts){
   frameStep(Math.min(raw,0.034));
 }
 function frameStep(dt){
+  modalTick();
   if(STATE==="boot"||paused)return;
   FRAME_N++;
   // The big centre banner ("3", "GO", "ELIMINATED") used to expire inside
@@ -17614,7 +19389,7 @@ function frameStep(dt){
   gameT+=dt;
   slowmoT=Math.max(0,slowmoT-dt);
   var worldDt=slowmoT>0?dt*0.4:dt;
-  if(STATE==="playing"&&gameT>75&&!hudC.sudden){
+  if(STATE==="playing"&&gameT>75&&!hudC.sudden&&!(MODE&&(MODE.boss||MODE.tut))){
     hudC.sudden=true;flashWarn("SUDDEN DEATH",1.2,"#ff3ca8");
     feed("Sudden death \u2014 the parry window is closing","ko");
   }
@@ -17657,6 +19432,8 @@ function frameStep(dt){
       f.update(f.isPlayer?dt:worldDt,gameT);
     }
     riftTick(worldDt,gameT);
+    if(BOSS.on)bossTick(worldDt);
+    if(TUT.on)tutTick(worldDt);
     if(NET.on)netTick(dt);
     else if(LIVE.n)liveTick(dt);
     // sweep dead decoys out
@@ -17950,6 +19727,22 @@ $("stdLight").addEventListener("click",function(){stdChoose("light");});
 $("stdDark").addEventListener("click",function(){stdChoose("dark");});
 $("lockTog").addEventListener("click",function(){setShiftLock(!shiftLock);});
 $("lbSettings").addEventListener("click",function(){openSettings();});
+$("lbFriends").addEventListener("click",function(){socialOpen("friends");});
+/* the phone MENU: folds the lobby buttons away; a dot when something in there wants you */
+(function(){
+  var t=document.getElementById("navTog");if(!t)return;
+  t.addEventListener("click",function(e){e.stopPropagation();document.body.classList.toggle("navOpen");});
+  var bar=document.getElementById("lobbyBar");
+  if(bar)bar.addEventListener("click",function(e){if(e.target.closest&&e.target.closest(".lbtn"))document.body.classList.remove("navOpen");});
+  setInterval(function(){
+    if(NET.srv)return;
+    var f=document.getElementById("lbFriendsN"),l=document.getElementById("lbLoginN");
+    var ping=(f&&f.style.display!=="none")||(l&&l.offsetParent!==null&&l.textContent&&l.textContent!=="0");
+    t.classList.toggle("ping",!!ping);
+    if(STATE!=="venue")document.body.classList.remove("navOpen");
+  },700);
+})();
+
 $("pSettings").addEventListener("click",function(){openSettings();});
 $("touchTog").addEventListener("click",function(){
   forceTouch=(forceTouch===null)?true:(forceTouch===true?false:null);
@@ -17969,6 +19762,15 @@ $("mFull").addEventListener("click",function(){
 function togglePause(){
   if(STATE==="venue"){backToVenue();return;}
   if(STATE!=="playing"&&STATE!=="countdown")return;
+  // online the match is shared: the menu opens over it, and it carries on underneath
+  if(NET.on){
+    var open=$("pause").classList.contains("hide");
+    $("pause").classList.toggle("hide",!open);
+    if(open){$("pauseInfo").innerHTML="Mode <b>"+MODE.name+"</b> &middot; <b>The match carries on</b> while this is open";
+      if(document.exitPointerLock)document.exitPointerLock();$("ui").classList.remove("on");}
+    else $("ui").classList.add("on");
+    return;
+  }
   paused=!paused;
   $("pause").classList.toggle("hide",!paused);
   if(paused){
@@ -17981,7 +19783,7 @@ function togglePause(){
 $("pResume").addEventListener("click",togglePause);
 $("pQuit").addEventListener("click",function(){
   paused=false;
-  if(STATE==="playing"||STATE==="countdown")econMatch(false,0);   // what was won before quitting still counts
+  if(!NET.on&&(STATE==="playing"||STATE==="countdown"))econMatch(false,0);   // what was won before quitting still counts
   if(NET.ws&&NET.code){$("pause").classList.add("hide");netLeaveMatch();return;}
   clearFighters();clearBalls();
   $("ui").classList.remove("on");enterLobby();
@@ -18053,12 +19855,16 @@ function chestShow(wins,tab,res){
     if(REEL.busy)return;chestQty=parseInt(b.getAttribute("data-q"),10)||1;sfx("tick");buildShop();});})(qb[i]);
 })();
 $("rankBack").addEventListener("click",function(){backToVenue();});
-$("rkPlay1").addEventListener("click",function(){if(rankIsPvp())godQueueStart();else startMatch("ranked1");});
+// signed in, ranked is played on the server (see SERVER-RUN SOLO); signed out it stays on this device, as it always was
+$("rkPlay1").addEventListener("click",function(){if(rankIsPvp())godQueueStart();else if(econOn()&&serverBase())soloServerStart("sranked1");else startMatch("ranked1");});
 $("rkPlay2").addEventListener("click",function(){
   if(rankIsPvp()){godSay("GOD is played one on one, against other players. Use FIND A GOD OPPONENT.",false);return;}
-  startMatch("ranked2");
+  if(econOn()&&serverBase())soloServerStart("sranked2");else startMatch("ranked2");
 });
 $("howBack").addEventListener("click",function(){backToVenue();});
+(function(){var w=document.querySelector("#howto .keys");if(!w||!w.parentNode)return;
+  var b=document.createElement("button");b.className="big gold";b.id="howTut";b.textContent="PLAY THE TUTORIAL";b.style.margin="12px auto 0";b.style.display="block";
+  b.addEventListener("click",function(){showScreen(null);tutStart();});w.parentNode.insertBefore(b,w.nextSibling);})();
 $("updGo").addEventListener("click",function(){
   SAVE.seenVersion=VERSION;writeSave();
   enterLobby();
@@ -18197,12 +20003,14 @@ $("pfWipe").addEventListener("click",function(){
   $("pfMsg").textContent="Progress reset.";
 });
 $("rAgain").addEventListener("click",function(){
+  if(NET.solo){soloServerStart(NET.solo);return;}   // a fresh room of your own
   if(NET.ws&&NET.code){netRematchVote();return;}   // vote, stay in the room
   startMatch(MODE.id);
 });
 $("rMenu").addEventListener("click",function(){
   // a GOD queue room is only ever that one match: leave it entirely
   if(NET.queue){netDisconnect();NET.queue=false;clearFighters();clearBalls();enterLobby();return;}
+  if(NET.solo){soloLeave();return;}
   if(NET.ws&&NET.code){netLeaveMatch();return;}    // back to the room, still connected
   clearFighters();clearBalls();
   enterLobby();
@@ -18272,7 +20080,7 @@ __G.hook({
   NET: NET,
   frame: frame,
   netHandle: netHandle,
-  setSend: function(fn){ netSend = fn; },
+  setSend: function(fn){ netSend = function(o){ try{ mvSeenOut(o); }catch(e){} return fn(o); }; },
   get: function(){ return { STATE: STATE, fighters: fighters, balls: balls, player: player, gameT: gameT, MODE: MODE }; },
   living: function(){ return livingFighters(false); },
   reset: function(){ riftAbort(); NET.on = false; clearFighters(); clearBalls(); STATE = "venue"; },
@@ -18281,6 +20089,10 @@ __G.hook({
   // server draws nothing, so it spawns as few effects as the game allows.
   boot: function(){ loadSave(); QUAL = 0; buildTextures(); initAssets(); initParticles(); STATE = "venue"; },
   maps: function(){ return MAPS.map(function(m){ return m.id; }); },
+  // Boss Rally: how much of the boss went down, for the room's settlement record
+  bossInfo: function(){ return bossInfo(); },
+  bossCfg: function(){ return BOSS_CFG; },
+  boss: function(){ return BOSS; },
   version: VERSION
 });
 })();

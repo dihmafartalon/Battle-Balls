@@ -158,7 +158,7 @@ export function rollItem(tab, grade, rnd) {
 }
 
 /* ---- the limited shelf ---- */
-function limEligible(it) { return !it.rank && !it.code && !it.pass && it.r !== "rank" && it.r !== "unreleased" && !it.free && !it.event && it.v > 0; }
+function limEligible(it) { return !it.rank && !it.code && !it.pass && it.r !== "rank" && it.r !== "unreleased" && it.r !== "secret" && !it.free && !it.event && it.v > 0; }
 function limPrice(it) { return Math.ceil(it.v * CAT.lim.markup / 50) * 50; }
 export function limitedOn(day) {
   for (const dr of CAT.lim.drops) if (day >= dr.from && day < dr.to) return dr.items;
@@ -319,7 +319,10 @@ export function codeReward(s, reward, rnd) {
 
 /* ---- one act ---- */
 // the modes only ever played online, where the room server decides the result
-export const NET_MODES = { mp: 1, mpranked2: 1, god1: 1 };
+/* Played on the server: every ranked mode, every online mode and Boss Rally.
+   What they pay is settled by the room that ran them (settleMatch below), never
+   by what a game says afterwards. */
+export const NET_MODES = { mp: 1, mpranked2: 1, god1: 1, ranked1: 1, ranked2: 1, boss: 1 };
 export function applyAct(s, a, ctx) {
   const rnd = ctx.rnd || Math.random, now = ctx.now || Date.now(), flags = ctx.flags || (ctx.flags = []);
   ensure(s);
@@ -418,7 +421,7 @@ export function applyAct(s, a, ctx) {
   }
 
   // selling and upgrading: never a starter, a free item, a rank reward, an ULTRA, a pass item, or what you have on
-  const tradable = (t, it) => it && own(s, t, it.id) && !(it.id === CAT.items[t].starter || it.free || it.rank || it.r === "rank" || it.r === "unreleased" || it.ultra || it.pass) && s[EQ[t]] !== it.id;
+  const tradable = (t, it) => it && own(s, t, it.id) && !(it.id === CAT.items[t].starter || it.free || it.rank || it.r === "rank" || (it.r === "unreleased" || it.r === "secret") || it.ultra || it.pass) && s[EQ[t]] !== it.id;
   if (a.k === "sell") {
     const it = tab && itemOf(tab, a.id);
     if (!tradable(tab, it)) return { ok: false, why: "That cannot be sold." };
@@ -503,16 +506,16 @@ export function applyAct(s, a, ctx) {
   if (a.k === "match") {
     const mode = typeof a.mode === "string" ? a.mode.slice(0, 16) : "", m = CAT.modes[mode] || { mult: 1, ranked: 0 };
     const e = s.econ;
-    /* An online match is run by the room server, which wrote down who won
-       (a ticket) before anyone was told. Pay that, not what the game says;
-       no ticket means no win, and each ticket pays once. */
-    let won = !!a.won, secsIn = Number(a.secs) || 0, tk = null;
-    if (NET_MODES[mode]) {
-      tk = (ctx.tickets || []).find(t => t && t.id === a.mt && !t.used && t.mode === mode) || null;
-      if (tk) { tk.used = true; won = !!tk.won; secsIn = tk.secs; }
-      else won = false;
-      a = Object.assign({}, a, { won });
+    /* A ranked, online or Boss Rally match is settled by the room that ran it
+       (settleMatch), the moment it ends. A game's own report of one pays
+       nothing: it is answered with what the server already paid, or "pending"
+       while the room's record is still on its way. */
+    if (NET_MODES[mode] || m.ranked) {
+      const done = typeof a.mt === "string" ? settledOf(ctx.settled, a.mt) : null;
+      if (done && done.mode === mode) return { ok: true, res: Object.assign({ settled: 1 }, done.res) };
+      return { ok: true, res: { pending: true, coins: 0, rp: 0, won: false } };
     }
+    let won = !!a.won, secsIn = Number(a.secs) || 0, tk = null;
     // fill the bank for the time that has passed, then pay this match out of it
     if (typeof e.bank !== "number" || !isFinite(e.bank)) { e.bank = MATCH.maxSecs; e.bankAt = now; }
     e.bank = Math.min(MATCH.bankMax, e.bank + Math.max(0, now - (e.bankAt || now)) / 1000);
@@ -562,6 +565,88 @@ export function applyAct(s, a, ctx) {
   return { ok: false, why: "unknown act" };
 }
 
+/* ---------- Settling a match the server ran ----------
+   The room that ran the match hands each account a record of it -- its own
+   clock, its own count of blocks and eliminations, who won -- and this works
+   out the pay. Nothing here comes from the player's game. Each record has a
+   unique id, and an id that has been settled before is answered with the same
+   result again rather than paid twice (the room resends until it hears back). */
+export const SETTLE = { kept: 400 };
+export const BOSS = {
+  // coins for each quarter of the Broken Champion's health taken, and for the kill
+  milestones: [0.25, 0.5, 0.75, 1], perMilestone: 450, victory: 1500,
+  // a milestone only counts if the fight lasted at least this long per quarter (no reset farming)
+  minSecsPerMilestone: 20,
+  // most boss coins an account can take in a rolling day
+  dayCap: 12000
+};
+export function settledOf(list, id) {
+  if (!Array.isArray(list) || typeof id !== "string") return null;
+  for (let i = list.length - 1; i >= 0; i--) if (list[i] && list[i].id === id) return list[i];
+  return null;
+}
+// RP for a ranked result, from the account's own rank (the game's rpFor, ported)
+export function rpFor(rp, won, perf, teams) {
+  let f = rankIndex(rp) / Math.max(1, CAT.ranks.length - 2);
+  f = Math.max(0, Math.min(1, f));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  if (won) return Math.round(lerp(50, 40, f)) + Math.round(Math.max(0, Math.min(perf / 6, lerp(15, 10, f))));
+  return -Math.round(lerp(teams ? 12 : 15, teams ? 28 : 34, f));
+}
+const clampN = (v, lo, hi) => { v = Number(v); return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : lo; };
+/* t: { id, mode, won, secs, coins, dfl, pf, kos, bots, boss:{dealt,total,victory} } -- all from the room */
+export function settleMatch(s, t, ctx) {
+  ctx = ctx || {};
+  const now = ctx.now || Date.now(), rnd = ctx.rnd || Math.random;
+  ensure(s);
+  if (!t || typeof t.id !== "string" || !t.id || t.id.length > 64) return { ok: false, why: "bad record" };
+  const mode = typeof t.mode === "string" ? t.mode.slice(0, 16) : "";
+  if (!NET_MODES[mode]) return { ok: false, why: "not a server mode" };
+  const prev = settledOf(ctx.settled, t.id);
+  if (prev) return { ok: true, dup: true, res: prev.res };
+  const m = CAT.modes[mode] || { mult: 1, ranked: 0, bots: 0 };
+  const won = !!t.won, secs = clampN(t.secs, 0, MATCH.maxSecs);
+  const dfl = clampN(t.dfl, 0, 5000) | 0, pf = clampN(t.pf, 0, 5000) | 0, kos = clampN(t.kos, 0, 100) | 0;
+  const res = { won, secs: Math.round(secs), coins: 0, rp: 0, ranked: [], pass: null, token: false };
+  // in-match coins (blocks, eliminations) as the room counted them, held to what a match that long can pay
+  let coins = Math.min(clampN(t.coins, 0, 1e6) | 0, matchCap(mode, secs, won));
+  if (mode === "boss") {
+    const B = t.boss || {}, total = Math.max(1, clampN(B.total, 1, 100) | 0), dealt = Math.min(total, clampN(B.dealt, 0, 100) | 0);
+    let got = 0;
+    for (const q of BOSS.milestones) if (dealt / total >= q - 1e-9 && secs >= BOSS.minSecsPerMilestone * q * 4) got++;
+    let pay = got * BOSS.perMilestone + (B.victory && dealt >= total ? BOSS.victory : 0);
+    const e = s.econ;
+    e.bossDay = (Array.isArray(e.bossDay) ? e.bossDay : []).filter(x => Array.isArray(x) && now - x[0] < 86400000);
+    const today = e.bossDay.reduce((a, x) => a + (x[1] | 0), 0);
+    pay = Math.max(0, Math.min(pay, BOSS.dayCap - today));
+    if (pay > 0) e.bossDay.push([now, pay]);
+    res.boss = { milestones: got, victory: !!(B.victory && dealt >= total), capped: pay < got * BOSS.perMilestone + (B.victory && dealt >= total ? BOSS.victory : 0) };
+    coins = pay;                         // Boss Rally pays for the boss, nothing else
+  } else {
+    const bots = m.bots | 0;
+    if (mode === "ranked1" || mode === "ranked2") coins += won ? Math.round((bots > 1 ? 220 : 120) * (m.mult || 1)) : 0;
+    else coins += won ? 260 : 40;
+  }
+  s.coins += coins; res.coins = coins;
+  if (m.ranked) {
+    let rp = rpFor(s.rp, won, dfl * 2.5 + pf * 3 + kos * 8, !!m.teams);
+    const cur = CAT.ranks[rankIndex(s.rp)];
+    if (cur && cur.pvp && !m.pvp) rp = 0;              // GOD: bots move nothing
+    const before = rankIndex(s.rp);
+    s.rp = Math.max(0, s.rp + rp);
+    res.rp = rp;
+    res.ranked = rankIndex(s.rp) > before ? rankGrant(s) : [];
+  }
+  const e = s.econ;
+  e.pm = (e.pm || []).filter(x => now - x < 3600 * 1000);
+  if (passLive(now) && secs >= MATCH.passMinSecs && passLevel(s) < P.max && e.pm.length < MATCH.passMatchesPerHour) {
+    e.pm.push(now);
+    res.pass = passAddXp(s, won ? P.xpWin : P.xpGame);
+  }
+  if (CAT.rodriga && secs >= MATCH.minCharge && rnd() < CAT.rodriga.chance) { s.tokens = (s.tokens | 0) + 1; res.token = true; }
+  return { ok: true, res };
+}
+
 /* A save's first taste of the server economy. An account that already had
    progress here keeps it; a brand-new account may bring this device's
    progress along once. What cannot be earned anywhere does not come with it,
@@ -575,7 +660,8 @@ export function importEcon(s, from, now, flags) {
   const num = (v, hi) => Math.max(0, Math.min(hi, Math.floor(Number(v) || 0)));
   s.coins = num(from.coins, IMPORT.coins); s.yen = num(from.yen, IMPORT.yen);
   // RP only comes along from this season: a device still holding last season's does not bring it back
-  s.rp = CAT.season && from.season !== CAT.season.id ? 0 : num(from.rp, IMPORT.rp);
+  // RP is only ever earned in matches the server ran: a device's own count never comes along
+  s.rp = 0;
   if (CAT.season && from.season === CAT.season.id) s.season = CAT.season.id;
   s.freeSpins = num(from.freeSpins, 100);
   let dropped = 0, value = s.coins + s.yen * CAT.yenRate, count = 0;
@@ -586,7 +672,7 @@ export function importEcon(s, from, now, flags) {
       const it = itemOf(t, id);
       if (!src[id] || !it) continue;
       // only ever from a code or never earnable: not brought along (a code can be redeemed on the account)
-      if (it.r === "unreleased" || it.rank === "dev" || it.code || it.ultra) { dropped++; continue; }
+      if ((it.r === "unreleased" || it.r === "secret") || it.rank === "dev" || it.code || it.ultra) { dropped++; continue; }
       give(s, t, id); count++; value += it.v * CAT.yenRate;
     }
   }

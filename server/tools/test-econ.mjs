@@ -32,15 +32,42 @@ let s3 = ensure({ yen: 2000 }); r = applyAct(s3, { k: "limited", tab: "skin", id
 // token roll
 let tok = 0; for (let i = 0; i < 50; i++) { const t = ensure({ econ: { v: 1 } }); const rr = applyAct(t, { k: "match", mode: "classic", won: true, rp: 0, coins: 10, secs: 60 }, { now: oct3 + i * 1e6, rnd: () => 0 }); if (rr.res.token) tok++; }
 assert.equal(tok, 50, "rnd 0 always pays a token");
-// GOD: pvp only
-let g = ensure({ rp: 0, econ: { v: 1 } }); g.rp = 15500; r = applyAct(g, { k: "match", mode: "ranked1", won: true, rp: 40, coins: 10, secs: 60 }, { now: oct3 }); assert.equal(r.res.rp, 0, "no RP vs bots at GOD");
-// online matches pay from the room's ticket, never from the claim
-const tickets = [{ id: "m1", mode: "god1", won: true, secs: 60, at: oct3 }];
-r = applyAct(g, { k: "match", mode: "god1", won: true, rp: 40, coins: 10, secs: 60, mt: "m1" }, { now: oct3 + 5e6, tickets }); assert.equal(r.res.rp, 40, "GOD 1v1 against a player pays RP");
-r = applyAct(g, { k: "match", mode: "god1", won: true, rp: 40, coins: 10, secs: 60, mt: "m1" }, { now: oct3 + 6e6, tickets }); assert.ok(r.res.rp < 0 && r.res.won === false, "a ticket pays once: " + JSON.stringify(r.res));
-r = applyAct(g, { k: "match", mode: "mp", won: true, rp: 0, coins: 10, secs: 60 }, { now: oct3 + 7e6, tickets }); assert.equal(r.res.won, false, "no ticket, no win");
-const lost = [{ id: "m2", mode: "mpranked2", won: false, secs: 80, at: oct3 }];
-const g2 = ensure({ rp: 500, econ: { v: 1 } }); r = applyAct(g2, { k: "match", mode: "mpranked2", won: true, rp: 40, coins: 10, secs: 80, mt: "m2" }, { now: oct3 + 8e6, tickets: lost }); assert.ok(r.res.rp < 0, "the ticket says lost: " + JSON.stringify(r.res));
+// ranked, online and Boss Rally matches: a game's claim pays nothing; the room's record (settleMatch) pays, once
+{
+  const { settleMatch } = await import("../src/econ.js");
+  let g = ensure({ rp: 0, econ: { v: 1 } }); g.rp = 15500;
+  r = applyAct(g, { k: "match", mode: "ranked1", won: true, rp: 70, coins: 9999, secs: 60 }, { now: oct3 });
+  assert.equal(r.res.rp, 0, "a claimed ranked win pays nothing"); assert.ok(r.res.pending, "and is pending until the room's record arrives");
+  assert.equal(g.rp, 15500, "RP untouched by the claim");
+  const settled = [];
+  const one = (sv, t, at) => { const x = settleMatch(sv, t, { now: at, settled, rnd: () => 1 }); if (x.ok && !x.dup) settled.push({ id: t.id, mode: t.mode, at, res: x.res }); return x; };
+  r = one(g, { id: "m0", mode: "ranked1", won: true, secs: 60, dfl: 10 }, oct3); assert.equal(r.res.rp, 0, "no RP vs bots at GOD");
+  r = one(g, { id: "m1", mode: "god1", won: true, secs: 60, dfl: 10 }, oct3 + 5e6); assert.ok(r.res.rp > 0, "GOD 1v1 against a player pays RP " + JSON.stringify(r.res));
+  const rp1 = g.rp;
+  r = one(g, { id: "m1", mode: "god1", won: true, secs: 60, dfl: 10 }, oct3 + 6e6); assert.ok(r.dup && g.rp === rp1, "a record pays once");
+  r = applyAct(g, { k: "match", mode: "god1", won: true, mt: "m1" }, { now: oct3 + 6e6, settled }); assert.ok(r.res.settled && g.rp === rp1, "asking again shows the result, pays nothing");
+  r = applyAct(g, { k: "match", mode: "mp", won: true, mt: "m1" }, { now: oct3 + 6e6, settled }); assert.ok(r.res.pending && g.rp === rp1, "a record of another mode does not match");
+  const g2 = ensure({ rp: 500, econ: { v: 1 } });
+  r = one(g2, { id: "m2", mode: "mpranked2", won: false, secs: 80 }, oct3 + 8e6); assert.ok(r.res.rp < 0, "the record says lost: " + JSON.stringify(r.res));
+  // a fast legitimate win still pays
+  const g3 = ensure({ rp: 0, econ: { v: 1 } });
+  r = one(g3, { id: "m3", mode: "ranked1", won: true, secs: 4, dfl: 1 }, oct3 + 9e6); assert.ok(r.res.rp >= 40 && g3.rp === r.res.rp, "a 4s ranked win pays: " + JSON.stringify(r.res));
+  // coins are the room's count, held to what a match that long can pay
+  const g4 = ensure({ econ: { v: 1 } }), c0 = g4.coins;
+  r = one(g4, { id: "m4", mode: "mp", won: true, secs: 30, coins: 1e9 }, oct3 + 9e6); assert.ok(g4.coins - c0 < 20000, "in-match coins are capped");
+  // modes the room does not run cannot be settled
+  r = one(g4, { id: "m5", mode: "classic", won: true, secs: 30 }, oct3 + 9e6); assert.equal(r.ok, false);
+  // Boss Rally: quarters of damage and the kill, never twice, held to a daily cap
+  const b = ensure({ econ: { v: 1 } }), bc = b.coins;
+  r = one(b, { id: "b1", mode: "boss", won: true, secs: 300, boss: { dealt: 6, total: 6, victory: true } }, oct3); assert.equal(b.coins - bc, 4 * 450 + 1500, JSON.stringify(r.res));
+  r = one(b, { id: "b1", mode: "boss", won: true, secs: 300, boss: { dealt: 6, total: 6, victory: true } }, oct3); assert.ok(r.dup && b.coins - bc === 3300, "boss pays once");
+  const bc2 = b.coins; r = one(b, { id: "b2", mode: "boss", won: false, secs: 8, boss: { dealt: 2, total: 6 } }, oct3 + 1000); assert.equal(b.coins, bc2, "a quick reset farms nothing");
+  let paid = 3300;
+  for (let i = 0; i < 6; i++) paid += one(b, { id: "bb" + i, mode: "boss", won: true, secs: 300, boss: { dealt: 6, total: 6, victory: true } }, oct3 + 2000 + i).res.coins;
+  assert.equal(paid, 12000, "daily cap holds: " + paid);
+  assert.equal(one(b, { id: "bnext", mode: "boss", won: true, secs: 300, boss: { dealt: 6, total: 6, victory: true } }, oct3 + 86400000 + 5000).res.coins, 3300, "and lifts a day later");
+  console.log("settlement tests passed");
+}
 // crown
 const sv = { swords: { crown: 1 }, eqSword: "crown" }; assert.ok(crownFix(sv, "a", "b")); assert.ok(!sv.swords.crown); assert.equal(sv.eqSword, "trainer");
 assert.ok(crownFix(sv, "b", "b")); assert.ok(sv.swords.crown); assert.ok(!crownFix(sv, "b", "b"));
@@ -52,7 +79,7 @@ console.log("server tests passed");
   const s = importEcon({}, { coins: 10, rp: 4000 }, Date.now(), fl);
   assert.equal(s.rp, 0, "last season's RP stays behind");
   const s2 = importEcon({}, { coins: 10, rp: 300, season: 1 }, Date.now(), fl);
-  assert.equal(s2.rp, 300, "this season's RP comes along");
+  assert.equal(s2.rp, 0, "RP is only earned in matches the server ran: a device's count never comes along");
   console.log("season import tests passed");
 }
 // rank rewards a game unlocked from last season's RP go; earned ones stay
@@ -78,9 +105,10 @@ console.log("server tests passed");
 }
 // a quick ranked win (Poop bots go down fast) still pays RP
 {
+  const { settleMatch } = await import("../src/econ.js");
   const s = ensure({ econ: { v: 1 } });
-  const r = applyAct(s, { k: "match", mode: "ranked1", won: true, rp: 40, coins: 50, secs: 8 }, { now: Date.now() });
-  assert.equal(r.res.rp, 40, "an 8 second ranked win pays: " + JSON.stringify(r.res)); assert.equal(s.rp, 40);
+  const r = settleMatch(s, { id: "q1", mode: "ranked1", won: true, secs: 8, dfl: 2 }, { now: Date.now(), settled: [] });
+  assert.ok(r.res.rp >= 40, "an 8 second ranked win pays: " + JSON.stringify(r.res)); assert.equal(s.rp, r.res.rp);
   console.log("quick ranked win test passed");
 }
 // the casino plays for coins and coins never buy yen

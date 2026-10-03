@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "build": "node tools/gencatalog.cjs && node tools/buildsim.cjs",
+    "test": "node tools/test-econ.mjs && node tools/test-dir.mjs && node tools/test-settle.mjs && node tools/test-social.mjs && node tools/test-move.mjs && node tools/test-boss.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"

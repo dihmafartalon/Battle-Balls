@@ -56,7 +56,7 @@ function byRarityDesc(list) {
   });
 }
 function itemValue(it) {
-  if (!it || it.rank || it.rarity === "rank" || it.ultra || it.pass || it.event || it.rarity === "unreleased") return 0;
+  if (!it || it.rank || it.rarity === "rank" || it.ultra || it.pass || it.event || it.rarity === "unreleased" || it.rarity === "secret") return 0;
   if (typeof it.yen === "number") return it.yen;
   return G.SELL[it.rarity || "common"] || 15;
 }
@@ -87,6 +87,8 @@ modes.mp = { mult: 3.2, rp: 0, ranked: 0, teams: 0, bots: 0 };
 modes.mpranked2 = { mult: 1.6, rp: 1, ranked: 1, teams: 1, bots: 2 };
 // GOD: ranked 1v1 against another player, from the GOD queue
 modes.god1 = { mult: 1.8, rp: 1, ranked: 1, teams: 0, bots: 0, pvp: 1 };
+// Boss Rally: co-op against the boss; pays for the boss only (econ BOSS), never RP
+modes.boss = { mult: 1, rp: 0, ranked: 0, teams: 1, bots: 0 };
 if (G.MODES_NET_EXTRA) Object.assign(modes, G.MODES_NET_EXTRA);
 
 const CAT = {
@@ -97,7 +99,7 @@ const CAT = {
   syms: G.SYMS.map(s => ({ w: s.w, pay: s.pay, pair: s.pairPay })),
   pass: { id: G.PASS.id, end: G.PASS.end, max: G.PASS.max, xpPer: G.PASS.xpPer, xpGame: G.PASS.xpGame, xpWin: G.PASS.xpWin,
     yenPer: G.PASS.yenPer, tiers: G.PASS_TIERS },
-  ranks: G.RANKS.map(r => ({ rp: r.rp, rewards: r.rewards || (r.reward ? [r.reward] : []), ...(r.pvp ? { pvp: 1 } : {}), ...(r.id ? { id: r.id } : {}) })),
+  ranks: G.RANKS.map(r => ({ rp: r.rp, rewards: r.rewards || (r.reward ? [r.reward] : []), ...(r.pvp ? { pvp: 1 } : {}), ...(r.id ? { id: r.id } : {}), ...(r.map ? { map: r.map } : {}) })),
   yenRate: G.YEN_RATE,
   modes
 };

@@ -28,7 +28,7 @@ __G.hook({
   NET: NET,
   frame: frame,
   netHandle: netHandle,
-  setSend: function(fn){ netSend = fn; },
+  setSend: function(fn){ netSend = function(o){ try{ mvSeenOut(o); }catch(e){} return fn(o); }; },
   get: function(){ return { STATE: STATE, fighters: fighters, balls: balls, player: player, gameT: gameT, MODE: MODE }; },
   living: function(){ return livingFighters(false); },
   reset: function(){ riftAbort(); NET.on = false; clearFighters(); clearBalls(); STATE = "venue"; },
@@ -37,6 +37,10 @@ __G.hook({
   // server draws nothing, so it spawns as few effects as the game allows.
   boot: function(){ loadSave(); QUAL = 0; buildTextures(); initAssets(); initParticles(); STATE = "venue"; },
   maps: function(){ return MAPS.map(function(m){ return m.id; }); },
+  // Boss Rally: how much of the boss went down, for the room's settlement record
+  bossInfo: function(){ return bossInfo(); },
+  bossCfg: function(){ return BOSS_CFG; },
+  boss: function(){ return BOSS; },
   version: VERSION
 });
 `;

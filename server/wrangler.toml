@@ -16,6 +16,16 @@ class_name = "Vault"
 name = "DIR"
 class_name = "Directory"
 
+# social (4.1): one Hub per account (friends, presence, messages, invites)
+# and one Party per party
+[[durable_objects.bindings]]
+name = "HUB"
+class_name = "Hub"
+
+[[durable_objects.bindings]]
+name = "PARTY"
+class_name = "Party"
+
 # SQLite-backed Durable Objects are what the free Workers plan supports
 [[migrations]]
 tag = "v1"
@@ -28,6 +38,10 @@ new_sqlite_classes = ["Vault"]
 [[migrations]]
 tag = "v3"
 new_sqlite_classes = ["Directory"]
+
+[[migrations]]
+tag = "v4"
+new_sqlite_classes = ["Hub", "Party"]
 
 [vars]
 # Redeem codes only work for these accounts: your Google account number (the
