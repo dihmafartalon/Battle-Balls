@@ -28,7 +28,7 @@ __G.hook({
   NET: NET,
   frame: frame,
   netHandle: netHandle,
-  setSend: function(fn){ netSend = fn; },
+  setSend: function(fn){ netSend = function(o){ try{ mvSeenOut(o); }catch(e){} return fn(o); }; },
   get: function(){ return { STATE: STATE, fighters: fighters, balls: balls, player: player, gameT: gameT, MODE: MODE }; },
   living: function(){ return livingFighters(false); },
   reset: function(){ riftAbort(); NET.on = false; clearFighters(); clearBalls(); STATE = "venue"; },

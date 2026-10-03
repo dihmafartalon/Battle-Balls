@@ -97,7 +97,7 @@ const CAT = {
   syms: G.SYMS.map(s => ({ w: s.w, pay: s.pay, pair: s.pairPay })),
   pass: { id: G.PASS.id, end: G.PASS.end, max: G.PASS.max, xpPer: G.PASS.xpPer, xpGame: G.PASS.xpGame, xpWin: G.PASS.xpWin,
     yenPer: G.PASS.yenPer, tiers: G.PASS_TIERS },
-  ranks: G.RANKS.map(r => ({ rp: r.rp, rewards: r.rewards || (r.reward ? [r.reward] : []), ...(r.pvp ? { pvp: 1 } : {}), ...(r.id ? { id: r.id } : {}) })),
+  ranks: G.RANKS.map(r => ({ rp: r.rp, rewards: r.rewards || (r.reward ? [r.reward] : []), ...(r.pvp ? { pvp: 1 } : {}), ...(r.id ? { id: r.id } : {}), ...(r.map ? { map: r.map } : {}) })),
   yenRate: G.YEN_RATE,
   modes
 };

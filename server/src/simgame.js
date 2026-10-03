@@ -895,13 +895,14 @@ function cloudLoadMeta(){
       // (base); anything changed since then becomes the first change sent
       CLOUD.view=o.view||(o.base?cloudStrip(o.base):null);
       CLOUD.dirty=CLOUD.pending.length>0||!!o.dirty;
-      CLOUD.ec=!!o.ec;CLOUD.econMarked=!!o.em;CLOUD.acts=Array.isArray(o.acts)?o.acts:[];}
+      CLOUD.ec=!!o.ec;CLOUD.econMarked=!!o.em;CLOUD.acts=Array.isArray(o.acts)?o.acts:[];
+      CLOUD.pendingMids=Array.isArray(o.pm)?o.pm.filter(function(x){return typeof x==="string";}).slice(-20):[];}
   }catch(e){}
 }
 function cloudKeepMeta(){
   try{
     if(CLOUD.tok)window.localStorage.setItem(CLOUDKEY,JSON.stringify({tok:CLOUD.tok,rev:CLOUD.rev,name:CLOUD.name,at:CLOUD.at,
-      view:CLOUD.view,pending:CLOUD.pending,dirty:CLOUD.dirty,ec:!!CLOUD.ec,em:!!CLOUD.econMarked,acts:CLOUD.acts||[]}));
+      view:CLOUD.view,pending:CLOUD.pending,dirty:CLOUD.dirty,ec:!!CLOUD.ec,em:!!CLOUD.econMarked,acts:CLOUD.acts||[],pm:CLOUD.pendingMids||[]}));
     else window.localStorage.removeItem(CLOUDKEY);
   }catch(e){}
 }
@@ -1418,6 +1419,8 @@ function cloudSync(keepalive){
     if(r.status===429)cloudSchedule(Math.max(1,(r.j.retry||1000)/1000));
     else if(CLOUD.dirty)cloudSchedule(CLOUD_T.gap);
     econFlush();
+    // results the server was still settling last time: once per session, ask again
+    if(!CLOUD.resumed&&(CLOUD.pendingMids||[]).length){CLOUD.resumed=true;netSettleResume();}
     renderCloud();
   },function(){
     CLOUD.busy=false;
@@ -6731,7 +6734,7 @@ function deflect(b,by,perfect,timed){
   // back up at whoever called it down.
   if(b.judged){b.mult=Math.max(1,b.mult-b.judged);b.judged=0;}
   var gained=quick?1:Math.round((perfect?10:5)*MODE.mult);
-  by.deflects++;
+  by.deflects++;by.runC=(by.runC|0)+gained;      // what this block earned, counted for everyone (the server pays from it)
   if(perfect)by.perfects++;
   swingOnce(by);
   b.mult+=rampStep()*(perfect?1.25:1);       // no ceiling, but a steady climb
@@ -6829,8 +6832,9 @@ function ballHits(b,f,forced){
         ringBurst(killer.pos.x,killer.y+.4,killer.pos.z,20+bn*6,6+bn*2,0x9e1b32,1.4,.6);
         if(killer.isPlayer)feed("Bloodlust: +"+Math.round(killer.bloodlust*100)+"% speed","gold");
       }
+      var kbonus=Math.round(60*MODE.mult);killer.runC=(killer.runC|0)+kbonus;
       if(killer.isPlayer){
-        var bonus=Math.round(60*MODE.mult);
+        var bonus=kbonus;
         addCoins(bonus);run.coins+=bonus;
         feed("Elimination  +"+bonus,"gold");
       }
@@ -12782,6 +12786,76 @@ function godQueuePoll(){
     setTimeout(godQueuePoll,2000);
   },function(){GODQ.on=false;godSay("Could not reach the server.",false);});
 }
+/* ---- SERVER-RUN SOLO MATCHES ----
+   Signed in, a ranked match (and Boss Rally) is played in a room of your own
+   on the server: the same game, run there, so what it pays is what the server
+   saw -- never what this page says. The page only moves you and presses your
+   buttons, exactly as in an online match. */
+var SOLO_NAMES={sranked1:"RANKED 1v1",sranked2:"RANKED 2v2",boss:"BOSS RALLY"};
+function soloCode(){var A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",c="S";for(var i=0;i<7;i++)c+=A[Math.floor(Math.random()*A.length)];return c;}
+function soloSay(t,bad){
+  if(typeof notify==="function")notify({kind:bad?"error":"info",title:SOLO_NAMES[NET.solo]||"MATCH",text:t,ttl:bad?7:4});
+  else feed(t,bad?"ko":"good");
+}
+function soloServerStart(kind){
+  if(!econOn()||!serverBase()){soloSay(kind==="boss"?"Boss Rally rewards need you to be signed in.":"Ranked is played on the server. Sign in with Google on your Profile first.",true);return false;}
+  netDisconnect(true);
+  NET.solo=kind;NET.queue=false;NET.soloAt=Date.now();
+  var tok=NET.soloTok=(NET.soloTok||0)+1;
+  soloSay("Connecting to the server\u2026");
+  netConnect(soloCode());
+  setTimeout(function(){
+    if(NET.soloTok!==tok||!NET.solo)return;
+    if(STATE!=="playing"&&STATE!=="countdown"&&STATE!=="over"){
+      var why=NET.err||"The server did not start the match.";
+      netDisconnect();NET.solo="";soloSay(why+" Try again.",true);
+    }
+  },15000);
+  return true;
+}
+function soloLeave(){netDisconnect();NET.solo="";clearFighters();clearBalls();enterLobby();}
+/* What a server-run match paid, asked for until the server has it. The
+   server settles every match the moment it ends; a slow or lost write stays
+   pending there and is retried, so a result is never lost -- and never
+   counted as a loss while it is on its way. */
+function netSettleFetch(mid,tries){
+  if(!mid||!econOn())return;
+  tries=tries|0;
+  cloudPost("/cloud",{token:CLOUD.tok,op:"matchres",mid:mid}).then(function(r){
+    var j=r&&r.j||{};
+    if(r.status===200&&j.res){
+      econTake(j.save);
+      CLOUD.pendingMids=(CLOUD.pendingMids||[]).filter(function(x){return x!==mid;});cloudKeepMeta();
+      NET._settled={mid:mid,res:j.res,mode:j.mode};
+      netShowSettled(mid,j.res,j.mode);return;
+    }
+    if(r.status===200&&j.pending){
+      if((CLOUD.pendingMids||[]).indexOf(mid)<0){CLOUD.pendingMids=(CLOUD.pendingMids||[]).concat([mid]).slice(-20);cloudKeepMeta();}
+      if(tries<20){setTimeout(function(){netSettleFetch(mid,tries+1);},Math.min(8000,1200+tries*600));return;}
+      netShowSettled(mid,null);return;
+    }
+    if(tries<20)setTimeout(function(){netSettleFetch(mid,tries+1);},4000);
+  },function(){if(tries<20)setTimeout(function(){netSettleFetch(mid,tries+1);},5000);});
+}
+// results that were still pending last time: asked for again once signed in
+function netSettleResume(){(CLOUD.pendingMids||[]).slice().forEach(function(m){netSettleFetch(m,10);});}
+function netShowSettled(mid,res,mode){
+  var onScreen=(NET.lastMid===mid&&!$("results").classList.contains("hide"));
+  if(!res){if(onScreen)$("rpline").innerHTML="<span style='opacity:.7'>RESULT PENDING \u00b7 IT WILL BE ADDED WHEN THE SERVER CONFIRMS IT</span>";return;}
+  if(!onScreen){
+    if(NET.lastMid!==mid&&typeof notify==="function")notify({kind:"info",title:"MATCH CONFIRMED",text:(res.rp?((res.rp>0?"+":"")+res.rp+" RP, "):"")+"+"+(res.coins|0)+" coins",ttl:5});
+    return;
+  }
+  $("rCoins").textContent=res.coins|0;
+  if(MODE&&MODE.boss){$("rpline").innerHTML=bossResultLine(res);return;}
+  if(MODE&&MODE.ranked)
+    $("rpline").innerHTML=((res.rp|0)>=0?"<b>+"+(res.rp|0)+" RP</b>":"<b class='neg'>"+(res.rp|0)+" RP</b>")+
+      " &nbsp;&middot;&nbsp; "+currentRank().name.toUpperCase()+((res.ranked&&res.ranked.length)?" &nbsp;&middot;&nbsp; <b>RANK UP!</b>":"")+
+      " &nbsp;&middot;&nbsp; <span style='opacity:.45'>CONFIRMED BY THE SERVER</span>";
+  if(res.ranked&&res.ranked.length)sfx("rank");
+  if(res.pass){$("rPass").innerHTML=passResultHtml(res.pass);$("rPass").classList.toggle("hide",!res.pass);}
+  if(res.token)setTimeout(rodrigaTokenFx,600);
+}
 function godMatch(code){
   sfx("rank");
   godSay("<b>OPPONENT FOUND</b><br>Connecting&hellip;");
@@ -12949,6 +13023,8 @@ function useAbility(f,remoteCast){
   if(a.passive||f.abilCd>0||!f.alive||f.stun>0||f.frozen>0)return;
   if(lastTwoBan(a)&&!remoteCast){if(f.isPlayer)flashWarn(a.name.toUpperCase()+" IS OFF \u2014 LAST TWO",0.9,"#ff6b6b");return;}
   f.abilCd=a.cd;
+  // the server's movement check: whoever casts may move fast for a moment
+  if(NET.on&&NET.isHost&&NET.srv)mvGrant(f);
   // Jordan was a free win one on one (ranked 1v1 above all): it comes round far
   // less often when there is only one person to bring it down on
   if(a.id==="jordan"&&oneOnOne(f))f.abilCd=a.cd*1.6;
@@ -13773,7 +13849,7 @@ function wsUrlFor(code){
   var ws=b.replace(/^http:/,"ws:").replace(/^https:/,"wss:");
   if(NET.specTok&&NET.specWatch)return ws+"/live/"+encodeURIComponent(NET.specWatch)+"?spectate="+encodeURIComponent(NET.specTok);
   if(NET.specTok)return ws+"/room/"+code+"?spectate="+encodeURIComponent(NET.specTok);
-  var q=(NET.queue?"?q=1&":"?")+"name="+encodeURIComponent((SAVE.netName||"Player").slice(0,14))+
+  var q=(NET.queue?"?q=1&":"?")+(NET.solo?"solo="+encodeURIComponent(NET.solo)+"&":"")+"name="+encodeURIComponent((SAVE.netName||"Player").slice(0,14))+
         "&sword="+encodeURIComponent(eqBlade())+
         "&skin="+encodeURIComponent(SAVE.eqSkin)+
         "&abil="+encodeURIComponent(SAVE.eqAbil)+
@@ -13922,6 +13998,9 @@ function netHandle(m){
   }
   if(!NET.on)return;
   if(m.t==="state")   {netRemoteState(m);return;}
+  // the server says we cannot be where we said: we are where it says
+  if(m.t==="corr"){if(player&&player.alive&&!player.isRemote&&typeof m.x==="number"&&isFinite(m.x)&&isFinite(m.z)){
+    player.pos.x=m.x;player.pos.z=m.z;if(typeof m.y==="number"&&isFinite(m.y)&&player.y>m.y){player.y=m.y;player.vy=Math.min(player.vy,0);}player.vel.set(0,0,0);}return;}
   if(m.t==="swing")   {netRemoteSwing(m);return;}
   if(m.t==="ability") {netRemoteAbility(m);return;}
   if(m.t==="parry")   {netHostParryClaim(m);return;}
@@ -14190,13 +14269,17 @@ function startNetMatch(m){
   if(Array.isArray(m.off))applyAbilOff(m.off);          // the room's kill switches, the same for everyone
   NET.matchSeq=(NET.matchSeq||0)+1;
   var ranked2=(m.mode==="ranked2"),god=(m.mode==="god1");
+  // server-run solo ranked: one player and rank-tuned bots, built from the seed on both sides
+  var sranked=(m.mode==="sranked1"||m.mode==="sranked2"),boss=(m.mode==="boss");
+  NET.lastMid=typeof m.mid==="string"?m.mid.slice(0,64):"";
   // a rematch has to run the SAME match back. It used to always send "mp",
   // so pressing PLAY AGAIN after a Ranked 2v2 quietly dropped you into casual.
   NET.lastMode=m.mode||"mp"; NET.lastRf=(m.rf===undefined?0:m.rf);
   NET.lastBots=_netBots=clamp(Math.round(m.bots||0),0,8);
   NET.lastGm=m.gm||"ffa";
-  MODE=copyMode(god?NETMODE_GOD:(ranked2?NETMODE2:NETMODE));
-  if(!ranked2&&!god){
+  MODE=copyMode(god?NETMODE_GOD:ranked2?NETMODE2:sranked?modeById(m.mode==="sranked1"?"ranked1":"ranked2"):boss?BOSSMODE:NETMODE);
+  if(sranked||boss)MODE.net=true;
+  if(!ranked2&&!god&&!sranked&&!boss){
     // the host's gamemode choice, applied identically on every client
     var gmDef=netGameById(m.gm||"ffa");
     for(var ok2 in gmDef.over)MODE[ok2]=gmDef.over[ok2];
@@ -14205,11 +14288,13 @@ function startNetMatch(m){
     NETPICK.gm=gmDef.id;NETPICK.bots=_netBots;
   }
   RANKF=0;
-  if(ranked2){
+  if(ranked2||sranked){
     // both clients must tune the bots identically, so difficulty comes from
     // the HOST's rank, sent with the start message
     MODE._tune=rankedTuning(clamp(m.rf===undefined?0:m.rf,0,1));
     RANKF=m.rf||0;
+    // solo ranked feels exactly as it did on this device: the whole ranked tuning
+    if(sranked){MODE.speed=MODE._tune.speed;MODE.window=MODE._tune.window;MODE.ramp=MODE._tune.ramp;MODE.minFlight=MODE._tune.minFlight;}
   }
   NET.on=true;NET.status="playing";
   NET.hist.length=0;NET.remote={};NET.seq=0;NET.mid="";
@@ -14225,8 +14310,9 @@ function startNetMatch(m){
   paused=false;$("pause").classList.add("hide");
 
   var roster=NET.players.slice();
-  var total=ranked2?roster.length:Math.max(roster.length+netFill(),1);
-  MODE.duelNet=!ranked2&&total===2;
+  if(boss){bossNetBuild(m,roster);return;}
+  var total=ranked2?roster.length:sranked?(MODE.bots+1):Math.max(roster.length+netFill(),1);
+  MODE.duelNet=!ranked2&&!(m.mode==="sranked2")&&total===2;
   var myAb=null;for(var ri=0;ri<roster.length;ri++)if(roster[ri].id===NET.you)myAb=roster[ri].abil;
   var idx=0;
   for(var i=0;i<roster.length;i++){
@@ -14234,9 +14320,9 @@ function startNetMatch(m){
     var a=(idx/total)*TAU;
     var mine=(p.id===NET.you);
     var f=new Fighter({name:mine?"YOU":(p.name||"Player"),isPlayer:mine,
-      team:ranked2?0:(MODE.teams?(i%2):1),
-      x:Math.cos(ranked2?(a*0.25-0.6):a)*(ARENA_R*0.55),
-      z:Math.sin(ranked2?(a*0.25-0.6):a)*(ARENA_R*0.55),
+      team:(ranked2||sranked)?0:(MODE.teams?(i%2):1),
+      x:sranked?ARENA_R*0.5:Math.cos(ranked2?(a*0.25-0.6):a)*(ARENA_R*0.55),
+      z:sranked?0:Math.sin(ranked2?(a*0.25-0.6):a)*(ARENA_R*0.55),
       sword:p.sword||"trainer",ability:resolveAbility(p.abil||"dash"),
       skinDef:skinById(p.skin||"rookie")});
     f.netId=p.id;
@@ -14252,23 +14338,28 @@ function startNetMatch(m){
   // and the guest moves them from the host's snapshots.
   var names=BOTNAMES.slice();
   var botSeed=mulberry32(m.seed^0x5bf03635);
-  var nBots=ranked2?2:Math.max(0,total-roster.length);
+  var nBots=ranked2?2:sranked?MODE.bots:Math.max(0,total-roster.length);
   for(i=0;i<nBots;i++){
-    var a2=ranked2?(0.6+i*0.5):((idx/Math.max(1,total))*TAU);
+    var a2=ranked2?(0.6+i*0.5):sranked?(((i+1)/total)*TAU):((idx/Math.max(1,total))*TAU);
     var nm=names[Math.floor(botSeed()*names.length)]||("Bot"+i);
-    var bSkill,bReact;
-    if(ranked2){
+    var bSkill,bReact,sAlly=sranked&&MODE.teams&&i===0;
+    if(sranked){
+      // the same opponents a solo ranked match always had: tuned to your rank, an ally a shade weaker
+      var jit=0.03*(1-RANKF*0.85);
+      bSkill=clamp(MODE._tune.skill*(sAlly?0.94:1)+(botSeed()*2-1)*jit,0.3,0.999);
+      bReact=clamp(MODE._tune.react*(sAlly?1.15:1)+(botSeed()*2-1)*0.02,0.03,0.5);
+    } else if(ranked2){
       bSkill=clamp(MODE._tune.skill+(botSeed()-0.5)*0.06,0.3,0.998);
       bReact=clamp(MODE._tune.react+(botSeed()-0.5)*0.04,0.03,0.5);
     } else {
       bSkill=0.72+botSeed()*0.12;bReact=0.14+botSeed()*0.14;
     }
-    var bf=new Fighter({name:nm,team:ranked2?1:(MODE.teams?((roster.length+i)%2):1),
-      x:Math.cos(a2)*(ARENA_R*0.55),z:Math.sin(a2)*(ARENA_R*0.55),
+    var bf=new Fighter({name:sAlly?nm+" (ally)":nm,team:ranked2?1:sranked?(sAlly?0:1):(MODE.teams?((roster.length+i)%2):1),
+      x:Math.cos(a2)*(ARENA_R*(sranked?0.5:0.55)),z:Math.sin(a2)*(ARENA_R*(sranked?0.5:0.55)),
       sword:BOT_SWORDS()[Math.floor(botSeed()*BOT_SWORDS().length)].id,
       ability:botAbility(botSeed),
       skill:bSkill,react:bReact,
-      skinDef:{body:ranked2?0xff5470:BOTCOLORS[i%BOTCOLORS.length],
+      skinDef:{body:sranked?(MODE.teams?(sAlly?0x4ad991:0xff5470):BOTCOLORS[i%BOTCOLORS.length]):ranked2?0xff5470:BOTCOLORS[i%BOTCOLORS.length],
         limb:0x2a2f45,skin:0xf0c89a,glow:0}});
     bf.netId=null;bf.isBot=true;bf.botIndex=i;
     // on the guest these are puppets: no AI, driven by botstate snapshots
@@ -14308,14 +14399,16 @@ function startNetMatch(m){
   $("slots").style.display="";
   $("rankhud").style.display="flex";
   $("rankhudIcon").innerHTML="";
-  $("rankhudName").textContent=(NET.isHost?"HOST \u00b7 ":"")+"ROOM "+NET.code+
+  if(sranked){$("rankhudIcon").innerHTML=rankIcon(currentRank(),26);
+    $("rankhudName").textContent=currentRank().name.toUpperCase()+" "+(MODE.teams?"2v2":"1v1")+" \u00b7 SERVER";}
+  else $("rankhudName").textContent=(NET.isHost?"HOST \u00b7 ":"")+"ROOM "+NET.code+
     " \u00b7 "+(ranked2?"RANKED 2v2":String(MODE.name||"").toUpperCase());
   _aliveShown=-1;
   NET.rematch=false;NET.startingRematch=false;
   if(myAb&&!abilityAllowed(myAb))feed(abilById(myAb).name+" is disabled in 1v1 \u2014 using Dash","ko");
   mpSendLoadout(false);          // clear the ready flags for the next vote
   updateSlotIcons();setAlive();
-  feed(NET.isHost?"You are hosting this match":(NET.srvHost?"The server is running this match":"Connected to "+NET.code),"good");
+  feed(sranked?"Ranked: the server is running this match":NET.isHost?"You are hosting this match":(NET.srvHost?"The server is running this match":"Connected to "+NET.code),"good");
 }
 // somebody joined or left mid-match
 function netSyncRoster(wasHost){
@@ -14353,9 +14446,75 @@ function netSyncRoster(wasHost){
     if(STATE==="playing")checkEnd();
   }
 }
+/* ---- MOVEMENT, CHECKED BY THE SERVER ----
+   Each player moves themselves and says where they are; the room's own copy
+   of the game (the server) holds every report to what that fighter could
+   really have done since the last one it accepted: its top speed right now
+   (sprint, Overdrive, Bloodlust and friends included), the time that passed,
+   with room for network jitter and a lag spike, how high a double jump goes,
+   and the edge of the arena. Anything an ability can do -- a Dash, a Switch,
+   a pull, a knockback, a rift -- opens a short grace window for whoever it can
+   move. A report that is not a number is dropped; one that goes further than
+   possible is cut back to the furthest legal point and the player is told
+   where they really are. One bad report is a lag spike and costs nothing;
+   only a run of them is noted for the admin to look at -- never a ban. */
+var MV={jitter:0.25,slack:1.2,maxGap:2.0,yMax:9.6,yMaxBurst:28,graceS:2.6,graceDist:46,
+  strikeAt:2.5,flagStrikes:6,decayS:5,corrGap:0.4,flagGap:60};
+function mvNow(){return (typeof performance!=="undefined"&&performance.now?performance.now():Date.now())/1000;}
+function mvTop(f){return RUN_BASE*RUN_SPRINT*Math.max(1,f.speedMul||1)*(1+Math.max(0,f.bloodlust||0))*1.18;}
+function mvGrant(f,secs){if(f)f.mvGrace=Math.max(f.mvGrace||0,mvNow()+(secs||MV.graceS));}
+function mvGrantAll(secs){for(var i=0;i<fighters.length;i++)if(fighters[i].alive)mvGrant(fighters[i],secs);}
+// anything the server says that can move a player opens a grace window (see setSend in buildsim)
+function mvSeenOut(o){
+  if(!o||!NET.srv)return;
+  if(o.t==="ability")mvGrantAll(o.only==="pull"||o.only==="rift"||o.only==="riftsnap"?MV.graceS+0.6:1.8);
+  else if(o.t==="start")for(var i=0;i<fighters.length;i++)fighters[i].mv=null;
+}
+// where the arena ends for a fighter: the circle (or Boss Rally's half-disc)
+function mvArena(x,z){
+  if(MODE&&MODE.boss&&typeof bossArenaClamp==="function")return bossArenaClamp(x,z);
+  var d=Math.sqrt(x*x+z*z),edge=ARENA_R-1.3;
+  if(d<=edge)return {x:x,z:z,out:0};
+  return {x:x/d*edge,z:z/d*edge,out:d-edge};
+}
+function mvAccept(f,m){
+  var k,keys=["x","z","y","r","vx","vz"];
+  for(var i=0;i<keys.length;i++){k=keys[i];if(m[k]!==undefined&&!(typeof m[k]==="number"&&isFinite(m[k]))){mvStrike(f,"sent a position that is not a number",1);return false;}}
+  if(typeof m.x!=="number"||typeof m.z!=="number")return false;
+  if(typeof m.y!=="number")m.y=0;
+  var now=mvNow(),L=f.mv;
+  if(!L)L=f.mv={x:f.pos.x,z:f.pos.z,y:f.y||0,t:now-0.05,s:0,sAt:now,corrAt:0,flagAt:-1e9};
+  var dt=Math.min(Math.max(0,now-L.t),MV.maxGap);
+  var grace=(f.mvGrace||0)>now;
+  var allow=mvTop(f)*(dt+MV.jitter)+MV.slack+(grace?MV.graceDist:0);
+  var dx=m.x-L.x,dz=m.z-L.z,d=Math.sqrt(dx*dx+dz*dz),cx=m.x,cz=m.z,cy=m.y,excess=0;
+  if(d>allow){excess=d-allow;cx=L.x+dx*allow/d;cz=L.z+dz*allow/d;}
+  var A=mvArena(cx,cz);
+  if(A.out>0.6)excess=Math.max(excess,A.out);
+  cx=A.x;cz=A.z;
+  var ymax=grace?MV.yMaxBurst:MV.yMax;
+  if(cy>ymax){excess=Math.max(excess,cy-ymax);cy=ymax;}
+  if(cy<-1){excess=Math.max(excess,-cy);cy=0;}
+  // strikes fade with time: a lag spike now and then never adds up
+  L.s=Math.max(0,L.s-(now-L.sAt)/MV.decayS);L.sAt=now;
+  if(excess>MV.strikeAt){
+    mvStrike(f,"moved "+excess.toFixed(1)+" units further than possible",1);
+    if(now-L.corrAt>MV.corrGap){L.corrAt=now;netSend({t:"corr",to:f.netId,x:+cx.toFixed(2),z:+cz.toFixed(2),y:+cy.toFixed(2)});}
+  }
+  m.x=cx;m.z=cz;m.y=cy;
+  L.x=cx;L.z=cz;L.y=cy;L.t=now;
+  return true;
+}
+function mvStrike(f,why,n){
+  var L=f.mv||(f.mv={x:f.pos.x,z:f.pos.z,y:f.y||0,t:mvNow(),s:0,sAt:mvNow(),corrAt:0,flagAt:-1e9});
+  L.s+=n||1;
+  var now=mvNow();
+  if(L.s>=MV.flagStrikes&&now-L.flagAt>MV.flagGap){L.flagAt=now;netSend({t:"mvflag",who:f.netId,detail:why+" ("+Math.round(L.s)+" times in a row)"});}
+}
 function netRemoteState(m){
   var f=NET.remote[m.from];
   if(!f||!f.alive)return;
+  if(NET.isHost&&NET.srv&&!mvAccept(f,m))return;
   f.netTarget=f.netTarget||{x:f.pos.x,z:f.pos.z,y:0,yaw:f.yaw};
   f.netTarget.x=m.x;f.netTarget.z=m.z;f.netTarget.y=m.y;f.netTarget.yaw=m.r;
   f.vel.x=m.vx||0;f.vel.z=m.vz||0;
@@ -14740,6 +14899,7 @@ function netRematchCount(){
 }
 function netRenderRematch(){
   if(!NET.ws||$("results").classList.contains("hide"))return;
+  if(NET.solo){$("rAgain").textContent="PLAY AGAIN";$("rAgain").classList.remove("ghost");$("rMenu").textContent="LOBBY";return;}
   var n=netRematchCount(),total=NET.players.length;
   var btn=$("rAgain");
   btn.textContent=NET.rematch
@@ -14769,26 +14929,28 @@ function netFinish(won){
   STATE="over";
   NET.rematch=false;NET.startingRematch=false;
   for(var i=0;i<balls.length;i++){balls[i].active=false;balls[i].mesh.visible=false;}
+  // signed in to a server that ran this match: it settles coins, RP and the pass; this page only shows them
+  var srvPaid=NET.srvHost&&econOn()&&!!NET.mid;
   var bonus=won?260:40;
-  addCoins(bonus);run.coins+=bonus;
+  if(!srvPaid){addCoins(bonus);run.coins+=bonus;}
   SAVE.games++;
-  var passRes=passAward(won);
+  var passRes=srvPaid?null:passAward(won);
   // Ranked 2v2 is a ranked mode that happens to run over the network, so it
   // finishes here rather than in endRound -- and this branch used to skip RP
   // altogether, so neither player ever gained or lost any.
   var rpGain=0;
-  if(MODE.ranked){
+  if(MODE.ranked&&!srvPaid){
     var perf=player?(player.deflects*2.5+player.perfects*3+player.kos*8):0;
     rpGain=rankedRp(won,perf,!!MODE.teams);
   }
-  rodrigaRoll();
+  if(!srvPaid)rodrigaRoll();
   if(won){
     SAVE.wins++;SAVE.streak++;
     if(SAVE.streak>SAVE.bestStreak)SAVE.bestStreak=SAVE.streak;
   } else SAVE.streak=0;
-  var newRank=addRP(rpGain);
+  var newRank=srvPaid?false:addRP(rpGain);
   writeSave();
-  econMatch(won,rpGain);
+  if(srvPaid)netSettleFetch(NET.mid);else econMatch(won,rpGain);
   // the host timed every guest's blocks: those go to the server's anticheat (never to the other players)
   if(NET.isHost)for(var ri=0;ri<fighters.length;ri++){var rf=fighters[ri];
     if(rf.isRemote&&rf.netId&&(rf.tBlocks|0)>0){var at=acTiming(rf);netSend({t:"acrep",who:rf.netId,blocks:rf.tBlocks|0,perfects:rf.tPerfects|0,tn:at.n,tsd:at.sd,tmean:at.mean});}}
@@ -14799,9 +14961,11 @@ function netFinish(won){
        left for the room -- or a new match has started -- it must not pull the
        results screen back over the top of it. */
     if(tok!==NET.matchSeq||STATE!=="over")return;
-    $("place").textContent=won?"VICTORY":"ELIMINATED";
+    $("place").textContent=MODE.boss?(won?"CHAMPION BROKEN":"DEFEATED"):(won?"VICTORY":"ELIMINATED");
     $("place").className=won?"win":"lose";
-    if(MODE.ranked)
+    if(srvPaid)
+      $("rpline").innerHTML="<span style='opacity:.7'>CONFIRMING WITH THE SERVER\u2026</span>";
+    else if(MODE.ranked)
       $("rpline").innerHTML=(rpGain>=0?"<b>+"+rpGain+" RP</b>":"<b class='neg'>"+rpGain+" RP</b>")+
         " &nbsp;&middot;&nbsp; "+currentRank().name.toUpperCase()+
         (newRank?" &nbsp;&middot;&nbsp; <b>RANK UP!</b>":"")+
@@ -14812,10 +14976,12 @@ function netFinish(won){
     $("rDeflect").textContent=player?player.deflects:0;
     $("rPerfect").textContent=player?player.perfects:0;
     $("rKO").textContent=player?player.kos:0;
-    $("rCoins").textContent=run.coins;
+    $("rCoins").textContent=srvPaid?"\u2026":run.coins;
     $("rPass").innerHTML=passResultHtml(passRes);$("rPass").classList.toggle("hide",!passRes);
     $("ui").classList.remove("on");
     showScreen("results");refreshCoins();
+    // the server's answer may have come back already: show it now that the screen is up
+    if(srvPaid&&NET._settled&&NET._settled.mid===NET.mid)netShowSettled(NET.mid,NET._settled.res,NET._settled.mode);
     // votes only count once the results are up
     if(NET.ws){mpSendLoadout(false);netRenderRematch();}
   },1500);
@@ -18059,10 +18225,11 @@ function chestShow(wins,tab,res){
     if(REEL.busy)return;chestQty=parseInt(b.getAttribute("data-q"),10)||1;sfx("tick");buildShop();});})(qb[i]);
 })();
 $("rankBack").addEventListener("click",function(){backToVenue();});
-$("rkPlay1").addEventListener("click",function(){if(rankIsPvp())godQueueStart();else startMatch("ranked1");});
+// signed in, ranked is played on the server (see SERVER-RUN SOLO); signed out it stays on this device, as it always was
+$("rkPlay1").addEventListener("click",function(){if(rankIsPvp())godQueueStart();else if(econOn()&&serverBase())soloServerStart("sranked1");else startMatch("ranked1");});
 $("rkPlay2").addEventListener("click",function(){
   if(rankIsPvp()){godSay("GOD is played one on one, against other players. Use FIND A GOD OPPONENT.",false);return;}
-  startMatch("ranked2");
+  if(econOn()&&serverBase())soloServerStart("sranked2");else startMatch("ranked2");
 });
 $("howBack").addEventListener("click",function(){backToVenue();});
 $("updGo").addEventListener("click",function(){
@@ -18203,12 +18370,14 @@ $("pfWipe").addEventListener("click",function(){
   $("pfMsg").textContent="Progress reset.";
 });
 $("rAgain").addEventListener("click",function(){
+  if(NET.solo){soloServerStart(NET.solo);return;}   // a fresh room of your own
   if(NET.ws&&NET.code){netRematchVote();return;}   // vote, stay in the room
   startMatch(MODE.id);
 });
 $("rMenu").addEventListener("click",function(){
   // a GOD queue room is only ever that one match: leave it entirely
   if(NET.queue){netDisconnect();NET.queue=false;clearFighters();clearBalls();enterLobby();return;}
+  if(NET.solo){soloLeave();return;}
   if(NET.ws&&NET.code){netLeaveMatch();return;}    // back to the room, still connected
   clearFighters();clearBalls();
   enterLobby();
@@ -18278,7 +18447,7 @@ __G.hook({
   NET: NET,
   frame: frame,
   netHandle: netHandle,
-  setSend: function(fn){ netSend = fn; },
+  setSend: function(fn){ netSend = function(o){ try{ mvSeenOut(o); }catch(e){} return fn(o); }; },
   get: function(){ return { STATE: STATE, fighters: fighters, balls: balls, player: player, gameT: gameT, MODE: MODE }; },
   living: function(){ return livingFighters(false); },
   reset: function(){ riftAbort(); NET.on = false; clearFighters(); clearBalls(); STATE = "venue"; },

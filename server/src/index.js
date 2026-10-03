@@ -11,12 +11,17 @@
    ===================================================================== */
 
 import { CAT } from "./catalog.js";
-import { ECON_KEYS, setAbilOff, ultrasOf, timingVerdict, timingAdd, timingPooled, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdict, retire, RETIRED, newStats, snap, recordAct, watchFlags, suspicion, summary, seasonReset, rankClean } from "./econ.js";
+import { ECON_KEYS, setAbilOff, ultrasOf, timingVerdict, timingAdd, timingPooled, applyAct, importEcon, ensure, codeReward, itemOf, parryVerdict, retire, RETIRED, newStats, snap, recordAct, watchFlags, suspicion, summary, seasonReset, rankClean, settleMatch, settledOf, SETTLE } from "./econ.js";
 const RETIRED_RE = new RegExp('"(' + Object.keys(RETIRED.abil).join("|") + ')"');
 import { adminPage, handleAdmin, ADMIN_TRIES, ADMIN_WINDOW_MS, specCheck } from "./admin.js";
 import { SimHost, SIM_ID } from "./sim.js";
 
 const MAX_PLAYERS = 6;
+const BOSS_MAX = 4;                          // Boss Rally: one to four players
+// modes a room opens for one player and starts by itself; what each settles as
+export const SOLO_MODES = { sranked1: 1, sranked2: 1, boss: 1 };
+export const SETTLE_MODE = { mp: "mp", ranked2: "mpranked2", god1: "god1", sranked1: "ranked1", sranked2: "ranked2", boss: "boss" };
+const SETTLE_GIVEUP_MS = 7 * 24 * 3600 * 1000;
 const ALPHA = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";   // no O/0/I/1
 
 /* ---------- pure logic, unit-testable without Cloudflare ---------- */
@@ -61,7 +66,7 @@ export function buildRoster(players) {
 // hold: a guest hitting or throwing a ball it caught; only the host acts on it
 const RELAY = { state:1, parry:1, ability:1, swing:1, chat:1, pstate:1, trade:1, hold:1 };
 // only the room's own match may say these: from a player they are dropped
-const SIM_ONLY = { ball:1, hit:1, spawn:1, roundover:1, botstate:1, parryok:1 };
+const SIM_ONLY = { ball:1, hit:1, spawn:1, roundover:1, botstate:1, parryok:1, corr:1, mvflag:1, boss:1 };
 // setup is the leader telling the room which gamemode and how many bots
 const LEADER_ONLY = { setup:1 };
 // what the match hears from a player; parry and hold are for it alone
@@ -299,6 +304,13 @@ export class Room {
       try { ws.send(text); } catch (e) { /* socket closing */ }
     }
   }
+  sendTo(id, obj) {
+    const text = JSON.stringify(obj);
+    for (const ws of this.ctx.getWebSockets()) {
+      const a = ws.deserializeAttachment();
+      if (a && a.id === id) { try { ws.send(text); } catch (e) {} }
+    }
+  }
   pushRoster(leaving) {
     const r = buildRoster(this.roster(leaving));
     this.broadcast(r, leaving); this.announce(null, leaving);
@@ -329,7 +341,10 @@ export class Room {
     if (live) return this.liveSocket(url, live);
     // the admin, watching: not a player, not on the roster, cannot send a thing
     if (url.searchParams.get("spectate")) return this.spectator(url);
-    if (this.roster().length >= MAX_PLAYERS)
+    // a solo room (server-run ranked, Boss Rally on your own) is for one player
+    const soloAsk = SOLO_MODES[url.searchParams.get("solo")] ? url.searchParams.get("solo") : "";
+    const metaNow = (this.ctx.storage && (await this.ctx.storage.get("meta"))) || {};
+    if (this.roster().length >= MAX_PLAYERS || (metaNow.solo && this.roster().length >= 1) || (soloAsk && this.roster().length >= 1))
       return new Response("room full", { status: 403 });
 
     // online play needs a Google account, so a ban sticks. The session token
@@ -371,10 +386,17 @@ export class Room {
     if (this.ctx.storage && code) await this.ctx.storage.put("code", normaliseCode(code));
     // a room made by the GOD queue is never listed
     if (url.searchParams.get("q") === "1" && this.ctx.storage) { const mt = (await this.ctx.storage.get("meta")) || {}; mt.q = true; await this.ctx.storage.put("meta", mt); }
+    // a solo room: private, one player, and it starts itself
+    if (soloAsk && this.ctx.storage) { const mt = (await this.ctx.storage.get("meta")) || {}; mt.solo = soloAsk; mt.priv = true; await this.ctx.storage.put("meta", mt); }
     dirCall(this.env, { op: "room", code: normaliseCode(code), sub: who.sub, name: me.name });
     server.send(JSON.stringify({ t:"welcome", you: me.id, host: SIM_ID, leader: this.hostId(), srv: 1,
                                  max: MAX_PLAYERS, now: Date.now() }));
     this.pushRoster();
+    if (soloAsk) {
+      await this.startMatch({ t: "start", mode: soloAsk, q: 0, map: "random", gm: "ffa", bots: 0, rf: 0,
+        seed: (Math.random() * 2147483647) | 0, at: Date.now() });
+      return new Response(null, { status: 101, webSocket: client });
+    }
     // a GOD queue room starts itself the moment both players are in
     if (url.searchParams.get("q") === "1" && this.roster().length === 2 && !this.qStarted) {
       this.qStarted = true;
@@ -532,18 +554,31 @@ export class Room {
     const meta = (this.ctx.storage && (await this.ctx.storage.get("meta"))) || {};
     // GOD 1v1 only comes from the GOD queue; anything else asking for it plays casual
     if (p.mode === "god1" && !meta.q) p.mode = "mp";
-    if (p.mode === "ranked2") {
-      // the bots are tuned from the leader's real rank, not a number their game sends
-      const lead = players.find(x => x.id === electHost(players)) || players[0];
+    // a solo room only ever plays the mode it was opened for; nobody else may ask for one
+    if (meta.solo) p.mode = meta.solo;
+    else if (SOLO_MODES[p.mode] && p.mode !== "boss") p.mode = "mp";
+    // Boss Rally is for one to four
+    if (p.mode === "boss" && players.length > BOSS_MAX) {
+      this.broadcast({ t: "notice", text: "Boss Rally is for up to " + BOSS_MAX + " players. This room has " + players.length + "." });
+      return;
+    }
+    const lead = players.find(x => x.id === electHost(players)) || players[0];
+    if (p.mode === "ranked2" || p.mode === "sranked1" || p.mode === "sranked2") {
+      // the bots are tuned from the leader's real rank, fetched fresh (a rematch comes after the last match paid)
+      if (lead.sub) { const a = await this.account(lead.sub); if (a) lead.rp = a.rp | 0; }
       let idx = 0; for (let i = 0; i < CAT.ranks.length; i++) if ((lead.rp | 0) >= CAT.ranks[i].rp) idx = i;
       p.rf = +(idx / Math.max(1, CAT.ranks.length - 1)).toFixed(4);
+      // solo ranked plays the arena of your rank, as it always has
+      if (p.mode !== "ranked2") p.map = (CAT.ranks[idx] && CAT.ranks[idx].map) || "sky";
+      p.bots = 0;
     }
+    if (p.mode === "boss") { p.map = "sky"; p.bots = 0; p.gm = "boss"; }
     if (!this.sim) this.sim = new SimHost(o => this.fromSim(o));
     else if (this.sim.running) this.sim.stop();
     if (p.map === "random") p.map = this.sim.maps[Math.floor(Math.random() * this.sim.maps.length)] || "sky";
-    this.match = { id: crypto.randomUUID(), at: Date.now(),
-      mode: p.mode === "ranked2" ? "mpranked2" : (p.mode === "god1" ? "god1" : "mp"),
+    this.match = { id: crypto.randomUUID(), at: Date.now(), mode: SETTLE_MODE[p.mode] || "mp",
       players: players.map(x => ({ id: x.id, sub: x.sub })) };
+    p.mid = this.match.id;
     this.casts = new WeakMap();                       // a new match: cooldowns start over
     try { const fl = await dirCall(this.env, { op: "abiloff" }); p.off = (fl && Array.isArray(fl.off)) ? fl.off : []; } catch (e) { p.off = []; }
     this.broadcast(p);
@@ -553,6 +588,14 @@ export class Room {
   }
   fromSim(o) {
     if (!o || typeof o.t !== "string") return;
+    // for one player only: the server correcting where they are
+    if (o.t === "corr" && typeof o.to === "string") { this.sendTo(o.to, o); return; }
+    // the movement check noted a run of impossible moves: a flag for the admin, never a ban
+    if (o.t === "mvflag") {
+      const who = this.roster().find(p => p.id === o.who);
+      if (who && who.sub) this.report(who.sub, { kind: "movement", sev: "flag", by: "room", detail: String(o.detail || "").slice(0, 200) });
+      return;
+    }
     if (SIM_OUT[o.t]) { this.broadcast(Object.assign({}, o, { from: SIM_ID })); return; }
     if (o.t === "roundover") { this.matchOver(o); return; }
     if (o.t === "acrep") {
@@ -570,25 +613,85 @@ export class Room {
     }
     // anything else the game says (its own loadout, pings, lobby setup) is for nobody
   }
-  /* The match is over. Before anyone is told, each account gets a ticket with
-     its result: that ticket, not the player's game, is what pays out. */
+  /* The match is over. Before anyone is told, each account's record of it is
+     written to this room's own storage, then delivered to the account. A
+     delivery that fails or times out stays here and is tried again (alarm),
+     through restarts, until the account has it; the account pays each match id
+     once however many times it arrives. Until then the player's result is
+     "pending" -- never a loss. */
   async matchOver(o) {
     const M = this.match; this.match = null;
     const mid = M ? M.id : "";
     if (M && this.env && this.env.VAULT) {
       let fighters = [];
       try { fighters = this.sim.state().fighters || []; } catch (e) {}
-      const teamOf = id => { const f = fighters.find(x => x.netId === id); return f ? f.team : -9; };
+      const fOf = id => fighters.find(x => x.netId === id) || null;
+      let boss = null;
+      try { boss = this.sim.g.bossInfo ? this.sim.g.bossInfo() : null; } catch (e) {}
       const secs = Math.round((Date.now() - M.at) / 1000);
-      const jobs = M.players.filter(p => p.sub).map(p => {
-        const won = (typeof o.tm === "number" && o.tm >= 0) ? teamOf(p.id) === o.tm : o.w === p.id;
-        return toVault(this.env, p.sub, { op: "ticket", sub: p.sub, ticket: { id: mid, mode: M.mode, won, secs } }).catch(() => {});
+      const recs = M.players.filter(p => p.sub).map(p => {
+        const f = fOf(p.id);
+        const won = M.mode === "boss" ? !!(boss && boss.victory)
+          : (typeof o.tm === "number" && o.tm >= 0) ? !!f && f.team === o.tm : o.w === p.id;
+        const t = { id: mid, mode: M.mode, won, secs,
+          coins: f ? (f.runC | 0) : 0, dfl: f ? (f.deflects | 0) : 0, pf: f ? (f.perfects | 0) : 0, kos: f ? (f.kos | 0) : 0,
+          tb: f ? (f.tBlocks | 0) : 0, tp: f ? (f.tPerfects | 0) : 0 };
+        if (boss) t.boss = { dealt: boss.dealt | 0, total: boss.total | 0, victory: !!boss.victory };
+        return { sub: p.sub, t, tries: 0, next: 0, at: Date.now() };
       });
-      await Promise.race([Promise.all(jobs), new Promise(r => setTimeout(r, 2500))]);
+      if (this.ctx.storage) {
+        const put = {}; for (const r of recs) put["settle:" + mid + ":" + r.sub] = r;
+        if (recs.length) await this.ctx.storage.put(put);
+      }
+      // try now, briefly: most land before anyone is told
+      await Promise.race([this.deliverAll(), new Promise(r => setTimeout(r, 2500))]);
+      if (this.ctx.storage && this.ctx.storage.setAlarm) {
+        const left = await this.ctx.storage.list({ prefix: "settle:" });
+        if (left.size) await this.ctx.storage.setAlarm(Date.now() + 5000);
+      }
     }
     this.broadcast(Object.assign({}, o, { mid, from: SIM_ID }));
     this.qStarted = false;
     this.announce({ playing: false });
+  }
+  // every settlement still waiting here, sent again; a success is forgotten, a failure backs off
+  async deliverAll() {
+    if (!this.ctx.storage || !this.env || !this.env.VAULT) return 0;
+    const now = Date.now(), all = await this.ctx.storage.list({ prefix: "settle:" });
+    let left = 0;
+    for (const [key, r] of all) {
+      if (r.next > now) { left++; continue; }
+      let ok = false;
+      try {
+        const res = await toVault(this.env, r.sub, { op: "settle", sub: r.sub, ticket: r.t });
+        ok = res.status === 200 || res.status === 400;          // 400: a record the account cannot use -- retrying will not help
+      } catch (e) { ok = false; }
+      if (ok) { await this.ctx.storage.delete(key); continue; }
+      r.tries++;
+      // a week of trying, then it is written off (and seen on the admin page as a missing match)
+      if (now - r.at > SETTLE_GIVEUP_MS) { await this.ctx.storage.delete(key); continue; }
+      r.next = now + Math.min(10 * 60 * 1000, 2000 * Math.pow(2, Math.min(r.tries, 9)));
+      await this.ctx.storage.put(key, r);
+      left++;
+    }
+    return left;
+  }
+  async alarm() {
+    const left = await this.deliverAll();
+    if (left && this.ctx.storage) {
+      let soonest = Infinity;
+      for (const [, r] of await this.ctx.storage.list({ prefix: "settle:" })) soonest = Math.min(soonest, r.next || 0);
+      await this.ctx.storage.setAlarm(Math.max(Date.now() + 1000, isFinite(soonest) ? soonest : Date.now() + 60000));
+    }
+  }
+  // what an account owns and its RP, asked fresh
+  async account(sub) {
+    try {
+      const r = await toVault(this.env, sub, { op: "acct", sub });
+      const j = await r.json();
+      if (j && j.inv) { this.invs.set(sub, j.inv); return j; }
+    } catch (e) {}
+    return null;
   }
 }
 
@@ -856,6 +959,37 @@ export class Vault {
       await st.put("tickets", list.slice(-TICKETS_KEPT));
       return jsonRes({ ok: true });
     }
+    /* A room settling a match it ran. Idempotent: the id was made by the room,
+       and an id seen before gets its first answer back, paid once. */
+    if (body.op === "settle") {
+      const t = body.ticket || {};
+      if (typeof t.id !== "string" || !t.id || t.id.length > 64 || typeof t.mode !== "string") return jsonRes({ error: "bad record" }, 400);
+      const settled = (await st.get("settled")) || [];
+      const prev = settledOf(settled, t.id);
+      if (prev) return jsonRes({ ok: true, dup: true, res: prev.res });
+      const save = ensure(rec ? JSON.parse(rec.data) : {});
+      if (!save.econ) save.econ = { v: 1, at: now };
+      const stats = (await st.get("stats")) || newStats(now), hist = (await st.get("hist")) || [], ledger = (await st.get("ledger")) || [];
+      const pre = snap(save), r = settleMatch(save, t, { now, settled });
+      if (!r.ok) return jsonRes({ error: r.why }, 400);
+      recordAct(stats, hist, ledger, "match", { mode: t.mode, won: !!t.won, secs: t.secs, blocks: t.tb | 0, perfects: t.tp | 0 }, { ok: true, res: r.res }, pre, snap(save), now);
+      settled.push({ id: t.id, mode: t.mode, at: now, res: r.res });
+      const flags = watchFlags(stats, hist, now);
+      const data = JSON.stringify(save);
+      const next = { data, rev: (rec ? rec.rev : 0) + 1, at: now };
+      const keep = await this.snapshot(rec, now);
+      // the save and the record that it was paid go in one put: both or neither
+      await st.put(Object.assign({ save: next, settled: settled.slice(-SETTLE.kept), stats, hist, ledger }, keep));
+      rec = next;
+      for (const f of flags) await this.flagIn(sub, f, now);
+      const sus = suspicion(stats, hist, (await st.get("flags")) || [], now);
+      dirCall(this.env, { op: "touch", sub, name: save.netName || "", rp: save.rp | 0, season: save.season | 0, sum: summary(stats, sus), ul: ultrasOf(save) });
+      return jsonRes({ ok: true, res: r.res });
+    }
+    if (body.op === "acct") {                        // a room asking what this account owns and its RP (never from a player)
+      const s = ensure(rec ? JSON.parse(rec.data) : {});
+      return jsonRes({ inv: { swords: s.swords, abils: s.abils, skins: s.skins }, rp: s.rp | 0, name: s.netName || "" });
+    }
     if (body.op === "tim") {                         // a room timed this player's blocks (never from a player)
       const stats = (await st.get("stats")) || newStats(now);
       if (!stats.wf) stats.wf = {};
@@ -1008,6 +1142,7 @@ export class Vault {
       if (!save.econ) importEcon(save, body.imp, now, flags);
       const bj = (await st.get("bj")) || {};
       const tickets = ((await st.get("tickets")) || []).filter(x => now - x.at < TICKET_MS);
+      const settled = (await st.get("settled")) || [];
       const res = [];
       // the watch: counts, match history and a ledger of every change (see econ.js)
       const stats = (await st.get("stats")) || newStats(now), hist = (await st.get("hist")) || [], ledger = (await st.get("ledger")) || [];
@@ -1025,7 +1160,7 @@ export class Vault {
           if (a && typeof a.id === "string" && a.id.length <= 32 && seen.indexOf(a.id) >= 0) { res.push({ ok: true, dup: true }); continue; }
           // the kill switches, asked again at most once a minute
           if (a && a.k === "chest" && !(now - (this.offAt || 0) < 60000)) { const fl = await dirCall(this.env, { op: "abiloff" }); setAbilOff(fl ? fl.off : ["guardian"]); this.offAt = now; }
-          const pre = snap(save), r = applyAct(save, a, { now, rnd: Math.random, bj, flags, tickets });
+          const pre = snap(save), r = applyAct(save, a, { now, rnd: Math.random, bj, flags, tickets, settled });
           res.push(r);
           recordAct(stats, hist, ledger, a && typeof a.k === "string" ? a.k.slice(0, 12) : "?", a || {}, r, pre, snap(save), now);
           if (a && typeof a.id === "string" && a.id.length <= 32) seen.push(a.id);
@@ -1052,6 +1187,11 @@ export class Vault {
     }
 
     if (body.op === "load") return jsonRes(Object.assign(view(), { inbox: await this.takeInbox() }));
+    // what the server paid for a match it ran: never pays anything itself
+    if (body.op === "matchres") {
+      const one = settledOf((await st.get("settled")) || [], String(body.mid || "").slice(0, 64));
+      return jsonRes(Object.assign(view(), one ? { mid: one.id, mode: one.mode, res: one.res } : { mid: String(body.mid || "").slice(0, 64), pending: true }));
+    }
     if (body.op === "sync") {
       const ops = Array.isArray(body.ops) ? body.ops : [];
       if (ops.length > OPS_PER_SYNC) return jsonRes({ error: "too many changes at once" }, 400);
@@ -1233,9 +1373,9 @@ export async function handleCloud(request, env, path, opts) {
   // /cloud: { token: "<account>.<secret>", op, save?, base? }
   const m = /^([A-Za-z0-9_-]{1,64})\.([0-9a-f]{48})$/.exec(String(body.token || ""));
   if (!m) return jsonRes({ error: "signed out" }, 401);
-  if (!["load", "save", "sync", "logout", "history", "restore", "act"].includes(body.op)) return jsonRes({ error: "unknown op" }, 400);
+  if (!["load", "save", "sync", "logout", "history", "restore", "act", "matchres"].includes(body.op)) return jsonRes({ error: "unknown op" }, 400);
   return toVault(env, m[1], { op: body.op, sub: m[1], secret: m[2], save: body.save, base: body.base, ops: body.ops, kept: body.kept,
-    acts: body.acts, imp: body.imp });
+    acts: body.acts, imp: body.imp, mid: typeof body.mid === "string" ? body.mid.slice(0, 64) : undefined });
 }
 
 /* ---------- Worker ---------- */
