@@ -1154,7 +1154,7 @@ export function tamperVerdict(ops) {
     const tab = { swords: "sword", abils: "abil", skins: "skin" }[p[0]];
     if (tab && p.length === 2 && kind === "=" && v) {
       const it = itemOf(tab, p[1]);
-      if (it && (it.ultra || it.rank === "dev" || it.r === "unreleased" || it.code)) bad.push(p[1]);
+      if (it && (it.ultra || it.rank === "dev" || (it.r === "unreleased" || it.r === "secret") || it.code)) bad.push(p[1]);
       else big.push("+" + p[1]);
     } else if ((p[0] === "coins" || p[0] === "yen" || p[0] === "rp") && kind === "+" && typeof v === "number" && v > 0) {
       if (v > 100000) bad.push(p[0] + " +" + v); else big.push(p[0] + " +" + v);

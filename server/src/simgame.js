@@ -72,7 +72,7 @@ function ri(a,b){return Math.floor(a+RNG()*(b-a+1));}
 function pick(a){return a[Math.floor(RNG()*a.length)];}
 // bots never carry something that is not out yet
 // never the #1's Crown, an event's one-off, GOD's blade or anything code-only
-function BOT_SWORDS(){return SWORDS.filter(function(w){return w.rarity!=="unreleased"&&!w.ultra&&!w.top1&&!w.event&&!w.code&&w.rank!=="god";});}
+function BOT_SWORDS(){return SWORDS.filter(function(w){return w.rarity!=="unreleased"&&w.rarity!=="secret"&&!w.ultra&&!w.top1&&!w.event&&!w.code&&w.rank!=="god";});}
 function dist2(ax,az,bx,bz){var dx=ax-bx,dz=az-bz;return dx*dx+dz*dz;}
 function hex2rgb(h){return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255];}
 // hue in 0..1 -> packed hex, for prismatic cosmetics that cycle colour
@@ -293,7 +293,7 @@ var SWORDS=[
  {id:"vampfang",name:"Vamp Fang",rarity:"mythic",event:"pack",secret:true,price:-1,yen:345,blade:0xf2ead8,hilt:0x141016,glow:0xff1a34,shape:"vampfang",hold:"one",swing:"slash",idle:"none",
   desc:"The Rap Pack's secret. One long curved fang of ivory, a blood-red gem in a bat-wing guard. Every cut is red, and the bats come out."},
  // DEV2: price, rarity and how you get them are not decided yet
- {id:"dev2sniper",name:"Dev2",rarity:"unreleased",price:-1,phantom:"sniper",set:"DEV2",blade:0xc8ccd6,hilt:0x141418,glow:0xb46bff,shape:"dev2sniper",hold:"phantom",swing:"phantom",idle:"none",size:.9,
+ {id:"dev2sniper",name:"Dev2",rarity:"secret",price:-1,phantom:"sniper",set:"DEV2",blade:0xc8ccd6,hilt:0x141418,glow:0xb46bff,shape:"dev2sniper",hold:"phantom",swing:"phantom",idle:"none",size:.9,
   desc:"One weapon, three ways to carry it. A skeletal black-and-silver sniper with a long suppressor, and a hooked karambit with a glowing purple edge: carry the SNIPER, the KARAMBIT, or BOTH -- choose in your inventory. A shot is a flash and a slash of light; a cut is a crescent and a spin."},
  {id:"divineright",name:"Divine Right",price:-1,rank:"god",blade:0xdce6f2,hilt:0xd8b050,glow:0x7ad8ff,shape:"divine",hold:"rhip",swing:"divine",idle:"orbit",
   desc:"The GOD rank's blade. Worn on the right hip and drawn in one stroke: the wings open, the runes light, and every cut sheds feathers of light."},
@@ -731,9 +731,9 @@ function swordById(id){if(id==="dev2both")return PH_BOTH;if(id==="dev2karambit")
    together, the sniper in the right hand, the knife in the left. Never listed,
    never sold; it is what you carry when that mode is chosen and you own both. */
 // the karambit on its own: Dev2 carried as the knife (also not an item)
-var PH_KNIFE={id:"dev2karambit",name:"Dev2",virtual:true,rarity:"unreleased",price:-1,phantom:"karambit",set:"DEV2",blade:0xd8dce6,hilt:0x141418,glow:0xb46bff,shape:"dev2karambit",hold:"phantom",swing:"phantom",idle:"none",
+var PH_KNIFE={id:"dev2karambit",name:"Dev2",virtual:true,rarity:"secret",price:-1,phantom:"karambit",set:"DEV2",blade:0xd8dce6,hilt:0x141418,glow:0xb46bff,shape:"dev2karambit",hold:"phantom",swing:"phantom",idle:"none",
   desc:"Dev2. A hooked silver-black karambit with a finger ring and a glowing purple edge. A parry is a quick cut and a white-purple crescent. Carry it with the Dev2 Sniper for BOTH."};
-var PH_BOTH={id:"dev2both",name:"Dev2",rarity:"unreleased",price:-1,phantom:"both",virtual:true,set:"DEV2",
+var PH_BOTH={id:"dev2both",name:"Dev2",rarity:"secret",price:-1,phantom:"both",virtual:true,set:"DEV2",
   blade:0xc8ccd6,hilt:0x141418,glow:0xb46bff,shape:"dev2sniper",hold:"phantom",swing:"phantom",idle:"none",size:.9,
   desc:"Dev2, both at once: the sniper in the right hand, the karambit in the left, the parries taking turns."};
 function phOwnsBoth(){return !!(SAVE.swords&&SAVE.swords.dev2sniper);}   // Dev2 is one item: owning it is owning all three
@@ -788,7 +788,7 @@ var VERSION="4.0";
 // what an item is worth in yen, by rarity
 var SELL={common:15,rare:40,epic:85,legendary:190,mythic:465};
 function itemValue(it){
-  if(!it||it.rank||it.rarity==="rank"||it.ultra||it.pass||it.event||it.rarity==="unreleased")return 0;   // unreleased: no price yet, so no worth
+  if(!it||it.rank||it.rarity==="rank"||it.ultra||it.pass||it.event||it.rarity==="unreleased"||it.rarity==="secret")return 0;   // unreleased/secret: no price, so no worth
   // every item carries its own worth; the rarity table is only a fallback
   if(typeof it.yen==="number")return it.yen;
   return SELL[it.rarity||"common"]||15;
@@ -3694,7 +3694,7 @@ var SKIN_FX={
   clockwork:{c:0xffd88a,rate:8,vy:[-.4,.6],  g:1.0, sz:.42,life:.8, r:.7},
   bert:    {c:0xffe14a,rate:14,vy:[-.2,.5],  g:.6,  sz:.40,life:.35,r:.55}
 };
-var RARE_BOOST={common:.65,rare:.85,epic:1.0,legendary:1.25,mythic:1.5,halloween:1.5,unreleased:1.5,ultra:1.5};
+var RARE_BOOST={common:.65,rare:.85,epic:1.0,legendary:1.25,mythic:1.5,halloween:1.5,unreleased:1.5,secret:1.5,ultra:1.5};
 function fxLerpCol(f,t){
   var a=hex2rgb(f.c1),b=hex2rgb(f.c2);
   return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
@@ -5756,7 +5756,9 @@ Fighter.prototype.update=function(dt,t){
     this.idleWeapon(dt,t);
   }
   this.skinTick(dt,t);
-  if(this.tauntT>0)this.tauntT=Math.max(0,this.tauntT-dt);
+  if(this.tauntT>0){this.tauntT=Math.max(0,this.tauntT-dt);
+    // walked off: the emote stops there, bubble and all
+    if(this.tauntX!=null&&dist2(this.pos.x,this.pos.z,this.tauntX,this.tauntZ)>TAUNT_RANGE*TAUNT_RANGE){this.tauntT=0;if(this.bub){this.bubT=0;this.bub.visible=false;}}}
   var locked=isTargeted(this);
   if(locked){
     var pulse=0.45+Math.abs(Math.sin(t*9))*0.55;
@@ -5824,7 +5826,7 @@ var TAUNTS=[
   {id:"stagedive",e:"\ud83c\udfa4",txt:"STAGE DIVE",col:"#ff1a34",pack:"rap",fx:"stagedive",rarity:"mythic",
   desc:"Hype the crowd up, dive off the stage... and land face first. Stars included. From the Rap Pack."}
 ];
-var TAUNT_DUR=2.2,TAUNT_GAP=2;
+var TAUNT_DUR=2.2,TAUNT_GAP=2,TAUNT_RANGE=3.5;   // walk this far from where an emote started and it ends
 var TAUNT_BASE=TAUNTS.filter(function(t){return !t.pack;}).map(function(t){return t.id;});      // the eight everyone has
 function emoteOwned(id){return TAUNT_BASE.indexOf(id)>=0||!!(SAVE.emotes&&SAVE.emotes[id]);}
 // what is in your wheel: the eight you equipped (anything not yours drops back to a default)
@@ -5840,7 +5842,7 @@ function tauntById(id){for(var i=0;i<TAUNTS.length;i++)if(TAUNTS[i].id===id)retu
 Fighter.prototype.taunt=function(id){
   var tk=tauntById(id);
   if(!tk||!this.alive)return false;
-  this.tauntK=tk.id;this.tauntT=TAUNT_DUR;
+  this.tauntK=tk.id;this.tauntT=TAUNT_DUR;this.tauntX=this.pos.x;this.tauntZ=this.pos.z;
   this.say(tk.e+" "+tk.txt,tk.col,TAUNT_DUR);
   if(tk.fx==="portal"&&this.mesh&&QUAL>=0){
     // the portal stands just behind you, facing the way you face
@@ -15545,7 +15547,8 @@ var RARITY={common:{w:59,c:0x9aa3ad,n:"COMMON"},rare:{w:24.6,c:0x5fd8ff,n:"RARE"
   mythic:{w:2,c:0xff3ca8,n:"MYTHIC"},
   ultra:{w:0,c:0xd0102a,n:"ULTRA"},            // never rolled: ULTRA items only come from codes
   halloween:{w:0,c:0xff7a12,n:"HALLOWEEN"},    // never rolled: only from the Halloween Pass
-  unreleased:{w:0,c:0x9fdcff,n:"UNRELEASED"}}; // never rolled: test items before they launch
+  unreleased:{w:0,c:0x9fdcff,n:"UNRELEASED"},  // never rolled: test items before they launch
+  secret:{w:0,c:0x8a3cff,n:"SECRET"}};          // never rolled, never sold, never shown until it's yours // never rolled: test items before they launch
 var RARORDER=["mythic","legendary","epic","rare","common"];
 var shopTab="sword";
 /* ---- the Limited shop ----
@@ -15902,11 +15905,11 @@ function buildLimited(){
    written in the file, so a mythic could sit between two commons and the good
    things were impossible to find. Rank rewards and code items lead, then mythic
    down to common, and within a tier the more expensive one first. */
-var RARITY_ORDER={ultra:-1,halloween:-.5,rank:0,mythic:1,legendary:2,epic:3,rare:4,common:5};
+var RARITY_ORDER={secret:-1.5,ultra:-1,halloween:-.5,rank:0,mythic:1,legendary:2,epic:3,rare:4,common:5};
 function byRarityDesc(list){
   return list.slice().sort(function(a,b){
-    var ra=a.ultra?-1:(a.rank||a.code)?0:(RARITY_ORDER[a.rarity]===undefined?5:RARITY_ORDER[a.rarity]);
-    var rb=b.ultra?-1:(b.rank||b.code)?0:(RARITY_ORDER[b.rarity]===undefined?5:RARITY_ORDER[b.rarity]);
+    var ra=a.rarity==='secret'?-1.5:a.ultra?-1:(a.rank||a.code)?0:(RARITY_ORDER[a.rarity]===undefined?5:RARITY_ORDER[a.rarity]);
+    var rb=b.rarity==='secret'?-1.5:b.ultra?-1:(b.rank||b.code)?0:(RARITY_ORDER[b.rarity]===undefined?5:RARITY_ORDER[b.rarity]);
     if(ra!==rb)return ra-rb;
     var pa=a.price<0?1e9:(a.price||0), pb=b.price<0?1e9:(b.price||0);
     if(pa!==pb)return pb-pa;
@@ -16148,6 +16151,7 @@ var pickSel={sword:null,abil:null,skin:null};
 function itemTier(it){return (it.rank||it.rarity==="rank")?"rank":(it.rarity||"common");}
 function tierLabel(it){
   if(it.rarity==="unreleased")return "UNRELEASED";
+  if(it.rarity==="secret")return "SECRET";
   if(it.top1)return "#1 ONLY";
   if(it.ultra)return "ULTRA";
   if(it.season===0)return "SEASON 0";
@@ -16158,7 +16162,7 @@ function tierLabel(it){
   if(it.free)return "FREE";
   return (RARITY[it.rarity]||RARITY.common).n;
 }
-function tierColor(it){var t=itemTier(it);return t==="rank"?"#7dffc4":hexStr((RARITY[t]||RARITY.common).c);}
+function tierColor(it){var t=itemTier(it);return t==="rank"?"#4ee88a":hexStr((RARITY[t]||RARITY.common).c);}
 function itemTile(it,d,o){
   o=o||{};
   var el=document.createElement("div");
@@ -16218,7 +16222,7 @@ function renderPicker(fresh){
   // everything is listed, owned or not: what you do not have shows locked
   // (a pack's secret bonus is the exception: not listed until it is yours)
   // (and nothing unreleased shows to anyone who has not been given it)
-  var list=d.list.filter(function(it){if(it.rarity==="unreleased"&&!d.own[it.id])return false;
+  var list=d.list.filter(function(it){if((it.rarity==="unreleased"||it.rarity==="secret")&&!d.own[it.id])return false;
     if(it.secret&&!d.own[it.id]){var pk=packOf(tab,it.id);return !(pk&&packSecret(PACKS[pk],tab,it.id));}return true;});
   var owned=list.filter(function(it){return d.own[it.id];});
   list=owned.concat(list.filter(function(it){return !d.own[it.id];}));

@@ -56,7 +56,7 @@ function byRarityDesc(list) {
   });
 }
 function itemValue(it) {
-  if (!it || it.rank || it.rarity === "rank" || it.ultra || it.pass || it.event || it.rarity === "unreleased") return 0;
+  if (!it || it.rank || it.rarity === "rank" || it.ultra || it.pass || it.event || it.rarity === "unreleased" || it.rarity === "secret") return 0;
   if (typeof it.yen === "number") return it.yen;
   return G.SELL[it.rarity || "common"] || 15;
 }

@@ -158,7 +158,7 @@ export function rollItem(tab, grade, rnd) {
 }
 
 /* ---- the limited shelf ---- */
-function limEligible(it) { return !it.rank && !it.code && !it.pass && it.r !== "rank" && it.r !== "unreleased" && !it.free && !it.event && it.v > 0; }
+function limEligible(it) { return !it.rank && !it.code && !it.pass && it.r !== "rank" && it.r !== "unreleased" && it.r !== "secret" && !it.free && !it.event && it.v > 0; }
 function limPrice(it) { return Math.ceil(it.v * CAT.lim.markup / 50) * 50; }
 export function limitedOn(day) {
   for (const dr of CAT.lim.drops) if (day >= dr.from && day < dr.to) return dr.items;
@@ -418,7 +418,7 @@ export function applyAct(s, a, ctx) {
   }
 
   // selling and upgrading: never a starter, a free item, a rank reward, an ULTRA, a pass item, or what you have on
-  const tradable = (t, it) => it && own(s, t, it.id) && !(it.id === CAT.items[t].starter || it.free || it.rank || it.r === "rank" || it.r === "unreleased" || it.ultra || it.pass) && s[EQ[t]] !== it.id;
+  const tradable = (t, it) => it && own(s, t, it.id) && !(it.id === CAT.items[t].starter || it.free || it.rank || it.r === "rank" || (it.r === "unreleased" || it.r === "secret") || it.ultra || it.pass) && s[EQ[t]] !== it.id;
   if (a.k === "sell") {
     const it = tab && itemOf(tab, a.id);
     if (!tradable(tab, it)) return { ok: false, why: "That cannot be sold." };
@@ -586,7 +586,7 @@ export function importEcon(s, from, now, flags) {
       const it = itemOf(t, id);
       if (!src[id] || !it) continue;
       // only ever from a code or never earnable: not brought along (a code can be redeemed on the account)
-      if (it.r === "unreleased" || it.rank === "dev" || it.code || it.ultra) { dropped++; continue; }
+      if ((it.r === "unreleased" || it.r === "secret") || it.rank === "dev" || it.code || it.ultra) { dropped++; continue; }
       give(s, t, id); count++; value += it.v * CAT.yenRate;
     }
   }
