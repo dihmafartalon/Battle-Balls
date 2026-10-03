@@ -13822,7 +13822,17 @@ function sfx(k){
 /* ============================================================
    12b. NETWORK \u2014 private lobbies over a Cloudflare room server
    ============================================================ */
-var SERVER_URL="https://battle-balls-rooms.benmaeder.workers.dev";
+var SERVER_URL="https://api.battleballs.org";
+/* battleballs.org's own address for the server. If it does not answer, the
+   game falls back to the worker's original address, so a DNS hiccup never
+   takes the game offline. */
+var SERVER_URL_FALLBACK="https://battle-balls-rooms.benmaeder.workers.dev";
+(function(){try{
+  if(typeof fetch!=="function"||typeof AbortController==="undefined")return;
+  var ac=new AbortController(),t=setTimeout(function(){ac.abort();},4000);
+  fetch(SERVER_URL+"/health",{signal:ac.signal,cache:"no-store"}).then(function(r){clearTimeout(t);if(!r.ok)throw 0;})
+    .catch(function(){clearTimeout(t);SERVER_URL=SERVER_URL_FALLBACK;});
+}catch(e){}})();
 /* Test builds: open the game with ?test=1 and this tab talks to the TEST
    server instead (a separate worker with its own accounts), until ?test=0 or
    the tab is closed. Only this one fixed address -- a link can never point the
