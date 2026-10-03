@@ -12940,8 +12940,6 @@ function phShot(f,gun){
   phMuzzle(f,at(.25),dir);
   phTracer(f,at(.3),dir,42);
   phUltra(f,true);
-  // a tear in the air down range where the round went through
-  if(QUAL>0&&phNear(f)){var tp=at(7);hwTear(tp.x,tp.y,tp.z,f.yaw,rr(-.5,.5),4.2,1.5,.42);}
   phBubble(f,1.5);
   if(near)phPop(f,new THREE.Vector3(f.pos.x,f.y+1.6,f.pos.z),0xffffff,5,.12,phStarTex(),2,.7);
   if(near)for(var fi=0;fi<(hi?6:3);fi++){var fp=at(.2+fi*.25);phFlame(f,fp,fi%2?"glow":"dark",.9,.35,.9);}
@@ -12986,7 +12984,6 @@ function phCut(f,knife,ks){
   // a crescent on the diagonal of the cut (the left hand's runs the other way)
   devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+1.8,f.pos.z),track:f,trackY:1.8,yaw:f.yaw,roll:-.55*ks,span:3.9,scale:1.55,thick:1.5,dir:ks,life:.32,hold:.09,flick:.05,fire:true});
   phUltra(f,false);
-  if(QUAL>0&&phNear(f)){var fw=new THREE.Vector3(Math.sin(f.yaw),0,Math.cos(f.yaw));hwTear(f.pos.x+fw.x*3,f.y+1.8,f.pos.z+fw.z*3,f.yaw,-.55*ks,3.4,1.1,.34);}
   if(!phNear(f)||!knife.userData.tipPt)return;
   var p=phW(f,phLocal(knife,knife.userData.tipPt,new THREE.Vector3()));
   phPop(f,p,0xb890ff,2.4,.18,phStarTex(),4,.85);
