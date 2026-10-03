@@ -3299,7 +3299,6 @@ function enterLobby(){
   $("lobbyBar").classList.add("on");
   $("slots").style.display="none";
   updateChips();refreshCoins();updateLobbyBar();
-  setTimeout(function(){if(STATE==="venue"&&!NET.srv)tutOffer();},1800);
   $("vRank").textContent=currentRank().name.toUpperCase();
   $("vRankIco").innerHTML=rankIcon(currentRank(),28);
   refreshSaveWarn();
@@ -13824,6 +13823,20 @@ function sfx(k){
    12b. NETWORK \u2014 private lobbies over a Cloudflare room server
    ============================================================ */
 var SERVER_URL="https://battle-balls-rooms.benmaeder.workers.dev";
+/* Test builds: open the game with ?test=1 and this tab talks to the TEST
+   server instead (a separate worker with its own accounts), until ?test=0 or
+   the tab is closed. Only this one fixed address -- a link can never point the
+   game at somebody else's server. */
+var TEST_SERVER_URL="https://battle-balls-rooms-test.benmaeder.workers.dev";
+var TEST_MODE=(function(){try{
+  var q=new URLSearchParams(window.location.search);
+  if(q.get("test")==="1")window.sessionStorage.setItem("bb_test","1");
+  if(q.get("test")==="0")window.sessionStorage.removeItem("bb_test");
+  return window.sessionStorage.getItem("bb_test")==="1";
+}catch(e){return false;}})();
+if(TEST_MODE){try{var tb=document.createElement("div");tb.textContent="TEST SERVER";
+  tb.style.cssText="position:fixed;left:50%;bottom:4px;transform:translateX(-50%);z-index:300;padding:2px 10px;border-radius:8px;background:#ff3ca8;color:#fff;font:800 11px sans-serif;letter-spacing:.12em;pointer-events:none";
+  document.body.appendChild(tb);}catch(e){}}
 // players can still point the game at their own server from the lobby screen
 var NET={
   on:false,          // are we in a networked match
@@ -13857,7 +13870,7 @@ function netSend(o){
   try{NET.ws.send(JSON.stringify(o));return true;}catch(e){return false;}
 }
 function serverBase(){
-  var u=((SAVE&&SAVE.serverUrl)||SERVER_URL||"").trim().replace(/\/+$/,"");
+  var u=((TEST_MODE?TEST_SERVER_URL:"")||(SAVE&&SAVE.serverUrl)||SERVER_URL||"").trim().replace(/\/+$/,"");
   if(u&&!/^https?:/i.test(u))u="https://"+u;
   return u.replace(/\/+$/,"");
 }

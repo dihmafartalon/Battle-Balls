@@ -16,7 +16,40 @@ Packages:
 | Lobby performance | Static decorations welded by material; Low drops beams/webs/rings and fog; distant effects animate at a lower rate | — |
 | Boss Rally | New mode (Casual card, or a room's mode), practice offline | Server runs it in the room sim; pays per damage milestone + victory (no RP, daily cap) |
 | Social | FRIENDS panel, top-right notifications, phone MENU | New `Hub` (per account) and `Party` Durable Objects, tags in `Directory`, seat reservations in `Room` |
-| Tutorial | One minute, skippable, replayable from How to Play; no rewards | — |
+| Tutorial | One minute, optional: only from How to Play (never pops up); no rewards | — |
+
+## Try it before deploying (a test copy that can't touch production)
+
+1. **A test server**, separate from the real one (its own empty accounts; the
+   real accounts and saves are never touched). From the unzipped server folder:
+
+       npm install
+       npx wrangler deploy --name battle-balls-rooms-test
+
+   It lands at `https://battle-balls-rooms-test.benmaeder.workers.dev` -- the
+   address the game's test switch uses. Check `/health` says `ok 2026-10-03a`.
+   (Optional, for the admin page on the test copy:
+   `npx wrangler secret put ADMIN_KEY --name battle-balls-rooms-test`.)
+
+2. **A test copy of the site**, as a Cloudflare Pages *preview*, not production:
+   in the Pages project choose *Create deployment*, set the environment to
+   **Preview** (branch name e.g. `test`) and upload the site zip's files. It
+   gets its own address like `https://test.<your-project>.pages.dev`; the live
+   site is unchanged.
+
+3. Open the preview with **`?test=1`** on the end, e.g.
+   `https://test.<your-project>.pages.dev/?test=1`. A pink **TEST SERVER** tag
+   shows at the bottom of the screen; that tab now talks only to the test
+   server. `?test=0` switches back.
+
+4. **Google sign-in on the preview:** Google only allows sign-in from addresses
+   it knows. In Google Cloud > APIs & Services > Credentials > your OAuth client,
+   add the preview address (`https://test.<your-project>.pages.dev`) to
+   *Authorized JavaScript origins*. Without it you can still try Boss Rally
+   practice, the tutorial and the phone layout, but not anything online.
+
+When you're happy, deploy for real with the steps below. You can delete the
+test worker afterwards from the Cloudflare dashboard (Workers & Pages).
 
 ## Setup / migration (in this order)
 
@@ -61,7 +94,7 @@ Server suite (`npm test` in `server/`), all passing:
 Browser checks (headless Chromium + SwiftShader, local `wrangler dev`, a test-only dev login instead of Google):
 - Two players: tag search → request accepted from the toast → host a room → INVITE TO LOBBY → JOIN puts the friend in that room; DMs both ways (markup shown as text); party invite/accept; Boss Rally started for the room and run by the server; presence reads "IN MATCH".
 - Solo ranked on the server: match id issued, menu open does not pause (`paused=false`, clock ran 1.3 s), result shows "CONFIRMED BY THE SERVER" after settlement.
-- Tutorial: block → miss → ability → done, 0 coins, no match counted.
+- Tutorial: block → miss → ability → done, 0 coins, no match counted; it is never offered automatically.
 - Popups: held W released when the shop opens, no movement/jump/block/ability under it, typing in a field doesn't move you, controls return when it closes, a popup over a match blocks the Block key.
 - Layout screenshots: 390×844 and 844×390 phones, 1024×768 and 768×1024 iPad.
 
