@@ -3299,6 +3299,7 @@ function enterLobby(){
   $("lobbyBar").classList.add("on");
   $("slots").style.display="none";
   updateChips();refreshCoins();updateLobbyBar();
+  setTimeout(function(){if(STATE==="venue"&&!NET.srv)tutOffer();},1800);
   $("vRank").textContent=currentRank().name.toUpperCase();
   $("vRankIco").innerHTML=rankIcon(currentRank(),28);
   refreshSaveWarn();
@@ -6879,7 +6880,8 @@ function deflect(b,by,perfect,timed){
   // Ricky's .9: the block is a shot, and the tracer goes where the ball is going
   if(by.swordDef&&by.swordDef.swing==="gunshot"&&b.target)gunTracer(by,b.target.pos.x,b.target.y+AIM_Y,b.target.pos.z);
   if(NET.on&&NET.isHost)netBroadcastBall();
-  if(by.isPlayer){
+  if(MODE.tut&&by.isPlayer){tutEvent("parry");if(!quick)feed(perfect?"PERFECT":"Blocked",perfect?"gold":"good");}
+  else if(by.isPlayer){
     addCoins(gained);run.coins+=gained;
     if(!quick)feed(perfect?("PERFECT  +"+gained):("Blocked  +"+gained),perfect?"gold":"good");
     if(perfect&&!quick)flashWarn("PERFECT",0.45,"#ffd23f");
@@ -6896,6 +6898,7 @@ function ballHits(b,f,forced){
   }
   // a player on the network: did they press in time? If we have not heard yet,
   // give them one round trip to say so
+  if(MODE.tut&&tutHit(b,f))return;
   if(!forced&&NET.on&&NET.isHost&&f.isRemote&&f.alive){
     var cNow=netNow(),use=netPressFor(f,cNow);
     if(use){use.used=true;f.blockVis=0;f.blockFlash=1;acLead(f,cNow-use.t,b.age);deflect(b,f,cNow-use.t<=BLOCK.perfect*1000+40,true);return;}
@@ -13147,6 +13150,7 @@ function useAbility(f,remoteCast){
   if(a.passive||f.abilCd>0||!f.alive||f.stun>0||f.frozen>0)return;
   if(lastTwoBan(a)&&!remoteCast){if(f.isPlayer)flashWarn(a.name.toUpperCase()+" IS OFF \u2014 LAST TWO",0.9,"#ff6b6b");return;}
   f.abilCd=a.cd;
+  if(MODE.tut&&f.isPlayer)tutEvent("ability");
   // the server's movement check: whoever casts may move fast for a moment
   if(NET.on&&NET.isHost&&NET.srv)mvGrant(f);
   // Jordan was a free win one on one (ranked 1v1 above all): it comes round far
@@ -14221,6 +14225,7 @@ function disposeTree(root){
 }
 function clearFighters(){
   if(BOSS.on||BOSS.model)bossStop();
+  if(TUT.on){TUT.on=false;tutPaint();}
   v4Clear();
   for(var si=0;si<fighters.length;si++)dropShell(fighters[si]);
   if(typeof clearSlashes==="function")clearSlashes();
@@ -15276,7 +15281,7 @@ function socialSend(m,cb){
 // where this game is, for friends: in a match, in a lobby, or just around
 function socialWhere(){
   var inMatch=(STATE==="playing"||STATE==="countdown"||STATE==="over");
-  var room=(NET.on&&NET.code&&!NET.solo&&!NET.queue)?NET.code:"";
+  var room=(NET.ws&&NET.code&&!NET.solo&&!NET.queue)?NET.code:"";
   return {s:inMatch?"match":(room||STATE==="venue")?"lobby":"online",room:room};
 }
 function socialStatus(force){
@@ -15284,7 +15289,7 @@ function socialStatus(force){
   var w=socialWhere(),k=w.s+"|"+w.room;
   if(force||k!==SOCIAL.lastSt){SOCIAL.lastSt=k;socialSend({t:"st",s:w.s,room:w.room});}
 }
-setInterval(function(){
+setInterval(function(){if(NET.srv)return;
   if(!socialOn()){if(SOCIAL.ws||SOCIAL.st)socialStop();return;}
   if(!SOCIAL.ws&&!SOCIAL.timer)socialConnect();
   socialStatus(false);
@@ -15326,11 +15331,11 @@ function socialAutoParty(){
   for(var i=0;i<st.linvIn.length;i++){var v=st.linvIn[i];
     if(!v.party||SOCIAL.pend["auto"+v.id])continue;
     if(STATE==="playing"||STATE==="countdown")continue;
-    if(NET.on&&NET.code===v.code)continue;
+    if(NET.ws&&NET.code===v.code)continue;
     SOCIAL.pend["auto"+v.id]=1;socialJoinInvite(v.id);
   }
 }
-setInterval(function(){if(SOCIAL.st&&STATE!=="playing"&&STATE!=="countdown")socialAutoParty();},2000);
+setInterval(function(){if(NET.srv)return;if(SOCIAL.st&&STATE!=="playing"&&STATE!=="countdown")socialAutoParty();},2000);
 function socialJoinInvite(id){
   if(STATE==="playing"||STATE==="countdown"){notify({kind:"info",id:"busy",title:"IN A MATCH",text:"Finish your match first — the invite will wait.",ttl:4});return;}
   socialSend({t:"lacc",id:id},function(r){
@@ -15445,7 +15450,7 @@ function socialFriends(body,st){
   body.appendChild(sh("div","sechead","FRIENDS ("+fr.length+")"));
   if(!fr.length)body.appendChild(sh("div","fine","No friends yet. Share your tag, or add someone by theirs."));
   // can you invite people to where you are? only from a real online lobby
-  var inRoom=NET.on&&NET.code&&!NET.solo&&!NET.queue&&NET.status==="lobby";
+  var inRoom=NET.ws&&NET.code&&!NET.solo&&!NET.queue&&NET.status==="lobby";
   var invited={};st.linvOut.forEach(function(o){invited[o.to]=o.id;});
   fr.forEach(function(x){
     r=socialRow(x.name,x.tag+" · "+(PRES_TXT[x.pres]||"OFFLINE"),x.pres);
@@ -15513,13 +15518,13 @@ function socialParty(body,st){
   var row2=sh("div","socsets");
   row2.appendChild(shBtn(mine&&mine.ready?"NOT READY":"READY",mine&&mine.ready?"":"gold",function(){socialAct({t:"pready",r:!(mine&&mine.ready)});}));
   if(lead){
-    var inRoom=NET.on&&NET.code&&!NET.solo&&!NET.queue&&NET.status==="lobby";
+    var inRoom=NET.ws&&NET.code&&!NET.solo&&!NET.queue&&NET.status==="lobby";
     row2.appendChild(shBtn("BRING PARTY TO MY LOBBY","gold",function(){socialAct({t:"pgo",room:NET.code},"Bringing the party in");},!inRoom));
     row2.appendChild(shBtn("DISBAND","red",function(){socialAct({t:"pdisband"});}));
   }
   row2.appendChild(shBtn("LEAVE","",function(){socialAct({t:"pleave"});}));
   body.appendChild(row2);
-  if(lead)body.appendChild(sh("div","fine",(NET.on&&NET.code?"":"Host or join a lobby first, then bring everyone in. ")+
+  if(lead)body.appendChild(sh("div","fine",(NET.ws&&NET.code?"":"Host or join a lobby first, then bring everyone in. ")+
     (p.members.length>4?"Boss Rally takes up to 4 — your party has "+p.members.length+".":"")));
 }
 function socialMsgs(body,st){
@@ -15626,12 +15631,127 @@ function notesLay(){
     more.textContent="+"+(n-3)+" MORE";el.insertBefore(more,el.firstChild);}
   else if(more)more.remove();
 }
-setInterval(function(){
+setInterval(function(){if(NET.srv)return;
   var now=Date.now(),ch=false;
   for(var i=NOTES.list.length-1;i>=0;i--)if(NOTES.list[i].until<now){var n=NOTES.list[i];n.el.classList.add("out");NOTES.list.splice(i,1);ch=true;
     (function(e){setTimeout(function(){if(e.parentNode)e.parentNode.removeChild(e);},300);})(n.el);}
   if(ch||NOTES.list.length)notesLay();
 },500);
+
+/* ============================================================
+   THE TUTORIAL -- a minute, skippable, and replayable from How to Play
+   ------------------------------------------------------------
+   A slow ball and a training dummy that always sends it back. Three things
+   to do: block it, let one through (and see what that costs), use your
+   ability. Nothing is paid or counted: no coins, no RP, no stats, no ranked.
+   ============================================================ */
+var TUTMODE={id:"tutorial",name:"Tutorial",bots:1,speed:0.55,ramp:1.0,window:0.40,mult:0,minFlight:1.2,rp:0,tut:true,
+  desc:"Learn to block, see what a miss costs, and use your ability."};
+var TUT={on:false,step:0,wait:0,parries:0};
+function tutKey(a){return (lastTouch||touchMode)?(a==="block"?"the BLOCK button":"the ability button"):keyName(bindKey(a))+(a==="block"?" (or click)":"");}
+var TUT_STEPS=[
+  function(){return "<b>1 · BLOCK</b>When the ball turns <span style='color:#ff6b6b'>red</span> it's coming for you. Press <kbd>"+tutKey("block")+"</kbd> just before it touches you.";},
+  function(){return "<b>2 · A MISS</b>Now let one through — don't press anything. See what happens.";},
+  function(){return "<b>3 · YOUR ABILITY</b>Every fighter has one. Press <kbd>"+tutKey("ability")+"</kbd> to use it.";},
+  function(){return "<b>YOU'RE READY</b>Blocks send the ball back, a miss knocks you out, and abilities turn rallies. Have fun!";}
+];
+function tutBox(){
+  var el=$("tutBox");if(el)return el;
+  el=document.createElement("div");el.id="tutBox";el.className="hide";
+  el.innerHTML="<div id='tutDots'></div><div id='tutText'></div><div id='tutBtns'></div>";
+  (document.getElementById("ui")||document.body).appendChild(el);
+  return el;
+}
+function tutPaint(){
+  var el=tutBox();el.classList.toggle("hide",!TUT.on);
+  if(!TUT.on)return;
+  var d="";for(var i=0;i<3;i++)d+="<i class='"+(i<TUT.step?"done":i===TUT.step?"now":"")+"'></i>";
+  $("tutDots").innerHTML=d;
+  $("tutText").innerHTML=TUT_STEPS[Math.min(TUT.step,3)]();
+  var b=$("tutBtns");b.innerHTML="";
+  function btn(t,cls,fn){var x=document.createElement("button");x.className="big sm "+(cls||"");x.textContent=t;x.addEventListener("click",fn);b.appendChild(x);}
+  if(TUT.step<3)btn("SKIP TUTORIAL","",function(){tutEnd(false);});
+  else{btn("PLAY A MATCH","gold",function(){tutEnd(true);});btn("BACK TO LOBBY","",function(){tutEnd(false);});}
+}
+function tutStart(){
+  riftAbort();
+  NET.matchSeq=(NET.matchSeq||0)+1;
+  MODE=copyMode(TUTMODE);RANKF=0;
+  buildArena(mapById("sky"));
+  venueKind=null;
+  if(showcase){scene.remove(showcase.mesh);showcase=null;}
+  clearFighters();clearBalls();
+  venue.visible=false;arena.visible=true;
+  slowmoT=0;run={coins:0,at:Date.now()};hudC={};stopSpectating();
+  paused=false;$("pause").classList.add("hide");
+  player=new Fighter({name:"YOU",isPlayer:true,x:0,z:ARENA_R*0.32,team:0,sword:eqBlade(),ability:"dash",skinDef:skinById(SAVE.eqSkin)});
+  fighters.push(player);
+  var dummy=new Fighter({name:"Training Dummy",x:0,z:-ARENA_R*0.32,team:1,sword:"trainer",ability:"dash",skill:0.999,react:0.05,
+    skinDef:{body:0xd8b070,limb:0x6a4a2a,skin:0xe8d0a0,glow:0}});
+  dummy.isBot=true;dummy.botIndex=0;dummy.tutDummy=true;fighters.push(dummy);
+  var bb=new Ball();bb.speed=BALL_BASE*MODE.speed;bb.mult=1;bb.judged=0;balls.push(bb);
+  camYaw=Math.PI;camPitch=-0.14;camDist=prefCamDist();
+  camLook.set(player.pos.x,player.y+2.6,player.pos.z);
+  STATE="countdown";countdown=2.2;gameT=0;
+  showScreen(null);$("ui").classList.add("on");
+  $("ui").classList.remove("venuemode");
+  $("lobbyBar").classList.remove("on");$("venueHud").classList.remove("on");
+  $("slots").style.display="";
+  $("rankhud").style.display="flex";$("rankhudIcon").innerHTML="";$("rankhudName").textContent="TUTORIAL · NO REWARDS";
+  _aliveShown=-1;updateSlotIcons();setAlive();
+  TUT.on=true;TUT.step=0;TUT.wait=0;TUT.parries=0;
+  tutPaint();
+}
+function tutNext(){TUT.step++;TUT.wait=0;sfx("rank");tutPaint();}
+// what the player just did, as the tutorial sees it
+function tutEvent(k){
+  if(!TUT.on||TUT.wait>0)return;
+  if(k==="parry"){
+    if(TUT.step===0){flashWarn("NICE BLOCK!",1.0,"#6bffb0");TUT.wait=1.2;TUT.after=tutNext;}
+    else if(TUT.step===1)flashWarn("THAT WAS A BLOCK — LET ONE THROUGH",1.4,"#ffd23f");
+  }
+  if(k==="ability"&&TUT.step===2){flashWarn("THAT'S YOUR ABILITY!",1.0,"#6bffb0");TUT.wait=1.4;TUT.after=function(){tutNext();SAVE.tutDone=true;writeSave();};}
+}
+/* the ball reached somebody in the tutorial: the dummy always sends it back;
+   you are never really knocked out, only shown what a miss would do */
+function tutHit(b,f){
+  if(!MODE||!MODE.tut)return false;
+  if(f.tutDummy){deflect(b,f,false);return true;}
+  if(!f.isPlayer)return false;
+  flashVig();sfx("ko");
+  if(TUT.step===1&&TUT.wait<=0){
+    flashWarn("KNOCKED OUT",1.6,"#ff3ca8");
+    feed("A missed block knocks you out — in a real match that's your round over","ko");
+    TUT.wait=2.2;TUT.after=tutNext;
+  } else flashWarn("MISSED — BLOCK A LITTLE EARLIER",1.2,"#ff6b6b");
+  burst(f.pos.x,f.y+2,f.pos.z,24,9,0xff3ca8,1.4,.6,-4);
+  resetBall(b,1.4);
+  return true;
+}
+function tutTick(dt){
+  if(!TUT.on)return;
+  if(TUT.wait>0){TUT.wait-=dt;if(TUT.wait<=0&&TUT.after){var a=TUT.after;TUT.after=null;a();}}
+}
+function tutEnd(play){
+  var was=TUT.on;TUT.on=false;tutPaint();
+  if(!was)return;
+  SAVE.tutDone=true;SAVE.tutAsked=true;writeSave();
+  clearFighters();clearBalls();
+  $("ui").classList.remove("on");
+  enterLobby();
+  if(play){buildModeCards();showScreen("modes");}
+}
+// a first visit: offer it once
+function tutOffer(){
+  if(SAVE.tutDone||SAVE.tutAsked||(SAVE.games|0)>0||document.querySelector(".giftpop"))return;
+  SAVE.tutAsked=true;writeSave();
+  var el=document.createElement("div");el.className="giftpop";el.setAttribute("data-modal","1");
+  el.innerHTML="<div class='gpcard'><div class='gpribbon'>NEW HERE?</div><div class='gpnote' style='font-style:normal;margin-top:0'>A one-minute tutorial: block the ball, see what a miss costs, use your ability. No rewards, no ranked — replay it any time from How to Play.</div>"+
+    "<div class='gpbtns'><button class='big gold' id='tutGo'>PLAY TUTORIAL</button><button class='big' id='tutNo'>SKIP</button></div></div>";
+  document.body.appendChild(el);
+  el.querySelector("#tutGo").addEventListener("click",function(){el.remove();tutStart();});
+  el.querySelector("#tutNo").addEventListener("click",function(){el.remove();});
+}
 
 /* ---------------- networked matches ----------------
    The host's browser is authoritative: it runs the ball, the bots, hit
@@ -19311,6 +19431,7 @@ function frameStep(dt){
     }
     riftTick(worldDt,gameT);
     if(BOSS.on)bossTick(worldDt);
+    if(TUT.on)tutTick(worldDt);
     if(NET.on)netTick(dt);
     else if(LIVE.n)liveTick(dt);
     // sweep dead decoys out
@@ -19724,6 +19845,9 @@ $("rkPlay2").addEventListener("click",function(){
   if(econOn()&&serverBase())soloServerStart("sranked2");else startMatch("ranked2");
 });
 $("howBack").addEventListener("click",function(){backToVenue();});
+(function(){var w=document.querySelector("#howto .keys");if(!w||!w.parentNode)return;
+  var b=document.createElement("button");b.className="big gold";b.id="howTut";b.textContent="PLAY THE TUTORIAL";b.style.margin="12px auto 0";b.style.display="block";
+  b.addEventListener("click",function(){showScreen(null);tutStart();});w.parentNode.insertBefore(b,w.nextSibling);})();
 $("updGo").addEventListener("click",function(){
   SAVE.seenVersion=VERSION;writeSave();
   enterLobby();

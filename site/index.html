@@ -363,6 +363,47 @@ input[type=range]{accent-color:#3dbb22;cursor:pointer}
 #speedhud{left:50%;top:10px;transform:translateX(-50%);padding:5px 16px;flex-direction:column;gap:2px}
 #speedhud b{font-size:28px;color:#ffb3ec}
 #rankhud{left:14px!important;top:66px!important}
+/* ---- phones: the lobby buttons fold into a MENU button ----
+   Collapsed by default so the lobby can be seen; opened, they sit in a
+   compact panel clear of the joystick and the BLOCK / ABILITY buttons. Every
+   label is the short one, so nothing is clipped. */
+#navTog{display:none;position:absolute;z-index:8;width:52px;height:52px;border-radius:12px;border:3px solid var(--nv);cursor:pointer;color:#fff;
+  background:linear-gradient(180deg,#5fc0ff,#2677e8);box-shadow:inset 0 3px 0 rgba(255,255,255,.4),0 4px 0 var(--nv);font:inherit;font-weight:800;font-size:9.5px;letter-spacing:.06em;padding:0}
+#navTog i{display:block;width:22px;height:3px;margin:3px auto;border-radius:2px;background:#fff;font-style:normal}
+#navTog b{display:block;margin-top:3px}
+#navTog .dot{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:#ff3ca8;border:2px solid var(--nv);display:none}
+#navTog.ping .dot{display:block}
+@media (max-width:520px),(max-height:520px){
+  #ui.venuemode #navTog{display:block}
+  #lobbyBar.on{display:none}
+  body.navOpen #lobbyBar.on{display:grid;padding:8px;border-radius:14px;background:rgba(8,14,40,.82);border:3px solid var(--nv);z-index:9}
+  #lobbyBar #lbPass,#lobbyBar #lbLogin{grid-column:auto;width:58px;height:58px;flex-direction:column;justify-content:center;padding:0}
+  #lobbyBar .lbtn .lbw{display:none!important}#lobbyBar .lbtn .lbl{display:block!important;position:absolute;left:0;right:0;bottom:4px;font-size:9.5px;text-align:center}
+  #lobbyBar #lbPass .lbi,#lobbyBar #lbLogin .lbi{height:26px;margin:-12px 0 0}#lobbyBar #lbPass .lbi svg,#lobbyBar #lbLogin .lbi svg{width:26px;height:26px}
+}
+@media (max-width:520px){
+  #ui .bossHud,body.touch #ui .bossHud{top:112px;width:92vw}
+  #tutBox,body.touch #tutBox{top:112px}
+  #navTog{top:62px;right:10px}
+  #lobbyBar{grid-template-columns:repeat(3,58px)!important;top:122px!important;right:10px!important;left:auto!important}
+  #notes{top:122px}
+  body.navOpen #notes{top:auto;bottom:300px}
+}
+@media (max-height:520px){
+  #navTog{top:54px;left:10px}
+  #lobbyBar{grid-template-columns:repeat(5,52px)!important;top:54px!important;left:70px!important;right:auto!important}
+  #lobbyBar #lbPass,#lobbyBar #lbLogin{width:52px;height:52px}
+}
+
+#tutBox{position:absolute;left:50%;top:76px;transform:translateX(-50%);width:min(480px,86vw);z-index:7;padding:12px 16px;border-radius:14px;border:3px solid var(--nv);
+  background:linear-gradient(180deg,#2a4aa8,#18307a);color:#fff;text-align:center;box-shadow:0 5px 0 rgba(6,14,44,.7)}
+#tutBox.hide{display:none}
+#tutText{font-size:15px;line-height:1.45}#tutText b{display:block;font-size:13px;letter-spacing:.14em;color:var(--y1);margin-bottom:3px}
+#tutText kbd{display:inline-block;padding:1px 7px;border-radius:6px;background:#fff;color:#0b1942;font-weight:800;font-family:inherit}
+#tutDots{display:flex;gap:6px;justify-content:center;margin-bottom:6px}#tutDots i{width:26px;height:6px;border-radius:3px;background:#0b1942}
+#tutDots i.now{background:#ffd23f}#tutDots i.done{background:#4ad991}
+#tutBtns{display:flex;gap:8px;justify-content:center;margin-top:8px}#tutBtns .big.sm{font-size:12px;padding:6px 12px}
+body.touch #tutBox{top:64px;padding:8px 12px}body.touch #tutText{font-size:13.5px}
 /* social panel */
 .socwnd{max-height:92vh}
 .socbody{max-height:70vh;overflow:auto;-webkit-overflow-scrolling:touch;padding:2px 4px 6px}
@@ -1076,6 +1117,7 @@ button.chip:active{transform:translateY(2px)}
   </div>
   <div id="zonePrompt"><b id="zoneKey">F</b><span id="zoneLabel"></span></div>
   <div id="tauntWheel" class="hide"><div class="twc">EMOTE<span>let go to send</span></div></div>
+  <button id="navTog" aria-label="Menu"><i></i><i></i><i></i><b>MENU</b><span class="dot"></span></button>
   <div id="lobbyBar">
     <button class="lbtn" id="lbPass"><span class="lbi"><svg viewBox='0 0 40 40'><path d='M20 9c1-4 4-6 7-6' stroke='#2e6a1a' stroke-width='3' fill='none' stroke-linecap='round'/><ellipse cx='13' cy='23' rx='9' ry='12' fill='#e8650c' stroke='#0b1942' stroke-width='2.4'/><ellipse cx='27' cy='23' rx='9' ry='12' fill='#e8650c' stroke='#0b1942' stroke-width='2.4'/><ellipse cx='20' cy='23' rx='9' ry='13' fill='#ff8a1e' stroke='#0b1942' stroke-width='2.4'/><path d='M12 19l4 4h-5zM28 19l-4 4h5z' fill='#ffe25a'/><path d='M11 28c3 3 6 4 9 4s6-1 9-4l-2 1-2-2-2 2-3-2-3 2-2-2-2 2z' fill='#ffe25a'/></svg></span><span class="lbl">PASS</span><span class="lbw">HALLOWEEN<br>PASS</span><span class="lbn" id="lbPassLv">0</span></button>
     <button class="lbtn" id="lbLogin"><span class="lbi"><svg viewBox='0 0 40 40'><rect x='5' y='8' width='30' height='27' rx='4' fill='#fff' stroke='#0b1942' stroke-width='2.6'/><rect x='5' y='8' width='30' height='8' rx='3' fill='#ff5a3a' stroke='#0b1942' stroke-width='2.6'/><path d='M12 5v7M28 5v7' stroke='#0b1942' stroke-width='3' stroke-linecap='round'/><path d='M13 25l5 4 9-9' stroke='#35a81d' stroke-width='3.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg></span><span class="lbl">LOGIN</span><span class="lbw">DAILY<br>REWARDS</span><span class="lbn" id="lbLoginN">0</span></button>
@@ -5022,6 +5064,7 @@ function enterLobby(){
   $("lobbyBar").classList.add("on");
   $("slots").style.display="none";
   updateChips();refreshCoins();updateLobbyBar();
+  setTimeout(function(){if(STATE==="venue"&&!NET.srv)tutOffer();},1800);
   $("vRank").textContent=currentRank().name.toUpperCase();
   $("vRankIco").innerHTML=rankIcon(currentRank(),28);
   refreshSaveWarn();
@@ -8602,7 +8645,8 @@ function deflect(b,by,perfect,timed){
   // Ricky's .9: the block is a shot, and the tracer goes where the ball is going
   if(by.swordDef&&by.swordDef.swing==="gunshot"&&b.target)gunTracer(by,b.target.pos.x,b.target.y+AIM_Y,b.target.pos.z);
   if(NET.on&&NET.isHost)netBroadcastBall();
-  if(by.isPlayer){
+  if(MODE.tut&&by.isPlayer){tutEvent("parry");if(!quick)feed(perfect?"PERFECT":"Blocked",perfect?"gold":"good");}
+  else if(by.isPlayer){
     addCoins(gained);run.coins+=gained;
     if(!quick)feed(perfect?("PERFECT  +"+gained):("Blocked  +"+gained),perfect?"gold":"good");
     if(perfect&&!quick)flashWarn("PERFECT",0.45,"#ffd23f");
@@ -8619,6 +8663,7 @@ function ballHits(b,f,forced){
   }
   // a player on the network: did they press in time? If we have not heard yet,
   // give them one round trip to say so
+  if(MODE.tut&&tutHit(b,f))return;
   if(!forced&&NET.on&&NET.isHost&&f.isRemote&&f.alive){
     var cNow=netNow(),use=netPressFor(f,cNow);
     if(use){use.used=true;f.blockVis=0;f.blockFlash=1;acLead(f,cNow-use.t,b.age);deflect(b,f,cNow-use.t<=BLOCK.perfect*1000+40,true);return;}
@@ -14870,6 +14915,7 @@ function useAbility(f,remoteCast){
   if(a.passive||f.abilCd>0||!f.alive||f.stun>0||f.frozen>0)return;
   if(lastTwoBan(a)&&!remoteCast){if(f.isPlayer)flashWarn(a.name.toUpperCase()+" IS OFF \u2014 LAST TWO",0.9,"#ff6b6b");return;}
   f.abilCd=a.cd;
+  if(MODE.tut&&f.isPlayer)tutEvent("ability");
   // the server's movement check: whoever casts may move fast for a moment
   if(NET.on&&NET.isHost&&NET.srv)mvGrant(f);
   // Jordan was a free win one on one (ranked 1v1 above all): it comes round far
@@ -15944,6 +15990,7 @@ function disposeTree(root){
 }
 function clearFighters(){
   if(BOSS.on||BOSS.model)bossStop();
+  if(TUT.on){TUT.on=false;tutPaint();}
   v4Clear();
   for(var si=0;si<fighters.length;si++)dropShell(fighters[si]);
   if(typeof clearSlashes==="function")clearSlashes();
@@ -17355,6 +17402,121 @@ setInterval(function(){if(NET.srv)return;
     (function(e){setTimeout(function(){if(e.parentNode)e.parentNode.removeChild(e);},300);})(n.el);}
   if(ch||NOTES.list.length)notesLay();
 },500);
+
+/* ============================================================
+   THE TUTORIAL -- a minute, skippable, and replayable from How to Play
+   ------------------------------------------------------------
+   A slow ball and a training dummy that always sends it back. Three things
+   to do: block it, let one through (and see what that costs), use your
+   ability. Nothing is paid or counted: no coins, no RP, no stats, no ranked.
+   ============================================================ */
+var TUTMODE={id:"tutorial",name:"Tutorial",bots:1,speed:0.55,ramp:1.0,window:0.40,mult:0,minFlight:1.2,rp:0,tut:true,
+  desc:"Learn to block, see what a miss costs, and use your ability."};
+var TUT={on:false,step:0,wait:0,parries:0};
+function tutKey(a){return (lastTouch||touchMode)?(a==="block"?"the BLOCK button":"the ability button"):keyName(bindKey(a))+(a==="block"?" (or click)":"");}
+var TUT_STEPS=[
+  function(){return "<b>1 · BLOCK</b>When the ball turns <span style='color:#ff6b6b'>red</span> it's coming for you. Press <kbd>"+tutKey("block")+"</kbd> just before it touches you.";},
+  function(){return "<b>2 · A MISS</b>Now let one through — don't press anything. See what happens.";},
+  function(){return "<b>3 · YOUR ABILITY</b>Every fighter has one. Press <kbd>"+tutKey("ability")+"</kbd> to use it.";},
+  function(){return "<b>YOU'RE READY</b>Blocks send the ball back, a miss knocks you out, and abilities turn rallies. Have fun!";}
+];
+function tutBox(){
+  var el=$("tutBox");if(el)return el;
+  el=document.createElement("div");el.id="tutBox";el.className="hide";
+  el.innerHTML="<div id='tutDots'></div><div id='tutText'></div><div id='tutBtns'></div>";
+  (document.getElementById("ui")||document.body).appendChild(el);
+  return el;
+}
+function tutPaint(){
+  var el=tutBox();el.classList.toggle("hide",!TUT.on);
+  if(!TUT.on)return;
+  var d="";for(var i=0;i<3;i++)d+="<i class='"+(i<TUT.step?"done":i===TUT.step?"now":"")+"'></i>";
+  $("tutDots").innerHTML=d;
+  $("tutText").innerHTML=TUT_STEPS[Math.min(TUT.step,3)]();
+  var b=$("tutBtns");b.innerHTML="";
+  function btn(t,cls,fn){var x=document.createElement("button");x.className="big sm "+(cls||"");x.textContent=t;x.addEventListener("click",fn);b.appendChild(x);}
+  if(TUT.step<3)btn("SKIP TUTORIAL","",function(){tutEnd(false);});
+  else{btn("PLAY A MATCH","gold",function(){tutEnd(true);});btn("BACK TO LOBBY","",function(){tutEnd(false);});}
+}
+function tutStart(){
+  riftAbort();
+  NET.matchSeq=(NET.matchSeq||0)+1;
+  MODE=copyMode(TUTMODE);RANKF=0;
+  buildArena(mapById("sky"));
+  venueKind=null;
+  if(showcase){scene.remove(showcase.mesh);showcase=null;}
+  clearFighters();clearBalls();
+  venue.visible=false;arena.visible=true;
+  slowmoT=0;run={coins:0,at:Date.now()};hudC={};stopSpectating();
+  paused=false;$("pause").classList.add("hide");
+  player=new Fighter({name:"YOU",isPlayer:true,x:0,z:ARENA_R*0.32,team:0,sword:eqBlade(),ability:"dash",skinDef:skinById(SAVE.eqSkin)});
+  fighters.push(player);
+  var dummy=new Fighter({name:"Training Dummy",x:0,z:-ARENA_R*0.32,team:1,sword:"trainer",ability:"dash",skill:0.999,react:0.05,
+    skinDef:{body:0xd8b070,limb:0x6a4a2a,skin:0xe8d0a0,glow:0}});
+  dummy.isBot=true;dummy.botIndex=0;dummy.tutDummy=true;fighters.push(dummy);
+  var bb=new Ball();bb.speed=BALL_BASE*MODE.speed;bb.mult=1;bb.judged=0;balls.push(bb);
+  camYaw=Math.PI;camPitch=-0.14;camDist=prefCamDist();
+  camLook.set(player.pos.x,player.y+2.6,player.pos.z);
+  STATE="countdown";countdown=2.2;gameT=0;
+  showScreen(null);$("ui").classList.add("on");
+  $("ui").classList.remove("venuemode");
+  $("lobbyBar").classList.remove("on");$("venueHud").classList.remove("on");
+  $("slots").style.display="";
+  $("rankhud").style.display="flex";$("rankhudIcon").innerHTML="";$("rankhudName").textContent="TUTORIAL · NO REWARDS";
+  _aliveShown=-1;updateSlotIcons();setAlive();
+  TUT.on=true;TUT.step=0;TUT.wait=0;TUT.parries=0;
+  tutPaint();
+}
+function tutNext(){TUT.step++;TUT.wait=0;sfx("rank");tutPaint();}
+// what the player just did, as the tutorial sees it
+function tutEvent(k){
+  if(!TUT.on||TUT.wait>0)return;
+  if(k==="parry"){
+    if(TUT.step===0){flashWarn("NICE BLOCK!",1.0,"#6bffb0");TUT.wait=1.2;TUT.after=tutNext;}
+    else if(TUT.step===1)flashWarn("THAT WAS A BLOCK — LET ONE THROUGH",1.4,"#ffd23f");
+  }
+  if(k==="ability"&&TUT.step===2){flashWarn("THAT'S YOUR ABILITY!",1.0,"#6bffb0");TUT.wait=1.4;TUT.after=function(){tutNext();SAVE.tutDone=true;writeSave();};}
+}
+/* the ball reached somebody in the tutorial: the dummy always sends it back;
+   you are never really knocked out, only shown what a miss would do */
+function tutHit(b,f){
+  if(!MODE||!MODE.tut)return false;
+  if(f.tutDummy){deflect(b,f,false);return true;}
+  if(!f.isPlayer)return false;
+  flashVig();sfx("ko");
+  if(TUT.step===1&&TUT.wait<=0){
+    flashWarn("KNOCKED OUT",1.6,"#ff3ca8");
+    feed("A missed block knocks you out — in a real match that's your round over","ko");
+    TUT.wait=2.2;TUT.after=tutNext;
+  } else flashWarn("MISSED — BLOCK A LITTLE EARLIER",1.2,"#ff6b6b");
+  burst(f.pos.x,f.y+2,f.pos.z,24,9,0xff3ca8,1.4,.6,-4);
+  resetBall(b,1.4);
+  return true;
+}
+function tutTick(dt){
+  if(!TUT.on)return;
+  if(TUT.wait>0){TUT.wait-=dt;if(TUT.wait<=0&&TUT.after){var a=TUT.after;TUT.after=null;a();}}
+}
+function tutEnd(play){
+  var was=TUT.on;TUT.on=false;tutPaint();
+  if(!was)return;
+  SAVE.tutDone=true;SAVE.tutAsked=true;writeSave();
+  clearFighters();clearBalls();
+  $("ui").classList.remove("on");
+  enterLobby();
+  if(play){buildModeCards();showScreen("modes");}
+}
+// a first visit: offer it once
+function tutOffer(){
+  if(SAVE.tutDone||SAVE.tutAsked||(SAVE.games|0)>0||document.querySelector(".giftpop"))return;
+  SAVE.tutAsked=true;writeSave();
+  var el=document.createElement("div");el.className="giftpop";el.setAttribute("data-modal","1");
+  el.innerHTML="<div class='gpcard'><div class='gpribbon'>NEW HERE?</div><div class='gpnote' style='font-style:normal;margin-top:0'>A one-minute tutorial: block the ball, see what a miss costs, use your ability. No rewards, no ranked — replay it any time from How to Play.</div>"+
+    "<div class='gpbtns'><button class='big gold' id='tutGo'>PLAY TUTORIAL</button><button class='big' id='tutNo'>SKIP</button></div></div>";
+  document.body.appendChild(el);
+  el.querySelector("#tutGo").addEventListener("click",function(){el.remove();tutStart();});
+  el.querySelector("#tutNo").addEventListener("click",function(){el.remove();});
+}
 
 /* ---------------- networked matches ----------------
    The host's browser is authoritative: it runs the ball, the bots, hit
@@ -20990,7 +21152,7 @@ function frameStep(dt){
   gameT+=dt;
   slowmoT=Math.max(0,slowmoT-dt);
   var worldDt=slowmoT>0?dt*0.4:dt;
-  if(STATE==="playing"&&gameT>75&&!hudC.sudden&&!(MODE&&MODE.boss)){
+  if(STATE==="playing"&&gameT>75&&!hudC.sudden&&!(MODE&&(MODE.boss||MODE.tut))){
     hudC.sudden=true;flashWarn("SUDDEN DEATH",1.2,"#ff3ca8");
     feed("Sudden death \u2014 the parry window is closing","ko");
   }
@@ -21034,6 +21196,7 @@ function frameStep(dt){
     }
     riftTick(worldDt,gameT);
     if(BOSS.on)bossTick(worldDt);
+    if(TUT.on)tutTick(worldDt);
     if(NET.on)netTick(dt);
     else if(LIVE.n)liveTick(dt);
     // sweep dead decoys out
@@ -21328,6 +21491,21 @@ $("stdDark").addEventListener("click",function(){stdChoose("dark");});
 $("lockTog").addEventListener("click",function(){setShiftLock(!shiftLock);});
 $("lbSettings").addEventListener("click",function(){openSettings();});
 $("lbFriends").addEventListener("click",function(){socialOpen("friends");});
+/* the phone MENU: folds the lobby buttons away; a dot when something in there wants you */
+(function(){
+  var t=document.getElementById("navTog");if(!t)return;
+  t.addEventListener("click",function(e){e.stopPropagation();document.body.classList.toggle("navOpen");});
+  var bar=document.getElementById("lobbyBar");
+  if(bar)bar.addEventListener("click",function(e){if(e.target.closest&&e.target.closest(".lbtn"))document.body.classList.remove("navOpen");});
+  setInterval(function(){
+    if(NET.srv)return;
+    var f=document.getElementById("lbFriendsN"),l=document.getElementById("lbLoginN");
+    var ping=(f&&f.style.display!=="none")||(l&&l.offsetParent!==null&&l.textContent&&l.textContent!=="0");
+    t.classList.toggle("ping",!!ping);
+    if(STATE!=="venue")document.body.classList.remove("navOpen");
+  },700);
+})();
+
 $("pSettings").addEventListener("click",function(){openSettings();});
 $("touchTog").addEventListener("click",function(){
   forceTouch=(forceTouch===null)?true:(forceTouch===true?false:null);
@@ -21447,6 +21625,9 @@ $("rkPlay2").addEventListener("click",function(){
   if(econOn()&&serverBase())soloServerStart("sranked2");else startMatch("ranked2");
 });
 $("howBack").addEventListener("click",function(){backToVenue();});
+(function(){var w=document.querySelector("#howto .keys");if(!w||!w.parentNode)return;
+  var b=document.createElement("button");b.className="big gold";b.id="howTut";b.textContent="PLAY THE TUTORIAL";b.style.margin="12px auto 0";b.style.display="block";
+  b.addEventListener("click",function(){showScreen(null);tutStart();});w.parentNode.insertBefore(b,w.nextSibling);})();
 $("updGo").addEventListener("click",function(){
   SAVE.seenVersion=VERSION;writeSave();
   enterLobby();
