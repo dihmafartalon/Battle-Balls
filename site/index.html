@@ -1502,10 +1502,26 @@ button.chip:active{transform:translateY(2px)}
   <div class="stripes"></div>
   <div class="wnd updwrap">
     <div class="win-title gold">WHAT'S NEW</div>
-    <div class="updbadge">4.0</div>
-    <div class="updtitle">BATTLE BALLS <span>4.0</span></div>
-    <div class="updsub">Season 1, the GOD rank, Rodriga, and a whole lot of Halloween.</div>
+    <div class="updbadge">4.1</div>
+    <div class="updtitle">BATTLE BALLS <span>4.1</span></div>
+    <div class="updsub">Boss Rally, friends and parties, and a tutorial.</div>
     <div class="notes">
+      <div class="note new">
+        <h5>BOSS RALLY</h5>
+        <p>Team up, 1 to 4 of you, against <b>The Broken Champion</b>. One heart each, one ball: <b>five parries break his guard</b> and the fifth ball hits him. Every guard break revives a downed teammate. His returns start to <b>curve</b> in phase 2, and in phase 3 he fights back &mdash; watch the floor. Coins for every quarter of his health you take, plus a victory bonus. Find it in <b>Casual</b>, or pick it as a room's mode.</p>
+      </div>
+      <div class="note new">
+        <h5>FRIENDS, PARTIES &amp; MESSAGES</h5>
+        <p>Hit <b>FRIENDS</b> in the lobby. You have a tag (like <b>NAME#1234</b>) to share. Add friends, see who's online or in a match, message them, <b>invite them straight into your lobby</b>, or make a party of up to 6 and bring everyone in at once. Notifications pop up top right.</p>
+      </div>
+      <div class="note new">
+        <h5>TUTORIAL</h5>
+        <p>New to Battle Balls? A one-minute tutorial teaches the block, what a miss costs, and your ability. Replay it any time from <b>How to Play</b>.</p>
+      </div>
+      <div class="note new">
+        <h5>FAIRER &amp; SMOOTHER</h5>
+        <p>Ranked and online rewards are now <b>confirmed by the server</b> (and never lost if your connection drops). Popups no longer let you move or block behind them. The lobby draws about <b>half as much</b>, and Low quality is much lighter on iPads. On phones the lobby buttons fold into a <b>MENU</b>.</p>
+      </div>
       <div class="note new">
         <h5>PATCH: APEX, PB FETUS &amp; BALANCE</h5>
         <p><b>Apex</b> now reaches the new #1 the moment their win puts them there, and rides on the back. <b>PB Fetus</b> is now <b>ULTRA</b>, with a much bigger swing. <b>Ricky's .9</b> fires a finale on its last beat. <b>Divine Judgment</b>: 28s cooldown and a harder slam, and a parry now kills the slam's speed. <b>Dylan's Warts</b> buffs are much stronger. <b>Ascended</b> no longer drops when you swing.</p>
@@ -2551,7 +2567,7 @@ var STORE_OK=true,SAVEKEY="battleballs_v1",LAST_SAVE=0;
    save on the way out -- and before START that wrote the blank starting save
    over your real one. That is what "logged in, but everything is gone" was. */
 var SAVE_LOADED=false;
-var VERSION="4.0";
+var VERSION="4.1";
 // what an item is worth in yen, by rarity
 var SELL={common:15,rare:40,epic:85,legendary:190,mythic:465};
 function itemValue(it){

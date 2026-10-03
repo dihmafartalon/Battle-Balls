@@ -1496,7 +1496,7 @@ export default {
    told apart by the name they play under and the rooms they were in. */
 const KICK_MS = 10 * 60 * 1000;          // a kicked player is kept out of that room this long
 const DIR_ROOMS_KEPT = 60, DIR_ROOMS_PER_ACCOUNT = 12, DIR_FEED_KEPT = 200;
-const SERVER_VERSION = "2026-10-01b";
+const SERVER_VERSION = "2026-10-03a";
 const LB_SIZE = 10, LB_CACHE_MS = 30 * 1000, OWNERS_CACHE_MS = 3 * 60 * 1000;
 const LOBBY_TTL_MS = 90 * 1000, QUEUE_TTL_MS = 8 * 1000;
 // switched off until the admin page says otherwise

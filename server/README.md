@@ -132,3 +132,18 @@ exactly like a wrong one.
 left off), shown on the board in the lobby and on the Ranked screen. It only
 ever gives out in-game names and RP. It fills in as players sign in and play:
 an account shows up once it has RP and has been online since this update.
+
+## 4.1: Boss Rally, social, settlement
+
+- **Settlement.** Every server-run match (multiplayer, GOD, ranked 2v2, solo
+  ranked, Boss Rally) is paid by the room writing a record per player keyed by
+  match id; the account settles each id once. Undelivered records are retried
+  by the room's alarm. The game asks `/cloud` op `matchres` for its result.
+- **Social.** `/social` is a websocket to the account's `Hub`. Parties live in
+  `Party` objects. Tags are kept in the `Directory`. A lobby invite asks the
+  room (`room-social` ops) to confirm the inviter and hold a seat.
+- New bindings `HUB` and `PARTY` and migration `v4` are in `wrangler.toml`.
+- `npm test` runs the whole suite; `npm run build` regenerates the catalog and
+  the sim after editing `site/index.html`.
+
+See `RELEASE-4.1.md` in the repo root for setup and what was tested.
