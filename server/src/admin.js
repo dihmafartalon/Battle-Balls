@@ -29,7 +29,7 @@ export async function specCheck(key, code, tok) {
   const want = await specSig(key, code, m[1], m[2]);
   return same(want, m[3]) ? { watch: m[2] } : null;
 }
-export const GAME_URL = "https://battleballs.pages.dev/";
+export const GAME_URL = "https://battleballs.org/";
 
 export async function handleAdmin(request, env, H) {
   if (request.method !== "POST") return H.jsonRes({ error: "POST only" }, 405);
