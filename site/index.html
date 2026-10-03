@@ -17563,8 +17563,8 @@ function buildLimited(){
 var RARITY_ORDER={secret:-1.5,ultra:-1,halloween:-.5,rank:0,mythic:1,legendary:2,epic:3,rare:4,common:5};
 function byRarityDesc(list){
   return list.slice().sort(function(a,b){
-    var ra=a.rarity==='secret'?-1.5:a.ultra?-1:(a.rank||a.code)?0:(RARITY_ORDER[a.rarity]===undefined?5:RARITY_ORDER[a.rarity]);
-    var rb=b.rarity==='secret'?-1.5:b.ultra?-1:(b.rank||b.code)?0:(RARITY_ORDER[b.rarity]===undefined?5:RARITY_ORDER[b.rarity]);
+    var ra=isSecretTier(a)?-1.5:a.ultra?-1:(a.rank||a.code)?0:(RARITY_ORDER[a.rarity]===undefined?5:RARITY_ORDER[a.rarity]);
+    var rb=isSecretTier(b)?-1.5:b.ultra?-1:(b.rank||b.code)?0:(RARITY_ORDER[b.rarity]===undefined?5:RARITY_ORDER[b.rarity]);
     if(ra!==rb)return ra-rb;
     var pa=a.price<0?1e9:(a.price||0), pb=b.price<0?1e9:(b.price||0);
     if(pa!==pb)return pb-pa;
@@ -17803,10 +17803,12 @@ var UI_ICO={"LOCK": "<svg viewBox='0 0 20 20'><path d='M6 9V6.5a4 4 0 0 1 8 0V9'
 /* ---- tiles and the detail panel: one look for every item grid ---- */
 var LIMSEL=null;
 var pickSel={sword:null,abil:null,skin:null};
-function itemTier(it){return (it.rank||it.rarity==="rank")?"rank":(it.rarity||"common");}
+// dev items and secret items are one tier: SECRET
+function isSecretTier(it){return it&&(it.rarity==="secret"||it.rank==="dev");}
+function itemTier(it){return isSecretTier(it)?"secret":(it.rank||it.rarity==="rank")?"rank":(it.rarity||"common");}
 function tierLabel(it){
   if(it.rarity==="unreleased")return "UNRELEASED";
-  if(it.rarity==="secret")return "SECRET";
+  if(isSecretTier(it))return "SECRET";
   if(it.top1)return "#1 ONLY";
   if(it.ultra)return "ULTRA";
   if(it.season===0)return "SEASON 0";
@@ -17877,7 +17879,7 @@ function renderPicker(fresh){
   // everything is listed, owned or not: what you do not have shows locked
   // (a pack's secret bonus is the exception: not listed until it is yours)
   // (and nothing unreleased shows to anyone who has not been given it)
-  var list=d.list.filter(function(it){if((it.rarity==="unreleased"||it.rarity==="secret")&&!d.own[it.id])return false;
+  var list=d.list.filter(function(it){if((it.rarity==="unreleased"||isSecretTier(it))&&!d.own[it.id])return false;
     if(it.secret&&!d.own[it.id]){var pk=packOf(tab,it.id);return !(pk&&packSecret(PACKS[pk],tab,it.id));}return true;});
   var owned=list.filter(function(it){return d.own[it.id];});
   list=owned.concat(list.filter(function(it){return !d.own[it.id];}));
