@@ -18430,6 +18430,8 @@ function inputReset(){
   try{joyId=null;lookId=null;joyEl.classList.remove("act");}catch(e){}
   dragging=false;rightLook=false;
   try{if(tauntWheelOpen())closeTauntWheel();}catch(e){}
+  // in the lobby, a popup stops you where you stand rather than letting you coast
+  try{if(STATE==="venue"&&player&&!player.isRemote){player.vel.x=0;player.vel.z=0;}}catch(e){}
   try{var dn=document.querySelectorAll("#touch .down");for(var i=0;i<dn.length;i++)dn[i].classList.remove("down");}catch(e){}
   try{if(!shiftLock&&pointerLocked())unlockPointer();refreshCursor();}catch(e){}
 }

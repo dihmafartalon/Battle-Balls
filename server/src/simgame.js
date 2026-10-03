@@ -16665,6 +16665,8 @@ function inputReset(){
   try{joyId=null;lookId=null;joyEl.classList.remove("act");}catch(e){}
   dragging=false;rightLook=false;
   try{if(tauntWheelOpen())closeTauntWheel();}catch(e){}
+  // in the lobby, a popup stops you where you stand rather than letting you coast
+  try{if(STATE==="venue"&&player&&!player.isRemote){player.vel.x=0;player.vel.z=0;}}catch(e){}
   try{var dn=document.querySelectorAll("#touch .down");for(var i=0;i<dn.length;i++)dn[i].classList.remove("down");}catch(e){}
   try{if(!shiftLock&&pointerLocked())unlockPointer();refreshCursor();}catch(e){}
 }
@@ -19387,7 +19389,7 @@ function frameStep(dt){
   gameT+=dt;
   slowmoT=Math.max(0,slowmoT-dt);
   var worldDt=slowmoT>0?dt*0.4:dt;
-  if(STATE==="playing"&&gameT>75&&!hudC.sudden&&!(MODE&&MODE.boss)){
+  if(STATE==="playing"&&gameT>75&&!hudC.sudden&&!(MODE&&(MODE.boss||MODE.tut))){
     hudC.sudden=true;flashWarn("SUDDEN DEATH",1.2,"#ff3ca8");
     feed("Sudden death \u2014 the parry window is closing","ko");
   }
@@ -19726,6 +19728,21 @@ $("stdDark").addEventListener("click",function(){stdChoose("dark");});
 $("lockTog").addEventListener("click",function(){setShiftLock(!shiftLock);});
 $("lbSettings").addEventListener("click",function(){openSettings();});
 $("lbFriends").addEventListener("click",function(){socialOpen("friends");});
+/* the phone MENU: folds the lobby buttons away; a dot when something in there wants you */
+(function(){
+  var t=document.getElementById("navTog");if(!t)return;
+  t.addEventListener("click",function(e){e.stopPropagation();document.body.classList.toggle("navOpen");});
+  var bar=document.getElementById("lobbyBar");
+  if(bar)bar.addEventListener("click",function(e){if(e.target.closest&&e.target.closest(".lbtn"))document.body.classList.remove("navOpen");});
+  setInterval(function(){
+    if(NET.srv)return;
+    var f=document.getElementById("lbFriendsN"),l=document.getElementById("lbLoginN");
+    var ping=(f&&f.style.display!=="none")||(l&&l.offsetParent!==null&&l.textContent&&l.textContent!=="0");
+    t.classList.toggle("ping",!!ping);
+    if(STATE!=="venue")document.body.classList.remove("navOpen");
+  },700);
+})();
+
 $("pSettings").addEventListener("click",function(){openSettings();});
 $("touchTog").addEventListener("click",function(){
   forceTouch=(forceTouch===null)?true:(forceTouch===true?false:null);
