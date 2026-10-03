@@ -15548,7 +15548,7 @@ var RARITY={common:{w:59,c:0x9aa3ad,n:"COMMON"},rare:{w:24.6,c:0x5fd8ff,n:"RARE"
   ultra:{w:0,c:0xd0102a,n:"ULTRA"},            // never rolled: ULTRA items only come from codes
   halloween:{w:0,c:0xff7a12,n:"HALLOWEEN"},    // never rolled: only from the Halloween Pass
   unreleased:{w:0,c:0x9fdcff,n:"UNRELEASED"},  // never rolled: test items before they launch
-  secret:{w:0,c:0x8a3cff,n:"SECRET"}};          // never rolled, never sold, never shown until it's yours // never rolled: test items before they launch
+  secret:{w:0,c:0x8a3cff,n:"UNRELEASED"}};     // dev items, Dev2: never rolled, sold or shown until yours          // never rolled, never sold, never shown until it's yours // never rolled: test items before they launch
 var RARORDER=["mythic","legendary","epic","rare","common"];
 var shopTab="sword";
 /* ---- the Limited shop ----
@@ -16148,12 +16148,12 @@ var UI_ICO={"LOCK": "<svg viewBox='0 0 20 20'><path d='M6 9V6.5a4 4 0 0 1 8 0V9'
 /* ---- tiles and the detail panel: one look for every item grid ---- */
 var LIMSEL=null;
 var pickSel={sword:null,abil:null,skin:null};
-// dev items and secret items are one tier: SECRET
-function isSecretTier(it){return it&&(it.rarity==="secret"||it.rank==="dev");}
+// dev items, secret items and unreleased ones are one tier, shown as UNRELEASED
+function isSecretTier(it){return it&&(it.rarity==="secret"||it.rarity==="unreleased"||it.rank==="dev");}
 function itemTier(it){return isSecretTier(it)?"secret":(it.rank||it.rarity==="rank")?"rank":(it.rarity||"common");}
 function tierLabel(it){
   if(it.rarity==="unreleased")return "UNRELEASED";
-  if(isSecretTier(it))return "SECRET";
+  if(isSecretTier(it))return "UNRELEASED";
   if(it.top1)return "#1 ONLY";
   if(it.ultra)return "ULTRA";
   if(it.season===0)return "SEASON 0";
