@@ -87,6 +87,8 @@ modes.mp = { mult: 3.2, rp: 0, ranked: 0, teams: 0, bots: 0 };
 modes.mpranked2 = { mult: 1.6, rp: 1, ranked: 1, teams: 1, bots: 2 };
 // GOD: ranked 1v1 against another player, from the GOD queue
 modes.god1 = { mult: 1.8, rp: 1, ranked: 1, teams: 0, bots: 0, pvp: 1 };
+// Boss Rally: co-op against the boss; pays for the boss only (econ BOSS), never RP
+modes.boss = { mult: 1, rp: 0, ranked: 0, teams: 1, bots: 0 };
 if (G.MODES_NET_EXTRA) Object.assign(modes, G.MODES_NET_EXTRA);
 
 const CAT = {

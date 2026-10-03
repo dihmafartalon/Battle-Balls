@@ -57,7 +57,7 @@ export function buildRoster(players) {
       .slice()
       .sort((a, b) => a.joinedAt - b.joinedAt || (a.id < b.id ? -1 : 1))
       .map(p => ({ id: p.id, name: p.name, ready: !!p.ready,
-                   sword: p.sword, skin: p.skin, abil: p.abil }))
+                   sword: p.sword, skin: p.skin, abil: p.abil, babil: p.babil }))
   };
 }
 
@@ -73,7 +73,7 @@ const LEADER_ONLY = { setup:1 };
 const SIM_FEED = { state:1, parry:1, ability:1, swing:1, hold:1 };
 const SIM_PRIVATE = { parry:1, hold:1 };
 // what the match says, for everyone
-const SIM_OUT = { ball:1, botstate:1, hit:1, ability:1, spawn:1, parryok:1, swing:1 };
+const SIM_OUT = { ball:1, botstate:1, hit:1, ability:1, spawn:1, parryok:1, swing:1, boss:1 };
 
 // A public game is a public endpoint. Without these, one script can hold a
 // socket open and flood the room, and every relayed byte is billed to you.
@@ -116,7 +116,9 @@ export function routeMessage(msg, senderId, hostId) {      // hostId: the room's
       ready: typeof msg.ready === "boolean" ? msg.ready : undefined,
       sword: typeof msg.sword === "string" ? msg.sword.slice(0, 24) : undefined,
       skin:  typeof msg.skin  === "string" ? msg.skin.slice(0, 24) : undefined,
-      abil:  typeof msg.abil  === "string" ? msg.abil.slice(0, 24) : undefined
+      abil:  typeof msg.abil  === "string" ? msg.abil.slice(0, 24) : undefined,
+      // the ability picked for Boss Rally when the usual one sits it out (casting it is still ownership-checked)
+      babil: typeof msg.babil === "string" ? msg.babil.slice(0, 24) : undefined
     }};
   }
   if (msg.t === "start") {
