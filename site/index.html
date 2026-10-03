@@ -363,6 +363,54 @@ input[type=range]{accent-color:#3dbb22;cursor:pointer}
 #speedhud{left:50%;top:10px;transform:translateX(-50%);padding:5px 16px;flex-direction:column;gap:2px}
 #speedhud b{font-size:28px;color:#ffb3ec}
 #rankhud{left:14px!important;top:66px!important}
+/* social panel */
+.socwnd{max-height:92vh}
+.socbody{max-height:70vh;overflow:auto;-webkit-overflow-scrolling:touch;padding:2px 4px 6px}
+.socN{display:inline-block;min-width:18px;margin-left:6px;padding:0 5px;border-radius:9px;background:#ff3ca8;color:#fff;font-size:11px;line-height:18px;font-style:normal}
+.socN:empty{display:none}
+.socerr{margin:4px 0 8px;padding:8px 10px;border-radius:10px;background:rgba(255,60,90,.22);border:2px solid #ff6b6b;color:#ffe0e4;font-size:13px;font-weight:700}
+.socme{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;border-radius:12px;background:rgba(11,25,66,.45)}
+.socme span{font-size:11px;letter-spacing:.12em;color:#9fc4ff;font-weight:800}.socme b{font-size:18px;color:var(--y1);letter-spacing:.04em}
+.socfind{display:flex;gap:8px;margin:10px 0}
+.socfind input{flex:1;min-width:0;font:inherit;font-size:15px;padding:9px 12px;border-radius:10px;border:3px solid var(--nv);background:#fff;color:#0b1942}
+.socrow{display:flex;align-items:center;gap:10px;padding:8px 10px;margin:6px 0;border-radius:12px;background:rgba(11,25,66,.38);flex-wrap:wrap}
+.socwho{flex:1;min-width:120px;display:flex;flex-direction:column}
+.socwho b{font-size:15px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.socwho span{font-size:11.5px;color:#a9c8ff;letter-spacing:.04em}
+.socacts{display:flex;gap:6px;flex-wrap:wrap}
+.socacts .big.sm,.socsets .big.sm{font-size:12px;padding:6px 10px}
+.socdot{width:12px;height:12px;border-radius:50%;flex:0 0 12px;background:#5a6680;border:2px solid #0b1942}
+.socdot.online{background:#4ad991}.socdot.lobby{background:#35e8ff}.socdot.match{background:#ffb040}
+.socsets{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.socmsgs{display:flex;gap:10px;min-height:46vh}
+.soclist{flex:0 0 32%;display:flex;flex-direction:column;gap:6px;overflow:auto;max-height:60vh}
+.socconv{display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;border:2px solid transparent;background:rgba(11,25,66,.38);color:#fff;font:inherit;font-weight:700;font-size:13px;cursor:pointer;text-align:left}
+.socconv.sel{border-color:var(--y1)}
+.socpane{flex:1;min-width:0;display:flex;flex-direction:column}
+.soclog{flex:1;overflow:auto;max-height:46vh;min-height:30vh;display:flex;flex-direction:column;gap:6px;padding:6px;border-radius:12px;background:rgba(6,14,44,.45)}
+.socmsg{align-self:flex-start;max-width:80%;padding:7px 11px;border-radius:12px;background:#24366e;color:#fff;font-size:14px;line-height:1.35;white-space:pre-wrap;word-break:break-word}
+.socmsg.me{align-self:flex-end;background:#2f7a5a}
+.socmsg.sending{opacity:.55}.socmsg.fail{background:#7a2a3a}
+@media (max-width:620px){.socmsgs{flex-direction:column}.soclist{flex:none;flex-direction:row;overflow-x:auto;max-height:none}.socconv{flex:0 0 auto}}
+/* notifications: top right, clear of the coins and the touch buttons */
+#notes{position:fixed;top:10px;right:132px;width:min(300px,52vw);z-index:220;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+#notes .note,#notes #notesMore{pointer-events:auto}
+#notes .note{padding:9px 12px;border-radius:12px;border:3px solid var(--nv);background:linear-gradient(180deg,#24408e,#152a66);color:#fff;
+  box-shadow:0 4px 0 rgba(6,14,44,.7);cursor:pointer;animation:noteIn .25s ease-out;transition:opacity .3s,transform .3s}
+#notes .note.out{opacity:0;transform:translateX(30px)}
+@keyframes noteIn{from{opacity:0;transform:translateX(30px)}}
+#notes .note b{display:block;font-size:11px;letter-spacing:.14em;color:var(--y1)}
+#notes .note span{display:block;font-size:13.5px;line-height:1.3;margin-top:2px;overflow:hidden;text-overflow:ellipsis}
+#notes .note.k-linv{border-color:#35e8ff}#notes .note.k-pinv{border-color:#b98aff}#notes .note.k-freq{border-color:#4ad991}#notes .note.k-dm{border-color:#ffd23f}
+#notes .nacts{display:flex;gap:6px;margin-top:7px}
+#notes .nacts button{flex:1;font:inherit;font-size:11.5px;font-weight:800;padding:5px 6px;border-radius:8px;border:2px solid var(--nv);background:var(--y1);color:#0b1942;cursor:pointer}
+#notes .nacts button+button{background:#d8e4ff}
+#notesMore{align-self:flex-end;font:inherit;font-size:11px;font-weight:800;padding:4px 10px;border-radius:9px;border:2px solid var(--nv);background:#d8e4ff;color:#0b1942;cursor:pointer}
+#notes.compact{width:min(210px,40vw)}
+#notes.compact .nacts{display:none}
+#notes.compact .note{padding:6px 9px}#notes.compact .note span{white-space:nowrap;font-size:12px}
+@media (max-width:700px){#notes{right:8px;top:64px;width:min(280px,64vw)}}
+body.touch #notes.compact{top:64px;right:8px}
+
 /* Boss Rally: his health, the guard, the phase -- top centre, clear of the touch buttons */
 .bossHud{position:absolute;top:74px;left:50%;transform:translateX(-50%);width:min(440px,70vw);text-align:center;pointer-events:none;z-index:6;font-family:inherit}
 .bossHud.hide{display:none}
@@ -1035,6 +1083,7 @@ button.chip:active{transform:translateY(2px)}
     <button class="lbtn" id="lbBlade"><span class="lbi" id="lbBladeIco"></span><span class="lbl">BLADES</span></button>
     <button class="lbtn" id="lbAbil"><span class="lbi" id="lbAbilIco"></span><span class="lbl">ABILITIES</span></button>
     <button class="lbtn" id="lbSkin"><span class="lbi" id="lbSkinIco"></span><span class="lbl">SKINS</span></button>
+    <button class="lbtn" id="lbFriends"><span class="lbi"><svg viewBox='0 0 40 40'><circle cx='14' cy='15' r='5.5' fill='#4ad991' stroke='#0b1942' stroke-width='2.4'/><path d='M4.5 32c0-6 4-9 9.5-9s9.5 3 9.5 9z' fill='#4ad991' stroke='#0b1942' stroke-width='2.4' stroke-linejoin='round'/><circle cx='27' cy='13' r='5' fill='#56b9ff' stroke='#0b1942' stroke-width='2.4'/><path d='M22 21.5c1.5-.8 3.2-1.2 5-1.2 5 0 8.5 2.8 8.5 8.7h-9' fill='#56b9ff' stroke='#0b1942' stroke-width='2.4' stroke-linejoin='round'/></svg></span><span class="lbl">FRIENDS</span><span class="lbn" id="lbFriendsN" style="display:none">0</span></button>
     <button class="lbtn" id="lbProfile"><span class="lbi"><svg viewBox='0 0 40 40'><rect x='5' y='7' width='30' height='26' rx='5' fill='#fff' stroke='#0b1942' stroke-width='2.6'/><circle cx='15' cy='18' r='4.6' fill='#56b9ff' stroke='#0b1942' stroke-width='2.2'/><path d='M8.5 29c0-4.5 3-6.8 6.5-6.8s6.5 2.3 6.5 6.8' fill='#56b9ff' stroke='#0b1942' stroke-width='2.2' stroke-linejoin='round'/><path d='M24 15h7M24 20h7M24 25h5' stroke='#0b1942' stroke-width='2.6' stroke-linecap='round'/></svg></span><span class="lbl">PROFILE</span></button>
     <button class="lbtn" id="lbSettings"><span class="lbi"><svg viewBox='0 0 40 40'><path d='M32.5 18.8L36.4 21.6L35.8 24.8L31.1 25.9L29.7 28.0L30.5 32.8L27.8 34.6L23.7 32.1L21.2 32.5L18.4 36.4L15.2 35.8L14.1 31.1L12.0 29.7L7.2 30.5L5.4 27.8L7.9 23.7L7.5 21.2L3.6 18.4L4.2 15.2L8.9 14.1L10.3 12.0L9.5 7.2L12.2 5.4L16.3 7.9L18.8 7.5L21.6 3.6L24.8 4.2L25.9 8.9L28.0 10.3L32.8 9.5L34.6 12.2L32.1 16.3z' fill='#fff' stroke='#0b1942' stroke-width='2.6' stroke-linejoin='round'/><circle cx='20' cy='20' r='5.6' fill='#8d9ab8' stroke='#0b1942' stroke-width='2.6'/></svg></span><span class="lbl">SETTINGS</span></button>
   </div>
@@ -15712,6 +15761,7 @@ function netHandle(m){
     NET.status="error";
     NET.err=m.why==="banned"?("This account is banned"+(m.reason?": "+m.reason:".")):
       m.why==="kicked"?(m.reason||"You were removed from that room."):
+      m.why==="full"?(m.reason||"That lobby is full."):
       m.why==="spec"?(m.reason||"That spectate link has expired."):
       "Online play needs a Google account. Sign in on your Profile, then try again.";
     if(m.why==="banned")cloudBanned(m.reason);
@@ -16909,6 +16959,402 @@ function bossRoomStart(){
   if(!bossAbilReady()){bossAbilPicker(bossRoomStart);return;}
   netSend({t:"start",mode:"boss",map:"sky"});
 }
+
+/* ============================================================
+   SOCIAL: friends, parties, messages -- and the notifications
+   ------------------------------------------------------------
+   The signed-in game keeps one socket to its account's Hub on the server,
+   which decides everything: who you are friends with, who may see you online,
+   whose messages and invites reach you. This side only draws it and asks.
+   Everything anyone else typed is put on the page as text, never as markup.
+   ============================================================ */
+var SOCIAL={ws:null,st:null,open:false,tab:"friends",conv:{},chat:"",rq:0,cb:{},retry:0,timer:0,beat:0,lastSt:"",
+  pend:{},found:null,err:"",busy:false};
+function socialOn(){return !!(cloudOn()&&serverBase()&&CLOUD.tok);}
+function socialConnect(){
+  SOCIAL.timer=0;
+  if(!socialOn()||SOCIAL.ws)return;
+  var b=serverBase().replace(/^http:/,"ws:").replace(/^https:/,"wss:");
+  var ws;
+  try{ws=new WebSocket(b+"/social?tok="+encodeURIComponent(CLOUD.tok)+"&name="+encodeURIComponent((SAVE.netName||CLOUD.name||"Player").slice(0,14)));}
+  catch(e){socialRetry();return;}
+  SOCIAL.ws=ws;
+  ws.onopen=function(){SOCIAL.retry=0;SOCIAL.lastSt="";socialStatus(true);};
+  ws.onmessage=function(ev){var m;try{m=JSON.parse(ev.data);}catch(e){return;}socialHandle(m);};
+  ws.onclose=function(){if(SOCIAL.ws===ws){SOCIAL.ws=null;socialRetry();}};
+  ws.onerror=function(){};
+}
+function socialRetry(){
+  clearTimeout(SOCIAL.timer);
+  if(!socialOn())return;
+  var d=Math.min(30000,2000*Math.pow(2,SOCIAL.retry++));
+  SOCIAL.timer=setTimeout(socialConnect,d);
+}
+function socialStop(){clearTimeout(SOCIAL.timer);SOCIAL.timer=0;if(SOCIAL.ws){try{SOCIAL.ws.onclose=null;SOCIAL.ws.close();}catch(e){}}SOCIAL.ws=null;SOCIAL.st=null;socialBadge();}
+function socialSend(m,cb){
+  if(!SOCIAL.ws||SOCIAL.ws.readyState!==1){if(cb)cb({err:"Not connected. Trying again…"});return false;}
+  if(cb){m.rq=++SOCIAL.rq;SOCIAL.cb[m.rq]=cb;}
+  try{SOCIAL.ws.send(JSON.stringify(m));return true;}catch(e){if(cb)cb({err:"Not connected."});return false;}
+}
+// where this game is, for friends: in a match, in a lobby, or just around
+function socialWhere(){
+  var inMatch=(STATE==="playing"||STATE==="countdown"||STATE==="over");
+  var room=(NET.ws&&NET.code&&!NET.solo&&!NET.queue)?NET.code:"";
+  return {s:inMatch?"match":(room||STATE==="venue")?"lobby":"online",room:room};
+}
+function socialStatus(force){
+  if(!SOCIAL.ws||SOCIAL.ws.readyState!==1)return;
+  var w=socialWhere(),k=w.s+"|"+w.room;
+  if(force||k!==SOCIAL.lastSt){SOCIAL.lastSt=k;socialSend({t:"st",s:w.s,room:w.room});}
+}
+setInterval(function(){if(NET.srv)return;
+  if(!socialOn()){if(SOCIAL.ws||SOCIAL.st)socialStop();return;}
+  if(!SOCIAL.ws&&!SOCIAL.timer)socialConnect();
+  socialStatus(false);
+  // the heartbeat: the server lets a silent socket go
+  if(Date.now()-SOCIAL.beat>20000){SOCIAL.beat=Date.now();socialSend({t:"ping"});}
+},1000);
+function socialHandle(m){
+  if(m.t==="re"){var cb=SOCIAL.cb[m.rq];delete SOCIAL.cb[m.rq];if(cb)cb(m);return;}
+  if(m.t==="state"){SOCIAL.timer=0;SOCIAL.st=m;socialAutoParty();socialBadge();socialRender();return;}
+  var st=SOCIAL.st;if(!st)return;
+  if(m.t==="pres"){for(var i=0;i<st.friends.length;i++)if(st.friends[i].sub===m.sub){st.friends[i].pres=m.pres;st.friends[i].name=m.name||st.friends[i].name;}socialRender();return;}
+  if(m.t==="dm"){
+    var c=socialConvOf(m.with);c.msgs.push(m.msg);
+    for(var j=0;j<st.friends.length;j++)if(st.friends[j].sub===m.with)st.friends[j].unread=m.unread|0;
+    if(SOCIAL.open&&SOCIAL.tab==="msgs"&&SOCIAL.chat===m.with){socialSend({t:"read",with:m.with});socialSetUnread(m.with,0);}
+    socialBadge();socialRender();return;
+  }
+  if(m.t==="note"){socialNote(m.n);return;}
+  if(m.t==="noteGone"){notifyDrop(m.id);return;}
+}
+function socialConvOf(sub){return SOCIAL.conv[sub]||(SOCIAL.conv[sub]={msgs:[],more:true,loaded:false,busy:false});}
+function socialSetUnread(sub,n){var st=SOCIAL.st;if(!st)return;for(var i=0;i<st.friends.length;i++)if(st.friends[i].sub===sub)st.friends[i].unread=n;socialBadge();}
+function socialFriend(sub){var st=SOCIAL.st;if(!st)return null;for(var i=0;i<st.friends.length;i++)if(st.friends[i].sub===sub)return st.friends[i];return null;}
+// how many things want you: unread messages, requests, invites
+function socialCount(){
+  var st=SOCIAL.st;if(!st)return 0;
+  var n=st.reqIn.length+st.pinv.length+st.linvIn.length;
+  for(var i=0;i<st.friends.length;i++)n+=st.friends[i].unread?1:0;
+  return n;
+}
+function socialBadge(){
+  var b=$("lbFriendsN");if(!b)return;
+  var n=socialCount();b.textContent=n>9?"9+":String(n);b.style.display=n?"":"none";
+  var btn=$("lbFriends");if(btn)btn.style.opacity=socialOn()?"1":".55";
+}
+// a party member is taken into the leader's lobby -- unless they are in a match: then it waits for them
+function socialAutoParty(){
+  var st=SOCIAL.st;if(!st)return;
+  for(var i=0;i<st.linvIn.length;i++){var v=st.linvIn[i];
+    if(!v.party||SOCIAL.pend["auto"+v.id])continue;
+    if(STATE==="playing"||STATE==="countdown")continue;
+    if(NET.ws&&NET.code===v.code)continue;
+    SOCIAL.pend["auto"+v.id]=1;socialJoinInvite(v.id);
+  }
+}
+setInterval(function(){if(NET.srv)return;if(SOCIAL.st&&STATE!=="playing"&&STATE!=="countdown")socialAutoParty();},2000);
+function socialJoinInvite(id){
+  if(STATE==="playing"||STATE==="countdown"){notify({kind:"info",id:"busy",title:"IN A MATCH",text:"Finish your match first — the invite will wait.",ttl:4});return;}
+  socialSend({t:"lacc",id:id},function(r){
+    if(r.err){notify({kind:"info",id:"lerr",title:"LOBBY INVITE",text:r.err,ttl:5});return;}
+    if(r.go)socialJoinRoom(r.go);
+  });
+}
+// into a friend's lobby: the same as typing the code in, after the server said yes
+function socialJoinRoom(code){
+  socialClose();
+  if(NET.solo){NET.solo="";}
+  if(typeof openMPScreen==="function")openMPScreen();
+  SAVE.netName=(SAVE.netName||CLOUD.name||"Player").slice(0,14);
+  netConnect(code,function(){mpSendLoadout(false);});
+}
+
+/* ---- the panel ---- */
+function socialEl(){
+  var el=$("social");if(el)return el;
+  el=document.createElement("div");el.id="social";el.className="screen hide";
+  el.innerHTML="<div class='wnd mid socwnd'><div class='win-title'>FRIENDS</div><button class='win-x' id='socX' aria-label='Close'>BACK</button>"+
+    "<div class='win-tabs' id='socTabs'><button class='tab sel' data-t='friends'>FRIENDS<span class='socN' id='socNf'></span></button>"+
+    "<button class='tab' data-t='party'>PARTY<span class='socN' id='socNp'></span></button>"+
+    "<button class='tab' data-t='msgs'>MESSAGES<span class='socN' id='socNm'></span></button></div>"+
+    "<div id='socBody' class='socbody'></div></div>";
+  document.body.appendChild(el);
+  $("socX").addEventListener("click",socialClose);
+  var ts=el.querySelectorAll("#socTabs .tab");
+  for(var i=0;i<ts.length;i++)ts[i].addEventListener("click",function(){SOCIAL.tab=this.getAttribute("data-t");socialRender();});
+  return el;
+}
+function socialOpenNow(){return SOCIAL.open;}
+function socialOpen(tab,chat){
+  var el=socialEl();
+  if(tab)SOCIAL.tab=tab;if(chat)SOCIAL.chat=chat;
+  SOCIAL.open=true;el.classList.remove("hide");el.setAttribute("data-modal","1");
+  if(!SOCIAL.ws&&socialOn())socialConnect();
+  socialRender();
+}
+function socialClose(){SOCIAL.open=false;var el=$("social");if(el){el.classList.add("hide");el.removeAttribute("data-modal");}}
+function sh(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
+function shBtn(label,cls,fn,dis){var b=sh("button","big sm "+(cls||""),label);if(dis){b.disabled=true;b.style.opacity=".45";}b.addEventListener("click",fn);return b;}
+var PRES_TXT={online:"ONLINE",lobby:"IN LOBBY",match:"IN MATCH",offline:"OFFLINE"};
+function socialAct(m,okText){
+  socialSend(m,function(r){if(r.err){SOCIAL.err=r.err;socialRender();}else{SOCIAL.err="";if(okText)notify({kind:"info",id:"ok"+m.t,title:"FRIENDS",text:okText,ttl:3});socialRender();}});
+}
+function socialRender(){
+  socialBadge();
+  if(!SOCIAL.open)return;
+  var body=$("socBody");if(!body)return;
+  var ts=document.querySelectorAll("#socTabs .tab");
+  for(var i=0;i<ts.length;i++)ts[i].classList.toggle("sel",ts[i].getAttribute("data-t")===SOCIAL.tab);
+  body.innerHTML="";
+  var st=SOCIAL.st;
+  if(!socialOn()){body.appendChild(sh("div","fine","Sign in with Google on your Profile to add friends, make parties and send messages."));return;}
+  if(!st){body.appendChild(sh("div","fine","Connecting…"));return;}
+  var nm=0;for(i=0;i<st.friends.length;i++)nm+=st.friends[i].unread?1:0;
+  $("socNf").textContent=(st.reqIn.length+st.linvIn.length)?String(st.reqIn.length+st.linvIn.length):"";
+  $("socNp").textContent=st.pinv.length?String(st.pinv.length):"";
+  $("socNm").textContent=nm?String(nm):"";
+  if(SOCIAL.err){var er=sh("div","socerr",SOCIAL.err);body.appendChild(er);}
+  if(SOCIAL.tab==="friends")socialFriends(body,st);
+  else if(SOCIAL.tab==="party")socialParty(body,st);
+  else socialMsgs(body,st);
+}
+function socialRow(name,sub,dot){
+  var r=sh("div","socrow");
+  if(dot){var d=sh("span","socdot "+dot);r.appendChild(d);}
+  var t=sh("div","socwho");t.appendChild(sh("b","",name));if(sub)t.appendChild(sh("span","",sub));r.appendChild(t);
+  var a=sh("div","socacts");r.appendChild(a);r._a=a;return r;
+}
+function socialFriends(body,st){
+  // your tag, to give to friends
+  var me=sh("div","socme");me.appendChild(sh("span","","YOUR TAG"));var tg=sh("b","",st.me.tag||"…");me.appendChild(tg);
+  me.appendChild(shBtn("COPY","",function(){try{navigator.clipboard.writeText(st.me.tag);}catch(e){}notify({kind:"info",id:"copy",title:"COPIED",text:st.me.tag,ttl:2});}));
+  body.appendChild(me);
+  // find by tag
+  var f=sh("div","socfind");var inp=sh("input","");inp.placeholder="Friend's tag, e.g. NAME#1234";inp.maxLength=16;inp.id="socFindIn";inp.autocomplete="off";
+  f.appendChild(inp);
+  var go=shBtn("ADD","gold",function(){var v=inp.value.trim();if(!v)return;socialAct({t:"freq",tag:v},"Friend request sent");inp.value="";});
+  f.appendChild(go);
+  inp.addEventListener("keydown",function(e){e.stopPropagation();if(e.key==="Enter")go.click();});
+  body.appendChild(f);
+  var i,r;
+  // invites waiting for you
+  if(st.linvIn.length||st.pinv.length){
+    body.appendChild(sh("div","sechead","INVITES"));
+    st.linvIn.forEach(function(v){
+      r=socialRow(v.name,(v.party?"Party → their lobby":"Lobby invite")+" · "+v.code,"lobby");
+      r._a.appendChild(shBtn("JOIN","gold",function(){socialJoinInvite(v.id);}));
+      r._a.appendChild(shBtn("DECLINE","",function(){socialAct({t:"ldec",id:v.id});}));
+      body.appendChild(r);
+    });
+    st.pinv.forEach(function(v){
+      r=socialRow(v.name,"Party invite","online");
+      r._a.appendChild(shBtn("ACCEPT","gold",function(){socialAct({t:"pacc",pid:v.pid},"You joined the party");SOCIAL.tab="party";}));
+      r._a.appendChild(shBtn("DECLINE","",function(){socialAct({t:"pdec",pid:v.pid});}));
+      body.appendChild(r);
+    });
+  }
+  if(st.reqIn.length){
+    body.appendChild(sh("div","sechead","FRIEND REQUESTS"));
+    st.reqIn.forEach(function(q){r=socialRow(q.name,q.tag);
+      r._a.appendChild(shBtn("ACCEPT","gold",function(){socialAct({t:"facc",sub:q.sub},"You're now friends with "+q.name);}));
+      r._a.appendChild(shBtn("DECLINE","",function(){socialAct({t:"fdec",sub:q.sub});}));
+      r._a.appendChild(shBtn("BLOCK","red",function(){socialAct({t:"block",sub:q.sub});}));
+      body.appendChild(r);});
+  }
+  // friends: online first
+  var order={match:0,lobby:1,online:2,offline:3};
+  var fr=st.friends.slice().sort(function(a,b){return (order[a.pres]-order[b.pres])||String(a.name).localeCompare(b.name);});
+  body.appendChild(sh("div","sechead","FRIENDS ("+fr.length+")"));
+  if(!fr.length)body.appendChild(sh("div","fine","No friends yet. Share your tag, or add someone by theirs."));
+  // can you invite people to where you are? only from a real online lobby
+  var inRoom=NET.ws&&NET.code&&!NET.solo&&!NET.queue&&NET.status==="lobby";
+  var invited={};st.linvOut.forEach(function(o){invited[o.to]=o.id;});
+  fr.forEach(function(x){
+    r=socialRow(x.name,x.tag+" · "+(PRES_TXT[x.pres]||"OFFLINE"),x.pres);
+    var on=x.pres!=="offline";
+    r._a.appendChild(shBtn("MESSAGE"+(x.unread?" ("+x.unread+")":""),x.unread?"gold":"",function(){socialOpen("msgs",x.sub);}));
+    if(on&&inRoom){
+      if(invited[x.sub])r._a.appendChild(shBtn("CANCEL INVITE","",function(){socialAct({t:"lcan",id:invited[x.sub]});}));
+      else r._a.appendChild(shBtn("INVITE TO LOBBY","gold",function(){socialAct({t:"linv",to:x.sub,room:NET.code},"Invited "+x.name+" to your lobby");}));
+    }
+    if(on)r._a.appendChild(shBtn("PARTY","",function(){socialAct({t:"pinv",sub:x.sub},"Party invite sent");}));
+    r._a.appendChild(shBtn("⋯","",function(){socialMore(x);}));
+    body.appendChild(r);
+  });
+  if(st.reqOut.length){
+    body.appendChild(sh("div","sechead","SENT"));
+    st.reqOut.forEach(function(q){r=socialRow(q.name,q.tag);r._a.appendChild(shBtn("CANCEL","",function(){socialAct({t:"fcan",sub:q.sub});}));body.appendChild(r);});
+  }
+  if(st.blocked.length){
+    body.appendChild(sh("div","sechead","BLOCKED"));
+    st.blocked.forEach(function(q){r=socialRow(q.name,q.tag);r._a.appendChild(shBtn("UNBLOCK","",function(){socialAct({t:"unblock",sub:q.sub});}));body.appendChild(r);});
+  }
+  // notification settings
+  body.appendChild(sh("div","sechead","NOTIFICATIONS"));
+  var sets=sh("div","socsets");
+  [["sound","Sounds"],["prev","Message previews"],["online","Friend online alerts"]].forEach(function(p){
+    var on=!!(st.set&&st.set[p[0]]);
+    sets.appendChild(shBtn(p[1]+": "+(on?"ON":"OFF"),on?"gold":"",function(){var o={t:"set"};o[p[0]]=!on;socialSend(o);}));
+  });
+  body.appendChild(sets);
+}
+function socialMore(x){
+  var body=$("socBody");body.innerHTML="";
+  body.appendChild(sh("div","sechead",x.name+" · "+x.tag));
+  var r=sh("div","socsets");
+  r.appendChild(shBtn("REMOVE FRIEND","",function(){socialAct({t:"frem",sub:x.sub},"Removed "+x.name);}));
+  r.appendChild(shBtn("BLOCK","red",function(){socialAct({t:"block",sub:x.sub},"Blocked "+x.name);}));
+  r.appendChild(shBtn("BACK","",function(){socialRender();}));
+  body.appendChild(r);
+  body.appendChild(sh("div","fine","Blocking removes them as a friend and stops their requests, messages and invites."));
+}
+function socialParty(body,st){
+  var p=st.party,me=st.me.sub;
+  if(st.pinv.length){
+    body.appendChild(sh("div","sechead","PARTY INVITES"));
+    st.pinv.forEach(function(v){var r=socialRow(v.name,"wants you in their party","online");
+      r._a.appendChild(shBtn("ACCEPT","gold",function(){socialAct({t:"pacc",pid:v.pid},"You joined the party");}));
+      r._a.appendChild(shBtn("DECLINE","",function(){socialAct({t:"pdec",pid:v.pid});}));body.appendChild(r);});
+  }
+  if(!p){
+    body.appendChild(sh("div","fine","Not in a party. Invite a friend from the Friends tab, or start one here. A party holds 6 — Boss Rally takes up to 4."));
+    var row=sh("div","socsets");row.appendChild(shBtn("START A PARTY","gold",function(){socialAct({t:"pnew"});}));body.appendChild(row);return;
+  }
+  var lead=p.leader===me;
+  body.appendChild(sh("div","sechead","YOUR PARTY ("+p.members.length+"/"+p.max+")"));
+  p.members.forEach(function(m){
+    var r=socialRow((m.sub===p.leader?"♛ ":"")+m.name+(m.sub===me?" (you)":""),(m.on?"HERE":"AWAY")+" · "+(m.ready?"READY":"NOT READY"),m.on?(m.ready?"lobby":"online"):"offline");
+    if(lead&&m.sub!==me){
+      r._a.appendChild(shBtn("MAKE LEADER","",function(){socialAct({t:"plead",sub:m.sub});}));
+      r._a.appendChild(shBtn("REMOVE","red",function(){socialAct({t:"pkick",sub:m.sub});}));
+    }
+    body.appendChild(r);
+  });
+  p.inv.forEach(function(v){body.appendChild(socialRow(v.name,"invited · waiting","offline"));});
+  var mine=null;for(var i=0;i<p.members.length;i++)if(p.members[i].sub===me)mine=p.members[i];
+  var row2=sh("div","socsets");
+  row2.appendChild(shBtn(mine&&mine.ready?"NOT READY":"READY",mine&&mine.ready?"":"gold",function(){socialAct({t:"pready",r:!(mine&&mine.ready)});}));
+  if(lead){
+    var inRoom=NET.ws&&NET.code&&!NET.solo&&!NET.queue&&NET.status==="lobby";
+    row2.appendChild(shBtn("BRING PARTY TO MY LOBBY","gold",function(){socialAct({t:"pgo",room:NET.code},"Bringing the party in");},!inRoom));
+    row2.appendChild(shBtn("DISBAND","red",function(){socialAct({t:"pdisband"});}));
+  }
+  row2.appendChild(shBtn("LEAVE","",function(){socialAct({t:"pleave"});}));
+  body.appendChild(row2);
+  if(lead)body.appendChild(sh("div","fine",(NET.ws&&NET.code?"":"Host or join a lobby first, then bring everyone in. ")+
+    (p.members.length>4?"Boss Rally takes up to 4 — your party has "+p.members.length+".":"")));
+}
+function socialMsgs(body,st){
+  var wrap=sh("div","socmsgs"),list=sh("div","soclist"),pane=sh("div","socpane");
+  wrap.appendChild(list);wrap.appendChild(pane);body.appendChild(wrap);
+  var fr=st.friends.slice().sort(function(a,b){return (b.unread|0)-(a.unread|0)||String(a.name).localeCompare(b.name);});
+  if(!fr.length){pane.appendChild(sh("div","fine","Messages are for friends. Add one from the Friends tab."));return;}
+  if(!SOCIAL.chat||!socialFriend(SOCIAL.chat))SOCIAL.chat=fr[0].sub;
+  fr.forEach(function(x){
+    var b=sh("button","socconv"+(x.sub===SOCIAL.chat?" sel":""));b.appendChild(sh("span","socdot "+x.pres));b.appendChild(sh("span","",x.name));
+    if(x.unread)b.appendChild(sh("i","socN",String(x.unread)));
+    b.addEventListener("click",function(){SOCIAL.chat=x.sub;socialRender();});list.appendChild(b);
+  });
+  var who=socialFriend(SOCIAL.chat),c=socialConvOf(SOCIAL.chat);
+  if(who.unread){socialSend({t:"read",with:who.sub});who.unread=0;socialBadge();}
+  if(!c.loaded&&!c.busy)socialHist(who.sub,false);
+  pane.appendChild(sh("div","sechead",who.name+" · "+(PRES_TXT[who.pres]||"")));
+  var log=sh("div","soclog");
+  if(c.more&&c.loaded)log.appendChild(shBtn("LOAD OLDER","",function(){socialHist(who.sub,true);}));
+  c.msgs.forEach(function(m){
+    var mine=m.from===st.me.sub;
+    var d=sh("div","socmsg"+(mine?" me":"")+(m.state?" "+m.state:""));
+    d.appendChild(sh("span","",m.text));          // plain text, always
+    if(m.state==="fail"){d.appendChild(shBtn("RETRY","",function(){c.msgs.splice(c.msgs.indexOf(m),1);socialSay(who.sub,m.text);}));}
+    log.appendChild(d);
+  });
+  pane.appendChild(log);
+  var form=sh("div","socfind"),inp=sh("input","");inp.maxLength=280;inp.placeholder="Message "+who.name;inp.id="socMsgIn";inp.autocomplete="off";
+  var send=shBtn("SEND","gold",function(){var v=inp.value;if(!v.trim())return;socialSay(who.sub,v);inp.value="";});
+  inp.addEventListener("keydown",function(e){e.stopPropagation();if(e.key==="Enter")send.click();});
+  form.appendChild(inp);form.appendChild(send);pane.appendChild(form);
+  setTimeout(function(){log.scrollTop=log.scrollHeight;try{if(!touchMode)inp.focus();}catch(e){}},0);
+}
+function socialHist(sub,older){
+  var c=socialConvOf(sub);if(c.busy)return;c.busy=true;
+  var first=null;for(var i=0;i<c.msgs.length;i++)if(c.msgs[i].k){first=c.msgs[i].k;break;}
+  socialSend({t:"hist",with:sub,before:older&&first?first:""},function(r){
+    c.busy=false;
+    if(r.err)return;
+    var have={};c.msgs.forEach(function(m){have[m.id]=1;});
+    var add=(r.msgs||[]).filter(function(m){return !have[m.id];});
+    c.msgs=older?add.concat(c.msgs):add.concat(c.msgs.filter(function(m){return !m.k||true;}));
+    if(!older){c.msgs.sort(function(a,b){return (a.at-b.at);});}
+    c.more=!!r.more;c.loaded=true;socialRender();
+  });
+}
+// a message goes out as "sending", then is "sent" or "failed" with a retry
+function socialSay(to,text){
+  var c=socialConvOf(to),cid="c"+(++SOCIAL.rq);
+  var m={id:cid,at:Date.now(),from:SOCIAL.st.me.sub,text:String(text).slice(0,280),state:"sending"};
+  c.msgs.push(m);socialRender();
+  socialSend({t:"dm",to:to,text:m.text,cid:cid},function(r){
+    if(r.err){m.state="fail";SOCIAL.err=r.err;}
+    else{m.state="";m.id=r.msg.id;m.at=r.msg.at;m.k=r.msg.k;m.text=r.msg.text;SOCIAL.err="";}
+    socialRender();
+  });
+}
+
+/* ---- notifications, top right ----
+   At most three at once; the rest fold into "+N more", which opens the
+   panel. The same thing twice is one notification. Anything you can act on
+   (a request, an invite) also stays in the panel after its toast goes. */
+var NOTES={list:[],more:0};
+function notesEl(){
+  var el=$("notes");if(el)return el;
+  el=document.createElement("div");el.id="notes";document.body.appendChild(el);return el;
+}
+function socialNote(n){
+  var st=SOCIAL.st;
+  var acts=[];
+  if(n.kind==="freq")acts=[["ACCEPT",function(){socialAct({t:"facc",sub:n.from},"You're now friends");}],["DECLINE",function(){socialAct({t:"fdec",sub:n.from});}]];
+  else if(n.kind==="pinv")acts=[["ACCEPT",function(){socialAct({t:"pacc",pid:n.pid},"You joined the party");}],["DECLINE",function(){socialAct({t:"pdec",pid:n.pid});}]];
+  else if(n.kind==="linv"&&!n.party)acts=[["JOIN",function(){socialJoinInvite(n.inv);}],["DECLINE",function(){socialAct({t:"ldec",id:n.inv});}]];
+  else if(n.kind==="dm")acts=[["REPLY",function(){socialOpen("msgs",n.from);}]];
+  notify({kind:n.kind,id:n.id,title:n.title,text:n.text,acts:acts,ttl:acts.length?9:5,
+    sound:!st||!st.set||st.set.sound!==false});
+}
+function notify(o){
+  if(typeof document==="undefined"||NET.srv)return;
+  var el=notesEl(),id=o.id||("n"+Date.now()+Math.random());
+  notifyDrop(id,true);
+  var d=document.createElement("div");d.className="note k-"+(o.kind||"info");d._id=id;
+  var t=document.createElement("b");t.textContent=o.title||"";d.appendChild(t);
+  var p=document.createElement("span");p.textContent=o.text||"";d.appendChild(p);
+  if(o.acts&&o.acts.length){var a=document.createElement("div");a.className="nacts";
+    o.acts.forEach(function(x){var b=document.createElement("button");b.textContent=x[0];b.addEventListener("click",function(e){e.stopPropagation();x[1]();notifyDrop(id);});a.appendChild(b);});
+    d.appendChild(a);}
+  d.addEventListener("click",function(){notifyDrop(id);if(o.kind&&o.kind!=="info")socialOpen(o.kind==="dm"?"msgs":o.kind==="pinv"?"party":"friends",o.kind==="dm"?o.from:null);});
+  NOTES.list.push({id:id,el:d,until:Date.now()+(o.ttl||5)*1000});
+  el.appendChild(d);
+  if(o.sound!==false){try{tone(880,1320,.09,"sine",.08);setTimeout(function(){tone(1320,1760,.08,"sine",.06);},70);}catch(e){}}
+  notesLay();
+}
+function notifyDrop(id,quiet){
+  for(var i=NOTES.list.length-1;i>=0;i--)if(NOTES.list[i].id===id){var n=NOTES.list[i];NOTES.list.splice(i,1);if(n.el.parentNode)n.el.parentNode.removeChild(n.el);}
+  if(!quiet)notesLay();
+}
+function notesLay(){
+  var el=notesEl(),n=NOTES.list.length;
+  el.classList.toggle("compact",STATE==="playing"||STATE==="countdown");
+  for(var i=0;i<n;i++)NOTES.list[i].el.style.display=i>=n-3?"":"none";
+  var more=$("notesMore");
+  if(n>3){if(!more){more=document.createElement("button");more.id="notesMore";more.addEventListener("click",function(){socialOpen("friends");});}
+    more.textContent="+"+(n-3)+" MORE";el.insertBefore(more,el.firstChild);}
+  else if(more)more.remove();
+}
+setInterval(function(){if(NET.srv)return;
+  var now=Date.now(),ch=false;
+  for(var i=NOTES.list.length-1;i>=0;i--)if(NOTES.list[i].until<now){var n=NOTES.list[i];n.el.classList.add("out");NOTES.list.splice(i,1);ch=true;
+    (function(e){setTimeout(function(){if(e.parentNode)e.parentNode.removeChild(e);},300);})(n.el);}
+  if(ch||NOTES.list.length)notesLay();
+},500);
 
 /* ---------------- networked matches ----------------
    The host's browser is authoritative: it runs the ball, the bots, hit
@@ -20881,6 +21327,7 @@ $("stdLight").addEventListener("click",function(){stdChoose("light");});
 $("stdDark").addEventListener("click",function(){stdChoose("dark");});
 $("lockTog").addEventListener("click",function(){setShiftLock(!shiftLock);});
 $("lbSettings").addEventListener("click",function(){openSettings();});
+$("lbFriends").addEventListener("click",function(){socialOpen("friends");});
 $("pSettings").addEventListener("click",function(){openSettings();});
 $("touchTog").addEventListener("click",function(){
   forceTouch=(forceTouch===null)?true:(forceTouch===true?false:null);
