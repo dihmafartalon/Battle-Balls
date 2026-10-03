@@ -9045,6 +9045,18 @@ function hwDecalTex(kind){
     x.lineWidth=4;for(i=0;i<6;i++){var ca=i/6*TAU;x.beginPath();x.arc(128+Math.cos(ca)*66,128+Math.sin(ca)*66,26,0,TAU);x.stroke();}
     x.beginPath();x.arc(128,128,14,0,TAU);x.fill();
     x.lineWidth=2.5;for(i=0;i<36;i++){var ta=i/36*TAU;x.beginPath();x.moveTo(128+Math.cos(ta)*104,128+Math.sin(ta)*104);x.lineTo(128+Math.cos(ta)*(i%3?98:92),128+Math.sin(ta)*(i%3?98:92));x.stroke();}
+  } else if(kind==="dev2"){
+    // Dev2's mark: a sniper's reticle burned into the floor, cracks running out of it
+    x.lineWidth=7;x.beginPath();x.arc(128,128,112,0,TAU);x.stroke();
+    x.lineWidth=2.5;x.beginPath();x.arc(128,128,96,0,TAU);x.stroke();x.beginPath();x.arc(128,128,40,0,TAU);x.stroke();
+    for(i=0;i<48;i++){var ra2=i/48*TAU,l2=i%6===0?84:i%2?92:88;x.lineWidth=i%6===0?4:2;
+      x.beginPath();x.moveTo(128+Math.cos(ra2)*96,128+Math.sin(ra2)*96);x.lineTo(128+Math.cos(ra2)*l2,128+Math.sin(ra2)*l2);x.stroke();}
+    x.lineWidth=5;for(i=0;i<4;i++){var ca2=i/4*TAU,cx2=Math.cos(ca2),cy2=Math.sin(ca2);
+      x.beginPath();x.moveTo(128+cx2*48,128+cy2*48);x.lineTo(128+cx2*122,128+cy2*122);x.stroke();
+      x.beginPath();x.moveTo(128+cx2*66-cy2*9,128+cy2*66+cx2*9);x.lineTo(128+cx2*76,128+cy2*76);x.lineTo(128+cx2*66+cy2*9,128+cy2*66-cx2*9);x.stroke();}
+    x.beginPath();x.arc(128,128,6,0,TAU);x.fill();
+    x.lineWidth=2;for(i=0;i<9;i++){var ka=i*.7+.35,kx=128+Math.cos(ka)*112,ky=128+Math.sin(ka)*112;x.beginPath();x.moveTo(kx,ky);
+      for(var kj=1;kj<4;kj++){kx+=Math.cos(ka+((i*7+kj*3)%5-2)*.3)*9;ky+=Math.sin(ka+((i*5+kj)%5-2)*.3)*9;x.lineTo(kx,ky);}x.stroke();}
   } else if(kind==="streak"){
     c=cvs(256,64);x=c.getContext("2d");
     var gr=x.createLinearGradient(0,0,0,64);
@@ -11159,7 +11171,7 @@ function phBubble(f,y){
     vertexShader:"varying float vF;void main(){vec4 mv=modelViewMatrix*vec4(position,1.0);vec3 n=normalize(normalMatrix*normal);vF=1.0-abs(dot(n,normalize(-mv.xyz)));gl_Position=projectionMatrix*mv;}",
     fragmentShader:"uniform float uOp;varying float vF;void main(){float r=pow(vF,2.6);gl_FragColor=vec4(mix(vec3(.55,.35,1.0),vec3(1.0),r)*(r*.7+.03)*uOp,1.0);}"}));
   scene.add(m);var t=0;
-  phOwn(f,{tick:function(dt){t+=dt;var k=t/.32;if(k>=1)return false;
+  phOwn(f,{tick:function(dt){t+=dt;var k=t/.22;if(k>=1)return false;
       m.position.set(f.pos.x,f.y+y,f.pos.z);m.scale.setScalar(2+1.9*(1-Math.pow(1-k,3)));m.material.uniforms.uOp.value=k<.1?k/.1:Math.pow(1-(k-.1)/.9,1.4);return true;},
     done:function(){scene.remove(m);m.material.dispose();}});
 }
@@ -11198,7 +11210,7 @@ function phBoom(f,p,dir,sz){
   // sparks
   for(var s2=0;s2<(hi?30:12)*sz;s2++){var c2=s2%3;spark(p.x,p.y,p.z,dir.x*rr(2,9)+rr(-4,4),rr(-1,5),dir.z*rr(2,9)+rr(-4,4),c2?1:.8,c2===1?.45:.8,1,rr(.18,.36),rr(.2,.45),3);}
   // black smoke rolling up after
-  for(var q=0;q<(hi?8:3)*sz;q++)(function(d){setTimeout(function(){if(f.mesh)phFlame(f,p.clone().add(new THREE.Vector3(rr(-.4,.4),rr(0,.4),rr(-.4,.4))),"dark",rr(1,1.6)*sz,rr(.6,.9),rr(.8,1.4));},d);})(80+q*30);
+  for(var q=0;q<(hi?8:3)*sz;q++)(function(d){setTimeout(function(){if(f.mesh)phFlame(f,p.clone().add(new THREE.Vector3(rr(-.4,.4),rr(0,.4),rr(-.4,.4))),"dark",rr(1,1.6)*sz,rr(.6,.9),rr(.8,1.4));},d);})(40+q*18);
   if(me)shakeCam(.14*sz);
 }
 /* The muzzle flash: a big star of it, black-violet under bright purple, a
@@ -11209,6 +11221,47 @@ function phDarkPop(f,pos,col,size,life,rot,op){
   phOwn(f,{tick:function(dt){t+=dt;var k=t/life;if(k>=1)return false;m.quaternion.copy(camera.quaternion);m.rotateZ(rot);
       m.scale.setScalar(size*(k<.2?.5+2.5*k:1+(k-.2)*.3));m.material.opacity=op*Math.pow(1-k,1.3);return true;},
     done:function(){scene.remove(m);m.material.dispose();}});
+}
+// the round: a line of light straight down range, black-violet round a white core, gone in a blink
+function phTracer(f,a,dir,len){
+  if(QUAL===0||!phNear(f))return;
+  var grp=new THREE.Group();grp.position.copy(a).addScaledVector(dir,len/2);grp.quaternion.setFromUnitVectors(PHY,dir.clone().normalize());scene.add(grp);
+  var L=[[0x12021e,.55,.5,false],[0x8a3cff,.9,.24,true],[0xf0e0ff,1,.06,true]].map(function(c){
+    var m=new THREE.Mesh(GEO.cyl8,new THREE.MeshBasicMaterial({color:c[0],transparent:true,opacity:c[1],depthWrite:false,toneMapped:false,
+      blending:c[3]?THREE.AdditiveBlending:THREE.NormalBlending}));m.scale.set(c[2],len,c[2]);m.renderOrder=c[3]?9:7;grp.add(m);return {m:m,op:c[1],w:c[2]};});
+  var t=0;phOwn(f,{tick:function(dt){t+=dt;var k=t/.17;if(k>=1)return false;
+      L.forEach(function(l){l.m.material.opacity=l.op*(1-k);var w=l.w*(1-k*.7);l.m.scale.x=l.m.scale.z=w;});return true;},
+    done:function(){scene.remove(grp);L.forEach(function(l){l.m.material.dispose();});}});
+}
+// purple lightning: a jagged crack of it from p0 to p1, a dark copy under it, flickering out
+function phBolt(f,p0,p1,life){
+  if(QUAL===0)return;
+  var grp=new THREE.Group();scene.add(grp);var mats=[];
+  var pts=[p0.clone()],n=7,d=p1.clone().sub(p0),len=d.length();
+  for(var i=1;i<n;i++){var q=p0.clone().addScaledVector(d,i/n);q.x+=rr(-.35,.35)*len/4;q.y+=rr(-.35,.35)*len/4;q.z+=rr(-.35,.35)*len/4;pts.push(q);}
+  pts.push(p1.clone());
+  [[0x1a0430,.6,.14,false],[0xb070ff,1,.07,true],[0xffffff,1,.025,true]].forEach(function(c){
+    var mat=new THREE.MeshBasicMaterial({color:c[0],transparent:true,opacity:c[1],depthWrite:false,toneMapped:false,blending:c[3]?THREE.AdditiveBlending:THREE.NormalBlending});mats.push({m:mat,op:c[1]});
+    for(var j=0;j<pts.length-1;j++){var A=pts[j],B=pts[j+1],seg=B.clone().sub(A),sl=seg.length();
+      var m=new THREE.Mesh(GEO.cyl8,mat);m.scale.set(c[2],sl,c[2]);m.position.copy(A).addScaledVector(seg,.5);m.quaternion.setFromUnitVectors(PHY,seg.normalize());m.renderOrder=c[3]?9:7;grp.add(m);}});
+  var t=0;life=life||.14;
+  phOwn(f,{tick:function(dt){t+=dt;var k=t/life;if(k>=1)return false;var fl=Math.random()<.25?.3:1;
+      mats.forEach(function(o){o.m.opacity=o.op*fl*(1-k*k);});return true;},
+    done:function(){scene.remove(grp);mats.forEach(function(o){o.m.dispose();});}});
+}
+// the ULTRA part, round the body: the reticle burned into the floor, rings racing out, a pillar, lightning
+function phUltra(f,big){
+  if(QUAL===0||!f.mesh||!phNear(f))return;
+  var X=f.pos.x,Y=f.y,Z=f.pos.z,sz=big?1:.7;
+  hwDecal(X,Y+.06,Z,"dev2",0x9a4cff,8*sz,.55,1.6*(Math.random()<.5?1:-1),f.yaw);
+  slashRing(X,Y+.1,Z,0x8a3cff,0,0);slashRing(X,Y+.1,Z,0xe0c8ff,.05,0);
+  ringBurst(X,Y+.3,Z,QUAL>1?28:12,10*sz,0x9a4cff,1.2,.32);
+  if(big)hwBeam(X,Y,Z,0x8a3cff,1.2,.3);
+  var nb=big?(QUAL>1?5:3):(QUAL>1?3:2),c=new THREE.Vector3(X,Y+1.7,Z);
+  for(var i=0;i<nb;i++){var a=Math.random()*TAU;phBolt(f,c.clone().add(new THREE.Vector3(Math.cos(a)*.4,rr(-.3,.4),Math.sin(a)*.4)),
+    new THREE.Vector3(X+Math.cos(a)*rr(2.6,4)*sz,Y+rr(.2,3.2),Z+Math.sin(a)*rr(2.6,4)*sz),rr(.1,.16));}
+  // embers flung out low across the floor
+  for(var e=0;e<(QUAL>1?24:10);e++){var ea=Math.random()*TAU,es=rr(5,11)*sz;spark(X,Y+.2,Z,Math.cos(ea)*es,rr(.5,2.5),Math.sin(ea)*es,.62,.3,1,rr(.18,.32),rr(.25,.45),2);}
 }
 function phMuzzle(f,p,dir){
   if(QUAL===0||!phNear(f))return;
@@ -11237,9 +11290,13 @@ function phShot(f,gun){
   // two slashes of fire wrapped round the body, crossed; a white flash and a bubble of it bursting out
   var sd=Math.random()<.5?1:-1;
   devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+1.75,f.pos.z),track:f,trackY:1.75,yaw:f.yaw+rr(-.15,.15),roll:0,span:4.3,scale:1.55,thick:1.9,dir:sd,
-    life:.58,hold:.2,flick:.07,fire:true});
+    life:.34,hold:.1,flick:.05,fire:true});
   phBoom(f,at(.35),dir,1);
   phMuzzle(f,at(.25),dir);
+  phTracer(f,at(.3),dir,42);
+  phUltra(f,true);
+  // a tear in the air down range where the round went through
+  if(QUAL>0&&phNear(f)){var tp=at(7);hwTear(tp.x,tp.y,tp.z,f.yaw,rr(-.5,.5),4.2,1.5,.42);}
   phBubble(f,1.5);
   if(near)phPop(f,new THREE.Vector3(f.pos.x,f.y+1.6,f.pos.z),0xffffff,5,.12,phStarTex(),2,.7);
   if(near)for(var fi=0;fi<(hi?6:3);fi++){var fp=at(.2+fi*.25);phFlame(f,fp,fi%2?"glow":"dark",.9,.35,.9);}
@@ -11282,7 +11339,9 @@ function phCut(f,knife,ks){
   phSfx("cut",f);
   if(QUAL===0)return;
   // a crescent on the diagonal of the cut (the left hand's runs the other way)
-  devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+1.8,f.pos.z),track:f,trackY:1.8,yaw:f.yaw,roll:-.55*ks,span:3.9,scale:1.55,thick:1.5,dir:ks,life:.5,hold:.15,flick:.07,fire:true});
+  devSlash(f,{pos:new THREE.Vector3(f.pos.x,f.y+1.8,f.pos.z),track:f,trackY:1.8,yaw:f.yaw,roll:-.55*ks,span:3.9,scale:1.55,thick:1.5,dir:ks,life:.32,hold:.09,flick:.05,fire:true});
+  phUltra(f,false);
+  if(QUAL>0&&phNear(f)){var fw=new THREE.Vector3(Math.sin(f.yaw),0,Math.cos(f.yaw));hwTear(f.pos.x+fw.x*3,f.y+1.8,f.pos.z+fw.z*3,f.yaw,-.55*ks,3.4,1.1,.34);}
   if(!phNear(f)||!knife.userData.tipPt)return;
   var p=phW(f,phLocal(knife,knife.userData.tipPt,new THREE.Vector3()));
   phPop(f,p,0xb890ff,2.4,.18,phStarTex(),4,.85);
