@@ -15,6 +15,8 @@ import { ECON_KEYS, setAbilOff, ultrasOf, timingVerdict, timingAdd, timingPooled
 const RETIRED_RE = new RegExp('"(' + Object.keys(RETIRED.abil).join("|") + ')"');
 import { adminPage, handleAdmin, ADMIN_TRIES, ADMIN_WINDOW_MS, specCheck } from "./admin.js";
 import { SimHost, SIM_ID } from "./sim.js";
+import { Hub, Party, normTag } from "./social.js";
+export { Hub, Party };
 
 const MAX_PLAYERS = 6;
 const BOSS_MAX = 4;                          // Boss Rally: one to four players
@@ -298,6 +300,40 @@ export class Room {
     return out;
   }
   hostId() { return electHost(this.roster()); }
+  /* ---- seats held for lobby invites ----
+     A friend invited to this room has a seat for a minute; held seats count
+     toward the six, so an invite can never overfill the room. The room is
+     asked directly -- a player's own word about which room they are in, or
+     whether it has space, is never taken. */
+  async resv() {
+    const now = Date.now(), r = (this.ctx.storage && (await this.ctx.storage.get("resv"))) || {};
+    for (const k in r) if (r[k] <= now) delete r[k];
+    return r;
+  }
+  async seatsTaken(r, except) {
+    const subs = new Set(this.roster().map(p => p.sub));
+    let n = subs.size;
+    for (const k in r) if (k !== except && !subs.has(k)) n++;
+    return n;
+  }
+  async socialOp(b) {
+    const sub = typeof b.sub === "string" ? b.sub.slice(0, 64) : "";
+    const meta = (this.ctx.storage && (await this.ctx.storage.get("meta"))) || {};
+    const r = await this.resv(), now = Date.now();
+    const out = o => new Response(JSON.stringify(o), { headers: { "Content-Type": "application/json" } });
+    if (b.op === "member") return out({ ok: !!sub && this.roster().some(p => p.sub === sub) });
+    if (b.op === "release") { delete r[sub]; await this.ctx.storage.put("resv", r); return out({ ok: true }); }
+    if (!this.roster().length) return out({ ok: false, why: "closed" });
+    if (meta.solo || meta.q) return out({ ok: false, why: "private" });
+    if (b.op === "reserve" || b.op === "claim") {
+      if (this.roster().some(p => p.sub === sub)) return out({ ok: true, here: true });
+      if (!r[sub] && (await this.seatsTaken(r, sub)) >= MAX_PLAYERS) return out({ ok: false, why: "full" });
+      r[sub] = now + Math.min(120000, Math.max(5000, b.op === "claim" ? 30000 : (b.ttl | 0) || 60000));
+      await this.ctx.storage.put("resv", r);
+      return out({ ok: true });
+    }
+    return out({ ok: false, why: "unknown" });
+  }
 
   broadcast(obj, exceptWs) {
     const text = JSON.stringify(obj);
@@ -336,6 +372,7 @@ export class Room {
 
   async fetch(request) {
     if (new URL(request.url).hostname === "room-admin") return this.adminOp(await request.json());
+    if (new URL(request.url).hostname === "room-social") return this.socialOp(await request.json());
     if (request.headers.get("Upgrade") !== "websocket")
       return new Response("expected websocket upgrade", { status: 426 });
     const url = new URL(request.url);
@@ -360,6 +397,17 @@ export class Room {
       server.send(JSON.stringify({ t: "denied", why: who.why, reason: who.reason || "" }));
       server.close(4001, who.why);
       return new Response(null, { status: 101, webSocket: client });
+    }
+    // seats held for invited friends count: only they may take them
+    if (this.ctx.storage) {
+      const r = await this.resv();
+      if ((await this.seatsTaken(r, who.sub)) >= MAX_PLAYERS && !this.roster().some(p => p.sub === who.sub)) {
+        server.accept();
+        server.send(JSON.stringify({ t: "denied", why: "full", reason: "That lobby is full." }));
+        server.close(4003, "full");
+        return new Response(null, { status: 101, webSocket: client });
+      }
+      if (r[who.sub]) { delete r[who.sub]; await this.ctx.storage.put("resv", r); }
     }
     // kicked by the admin a moment ago: not straight back in
     const kickedTill = this.ctx.storage ? await this.ctx.storage.get("kick:" + who.sub) : 0;
@@ -1361,6 +1409,21 @@ export async function handleQueue(request, env) {
   if (!body.leave && !(god >= 0 && (j.rp | 0) >= CAT.ranks[god].rp)) return jsonRes({ error: "not god" }, 403);
   return jsonRes((await dirCall(env, { op: "queue", sub: m[1], leave: !!body.leave })) || { error: "unavailable" });
 }
+/* The social socket: only a real session of the account gets its Hub, and
+   the Hub is told who it is by the Worker, never by the game. */
+export async function handleSocial(request, env) {
+  if (request.headers.get("Upgrade") !== "websocket") return jsonRes({ error: "expected websocket" }, 426);
+  if (!env.HUB || !env.VAULT) return jsonRes({ error: "social is not set up on this server" }, 503);
+  const url = new URL(request.url);
+  const m = /^([A-Za-z0-9_-]{1,64})\.([0-9a-f]{48})$/.exec(String(url.searchParams.get("tok") || ""));
+  let ok = false;
+  if (m) { try { const r = await toVault(env, m[1], { op: "whoami", sub: m[1], secret: m[2] }); ok = r.status === 200; } catch (e) {} }
+  if (!ok) return jsonRes({ error: "signed out" }, 401);
+  const to = new URL("https://hub/ws");
+  to.searchParams.set("sub", m[1]);
+  to.searchParams.set("name", (url.searchParams.get("name") || "").slice(0, 14));
+  return env.HUB.get(env.HUB.idFromName("h:" + m[1])).fetch(new Request(to.toString(), { headers: { Upgrade: "websocket" } }));
+}
 export async function handleCloud(request, env, path, opts) {
   if (request.method !== "POST") return jsonRes({ error: "POST only" }, 405);
   if (!env.VAULT) return jsonRes({ error: "cloud saves are not set up on this server" }, 503);
@@ -1406,6 +1469,7 @@ export default {
     // how many players own each ULTRA
     if (url.pathname === "/owners") return jsonRes((await dirCall(env, { op: "owners" })) || { owners: {} });
     if (url.pathname === "/queue") return handleQueue(request, env);
+    if (url.pathname === "/social") return handleSocial(request, env);
     if (url.pathname === "/admin") return new Response(adminPage(), { headers: { "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store", "X-Frame-Options": "DENY", "Referrer-Policy": "no-referrer" } });
     if (url.pathname === "/admin/api") return handleAdmin(request, env, { toVault, dirCall, jsonRes, readJson, ipKey });
@@ -1529,6 +1593,30 @@ export class Directory {
       for (const k in lob) if (now - lob[k].at > LOBBY_TTL_MS) delete lob[k];
       await st.put("lobbies", lob);
       return jsonRes({ ok: true });
+    }
+    /* ---- player tags: a stable, unique handle apart from the display name ----
+       NAME#1234, made once from the name the account had then; it never
+       changes when the name does. Search is by exact tag only. */
+    if (b.op === "tag") {
+      if (!sub) return jsonRes({ error: "no account" }, 400);
+      let tag = await st.get("tagOf:" + sub);
+      const nm = typeof b.name === "string" ? b.name.slice(0, 14) : "";
+      if (!tag) {
+        const base = (nm.replace(/[^A-Za-z0-9]/g, "").toUpperCase() || "PLAYER").slice(0, 10);
+        for (let i = 0; i < 40 && !tag; i++) {
+          const t = base + "#" + String(1000 + Math.floor(Math.random() * 9000));
+          if (!(await st.get("tag:" + t))) tag = t;
+        }
+        if (!tag) return jsonRes({ error: "busy" }, 503);
+        await st.put("tag:" + tag, { sub, name: nm });
+        await st.put("tagOf:" + sub, tag);
+      } else if (nm) await st.put("tag:" + tag, { sub, name: nm });
+      return jsonRes({ tag });
+    }
+    if (b.op === "findTag") {
+      const t = normTag(b.tag);
+      const r = t ? await st.get("tag:" + t) : null;
+      return jsonRes(r ? { sub: r.sub, name: r.name, tag: t } : { sub: null });
     }
     if (b.op === "lobbies") {
       const lob = (await st.get("lobbies")) || {}, out = [];

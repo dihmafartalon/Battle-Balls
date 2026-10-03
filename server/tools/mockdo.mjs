@@ -16,8 +16,12 @@ export function memStorage() {
     },
     async delete(k) { if (Array.isArray(k)) { let n = 0; for (const x of k) if (m.delete(x)) n++; return n; } return m.delete(k); },
     async list(o) {
-      const p = (o && o.prefix) || "", out = new Map();
-      for (const k of [...m.keys()].sort()) if (k.startsWith(p)) out.set(k, clone(m.get(k)));
+      o = o || {};
+      const p = o.prefix || "", out = new Map();
+      let keys = [...m.keys()].sort().filter(k => k.startsWith(p) && (o.start === undefined || k >= o.start) && (o.end === undefined || k < o.end));
+      if (o.reverse) keys.reverse();
+      if (o.limit) keys = keys.slice(0, o.limit);
+      for (const k of keys) out.set(k, clone(m.get(k)));
       return out;
     },
     async setAlarm(t) { alarm = t; },
@@ -34,8 +38,9 @@ export function memState() {
     // one at a time, like the real thing
     blockConcurrencyWhile(fn) { const p = q.then(fn); q = p.catch(() => {}); return p; },
     waitUntil() {},
-    getWebSockets() { return []; },
-    acceptWebSocket() {}
+    socks: [],
+    getWebSockets() { return this.socks.slice(); },
+    acceptWebSocket(ws) { this.socks.push(ws); }
   };
 }
 /* A namespace of objects of one class: get(idFromName(x)).fetch(url, init).
