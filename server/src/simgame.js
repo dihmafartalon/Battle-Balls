@@ -6878,10 +6878,6 @@ function veerApply(b,by){
 }
 function veerFx(b,spin){
   if(NET.srv)return;
-  // the whole bend drawn in teal sparks, so whoever it's going for can read it
-  if(!_tellV)_tellV=new THREE.Vector3();
-  for(var i=1;i<=28;i++){var s2=i/28;curveAt(b,b.target,s2,_tellV);
-    spark(_tellV.x,_tellV.y,_tellV.z,0,.25,0,.36,.94,.85,.9,.75,0);}
   ringBurst(b.pos.x,b.pos.y,b.pos.z,30+Math.round(spin*20),9+spin*6,0x5cf0d8,1.8,.55);
   ringBurst(b.pos.x,b.pos.y,b.pos.z,18,4,0xffffff,1.3,.35);
   burst(b.pos.x,b.pos.y,b.pos.z,26,12,0xb8fff0,1.5,.45,-2);
@@ -19605,9 +19601,6 @@ function frame(ts){
 function frameStep(dt){
   modalTick();
   veerCamTick(dt);
-  // a veered ball trails a teal comet tail the whole way
-  if(QUAL>0&&!NET.srv&&(STATE==="playing"))for(var vi=0;vi<balls.length;vi++){var vb=balls[vi];
-    if(vb.active&&vb.veered&&!(vb.held>0)){var vp=vb.mesh.position;spark(vp.x+rr(-.25,.25),vp.y+rr(-.25,.25),vp.z+rr(-.25,.25),0,0,0,.36,.94,.85,rr(.5,.9),.45,0);}}
   if(STATE==="boot"||paused)return;
   FRAME_N++;
   // The big centre banner ("3", "GO", "ELIMINATED") used to expire inside
