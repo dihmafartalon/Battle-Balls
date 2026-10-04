@@ -90,7 +90,7 @@ async function until(fn, ms, what) { const t0 = Date.now(); while (Date.now() - 
 
 // a solo fight from the first serve to the win (short health, so all three phases come quickly)
 {
-  const { s, out } = fight(1, { cfg: { hp: [3, 4, 5, 6], atkGap: [2.5, 3.5] } });
+  const { s, out } = fight(1, { cfg: { hp: [3, 4, 5, 6], atkGap: [[3, 4], [2.5, 3.5], [2.5, 3.5]] } });
   const stop = drive(s, out, ["A"], ["A"]);
   // track the speed through the fight: it may only ever climb
   let lastM = 0, drops = 0, m0 = null;
@@ -107,13 +107,13 @@ async function until(fn, ms, what) { const t0 = Date.now(); while (Date.now() - 
   assert.equal(evs.filter(e => e.k === "brk").length, 3, "three guard breaks for three segments");
   const rets = evs.filter(e => e.k === "ret");
   assert.ok(rets.length >= 12, "he returns the ball between parries: " + rets.length);
-  // phases: the curve starts in phase 2, attacks only in phase 3
+  // phases: the curve starts in phase 2; phase 1 only rains swords, the sweep comes from phase 2
   const phs = evs.filter(e => e.k === "ph").map(e => e.p);
   assert.deepEqual(phs, [2, 3]);
   const idx = k => bm.findIndex(m => m.ev && m.ev.k === "ph" && m.ev.p === k);
   assert.ok(bm.slice(0, idx(2)).every(m => !(m.ev && m.ev.k === "ret" && m.ev.c)), "no curves in phase 1");
   assert.ok(bm.slice(idx(2)).some(m => m.ev && m.ev.k === "ret" && m.ev.c), "curves from phase 2");
-  assert.ok(bm.slice(0, idx(3)).every(m => !(m.ev && m.ev.k === "atk")), "no attacks before phase 3");
+  assert.ok(bm.slice(0, idx(2)).every(m => !(m.ev && m.ev.k === "atk" && m.ev.a.k === "sweep")), "no sweep in phase 1");
   assert.equal(drops, 0, "the ball's speed never went down in the fight");
   assert.ok(lastM > m0 + 0.5, "and it climbed: " + m0 + " -> " + lastM);
   // nothing attacks during a recoil or a phase change, and every attack gives time to react
