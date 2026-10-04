@@ -487,6 +487,10 @@ body.touch .bossHud{top:64px;width:min(340px,58vw)}
 .slot .n{position:absolute;left:2px;right:2px;bottom:4px;font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .slot .k{position:absolute;top:3px;right:3px;min-width:22px;height:22px;padding:0 4px;border-radius:6px;background:#fff;color:var(--nv);
   border:2px solid var(--nv);font-size:11px;font-weight:700;line-height:18px;z-index:2}
+.slot.passive .k{display:none}
+.slot.passive::after{content:"PASSIVE";position:absolute;top:4px;left:50%;transform:translateX(-50%);z-index:2;padding:1px 6px;border-radius:6px;
+  background:#4ad991;color:#0b1942;font-size:9.5px;font-weight:800;letter-spacing:.08em}
+.tb.passive{opacity:.8}.tb small{display:block;font-size:9px;letter-spacing:.08em;color:#b8ffcf;margin-top:2px}
 .slot .cd{position:absolute;left:0;bottom:0;width:100%;height:0%;background:rgba(8,16,48,.62);z-index:1}
 .slot.ready{box-shadow:inset 0 3px 0 rgba(255,255,255,.4),0 5px 0 var(--nv),0 0 0 3px var(--g1)}
 #slotParry{background:linear-gradient(180deg,#ffe25a,#f09a00)}#slotParry .n{--oc:var(--yd)}
@@ -920,6 +924,8 @@ button.chip:active{transform:translateY(2px)}
   background:linear-gradient(180deg,var(--tab2),var(--tab));border:3px solid var(--nv);box-shadow:0 3px 0 var(--nv)}
 .setrow button.tog{min-width:62px;background:linear-gradient(180deg,var(--r1),var(--r2))}
 .setrow button.bindk{min-width:92px;background:linear-gradient(180deg,#3a4f8f,#22336a);font-variant-numeric:tabular-nums}
+.bindpair{display:flex;gap:6px}
+.setrow button.bindk.alt{min-width:78px;background:linear-gradient(180deg,#2c3a66,#1a264e);opacity:.92}
 .setrow button.bindk.on{background:linear-gradient(180deg,var(--y1),#d89a00);color:#12204e}
 .setrow button.tog.on{background:linear-gradient(180deg,var(--g1),var(--g2))}
 .qbtns{display:flex;gap:6px}
@@ -1945,6 +1951,7 @@ var ABIL_ICON={
   gravity:"<circle cx='20' cy='20' r='5' fill='{C}'/><path d='M20 4 L20 11 M20 29 L20 36 M4 20 L11 20 M29 20 L36 20' stroke='{C}' stroke-width='3' stroke-linecap='round'/><path d='M17 8 L20 11 L23 8 M17 32 L20 29 L23 32 M8 17 L11 20 L8 23 M32 17 L29 20 L32 23' stroke='{C}' stroke-width='2.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/>",
   overdrive:"<path d='M10 22 L20 4 L20 17 L30 17 L20 36 L20 22 Z' fill='{C}'/><circle cx='20' cy='20' r='15' fill='none' stroke='{C}' stroke-width='1.6' opacity='.45'/>",
   counter:"<path d='M20 4 L32 9 L32 20 C32 28 26 33 20 35 C14 33 8 28 8 20 L8 9 Z' fill='none' stroke='{C}' stroke-width='2.6'/><path d='M27 11 L14 26' stroke='{C}' stroke-width='3' stroke-linecap='round'/>",
+  veer:"<path d='M7 31 C9 18 16 12 24 13 C30 14 33 19 30 23 C27 27 21 24 23 19' fill='none' stroke='{C}' stroke-width='3' stroke-linecap='round'/><path d='M19 17 L23 19 L21 23' fill='none' stroke='{C}' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/><circle cx='7' cy='31' r='2.6' fill='{C}'/>",
   guardian:"<path d='M20 5 L31 10 L31 20 C31 27 26 32 20 34 C14 32 9 27 9 20 L9 10 Z' fill='none' stroke='{C}' stroke-width='2.6'/><path d='M14 20 L18 24 L26 15' stroke='{C}' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/>"
 };
 function skinIcon(s){
@@ -2137,6 +2144,8 @@ var ABILITIES=[
   desc:"A black cat spirit leaps out of you and hunts down the ball -- whoever it is chasing. When it lands, the ball is knocked onto whoever you are looking at, a little faster. Never you, never your own team."},
  {id:"lightskin",name:"Ricky's Lightskin Aura",rarity:"legendary",price:5200,yen:120,cd:20,color:0xfff3c4,
   desc:"A blinding golden burst: everyone else's screen goes white for over a second, with a sound nobody can miss. You see everything. Bots caught in it block badly while it lasts."},
+ {id:"veer",name:"Veer",rarity:"legendary",price:6400,yen:140,cd:0,color:0x5cf0d8,passive:true,
+  desc:"Passive. Every ball you hit veers off on a wild curve. Whip your camera round as you hit and it bends even harder, the way you turned. Bots get fooled into swinging early."},
  {id:"guardian",name:"Guardian",rarity:"legendary",price:3600,yen:115,cd:0,color:0xffffff,passive:true,
   desc:"Passive. Survive one otherwise fatal hit per round and respawn centre stage."},
  {id:"mindgrip",name:"Mind Grip",rarity:"epic",price:3800,yen:65,cd:19,color:0xc8a8ff,
@@ -2557,7 +2566,7 @@ function defaultSave(){
     freeSpinsL:0,tokens:0,login:{id:"",n:0,last:""},season:0,s0rp:0,passHr:[],emotes:{},eqEmotes:[]};
 }
 // the settings a wipe keeps: how the game looks and feels, not what you own
-var KEEP_ON_WIPE=["fov","qual","sens","shiftLock","mouseLock","invertY","camDist","binds",
+var KEEP_ON_WIPE=["fov","qual","sens","shiftLock","mouseLock","invertY","camDist","binds","binds2",
   "ballColor","ballGlow","musicVol","sfxVol","musicUrl","musicOn","showFps",
   "nameTags","feedOn","showHitbox","netName","serverUrl","seenVersion"];
 var SAVE=defaultSave();
@@ -2661,7 +2670,7 @@ document.addEventListener("visibilitychange",function(){
    that belong to a device -- quality, sensitivity, volume -- stay on it. */
 var GOOGLE_CLIENT_ID="710765331188-b711mqvsvv7kf9n08f41suvmf030fav5.apps.googleusercontent.com";
 var CLOUDKEY="battleballs_cloud";
-var DEVICE_KEYS=["fov","qual","sens","shiftLock","mouseLock","invertY","camDist","binds","musicVol","sfxVol","musicUrl",
+var DEVICE_KEYS=["fov","qual","sens","shiftLock","mouseLock","invertY","camDist","binds","binds2","musicVol","sfxVol","musicUrl",
   "musicOn","showFps","nameTags","feedOn","showHitbox","serverUrl","seenVersion","rangeBest","passHr"];
 var CLOUD_T={settle:2,gap:4,retry:20,pull:8};          // seconds: wait after a change, least time between sends, after a failure, between checks
 var CLOUD_OPS_PER=60;                                     // the server takes this many batches per request
@@ -8316,6 +8325,8 @@ function botBlock(f,b,dt){
       b.misread=false;
       if(Math.random()<eff){b.pressLead=BOTBLOCK.lead+gauss()*sd;}
       else {b.misread=true;b.pressLead=Math.random()<0.55?BLOCK.active+rr(0.12,0.65):-1;}   // too early, or frozen
+      // Veer: the bend fools them now and then into swinging early (sharper bots less often)
+      if(b.veered&&!b.misread&&!anticipated&&Math.random()<VEER.fool*(1.15-f.skill*0.45)){b.misread=true;b.pressLead=BLOCK.active+rr(0.18,0.5);}
       b.readLeft=(anticipated||judged)?0:f.react*rr(0.85,1.2)*(f.cursedT>0?1.3:1);
     }
     b.readLeft=Math.max(0,(b.readLeft||0)-dt);
@@ -8398,7 +8409,7 @@ function setupFlight(b,x,y,z,aimYaw,keepSpeed){
   // decision again there judged them on the short range left after the
   // overshoot, where the odds collapse, and quietly cost the top ranks several
   // points of return rate. A new exchange still gets a fresh roll.
-  if(!keepSpeed){b.decided=false;b.willParry=false;}
+  if(!keepSpeed){b.decided=false;b.willParry=false;b.veered=0;}
   if(!b.target){b.active=false;b.mesh.visible=false;return;}
   var t=b.target;
   var ex=t.pos.x-b.pos.x,ey=(t.y+AIM_Y)-b.pos.y,ez=t.pos.z-b.pos.z;
@@ -8545,10 +8556,10 @@ function wrathHit(b){
    built its speed one hit at a time. */
 function releaseHeld(b,aimOverride){
   if(NET.on&&!NET.isHost){                    // the host decides; guests just let go
-    b.held=0;b.heldBy=null;b.wrath=false;b.hits=0;b.orbit=false;return;
+    b.held=0;b.heldBy=null;b.holdYaw=undefined;b.wrath=false;b.hits=0;b.orbit=false;return;
   }
   var hb=b.heldBy;
-  b.held=0;b.heldBy=null;
+  b.held=0;b.heldBy=null;b.holdYaw=undefined;
   if(hb)hb.holdT=0;
   if(!hb||!hb.alive){                       // the holder died still holding it
     b.wrath=false;b.hits=0;
@@ -8619,6 +8630,46 @@ function resetBall(b,delay){
    twenty, 3.4x after forty. Long rallies still get frightening -- just not by
    hit fifteen. Ability bonuses are flat steps for the same reason: a x1.4 on top
    of a 6x ball was a +2.4 jump. */
+/* ---- VEER (passive) ----
+   Every ball its owner hits leaves on a wild bend: the arc's middle is pushed
+   well off to one side and up or down, and it still comes round onto its
+   target. Turning the camera as you hit bends it harder, the way you turned
+   (online the guest's turn rides along with their block press). A veered ball
+   reads badly: bots are sometimes fooled into swinging early. */
+var VEER={bend:6,camBend:1.3,lift:4,fool:0.1};
+var VEERCAM={last:null,v:0};
+// how hard (and which way) the camera is turning, -1..1, smoothed
+function veerCamTick(dt){
+  if(VEERCAM.last===null||!(dt>0)){VEERCAM.last=camYaw;return;}
+  var d=angDiff(VEERCAM.last,camYaw);VEERCAM.last=camYaw;
+  VEERCAM.v+=(clamp(d/dt/5,-1,1)-VEERCAM.v)*(1-Math.exp(-10*dt));
+}
+function veerApply(b,by){
+  var tg=b.target;
+  if(!tg||!b.c0||!b.c1)return;
+  var turn=by.isPlayer?VEERCAM.v:(by.isRemote?clamp(by.netVr||0,-1,1):(Math.random()*2-1)*0.6);
+  var spin=Math.abs(turn),side=spin>0.12?(turn>0?-1:1):(Math.random()<0.5?-1:1);
+  var dx=tg.pos.x-b.pos.x,dz=tg.pos.z-b.pos.z,D=Math.sqrt(dx*dx+dz*dz)||1;
+  var k=clamp(D/18,0.25,1);                        // a point-blank return bends less
+  var amt=VEER.bend*(1+VEER.camBend*spin)*k*rr(0.85,1.2);
+  var px=-dz/D,pz=dx/D;
+  b.c1.x+=px*amt*side;b.c1.z+=pz*amt*side;
+  b.c1.y=clamp(b.c1.y+(Math.random()<0.5?-1:1)*VEER.lift*(0.4+spin)*k,2,14);
+  var r=Math.sqrt(b.c1.x*b.c1.x+b.c1.z*b.c1.z),lim=Math.max(4,ARENA_R-1.5);
+  if(r>lim){b.c1.x*=lim/r;b.c1.z*=lim/r;}
+  // it leaves already swinging out along the new bend
+  steerDir(b.dir,b.c1.x-b.pos.x,b.c1.y-b.pos.y,b.c1.z-b.pos.z,0.9);
+  b.veered=1;b._ttiF=-1;
+  b.flightTime=tti(b);b.fairT=Math.max(0.2,b.flightTime*1.1);
+  veerFx(b,spin);
+}
+function veerFx(b,spin){
+  if(NET.srv)return;
+  pathTell(b,0.85,[0.36,0.94,0.85]);
+  ringBurst(b.pos.x,b.pos.y,b.pos.z,18+Math.round(spin*14),5+spin*4,0x5cf0d8,1.3,.45);
+  burst(b.pos.x,b.pos.y,b.pos.z,12,8,0xb8fff0,1.1,.35,-2);
+  try{tone(380,980+spin*600,.16,"sine",.07);}catch(e){}
+}
 function rampStep(){return Math.max(0.02,((MODE&&MODE.ramp)||1.11)-1)*0.55;}
 function deflect(b,by,perfect,timed){
   // what the anticheat reads: only a real press, judged on its own timing
@@ -8657,6 +8708,7 @@ function deflect(b,by,perfect,timed){
       aim+=(Math.random()<0.5?-1:1)*rr(0.25,0.95)*(0.4+by.skill*0.6);
   }
   setupFlight(b,tip.x,Math.max(1.6,tip.y),tip.z,aim);
+  if(by.ability==="veer"&&b.target)veerApply(b,by);
   // Ricky's .9: the block is a shot, and the tracer goes where the ball is going
   if(by.swordDef&&by.swordDef.swing==="gunshot"&&b.target)gunTracer(by,b.target.pos.x,b.target.y+AIM_Y,b.target.pos.z);
   if(NET.on&&NET.isHost)netBroadcastBall();
@@ -8807,27 +8859,30 @@ function updateBall(b,dt,t){
       if(b.held<=0)releaseHeld(b);
       return;
     }
+    /* Infinity and Opi's Wrath: the ball follows you with a delay. It swings
+       round after where you face rather than snapping to your aim, and drifts
+       after you as you move -- a weight on a string, not a sticker. */
+    var fy=hb.isPlayer?camYaw:hb.yaw;
+    if(b.holdYaw===undefined)b.holdYaw=fy;
+    b.holdYaw=dampAng(b.holdYaw,fy,b.wrath?3.2:2.6,dt);
     if(b.wrath){
-      // Opi's Wrath pins it in the air just in front of you, and each hit
-      // knocks it back a little so you can see it land
-      var fy=hb.isPlayer?camYaw:hb.yaw;
-      // high and well out, so the camera behind you can see it over your
-      // shoulder instead of it hiding inside your own back
+      // high and well out in front, so the camera behind you can see it over
+      // your shoulder; each hit knocks it back a little so you see it land
       var out=3.4+b.kick*0.6;
-      hx=hb.pos.x+Math.sin(fy)*out;hy=hb.y+3.4;hz=hb.pos.z+Math.cos(fy)*out;
+      hx=hb.pos.x+Math.sin(b.holdYaw)*out;hy=hb.y+3.4;hz=hb.pos.z+Math.cos(b.holdYaw)*out;
       // bots keep time with it at a pace set by how good they are
       if(!hb.isPlayer&&!hb.isRemote){
         b.botHitT-=dt;
         if(b.botHitT<=0){wrathHit(b);b.botHitT=lerp(0.34,0.15,hb.skill||0.6)+Math.random()*0.08;}
       }
     } else {
-      var ht2=hb.swordTip();
-      hx=ht2.x;hy=Math.max(1.3,ht2.y);hz=ht2.z;
+      // Infinity: held out beside you at chest height, trailing your turn
+      hx=hb.pos.x+Math.sin(b.holdYaw+0.5)*2.6;hy=hb.y+2.5+Math.sin(t*3)*0.15;hz=hb.pos.z+Math.cos(b.holdYaw+0.5)*2.6;
     }
-    // pulled in rather than snapped, so a catch reads as a catch
-    b.pos.x=damp(b.pos.x,hx,18,dt);
-    b.pos.y=damp(b.pos.y,hy,18,dt);
-    b.pos.z=damp(b.pos.z,hz,18,dt);
+    // it lags behind where it should be, so it reads as following you
+    b.pos.x=damp(b.pos.x,hx,6.5,dt);
+    b.pos.y=damp(b.pos.y,hy,8,dt);
+    b.pos.z=damp(b.pos.z,hz,6.5,dt);
     b.mesh.position.copy(b.pos);
     b.core.scale.setScalar(1.5+Math.sin(t*16)*0.14);
     if(b.held<=0)releaseHeld(b);
@@ -12853,6 +12908,8 @@ function phIdleFx(f,gun,knife,dt,t){
   }
 }
 /* ---- the look: violet and purple, hot magenta, an ice-cyan edge, white at the core ---- */
+// how big Dev2's effects are drawn: one knob for every flash, flame, slash and ring
+var PH_FXS=1.4;
 var PH_COL={vio:0x6a2cff,pur:0xb46bff,mag:0xff4fd8,cy:0x5fe8ff,wh:0xffffff};
 function phOwn(f,e){e.owner=f;V4FX.push(e);return e;}
 function phNear(f){return f===player||!player||dist2(f.pos.x,f.pos.z,player.pos.x,player.pos.z)<60*60;}
@@ -12877,7 +12934,7 @@ function phPop(f,pos,col,size,life,map,spin,op){
   var t=0,r0=Math.random()*TAU;
   phOwn(f,{tick:function(dt){t+=dt;var k=t/life;if(k>=1)return false;
       m.quaternion.copy(camera.quaternion);if(spin)m.rotateZ(r0+t*spin);
-      var s=k<.15?k/.15:1-(k-.15)/.85*.55;m.scale.setScalar(size*s);m.material.opacity=op*Math.pow(1-k,1.4);return true;},
+      var s=k<.15?k/.15:1-(k-.15)/.85*.55;m.scale.setScalar(size*s*PH_FXS);m.material.opacity=op*Math.pow(1-k,1.4);return true;},
     done:function(){scene.remove(m);m.material.dispose();}});
 }
 /* ---- DEV2'S CRESCENT ----
@@ -12960,7 +13017,7 @@ function devSlash(f,o){
   var fireAt=[];
   if(o.fire&&QUAL>0){var a0=-Math.PI/2-span/2;
     [0,.06,.94,1].forEach(function(fu){var fa=a0+fu*span,mk=new THREE.Object3D();mk.position.set(Math.cos(fa)*2.6,0,-Math.sin(fa)*2.6);inner.add(mk);fireAt.push({m:mk,u:fu});});}
-  grp.position.copy(o.pos);grp.scale.setScalar(o.scale||1);
+  grp.position.copy(o.pos);grp.scale.setScalar((o.scale||1)*PH_FXS);
   var fwd;
   if(o.normal){grp.quaternion.setFromUnitVectors(PHY,o.normal);grp.quaternion.multiply(PHq.setFromAxisAngle(PHY,o.roll||0));fwd=o.normal.clone();}
   else{grp.rotation.order="YXZ";grp.rotation.set(-(o.pitch||0),o.yaw||0,o.roll||0);fwd=new THREE.Vector3(0,0,1).applyEuler(grp.rotation);}
@@ -13011,7 +13068,7 @@ function phFlameMats(){
 // one flame: born at p, rising, flickering, shrinking out over `life`
 function phFlame(f,p,kind,size,life,vy,par,vel){
   var m=new THREE.Sprite(phFlameMats()[kind]);m.position.copy(p);m.renderOrder=kind==="glow"||kind==="hot"?9:8;(par||scene).add(m);
-  var t=0,ph=Math.random()*9,w=size*(.75+Math.random()*.4);
+  var t=0,ph=Math.random()*9,w=size*PH_FXS*(.75+Math.random()*.4);
   phOwn(f,{tick:function(dt){t+=dt;var k=t/life;if(k>=1)return false;
       m.position.y+=vy*dt;if(vel){m.position.addScaledVector(vel,dt);vel.multiplyScalar(Math.max(0,1-dt*5));}var fl=1+.18*Math.sin(t*40+ph);
       var s=(k<.2?k/.2:1-(k-.2)/.8);m.scale.set(w*s*fl*.6,w*s*(1.2+k*.5),1);return true;},
@@ -13020,7 +13077,7 @@ function phFlame(f,p,kind,size,life,vy,par,vel){
 /* ---- the shot: a ring of purple-and-black fire races round the body ---- */
 function phFireRing(f){
   if(QUAL===0||!f.mesh)return;
-  var hi=QUAL>1,N=hi?28:14,R=1.75,grp=new THREE.Group();scene.add(grp);
+  var hi=QUAL>1,N=hi?28:14,R=1.75*PH_FXS,grp=new THREE.Group();scene.add(grp);
   var tilt=.18,t=0,lit=0,spin=f.yaw+Math.PI;
   phOwn(f,{tick:function(dt){t+=dt;
       grp.position.set(f.pos.x,f.y+1.45,f.pos.z);
@@ -13070,7 +13127,7 @@ function phCard(f,pos,tex,w,h,rot,life,grow,op){
       m.quaternion.copy(camera.quaternion);m.rotateZ(rot);
       var s=k<.12?.4+.6*(k/.12):1+(k-.12)*(grow||.25);
       var hk=typeof h==="function"?h(k):h;
-      m.scale.set(w*s,hk*s,1);m.material.opacity=op*(k<.5?1:Math.pow(1-(k-.5)/.5,1.5));return true;},
+      m.scale.set(w*s*PH_FXS,hk*s*PH_FXS,1);m.material.opacity=op*(k<.5?1:Math.pow(1-(k-.5)/.5,1.5));return true;},
     done:function(){scene.remove(m);m.material.dispose();}});
   return m;
 }
@@ -15528,15 +15585,17 @@ function musicLoad(url,name){
   if(SAVE.musicOn)musicPlay();
 }
 function musicPlay(){
+  if(typeof BMUS!=="undefined"&&BMUS.on){bossMusicVolume();return;}   // the boss track is playing instead
   var a=MUSIC.el;
   if(!a||!a.src)return;
   var pr=a.play();
   if(pr&&pr.catch)pr.catch(function(){});   // blocked until a real gesture
 }
-function musicPause(){if(MUSIC.el)MUSIC.el.pause();}
+function musicPause(){if(MUSIC.el)MUSIC.el.pause();if(typeof BMUS!=="undefined")bossMusicVolume();}
 function musicVolume(v){
   SAVE.musicVol=clamp(v,0,1);
   if(MUSIC.el)MUSIC.el.volume=SAVE.musicVol;
+  if(typeof BMUS!=="undefined")bossMusicVolume();
 }
 function musicBoot(){
   // called from the first click, which is what browsers wait for
@@ -16170,9 +16229,9 @@ function startMatch(modeId){
    parry. Nothing resets it -- not damage, not a new rally, not a phase, not a
    knockout. Only a new fight starts it from the beginning.
 
-   Phase 1 is plain rallies. Phase 2 bends his returns, and says so: a teal
-   trail of the whole path and a CURVED tag. Phase 3 adds a dodge attack every
-   so often, telegraphed on the floor well before it lands. Nothing is thrown
+   Phase 1 has the odd sword rain. Phase 2 bends his returns (a teal trail of
+   the whole path and a CURVED tag) and adds his sweep. Phase 3 attacks every
+   few seconds. Every attack is telegraphed on the floor well before it lands. Nothing is thrown
    during a guard break or a phase change.
 
    Whoever runs the match (the server's copy of the game online, your own game
@@ -16189,7 +16248,7 @@ var BOSS_CFG={
   breakT:2.0,               // the guard-break recoil: nothing attacks during it
   phaseT:2.8,               // the phase change
   curve:[0.75,1.15],        // how far a phase 2+ return leaves off the straight line (radians)
-  atkGap:[9,14],            // phase 3: seconds between dodge attacks
+  atkGap:[[16,22],[9,12],[5,8]],   // seconds between dodge attacks in phase 1, 2 and 3
   atkWarn:1.8,              // how long the floor shows where it will land
   rainR:4.6,                // the sword-rain circles
   sweepHalf:0.44,           // half the sweep's width (about 25 degrees)
@@ -16226,6 +16285,8 @@ function bossAbilOk(id){return !BOSS_BAD[id];}
 var BOSS={on:false,hp:0,max:0,guard:0,phase:1,busyT:0,atk:null,atkT:0,endT:0,victory:false,down:[],
   t0:0,n:0,model:null,hud:null,fx:[],tell:[],seq:0};
 var BOSS_F=null;
+// how long until his next dodge attack: he attacks from the start, and faster as he breaks
+function bossAtkGap(ph){var g=BOSS_CFG.atkGap,r=g[clamp((ph|0)-1,0,g.length-1)];return Array.isArray(r)?rr(r[0],r[1]):rr(9,14);}
 function bossPhaseOf(hp,max){var f=hp/Math.max(1,max);return f>2/3+1e-9?1:(f>1/3+1e-9?2:3);}
 function bossHpFor(n){var t=BOSS_CFG.hp;return t[clamp(n,1,t.length)-1];}
 // the boss as far as the ball is concerned: a target with a big chest and no feet
@@ -16257,9 +16318,10 @@ function bossBegin(nPlayers){
   BOSS.on=true;BOSS.n=nPlayers;
   BOSS.max=BOSS.hp=bossHpFor(nPlayers);
   BOSS.guard=0;BOSS.phase=1;BOSS.busyT=0;BOSS.atk=null;BOSS.endT=0;BOSS.victory=false;BOSS.down=[];
-  BOSS.atkT=rr(BOSS_CFG.atkGap[0],BOSS_CFG.atkGap[1]);BOSS.t0=gameT;BOSS.seq=0;
+  BOSS.atkT=bossAtkGap(1);BOSS.t0=gameT;BOSS.seq=0;
   bossTargetObj();
   bossHudShow(true);bossHudPaint();
+  bossMusicStart();
 }
 function bossRuns(){return !NET.on||NET.isHost;}
 function bossState(){return {hp:BOSS.hp,mx:BOSS.max,gd:BOSS.guard,ph:BOSS.phase};}
@@ -16307,7 +16369,7 @@ function bossContact(b){
     if(BOSS.atk){BOSS.atk=null;bossEvent({k:"cx"});}
     var rv=bossReviveOne();
     bossEvent({k:"brk",x:+b.pos.x.toFixed(2),y:+b.pos.y.toFixed(2),z:+b.pos.z.toFixed(2),rv:rv});
-    if(phased){bossEvent({k:"ph",p:BOSS.phase});BOSS.atkT=rr(3.5,5.5);}
+    if(phased){bossEvent({k:"ph",p:BOSS.phase});BOSS.atkT=rr(2.5,4);}
     if(BOSS.hp<=0){BOSS.victory=true;BOSS.endT=1.6;b.respawn=99;bossEvent({k:"win"});}
     if(NET.on&&NET.isHost)netBroadcastBall();
     return;
@@ -16364,7 +16426,7 @@ function fighterRevive(f,x,z){
 function bossAttackStart(){
   var all=livingFighters(false).filter(function(f){return f.team===0;});
   if(!all.length)return;
-  var k=Math.random()<0.5?"rain":"sweep",atk={k:k,t:BOSS_CFG.atkWarn};
+  var k=(BOSS.phase<2||Math.random()<0.5)?"rain":"sweep",atk={k:k,t:BOSS_CFG.atkWarn};   // phase 1 only rains swords
   if(k==="rain"){
     atk.p=[];
     for(var i=0;i<all.length&&i<4;i++){
@@ -16407,7 +16469,7 @@ function bossAttackLand(){
     bossOnKo(f,false);
   }
   checkEnd();
-  BOSS.atkT=rr(BOSS_CFG.atkGap[0],BOSS_CFG.atkGap[1]);
+  BOSS.atkT=bossAtkGap(BOSS.phase);
 }
 function bossTick(dt){
   if(!BOSS.on||!MODE||!MODE.boss)return;
@@ -16420,13 +16482,14 @@ function bossTick(dt){
     else{BOSS.atk.t-=dt;if(BOSS.atk.t<=0)bossAttackLand();}
     return;
   }
-  if(BOSS.phase>=3&&BOSS.busyT<=0){
+  if(BOSS.busyT<=0){
     BOSS.atkT-=dt;
     if(BOSS.atkT<=0)bossAttackStart();
   }
 }
 function bossStop(){
   BOSS.on=false;BOSS.atk=null;
+  bossMusicStop();
   bossHudShow(false);
   bossTellClear();
   if(BOSS.model){disposeTree(BOSS.model.root);scene.remove(BOSS.model.root);BOSS.model=null;}
@@ -16445,8 +16508,8 @@ function bossShow(m){
     else if(ev.k==="srv"||ev.k==="ret"){
       bossAnim("swing");
       if(ev.c){BOSS.curveFx=0.9;}
-    } else if(ev.k==="brk"){bossGuardBreakFx(ev);}
-    else if(ev.k==="ph"){bossPhaseFx(ev.p);}
+    } else if(ev.k==="brk"){bossGuardBreakFx(ev);bossMusicHit();}
+    else if(ev.k==="ph"){bossPhaseFx(ev.p);bossMusicPhase(ev.p);}
     else if(ev.k==="ko"){bossHudFlash("GUARD RESET","#ff6b6b");}
     else if(ev.k==="atk"){bossTellStart(ev.a);}
     else if(ev.k==="land"){bossTellLand(ev.a);}
@@ -17557,6 +17620,128 @@ function tutOffer(){
   el.querySelector("#tutNo").addEventListener("click",function(){el.remove();});
 }
 
+/* ============================================================
+   BOSS MUSIC -- made here, note by note, with Web Audio
+   ------------------------------------------------------------
+   An original loop for The Broken Champion: D minor, a choir pad and low
+   brass over pounding drums and a driving bass. It climbs with him: phase 1
+   is heavy and slow, phase 2 adds hats and a lead line, phase 3 goes faster
+   with double kicks and the lead an octave up. A guard break hits a gong.
+   Nothing is downloaded: every sound is synthesised as it plays.
+   ============================================================ */
+var BMUS={on:false,out:null,timer:0,next:0,step:0,phase:1,gain:0.5};
+// D minor: Dm | Bb | Gm | A  (the A major chord's C# is what makes it sound menacing)
+var BMUS_CHORDS=[[38,50,53,57],[34,46,50,53],[31,43,46,50],[33,45,49,52]];
+var BMUS_LEAD=[[74,72,69,72,74,77,76,74],[74,70,69,70,72,74,72,70],[67,70,74,72,70,69,67,65],[69,73,76,73,69,67,65,64]];
+function bmF(n){return 440*Math.pow(2,(n-69)/12);}
+function bmNoise(ctx){
+  if(ctx._bmNoise)return ctx._bmNoise;
+  var len=ctx.sampleRate,b=ctx.createBuffer(1,len,ctx.sampleRate),d=b.getChannelData(0);
+  for(var i=0;i<len;i++)d[i]=Math.random()*2-1;
+  return ctx._bmNoise=b;
+}
+function bmEnv(ctx,dest,t,a,h,r,peak){
+  var g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);
+  g.gain.linearRampToValueAtTime(peak,t+a);g.gain.setValueAtTime(peak,t+a+h);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+a+h+r);g.connect(dest);return g;
+}
+function bmOsc(ctx,type,f,t,dur){var o=ctx.createOscillator();o.type=type;o.frequency.setValueAtTime(f,t);o.start(t);o.stop(t+dur+0.05);return o;}
+function bmKick(ctx,dest,t,v){
+  var o=bmOsc(ctx,"sine",150,t,0.4);o.frequency.exponentialRampToValueAtTime(42,t+0.16);
+  o.connect(bmEnv(ctx,dest,t,0.002,0.03,0.32,0.9*v));
+}
+function bmSnare(ctx,dest,t,v){
+  var n=ctx.createBufferSource();n.buffer=bmNoise(ctx);
+  var f=ctx.createBiquadFilter();f.type="bandpass";f.frequency.value=1900;f.Q.value=0.8;
+  n.connect(f);f.connect(bmEnv(ctx,dest,t,0.001,0.02,0.18,0.55*v));n.start(t);n.stop(t+0.3);
+  var o=bmOsc(ctx,"triangle",200,t,0.15);o.frequency.exponentialRampToValueAtTime(140,t+0.1);o.connect(bmEnv(ctx,dest,t,0.001,0.01,0.1,0.35*v));
+}
+function bmHat(ctx,dest,t,v){
+  var n=ctx.createBufferSource();n.buffer=bmNoise(ctx);
+  var f=ctx.createBiquadFilter();f.type="highpass";f.frequency.value=8000;
+  n.connect(f);f.connect(bmEnv(ctx,dest,t,0.001,0.005,0.045,0.22*v));n.start(t);n.stop(t+0.08);
+}
+function bmBass(ctx,dest,t,n,dur,v){
+  var o=bmOsc(ctx,"sawtooth",bmF(n),t,dur);
+  var f=ctx.createBiquadFilter();f.type="lowpass";f.Q.value=6;
+  f.frequency.setValueAtTime(900,t);f.frequency.exponentialRampToValueAtTime(260,t+dur);
+  o.connect(f);f.connect(bmEnv(ctx,dest,t,0.004,dur*0.4,dur*0.6,0.32*v));
+}
+function bmPad(ctx,dest,t,notes,dur,v){
+  var f=ctx.createBiquadFilter();f.type="lowpass";f.frequency.value=1300;f.Q.value=0.5;
+  f.connect(bmEnv(ctx,dest,t,dur*0.25,dur*0.45,dur*0.4,0.07*v));
+  for(var i=1;i<notes.length;i++)for(var d=-1;d<=1;d+=2){
+    var o=bmOsc(ctx,"sawtooth",bmF(notes[i]+12),t,dur);o.detune.value=d*9;o.connect(f);
+  }
+}
+function bmBrass(ctx,dest,t,notes,v){
+  var f=ctx.createBiquadFilter();f.type="lowpass";f.Q.value=3;
+  f.frequency.setValueAtTime(300,t);f.frequency.linearRampToValueAtTime(1800,t+0.08);f.frequency.exponentialRampToValueAtTime(500,t+0.6);
+  f.connect(bmEnv(ctx,dest,t,0.02,0.15,0.5,0.16*v));
+  for(var i=0;i<notes.length;i++){var o=bmOsc(ctx,"sawtooth",bmF(notes[i]+12),t,0.8);o.connect(f);}
+}
+function bmLead(ctx,dest,t,n,dur,v,up){
+  var o=bmOsc(ctx,"square",bmF(n+(up?12:0)),t,dur),o2=bmOsc(ctx,"sawtooth",bmF(n+(up?12:0))*1.004,t,dur);
+  var f=ctx.createBiquadFilter();f.type="lowpass";f.frequency.value=up?3200:2200;
+  o.connect(f);o2.connect(f);f.connect(bmEnv(ctx,dest,t,0.01,dur*0.5,dur*0.6,0.09*v));
+  // a touch of vibrato on the long notes
+  var lf=ctx.createOscillator(),lg=ctx.createGain();lf.frequency.value=5.5;lg.gain.value=6;lf.connect(lg);lg.connect(o.detune);lg.connect(o2.detune);lf.start(t+0.1);lf.stop(t+dur+0.05);
+}
+function bmGong(ctx,dest,t,v){
+  for(var i=0;i<4;i++){var o=bmOsc(ctx,"sine",[110,163,227,341][i],t,3);o.connect(bmEnv(ctx,dest,t,0.005,0.05,2.6,[0.35,0.2,0.14,0.08][i]*v));}
+  var n=ctx.createBufferSource();n.buffer=bmNoise(ctx);var f=ctx.createBiquadFilter();f.type="bandpass";f.frequency.value=3500;
+  n.connect(f);f.connect(bmEnv(ctx,dest,t,0.002,0.02,1.2,0.25*v));n.start(t);n.stop(t+1.5);
+}
+function bmBpm(ph){return ph>=3?152:ph===2?142:132;}
+// one sixteenth note of the song, at time t: step counts from the top of the loop
+function bmStep(ctx,dest,t,step,ph){
+  var s=step%16,bar=Math.floor(step/16)%4,ch=BMUS_CHORDS[bar],sx=60/bmBpm(ph)/4;
+  // drums
+  var kicks=ph>=3?[0,3,6,8,10,11,14]:ph===2?[0,6,8,14]:[0,8];
+  if(kicks.indexOf(s)>=0)bmKick(ctx,dest,t,s===0?1:0.85);
+  if(s===4||s===12)bmSnare(ctx,dest,t,1);
+  if(ph>=3&&s===15)bmSnare(ctx,dest,t,0.5);
+  if(ph>=2&&(ph>=3||s%2===0))bmHat(ctx,dest,t,s%4===2?1:0.6);
+  // bass: driving eighths, octave jumps once it gets going
+  if(s%2===0){var bn=ch[0]+((ph>=2&&s%4===2)?12:0);bmBass(ctx,dest,t,bn,sx*1.8,1);}
+  // pad over the whole bar, brass stab on the downbeat
+  if(s===0){bmPad(ctx,dest,t,ch,sx*16,1);bmBrass(ctx,dest,t,ch.slice(1),ph>=2?1:0.8);}
+  if(ph===1&&s===10)bmBrass(ctx,dest,t,ch.slice(1),0.5);
+  // the lead line: from phase 2, an octave up in phase 3
+  if(ph>=2&&s%2===0){var ln=BMUS_LEAD[bar][s/2];if(ln)bmLead(ctx,dest,t,ln,sx*(s%4===0?1.9:1.6),1,ph>=3);}
+}
+function bossMusicStart(){
+  if(NET.srv||BMUS.on||!AC||!SAVE.musicOn)return;
+  try{
+    BMUS.out=AC.createGain();BMUS.out.gain.value=0.0001;
+    var comp=AC.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;
+    BMUS.out.connect(comp);comp.connect(AC.destination);
+    BMUS.out.gain.linearRampToValueAtTime(BMUS.gain*clamp(SAVE.musicVol===undefined?0.45:SAVE.musicVol,0,1)*2,AC.currentTime+1.5);
+  }catch(e){return;}
+  BMUS.on=true;BMUS.step=0;BMUS.phase=1;BMUS.next=AC.currentTime+0.1;
+  if(MUSIC.el)MUSIC.el.pause();
+  BMUS.timer=setInterval(bossMusicTick,50);
+}
+function bossMusicTick(){
+  if(!BMUS.on||!AC)return;
+  while(BMUS.next<AC.currentTime+0.25){
+    try{bmStep(AC,BMUS.out,BMUS.next,BMUS.step,BMUS.phase);}catch(e){}
+    BMUS.next+=60/bmBpm(BMUS.phase)/4;BMUS.step++;
+  }
+}
+function bossMusicPhase(p){BMUS.phase=p;if(BMUS.on&&AC)try{bmGong(AC,BMUS.out,AC.currentTime+0.02,1);}catch(e){}}
+function bossMusicHit(){if(BMUS.on&&AC)try{bmGong(AC,BMUS.out,AC.currentTime+0.02,0.7);bmKick(AC,BMUS.out,AC.currentTime+0.02,1);}catch(e){}}
+function bossMusicStop(){
+  if(!BMUS.on)return;
+  BMUS.on=false;clearInterval(BMUS.timer);
+  var o=BMUS.out;BMUS.out=null;
+  try{o.gain.cancelScheduledValues(AC.currentTime);o.gain.setValueAtTime(o.gain.value,AC.currentTime);o.gain.linearRampToValueAtTime(0.0001,AC.currentTime+1.2);
+    setTimeout(function(){try{o.disconnect();}catch(e){}},1500);}catch(e){}
+  if(SAVE.musicOn)musicPlay();
+}
+// the music on/off switch and volume reach the boss track too
+function bossMusicVolume(){if(BMUS.on&&BMUS.out&&AC)try{BMUS.out.gain.setTargetAtTime(SAVE.musicOn?BMUS.gain*clamp(SAVE.musicVol,0,1)*2:0.0001,AC.currentTime,0.1);}catch(e){}}
+
 /* ---------------- networked matches ----------------
    The host's browser is authoritative: it runs the ball, the bots, hit
    detection and round end, and broadcasts snapshots. Everyone simulates
@@ -17953,6 +18138,7 @@ function netHostParryClaim(m){
   var oldest=now-(clamp((NET.rtt||120),0,400)+260);
   var when=(typeof m.c==="number")?clamp(m.c,oldest,now):(now-clamp((NET.rtt||120)/2,0,220));
   if(typeof m.y==="number"){f.netAim=m.y;f.netAimAt=gameT;}
+  if(typeof m.vr==="number"&&isFinite(m.vr))f.netVr=clamp(m.vr,-1,1);
   var P=f.netPresses||(f.netPresses=[]);
   P.push({t:when,used:false});
   // keep five seconds of them: enough to replay the cooldown honestly
@@ -18025,7 +18211,7 @@ function netBallMsg(){
       fx:b.fxT>0?b.fx:0,ft:+(b.fxT||0).toFixed(2),
       fb:b.fxBy?(b.fxBy.netId||("bot"+b.fxBy.botIndex)):null,
       ag:+(b.age||0).toFixed(3),ln:b.launchN||0,lh:netIdOf(b.lastHit),lp:b.lastHit?(b.lastHit.phAnim|0):0,
-      ae:b.aerial?1:0,cv:b.c0?[+b.c0.x.toFixed(2),+b.c0.y.toFixed(2),+b.c0.z.toFixed(2),+b.c1.x.toFixed(2),+b.c1.y.toFixed(2),+b.c1.z.toFixed(2),+(b.s||0).toFixed(4)]:0});
+      ae:b.aerial?1:0,vr:b.veered?1:0,cv:b.c0?[+b.c0.x.toFixed(2),+b.c0.y.toFixed(2),+b.c0.z.toFixed(2),+b.c1.x.toFixed(2),+b.c1.y.toFixed(2),+b.c1.z.toFixed(2),+(b.s||0).toFixed(4)]:0});
   }
   var bots=[];
   for(i=0;i<fighters.length;i++){
@@ -18135,9 +18321,12 @@ function netApplyBall(m){
     if(gp.s!==undefined){b.c0=b.c0||new THREE.Vector3();b.c1=b.c1||new THREE.Vector3();
       b.c0.copy(gp.c0);b.c1.copy(gp.c1);b.s=gp.s;}else b.s=undefined;
     if(s.ln!==undefined){if(s.ln!==b.launchN)b._predN=null;b.launchN=s.ln;}
+    b.veered=s.vr?1:0;
+    if(s.vr&&b._veerN!==b.launchN&&b.c0){b._veerN=b.launchN;b._veerFxWait=1;}
     b._ttiF=-1;
     b.flightSpeed=s.sp;b.speed=s.sp;b.mult=s.m;
     b.target=newTarget;b.lastHitBoss=(s.lh==="boss");
+    if(b._veerFxWait){b._veerFxWait=0;if(b.target)veerFx(b,0.5);}
     var wasMine=b.held>0&&b.heldBy===player;
     b.held=s.hl||0;b.heldBy=s.hb?fighterByNetId(s.hb):null;
     if(b.held>0&&b.heldBy){b.heldBy.catchArmT=0;b.heldBy.catchArm=null;}
@@ -18553,7 +18742,7 @@ function tryParry(){
   // a block with no key, click or tap behind it: something called the game directly
   if(STATE==="playing"&&performance.now()-AC_IN.last>400)AC_IN.ghost++;
   // everyone sees the block go up; the host also uses the time of the press
-  if(NET.on)netSend({t:"parry",c:netNow(),y:+camYaw.toFixed(3),pa:player.phAnim|0});
+  if(NET.on)netSend({t:"parry",c:netNow(),y:+camYaw.toFixed(3),pa:player.phAnim|0,vr:+VEERCAM.v.toFixed(2)});
 }
 /* A held swing lands as soon as the ball is genuinely in range. If it never
    gets there, it becomes the miss it always was. */
@@ -18624,8 +18813,10 @@ function bindKey(a){
   for(var i=0;i<BINDS.length;i++)if(BINDS[i][0]===a)return BINDS[i][2];
   return "";
 }
-function isBind(code,a){return keyNorm(code)===bindKey(a);}
-function bindHeld(a){return !!keys[bindKey(a)];}
+// every action can have a second key as well (empty unless you set one)
+function bindKey2(a){var b=SAVE&&SAVE.binds2;return (b&&b[a])||"";}
+function isBind(code,a){var c=keyNorm(code),k2=bindKey2(a);return c===bindKey(a)||(!!k2&&c===k2);}
+function bindHeld(a){var k2=bindKey2(a);return !!keys[bindKey(a)]||(!!k2&&!!keys[k2]);}
 function keyName(c){
   if(!c)return "\u2014";
   var m={Space:"SPACE",ShiftLeft:"SHIFT",ControlLeft:"CTRL",AltLeft:"ALT",Backquote:"`",Minus:"-",Equal:"=",
@@ -18640,13 +18831,25 @@ var lastTouch=!!(window.matchMedia&&window.matchMedia("(pointer: coarse)").match
 function setLastTouch(on){if(lastTouch!==on){lastTouch=on;hudC.zone=null;}}
 // pointer events say which it was (a tap's follow-up mouse events do not count)
 window.addEventListener("pointerdown",function(e){setLastTouch(e.pointerType==="touch"||e.pointerType==="pen");},true);
-function setBind(a,code){
-  SAVE.binds=SAVE.binds||{};
-  var old=bindKey(a);
-  // taken by something else: they swap, so nothing is ever left without a key
-  for(var i=0;i<BINDS.length;i++){var o=BINDS[i][0];if(o!==a&&bindKey(o)===code)SAVE.binds[o]=old;}
-  SAVE.binds[a]=code;
+function setBind(a,code,slot){
+  SAVE.binds=SAVE.binds||{};SAVE.binds2=SAVE.binds2||{};
+  var i,o;
+  if(slot===2){
+    // a second key can't be some other action's main key; it moves off any other second slot
+    for(i=0;i<BINDS.length;i++){o=BINDS[i][0];if(o!==a&&bindKey(o)===code)return false;}
+    for(i=0;i<BINDS.length;i++){o=BINDS[i][0];if(SAVE.binds2[o]===code)delete SAVE.binds2[o];}
+    if(code===bindKey(a))return false;
+    SAVE.binds2[a]=code;
+  } else {
+    var old=bindKey(a);
+    // taken by something else: they swap, so nothing is ever left without a key
+    for(i=0;i<BINDS.length;i++){o=BINDS[i][0];if(o!==a&&bindKey(o)===code)SAVE.binds[o]=old;}
+    // a second key that is now somebody's main key is let go
+    for(i=0;i<BINDS.length;i++){o=BINDS[i][0];if(SAVE.binds2[o]===code)delete SAVE.binds2[o];}
+    SAVE.binds[a]=code;
+  }
   keys={};writeSave();refreshKeyLabels();
+  return true;
 }
 function refreshKeyLabels(){
   var t=function(id,v){var el=$(id);if(el)el.textContent=v;};
@@ -18655,16 +18858,19 @@ function refreshKeyLabels(){
   t("kbJump",keyName(bindKey("jump")));t("kbBlock",keyName(bindKey("block")));t("kbAbil",keyName(bindKey("ability")));
   t("kbEmote",keyName(bindKey("emote")));t("kbShift",keyName(bindKey("shift")));t("kbSprint",keyName(bindKey("sprint")));
   t("kbShift2","OR PRESS "+keyName(bindKey("shift"))+" IN GAME");
-  for(var i=0;i<BINDS.length;i++)t("bind_"+BINDS[i][0],keyName(bindKey(BINDS[i][0])));
+  for(var i=0;i<BINDS.length;i++){t("bind_"+BINDS[i][0],keyName(bindKey(BINDS[i][0])));
+    var k2=bindKey2(BINDS[i][0]);t("bind2_"+BINDS[i][0],k2?keyName(k2):"+ ADD");}
   hudC.zone=null;
 }
-var bindWait=null;        // the action waiting for its new key
-function bindStart(a){
+var bindWait=null,bindSlot=1;   // the action (and which of its two keys) waiting for a new key
+function bindEl(){return bindWait?$((bindSlot===2?"bind2_":"bind_")+bindWait):null;}
+function bindStart(a,slot){
   if(bindWait)bindStop();
-  bindWait=a;var el=$("bind_"+a);if(el){el.textContent="PRESS A KEY\u2026";el.classList.add("on");}
+  bindWait=a;bindSlot=slot===2?2:1;var el=bindEl();
+  if(el){el.textContent=bindSlot===2?"KEY\u2026 (DEL CLEARS)":"PRESS A KEY\u2026";el.classList.add("on");}
 }
 function bindStop(){
-  var el=bindWait&&$("bind_"+bindWait);if(el)el.classList.remove("on");
+  var el=bindEl();if(el)el.classList.remove("on");
   bindWait=null;refreshKeyLabels();
 }
 // ahead of everything else: while a rebind waits, the next key is the answer
@@ -18673,8 +18879,12 @@ window.addEventListener("keydown",function(e){
   e.preventDefault();e.stopImmediatePropagation();
   if(e.code==="Escape"){bindStop();return;}
   var c=keyNorm(e.code);
-  if(BIND_FIXED[c]){var el=$("bind_"+bindWait);if(el)el.textContent="NOT THAT ONE";return;}
-  var a=bindWait;bindStop();setBind(a,c);sfx("tick");
+  // the second key can be cleared
+  if(bindSlot===2&&(c==="Delete"||c==="Backspace")){var a0=bindWait;bindStop();if(SAVE.binds2){delete SAVE.binds2[a0];writeSave();}refreshKeyLabels();sfx("tick");return;}
+  if(BIND_FIXED[c]){var el=bindEl();if(el)el.textContent="NOT THAT ONE";return;}
+  var a=bindWait,sl=bindSlot;bindStop();
+  if(setBind(a,c,sl)===false){var el2=$((sl===2?"bind2_":"bind_")+a);if(el2){el2.textContent="TAKEN";setTimeout(refreshKeyLabels,900);}return;}
+  sfx("tick");
 },true);
 function typingInField(e){
   var t=e&&e.target;
@@ -20348,6 +20558,9 @@ function updateSlotIcons(){
   var a=abilById(player?player.ability:SAVE.eqAbil);
   $("slotAbil").querySelector(".n").textContent=a.name.toUpperCase();
   $("siAbil").innerHTML=abilIcon(a,22);
+  // a passive ability is always on: the button says so instead of showing a key to press
+  $("slotAbil").classList.toggle("passive",!!a.passive);
+  var ta=$("tAbil");if(ta){ta.classList.toggle("passive",!!a.passive);ta.innerHTML=a.passive?"ABILITY<small>PASSIVE</small>":"ABILITY";}
   var s=swordById(player?player.swordDef.id:SAVE.eqSword);
   $("siParry").innerHTML=swordIcon(s).replace("width='34' height='34'","width='22' height='22'");
 }
@@ -21174,6 +21387,7 @@ function frame(ts){
 }
 function frameStep(dt){
   modalTick();
+  veerCamTick(dt);
   if(STATE==="boot"||paused)return;
   FRAME_N++;
   // The big centre banner ("3", "GO", "ELIMINATED") used to expire inside
@@ -21364,10 +21578,11 @@ function wireSettings(){
   var on=function(id,ev,fn){var el=$(id);if(el)el.addEventListener(ev,fn);};
   var br=$("bindRows");
   if(br){
-    br.innerHTML=BINDS.map(function(b){return "<div class='setrow'><label class='ol1'>"+b[1]+"</label><button class='bindk' id='bind_"+b[0]+"' data-a='"+b[0]+"'></button></div>";}).join("");
-    br.addEventListener("click",function(e){var bt=e.target.closest&&e.target.closest(".bindk");if(bt){bindStart(bt.getAttribute("data-a"));sfx("tick");}});
+    br.innerHTML=BINDS.map(function(b){return "<div class='setrow'><label class='ol1'>"+b[1]+"</label><span class='bindpair'><button class='bindk' id='bind_"+b[0]+"' data-a='"+b[0]+"'></button>"+
+      "<button class='bindk alt' id='bind2_"+b[0]+"' data-a='"+b[0]+"' data-s='2'></button></span></div>";}).join("");
+    br.addEventListener("click",function(e){var bt=e.target.closest&&e.target.closest(".bindk");if(bt){bindStart(bt.getAttribute("data-a"),bt.getAttribute("data-s")==="2"?2:1);sfx("tick");}});
   }
-  on("bindReset","click",function(){SAVE.binds={};keys={};writeSave();if(bindWait)bindStop();refreshKeyLabels();sfx("tick");});
+  on("bindReset","click",function(){SAVE.binds={};SAVE.binds2={};keys={};writeSave();if(bindWait)bindStop();refreshKeyLabels();sfx("tick");});
   refreshKeyLabels();
   on("sSens","input",function(){
     SAVE.sens=+$("sSens").value;SENS=SAVE.sens;
