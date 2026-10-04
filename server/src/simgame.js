@@ -789,7 +789,7 @@ var STORE_OK=true,SAVEKEY="battleballs_v1",LAST_SAVE=0;
    save on the way out -- and before START that wrote the blank starting save
    over your real one. That is what "logged in, but everything is gone" was. */
 var SAVE_LOADED=false;
-var VERSION="4.1";
+var VERSION="4.2";
 // what an item is worth in yen, by rarity
 var SELL={common:15,rare:40,epic:85,legendary:190,mythic:465};
 function itemValue(it){
@@ -6878,9 +6878,13 @@ function veerApply(b,by){
 }
 function veerFx(b,spin){
   if(NET.srv)return;
-  pathTell(b,0.85,[0.36,0.94,0.85]);
-  ringBurst(b.pos.x,b.pos.y,b.pos.z,18+Math.round(spin*14),5+spin*4,0x5cf0d8,1.3,.45);
-  burst(b.pos.x,b.pos.y,b.pos.z,12,8,0xb8fff0,1.1,.35,-2);
+  // the whole bend drawn in teal sparks, so whoever it's going for can read it
+  if(!_tellV)_tellV=new THREE.Vector3();
+  for(var i=1;i<=28;i++){var s2=i/28;curveAt(b,b.target,s2,_tellV);
+    spark(_tellV.x,_tellV.y,_tellV.z,0,.25,0,.36,.94,.85,.9,.75,0);}
+  ringBurst(b.pos.x,b.pos.y,b.pos.z,30+Math.round(spin*20),9+spin*6,0x5cf0d8,1.8,.55);
+  ringBurst(b.pos.x,b.pos.y,b.pos.z,18,4,0xffffff,1.3,.35);
+  burst(b.pos.x,b.pos.y,b.pos.z,26,12,0xb8fff0,1.5,.45,-2);
   try{tone(380,980+spin*600,.16,"sine",.07);}catch(e){}
 }
 function rampStep(){return Math.max(0.02,((MODE&&MODE.ramp)||1.11)-1)*0.55;}
@@ -11121,6 +11125,8 @@ function phIdleFx(f,gun,knife,dt,t){
   }
 }
 /* ---- the look: violet and purple, hot magenta, an ice-cyan edge, white at the core ---- */
+// how big Dev2's effects are drawn: one knob for every flash, flame, slash and ring
+var PH_FXS=1.4;
 var PH_COL={vio:0x6a2cff,pur:0xb46bff,mag:0xff4fd8,cy:0x5fe8ff,wh:0xffffff};
 function phOwn(f,e){e.owner=f;V4FX.push(e);return e;}
 function phNear(f){return f===player||!player||dist2(f.pos.x,f.pos.z,player.pos.x,player.pos.z)<60*60;}
@@ -11145,7 +11151,7 @@ function phPop(f,pos,col,size,life,map,spin,op){
   var t=0,r0=Math.random()*TAU;
   phOwn(f,{tick:function(dt){t+=dt;var k=t/life;if(k>=1)return false;
       m.quaternion.copy(camera.quaternion);if(spin)m.rotateZ(r0+t*spin);
-      var s=k<.15?k/.15:1-(k-.15)/.85*.55;m.scale.setScalar(size*s);m.material.opacity=op*Math.pow(1-k,1.4);return true;},
+      var s=k<.15?k/.15:1-(k-.15)/.85*.55;m.scale.setScalar(size*s*PH_FXS);m.material.opacity=op*Math.pow(1-k,1.4);return true;},
     done:function(){scene.remove(m);m.material.dispose();}});
 }
 /* ---- DEV2'S CRESCENT ----
@@ -11228,7 +11234,7 @@ function devSlash(f,o){
   var fireAt=[];
   if(o.fire&&QUAL>0){var a0=-Math.PI/2-span/2;
     [0,.06,.94,1].forEach(function(fu){var fa=a0+fu*span,mk=new THREE.Object3D();mk.position.set(Math.cos(fa)*2.6,0,-Math.sin(fa)*2.6);inner.add(mk);fireAt.push({m:mk,u:fu});});}
-  grp.position.copy(o.pos);grp.scale.setScalar(o.scale||1);
+  grp.position.copy(o.pos);grp.scale.setScalar((o.scale||1)*PH_FXS);
   var fwd;
   if(o.normal){grp.quaternion.setFromUnitVectors(PHY,o.normal);grp.quaternion.multiply(PHq.setFromAxisAngle(PHY,o.roll||0));fwd=o.normal.clone();}
   else{grp.rotation.order="YXZ";grp.rotation.set(-(o.pitch||0),o.yaw||0,o.roll||0);fwd=new THREE.Vector3(0,0,1).applyEuler(grp.rotation);}
@@ -11279,7 +11285,7 @@ function phFlameMats(){
 // one flame: born at p, rising, flickering, shrinking out over `life`
 function phFlame(f,p,kind,size,life,vy,par,vel){
   var m=new THREE.Sprite(phFlameMats()[kind]);m.position.copy(p);m.renderOrder=kind==="glow"||kind==="hot"?9:8;(par||scene).add(m);
-  var t=0,ph=Math.random()*9,w=size*(.75+Math.random()*.4);
+  var t=0,ph=Math.random()*9,w=size*PH_FXS*(.75+Math.random()*.4);
   phOwn(f,{tick:function(dt){t+=dt;var k=t/life;if(k>=1)return false;
       m.position.y+=vy*dt;if(vel){m.position.addScaledVector(vel,dt);vel.multiplyScalar(Math.max(0,1-dt*5));}var fl=1+.18*Math.sin(t*40+ph);
       var s=(k<.2?k/.2:1-(k-.2)/.8);m.scale.set(w*s*fl*.6,w*s*(1.2+k*.5),1);return true;},
@@ -11288,7 +11294,7 @@ function phFlame(f,p,kind,size,life,vy,par,vel){
 /* ---- the shot: a ring of purple-and-black fire races round the body ---- */
 function phFireRing(f){
   if(QUAL===0||!f.mesh)return;
-  var hi=QUAL>1,N=hi?28:14,R=1.75,grp=new THREE.Group();scene.add(grp);
+  var hi=QUAL>1,N=hi?28:14,R=1.75*PH_FXS,grp=new THREE.Group();scene.add(grp);
   var tilt=.18,t=0,lit=0,spin=f.yaw+Math.PI;
   phOwn(f,{tick:function(dt){t+=dt;
       grp.position.set(f.pos.x,f.y+1.45,f.pos.z);
@@ -11338,7 +11344,7 @@ function phCard(f,pos,tex,w,h,rot,life,grow,op){
       m.quaternion.copy(camera.quaternion);m.rotateZ(rot);
       var s=k<.12?.4+.6*(k/.12):1+(k-.12)*(grow||.25);
       var hk=typeof h==="function"?h(k):h;
-      m.scale.set(w*s,hk*s,1);m.material.opacity=op*(k<.5?1:Math.pow(1-(k-.5)/.5,1.5));return true;},
+      m.scale.set(w*s*PH_FXS,hk*s*PH_FXS,1);m.material.opacity=op*(k<.5?1:Math.pow(1-(k-.5)/.5,1.5));return true;},
     done:function(){scene.remove(m);m.material.dispose();}});
   return m;
 }
@@ -19599,6 +19605,9 @@ function frame(ts){
 function frameStep(dt){
   modalTick();
   veerCamTick(dt);
+  // a veered ball trails a teal comet tail the whole way
+  if(QUAL>0&&!NET.srv&&(STATE==="playing"))for(var vi=0;vi<balls.length;vi++){var vb=balls[vi];
+    if(vb.active&&vb.veered&&!(vb.held>0)){var vp=vb.mesh.position;spark(vp.x+rr(-.25,.25),vp.y+rr(-.25,.25),vp.z+rr(-.25,.25),0,0,0,.36,.94,.85,rr(.5,.9),.45,0);}}
   if(STATE==="boot"||paused)return;
   FRAME_N++;
   // The big centre banner ("3", "GO", "ELIMINATED") used to expire inside
