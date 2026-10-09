@@ -224,3 +224,38 @@ console.log("currency split tests passed"); }
   r = applyAct(s, { k: "sell", tab: "skin", id: "mummy" }, { now: oct10 }); assert.equal(r.ok, false, "a pass skin cannot be sold");
   console.log("pass 51-100 tests passed");
 }
+
+// ---- the After Hours Pack: Oct 15-22 (Pacific), 1800 yen, four items, once ----
+{
+  const { CAT } = await import("../src/catalog.js");
+  const P = CAT.packs.afterhours, R = CAT.packs.rap;
+  assert.equal(P.yen, 1800); assert.equal(P.from, R.to, "opens the moment the Rap Pack closes");
+  assert.equal(new Date(P.from).toISOString(), "2026-10-15T07:00:00.000Z");
+  assert.equal(new Date(P.to).toISOString(), "2026-10-22T07:00:00.000Z");
+  const mid = P.from + 3 * 864e5;
+  let s = ensure({ yen: 5000, econ: { v: 1 } });
+  let r = applyAct(s, { k: "pack", pack: "afterhours" }, { now: P.from - 1 });
+  assert.equal(r.ok, false, "not before it opens"); assert.equal(s.yen, 5000);
+  r = applyAct(s, { k: "pack", pack: "afterhours" }, { now: mid });
+  assert.ok(r.ok, JSON.stringify(r)); assert.equal(s.yen, 3200);
+  assert.ok(s.skins.dreddy && s.skins.fluffles && s.swords.nightshift && s.emotes.sysfail, "all four");
+  r = applyAct(s, { k: "pack", pack: "afterhours" }, { now: mid });
+  assert.equal(r.ok, false, "never twice"); assert.equal(s.yen, 3200);
+  r = applyAct(s, { k: "pack", pack: "afterhours" }, { now: P.to });
+  assert.equal(r.ok, false, "gone when it closes");
+  assert.ok(s.skins.dreddy && s.emotes.sysfail, "and kept after");
+  // the Rap Pack is still the Rap Pack, and still closes on time
+  let s2 = ensure({ yen: 5000, econ: { v: 1 } });
+  r = applyAct(s2, { k: "pack", pack: "rap" }, { now: mid }); assert.equal(r.ok, false, "rap is over by then");
+  r = applyAct(s2, { k: "pack", pack: "rap" }, { now: R.from + 864e5 }); assert.ok(r.ok, JSON.stringify(r));
+  assert.ok(!s2.skins.dreddy, "the rap pack gives none of it");
+  // not enough yen: nothing taken, nothing given
+  let s3 = ensure({ yen: 1799, econ: { v: 1 } });
+  r = applyAct(s3, { k: "pack", pack: "afterhours" }, { now: mid }); assert.equal(r.ok, false); assert.equal(s3.yen, 1799); assert.ok(!s3.skins.dreddy);
+  // never in a chest
+  for (let i = 0; i < 300; i++) { const t = ensure({ coins: 1e6 }); for (const tab of ["skin", "sword"]) { const rr = applyAct(t, { k: "chest", tab, grade: "normal", n: 10 }, { now: mid, rnd: Math.random });
+    for (const w of rr.res.won) assert.ok(!["dreddy", "fluffles", "nightshift"].includes(w.id), w.id); } }
+  // the emote is not one everybody has
+  assert.ok(!CAT.emotes.find(e => e.id === "sysfail").base);
+  console.log("after hours pack tests passed");
+}
