@@ -186,3 +186,41 @@ console.log("currency split tests passed"); }
   }
   console.log("dev2 tests passed");
 }
+
+// ---- the pass, levels 51-100: dearer levels, dearer yen, emotes, no yen tier over 100 ----
+{
+  const { CAT } = await import("../src/catalog.js");
+  const P = CAT.pass, oct10 = Date.UTC(2026, 9, 10, 18);
+  assert.equal(P.max, 100); assert.equal(P.tiers.length, 100);
+  assert.equal(P.xpAt[50], 5000, "the first fifty are unchanged");
+  assert.equal(P.xpAt[51] - P.xpAt[50], 150); assert.equal(P.xpAt[100] - P.xpAt[99], 346);
+  for (let lv = 2; lv <= 100; lv++) assert.ok(P.xpAt[lv] - P.xpAt[lv - 1] >= P.xpAt[lv - 1] - P.xpAt[lv - 2] || lv === 2, "costs never go down: " + lv);
+  assert.ok(P.tiers.every(t => !t.y || t.y <= 100), "no level pays over 100 yen");
+  // an old save at level 50 keeps its level and goes on from there
+  let s = ensure({ yen: 10000, pass: { id: P.id, xp: 5000, got: 50 } });
+  let r = applyAct(s, { k: "passbuy" }, { now: oct10 });
+  assert.ok(r.ok, JSON.stringify(r)); assert.equal(r.res.cost, 350); assert.equal(s.yen, 9650); assert.deepEqual(r.res.got, [51]);
+  // a level bought with progress into it keeps that progress and moves exactly one level
+  s = ensure({ yen: 10000, pass: { id: P.id, xp: P.xpAt[54] + 100, got: 54 } });
+  r = applyAct(s, { k: "passbuy" }, { now: oct10 });
+  assert.deepEqual(r.res.got, [55]); assert.equal(s.pass.xp, P.xpAt[55] + 100); assert.ok(s.emotes.boo, "level 55 is the BOO! emote");
+  // below 50 the price is the old one
+  s = ensure({ yen: 1000, pass: { id: P.id, xp: 300, got: 3 } });
+  r = applyAct(s, { k: "passbuy" }, { now: oct10 }); assert.equal(r.res.cost, 200); assert.deepEqual(r.res.got, [4]);
+  // to the top: the skins, blades and every emote, and nothing past 100
+  s = ensure({ yen: 1e6, pass: { id: P.id, xp: 5000, got: 50 }, econ: { v: 1 } });
+  for (let i = 0; i < 50; i++) { r = applyAct(s, { k: "passbuy" }, { now: oct10 }); assert.ok(r.ok, i + JSON.stringify(r)); }
+  assert.equal(s.pass.got, 100); assert.equal(s.pass.xp, P.xpAt[100]);
+  for (const id of ["boo", "zombie", "cauldron", "witching"]) assert.ok(s.emotes[id], "emote " + id);
+  for (const id of ["patchwork", "werewolf", "mummy", "pumpkinking"]) assert.ok(s.skins[id], "skin " + id);
+  for (const id of ["tesla", "silvermoon", "bonesaw", "wick"]) assert.ok(s.swords[id], "sword " + id);
+  r = applyAct(s, { k: "passbuy" }, { now: oct10 }); assert.equal(r.ok, false, "nothing past 100");
+  // match XP stops at the top too
+  const xp0 = s.pass.xp; applyAct(s, { k: "match", mode: "classic", won: true, rp: 0, coins: 10, secs: 60 }, { now: oct10 + 5e6 });
+  assert.equal(s.pass.xp, xp0);
+  // pass items stay out of chests, the Limited stall and selling
+  for (let i = 0; i < 300; i++) { const t = ensure({ coins: 1e6 }); for (const tab of ["skin", "sword"]) { const rr = applyAct(t, { k: "chest", tab, grade: "normal", n: 10 }, { now: oct10, rnd: Math.random });
+    for (const w of rr.res.won) assert.ok(!["patchwork", "werewolf", "mummy", "pumpkinking", "tesla", "silvermoon", "bonesaw", "wick"].includes(w.id), w.id); } }
+  r = applyAct(s, { k: "sell", tab: "skin", id: "mummy" }, { now: oct10 }); assert.equal(r.ok, false, "a pass skin cannot be sold");
+  console.log("pass 51-100 tests passed");
+}

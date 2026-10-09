@@ -55,6 +55,12 @@ function byRarityDesc(list) {
     return (a.name || "").localeCompare(b.name || "");
   });
 }
+// the total XP that reaches each level, the same sum the game's passCost makes
+function passXpAt(P) {
+  const at = [0];
+  for (let lv = 1; lv <= P.max; lv++) at[lv] = at[lv - 1] + (lv <= 50 || !P.xpPer2 ? P.xpPer : P.xpPer2 + (lv - 51) * (P.xpStep || 0));
+  return at;
+}
 function itemValue(it) {
   if (!it || it.rank || it.rarity === "rank" || it.ultra || it.pass || it.event || it.rarity === "unreleased" || it.rarity === "secret") return 0;
   if (typeof it.yen === "number") return it.yen;
@@ -98,7 +104,7 @@ const CAT = {
   up: { chain: G.UPCHAIN, odds: G.UPODDS, fee: G.UPFEE },
   syms: G.SYMS.map(s => ({ w: s.w, pay: s.pay, pair: s.pairPay })),
   pass: { id: G.PASS.id, end: G.PASS.end, max: G.PASS.max, xpPer: G.PASS.xpPer, xpGame: G.PASS.xpGame, xpWin: G.PASS.xpWin,
-    yenPer: G.PASS.yenPer, tiers: G.PASS_TIERS },
+    yenPer: G.PASS.yenPer, yenPer2: G.PASS.yenPer2 || G.PASS.yenPer, xpAt: passXpAt(G.PASS), tiers: G.PASS_TIERS },
   ranks: G.RANKS.map(r => ({ rp: r.rp, rewards: r.rewards || (r.reward ? [r.reward] : []), ...(r.pvp ? { pvp: 1 } : {}), ...(r.id ? { id: r.id } : {}), ...(r.map ? { map: r.map } : {}) })),
   yenRate: G.YEN_RATE,
   modes
@@ -107,7 +113,7 @@ if (G.RODRIGA) CAT.rodriga = G.RODRIGA;
 if (G.LOGIN_CAL) CAT.login = G.LOGIN_CAL;
 if (G.EVENT_SHOPS) CAT.events = G.EVENT_SHOPS;
 // every emote; base ones everyone has and are never stored
-if (G.TAUNTS) CAT.emotes = G.TAUNTS.map(t => ({ id: t.id, n: t.txt, r: t.rarity || "common", ...(t.pack ? {} : { base: 1 }) }));
+if (G.TAUNTS) CAT.emotes = G.TAUNTS.map(t => ({ id: t.id, n: t.txt, r: t.rarity || "common", ...(t.pass ? { pass: t.pass } : {}), ...(t.pack || t.pass ? {} : { base: 1 }) }));
 if (G.PACKS) { CAT.packs = {}; for (const k in G.PACKS) CAT.packs[k] = { yen: G.PACKS[k].yen, items: G.PACKS[k].items, from: G.PACKS[k].from, to: G.PACKS[k].to }; }
 if (G.SEASON) CAT.season = G.SEASON;
 
