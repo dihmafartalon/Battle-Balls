@@ -300,6 +300,11 @@ export class Hub {
         const r = await partyCall(this.env, s.party, { op, by: s.sub, sub: m.sub, r: !!m.r });
         return r.ok ? { ok: true } : { err: r.why || "Couldn't do that." };
       }
+      case "pfollow": {
+        if (!s.party) return { err: "You're not in a party." };
+        const r = await partyCall(this.env, s.party, { op: "follow", sub: s.sub });
+        return r.ok ? { ok: true } : { err: r.why || "Couldn't reach your leader." };
+      }
       case "pgo": {
         // the leader takes everyone to the lobby they are in (the room confirms it)
         if (!s.party) return { err: "You're not in a party." };
@@ -475,7 +480,7 @@ export class Party {
   constructor(ctx, env) { this.ctx = ctx; this.env = env; this.p = null; }
   async load() { if (!this.p) this.p = (await this.ctx.storage.get("p")) || null; return this.p; }
   save() { return this.p ? this.ctx.storage.put("p", this.p) : this.ctx.storage.delete("p"); }
-  view() { const p = this.p; return p ? { id: p.id, leader: p.leader, members: p.members.map(m => ({ sub: m.sub, tag: m.tag, name: m.name, ready: !!m.ready, on: !!m.on })), max: SOC.partyMax,
+  view() { const p = this.p; return p ? { id: p.id, leader: p.leader, room: p.room || "", members: p.members.map(m => ({ sub: m.sub, tag: m.tag, name: m.name, ready: !!m.ready, on: !!m.on })), max: SOC.partyMax,
     inv: Object.keys(p.inv).map(k => ({ sub: k, name: p.inv[k].name, exp: p.inv[k].exp })) } : null; }
   async fetch(req) {
     let b; try { b = await req.json(); } catch (e) { return json({ ok: false }, 400); }
@@ -489,11 +494,20 @@ export class Party {
     await Promise.all(tasks);
   }
   member(sub) { return this.p && this.p.members.find(m => m.sub === sub); }
+  // hold a seat for one member in the leader's room and send them there (unless they already are)
+  async pull(m, lead, code) {
+    const rs = await roomSocial(this.env, code, { op: "reserve", sub: m.sub, ttl: SOC.resvMs });
+    if (!rs.ok) return rs.why === "full" ? "full" : "no";
+    if (rs.here) return "here";
+    const r = await hubCall(this.env, m.sub, { op: "linv", from: lead.sub, tag: lead.tag, name: lead.name, id: rid(), code, exp: Date.now() + SOC.invTtl, party: true });
+    if (!r.ok) { await roomSocial(this.env, code, { op: "release", sub: m.sub }); return "no"; }
+    return "sent";
+  }
   async drop(sub, why) {
     const p = this.p;
     p.members = p.members.filter(m => m.sub !== sub);
     if (!p.members.length) { this.pid = p.id; for (const k in p.inv) await hubCall(this.env, k, { op: "pinvx", pid: p.id }); this.p = null; await this.tell([sub], why); return; }
-    if (p.leader === sub) p.leader = (p.members.find(m => m.on) || p.members[0]).sub;    // leadership passes on
+    if (p.leader === sub) { p.leader = (p.members.find(m => m.on) || p.members[0]).sub; p.room = null; }   // leadership passes on
     this.pid = p.id;
     await this.tell([sub], why);
   }
@@ -557,7 +571,7 @@ export class Party {
       case "lead": {
         if (p.leader !== b.by) return { ok: false, why: "Only the leader can do that." };
         if (!this.member(b.sub)) return { ok: false, why: "They're not in the party." };
-        p.leader = b.sub; await this.tell(); return { ok: true };
+        p.leader = b.sub; p.room = null; await this.tell(); return { ok: true };
       }
       case "disband": {
         if (p.leader !== b.by) return { ok: false, why: "Only the leader can do that." };
@@ -570,9 +584,10 @@ export class Party {
       case "ready": { const m = this.member(b.by); if (!m) return { ok: false }; m.ready = !!b.r; await this.tell(); return { ok: true }; }
       case "pres": {
         const m = this.member(b.sub); if (!m) return { ok: false };
+        if (!b.on && p.leader === b.sub) p.room = null;
         m.on = !!b.on; m.offAt = m.on ? 0 : now; if (b.name) m.name = clean(b.name, 14);
         // the leader going away hands the party to someone who is here
-        if (!m.on && p.leader === m.sub) { const o = p.members.find(x => x.on); if (o) p.leader = o.sub; }
+        if (!m.on && p.leader === m.sub) { const o = p.members.find(x => x.on); if (o) { p.leader = o.sub; p.room = null; } }
         await this.tell(); await this.schedule();
         return { ok: true };
       }
@@ -582,17 +597,27 @@ export class Party {
         const lead = this.member(b.by);
         const mem = await roomSocial(this.env, b.code, { op: "member", sub: b.by });
         if (!mem.ok) return { ok: false, why: "You're not in that lobby." };
-        let sent = 0;
+        const moved = p.room !== b.code;
+        p.room = b.code; p.roomAt = now;
+        let sent = 0, full = 0;
         for (const m of p.members) {
           if (m.sub === b.by || !m.on) continue;
-          const rs = await roomSocial(this.env, b.code, { op: "reserve", sub: m.sub, ttl: SOC.resvMs });
-          if (!rs.ok) return { ok: false, why: rs.why === "full" ? "Your lobby doesn't have room for everyone." : "You can't bring the party to this lobby.", sent };
-          const id = rid();
-          const r = await hubCall(this.env, m.sub, { op: "linv", from: b.by, tag: lead.tag, name: lead.name, id, code: b.code, exp: now + SOC.invTtl, party: true });
-          if (r.ok) sent++;
-          else await roomSocial(this.env, b.code, { op: "release", sub: m.sub });
+          if ((await this.pull(m, lead, b.code)) === "full") full++; else sent++;
         }
-        return { ok: true, sent };
+        if (moved) await this.tell();
+        if (full && !sent) return { ok: false, why: "Your lobby doesn't have room for everyone.", sent };
+        return { ok: true, sent, full };
+      }
+      case "follow": {
+        // a member (back after a reload, or new to the party) catching up with the leader
+        const m = this.member(b.sub);
+        if (!m) return { ok: false, why: "You're not in this party." };
+        if (b.sub === p.leader) return { ok: false, why: "You're the leader." };
+        if (!p.room) return { ok: false, why: "Your leader isn't in a lobby." };
+        const mem = await roomSocial(this.env, p.room, { op: "member", sub: p.leader });
+        if (!mem.ok) { p.room = null; await this.tell(); return { ok: false, why: "Your leader isn't in a lobby." }; }
+        const r = await this.pull(m, this.member(p.leader), p.room);
+        return r === "full" ? { ok: false, why: "Your leader's lobby is full." } : { ok: true };
       }
     }
     return { ok: false, why: "unknown op" };
