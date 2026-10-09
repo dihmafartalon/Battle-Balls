@@ -113,17 +113,20 @@ function passState(s) {
   if (s.pass.got > lv) s.pass.got = lv;
   return s.pass;
 }
-function passLevel(s) { return Math.min(P.max, Math.floor(s.pass.xp / P.xpPer)); }
+// levels past 50 cost more each: xpAt[lv] is the total XP that reaches lv
+function passLevel(s) { let lv = 0; while (lv < P.max && s.pass.xp >= P.xpAt[lv + 1]) lv++; return lv; }
+function passYen(lv) { return lv >= 50 ? P.yenPer2 : P.yenPer; }
 function passGive(s, lv) {
   const t = P.tiers[lv - 1]; if (!t) return;
   if (t.c) s.coins += t.c;
   else if (t.y) s.yen += t.y;
   else if (t.s) s.freeSpins += t.s;
+  else if (t.emote) s.emotes[t.emote] = 1;
   else { if (t.skin) give(s, "skin", t.skin); if (t.sword) give(s, "sword", t.sword); if (t.abil) give(s, "abil", t.abil); }
 }
 function passAddXp(s, n) {
   passState(s);
-  s.pass.xp = Math.min(P.max * P.xpPer, s.pass.xp + n);
+  s.pass.xp = Math.min(P.xpAt[P.max], s.pass.xp + n);
   const got = [];
   while (s.pass.got < passLevel(s)) { s.pass.got++; passGive(s, s.pass.got); got.push(s.pass.got); }
   return got;
@@ -497,10 +500,12 @@ export function applyAct(s, a, ctx) {
 
   if (a.k === "passbuy") {
     if (!passLive(now)) return { ok: false, why: "The pass has ended." };
-    if (passLevel(s) >= P.max) return { ok: false, why: "Already at the top level." };
-    if (s.yen < P.yenPer) return { ok: false, why: "Not enough yen." };
-    s.yen -= P.yenPer;
-    return { ok: true, res: { got: passAddXp(s, P.xpPer) } };
+    const lv = passLevel(s), cost = passYen(lv);
+    if (lv >= P.max) return { ok: false, why: "Already at the top level." };
+    if (s.yen < cost) return { ok: false, why: "Not enough yen." };
+    s.yen -= cost;
+    // the next level's whole cost: exactly one level, progress past it kept
+    return { ok: true, res: { got: passAddXp(s, P.xpAt[lv + 1] - P.xpAt[lv]), cost } };
   }
 
   if (a.k === "match") {
@@ -676,7 +681,7 @@ export function importEcon(s, from, now, flags) {
       give(s, t, id); count++; value += it.v * CAT.yenRate;
     }
   }
-  if (from.pass && from.pass.id === P.id) s.pass = { id: P.id, xp: int(from.pass.xp, 0, P.max * P.xpPer) || 0, got: int(from.pass.got, 0, P.max) || 0 };
+  if (from.pass && from.pass.id === P.id) s.pass = { id: P.id, xp: int(from.pass.xp, 0, P.xpAt[P.max]) || 0, got: int(from.pass.got, 0, P.max) || 0 };
   ensure(s);
   if (dropped) flags.push({ kind: "import", sev: "flag", detail: "brought " + dropped + " item(s) that cannot be earned (removed)" });
   if (value > 300000 || s.rp >= 5400) flags.push({ kind: "import", sev: "flag", detail: "new account arrived with " + s.coins + " coins, " + s.yen + " yen, " + count + " items, " + s.rp + " RP" });

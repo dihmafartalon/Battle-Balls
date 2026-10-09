@@ -281,6 +281,14 @@ var SWORDS=[
   desc:"A scythe with a lit jack-o'-lantern where the blade meets the shaft. Reaps a full circle of fire."},
  {id:"hexblade",name:"Hexblade",rarity:"halloween",pass:40,price:-1,blade:0xd9a8ff,hilt:0x1c0a33,glow:0xb14aff,shape:"hexblade",hold:"one",swing:"hex",idle:"orbit",
   desc:"A violet crystal blade circled by two turning rings of runes. Rises, whirls overhead and brands a hex into the floor."},
+ {id:"tesla",name:"Tesla Coil",rarity:"halloween",pass:60,price:-1,blade:0xc8ccd4,hilt:0x3a3e46,glow:0x9aff5a,shape:"tesla",hold:"one",swing:"uppercut",idle:"crackle",
+  desc:"A copper coil wound up a steel rod, a ball of green lightning on the end. The Monster's own. It crackles when it waits and arcs when it cuts."},
+ {id:"silvermoon",name:"Silver Moon",rarity:"halloween",pass:70,price:-1,blade:0xdfe6f2,hilt:0x3a2418,glow:0xfff0b0,shape:"silvermoon",hold:"one",swing:"spin",idle:"shimmer",
+  desc:"A crescent moon of solid silver with a burning pale edge, held behind three wolf claws. Swung all the way round, the way a full moon turns a man."},
+ {id:"bonesaw",name:"Bone Saw",rarity:"halloween",pass:80,price:-1,blade:0xe8dcc0,hilt:0x2a2014,glow:0x4affd0,shape:"bonesaw",hold:"one",swing:"overhead",idle:"none",
+  desc:"A blade of old bone with teeth down the front and a spine down the back. Glyphs burn turquoise in it, and the eye in the pommel is open."},
+ {id:"wick",name:"The Wick",rarity:"halloween",pass:90,price:-1,blade:0xf0dcb8,hilt:0xe0b040,glow:0xffa030,shape:"wick",hold:"one",swing:"slash",idle:"ember",
+  desc:"A candle as long as a sword in a gold candlestick, taken from the Count's own castle. Wax runs down it, and the flame on the end has never once gone out."},
  // ULTRA, and only ever from its own shrine beside Gnorman, for one week (see EVENT_SHOPS)
  {id:"wendigo",name:"Wendigo Katana",rarity:"ultra",price:-1,ultra:true,event:"wendigo",blade:0xe8eaf0,hilt:0x2a1a0a,glow:0x4ab8ff,shape:"wendigo",hold:"hip",swing:"wendigo",idle:"breathe",
   desc:"A blade that grew, not forged. Roots creep up from the grip, and the cracks are where the cold gets in. Sold at its shrine for one week only, then never again."},
@@ -591,6 +599,14 @@ var SKINS=[
   desc:"A rider's coat, a fire where the head should be, and the head itself carried in one hand, grinning."},
  {id:"hexwitch",name:"Hex Witch",rarity:"halloween",pass:40,style:"hexwitch",price:-1,body:0x2c1452,limb:0x150a2a,skin:0xa8d89a,glow:0xc86aff,bodyGlow:0x1a0636,
   desc:"A tall crooked hat with a burning violet band, a flared robe and runes that circle her as she walks."},
+ {id:"patchwork",name:"The Monster",rarity:"halloween",pass:60,style:"patchwork",price:-1,body:0x2a2e36,limb:0x1c1e24,skin:0x8ac87a,glow:0x9aff5a,bodyGlow:0x0a1a06,
+  desc:"A flat head, a heavy brow, stitches everywhere and two bolts through the neck that still spark when the current comes."},
+ {id:"werewolf",name:"Werewolf",rarity:"halloween",pass:70,style:"werewolf",price:-1,body:0x3a2448,limb:0x2a2a34,skin:0x6a5240,glow:0xffd23f,bodyGlow:0x1a0a10,
+  desc:"Moon-yellow eyes, a jaw that hangs open, a mane, claws, a tail, and what is left of a shirt."},
+ {id:"mummy",name:"Mummy",rarity:"halloween",pass:80,style:"mummy",price:-1,body:0xd8c8a0,limb:0xc8b890,skin:0xd8c8a0,glow:0x4affd0,bodyGlow:0x0a2a22,
+  desc:"Wrapped head to foot, a gold scarab on the chest, loose ends trailing, and one eye burning through a gap in the bandages."},
+ {id:"count",name:"The Count",rarity:"halloween",pass:90,style:"count",price:-1,body:0x14101a,limb:0x0e0a12,skin:0xdfe2ec,glow:0xff1a34,bodyGlow:0x2a0008,
+  desc:"Pale as the moon, hair slicked back to a point, red eyes, fangs, and a cape with a collar taller than his head. He only comes out at night."},
  // ---- 4.0 ----
  {id:"blackcat",name:"Black Cat",rarity:"halloween",yen:340,price:-1,style:"blackcat",body:0x141218,limb:0x0a090c,skin:0x1a181e,glow:0x0a0808,
   desc:"Pointed ears, a tail that never stops moving and two gold eyes in the dark. On Gnorman's stall for one week of October, then gone."},
@@ -789,7 +805,7 @@ var STORE_OK=true,SAVEKEY="battleballs_v1",LAST_SAVE=0;
    save on the way out -- and before START that wrote the blank starting save
    over your real one. That is what "logged in, but everything is gone" was. */
 var SAVE_LOADED=false;
-var VERSION="4.2";
+var VERSION="4.3";
 // what an item is worth in yen, by rarity
 var SELL={common:15,rare:40,epic:85,legendary:190,mythic:465};
 function itemValue(it){
@@ -5940,10 +5956,19 @@ var TAUNTS=[
   desc:"A green portal tears open behind you. Throw up the peace sign and lean back like you're about to dip. From the Interdimensional Pack."},
   // the rap pack's: hype the crowd, dive, and there is no crowd
   {id:"stagedive",e:"\ud83c\udfa4",txt:"STAGE DIVE",col:"#ff1a34",pack:"rap",fx:"stagedive",rarity:"mythic",
-  desc:"Hype the crowd up, dive off the stage... and land face first. Stars included. From the Rap Pack."}
+  desc:"Hype the crowd up, dive off the stage... and land face first. Stars included. From the Rap Pack."},
+  // the Halloween Pass's: owned like any other, given by its level
+  {id:"boo",e:"\ud83d\udc7b",txt:"BOO!",col:"#e8f4ff",pass:55,fx:"boo",rarity:"halloween",
+  desc:"A sheet ghost rises over your shoulder and lunges at whoever is looking. From the Halloween Pass, level 55."},
+  {id:"zombie",e:"\ud83e\udddf",txt:"BRAINS...",col:"#8aff6a",pass:75,fx:"zombie",rarity:"halloween",
+  desc:"Arms out, shamble, and three hands claw up out of the ground round you. From the Halloween Pass, level 75."},
+  {id:"cauldron",e:"\ud83e\uddea",txt:"TOIL & TROUBLE",col:"#9aff5a",pass:85,fx:"cauldron",rarity:"halloween",dur:2.8,
+  desc:"A cauldron drops out of the sky. Stir it until it bubbles, and a skull of green smoke rises out of it. From the Halloween Pass, level 85."},
+  {id:"witching",e:"\ud83c\udf15",txt:"WITCHING HOUR",col:"#c86aff",pass:100,fx:"witching",rarity:"halloween",dur:4.2,
+  desc:"The clock strikes midnight. A rune circle burns into the floor, a huge moon rises behind you, and you float up into a storm of bats with jack-o'-lanterns circling you, until lightning brings you down. The Halloween Pass's level 100."}
 ];
 var TAUNT_DUR=2.2,TAUNT_GAP=2,TAUNT_RANGE=3.5;   // walk this far from where an emote started and it ends
-var TAUNT_BASE=TAUNTS.filter(function(t){return !t.pack;}).map(function(t){return t.id;});      // the eight everyone has
+var TAUNT_BASE=TAUNTS.filter(function(t){return !t.pack&&!t.pass;}).map(function(t){return t.id;});      // the eight everyone has
 function emoteOwned(id){return TAUNT_BASE.indexOf(id)>=0||!!(SAVE.emotes&&SAVE.emotes[id]);}
 // what is in your wheel: the eight you equipped (anything not yours drops back to a default)
 function wheelEmotes(){
@@ -5958,8 +5983,10 @@ function tauntById(id){for(var i=0;i<TAUNTS.length;i++)if(TAUNTS[i].id===id)retu
 Fighter.prototype.taunt=function(id){
   var tk=tauntById(id);
   if(!tk||!this.alive)return false;
-  this.tauntK=tk.id;this.tauntT=TAUNT_DUR;this.tauntX=this.pos.x;this.tauntZ=this.pos.z;
-  this.say(tk.e+" "+tk.txt,tk.col,TAUNT_DUR);
+  var dur=tk.dur||TAUNT_DUR;
+  this.tauntK=tk.id;this.tauntT=dur;this.tauntD=dur;this.tauntX=this.pos.x;this.tauntZ=this.pos.z;
+  this.say(tk.e+" "+tk.txt,tk.col,dur);
+  if(P2_EMOTE_FX[tk.fx]&&this.mesh&&QUAL>=0)P2_EMOTE_FX[tk.fx](this);
   if(tk.fx==="portal"&&this.mesh&&QUAL>=0){
     // the portal stands just behind you, facing the way you face
     var by=Math.sin(this.yaw),bz=Math.cos(this.yaw),me=this;
@@ -5973,8 +6000,9 @@ Fighter.prototype.taunt=function(id){
 };
 // the moves: arms[1] is the right (blade) arm, arms[0] the left
 Fighter.prototype.tauntPose=function(dt){
-  var k=this.tauntK,a=TAUNT_DUR-this.tauntT,R=this.arms[1],L=this.arms[0],g=this.mesh,s;
+  var k=this.tauntK,a=(this.tauntD||TAUNT_DUR)-this.tauntT,R=this.arms[1],L=this.arms[0],g=this.mesh,s;
   function set(arm,x,z){arm.rotation.x=damp(arm.rotation.x,x,16,dt);arm.rotation.y=damp(arm.rotation.y,0,16,dt);arm.rotation.z=damp(arm.rotation.z,z,16,dt);}
+  if(P2_EMOTE_POSE[k]){P2_EMOTE_POSE[k](this,a,R,L,g,set);return;}
   if(k==="wave"){set(R,0,2.7+Math.sin(a*14)*0.35);set(L,0,-0.15);}
   else if(k==="laugh"){set(R,-0.7,0.3);set(L,-0.7,-0.3);g.rotation.x=Math.sin(a*22)*0.08;}
   else if(k==="ez"){set(R,0,1.1);set(L,0,-1.1);if(a<0.7)g.rotation.y+=a/0.7*Math.PI*2;}
@@ -6013,7 +6041,7 @@ function doTaunt(id){
   if(STATE!=="venue"&&STATE!=="playing"&&STATE!=="countdown"&&STATE!=="over")return false;
   if(gameT<tauntNext)return false;
   if(!player.taunt(id))return false;
-  tauntNext=gameT+TAUNT_GAP;
+  tauntNext=gameT+Math.max(TAUNT_GAP,(tauntById(id).dur||0));
   sfx("tick");
   if(NET.on)netSend({t:"ability",a:"taunt",only:"taunt",k:id});
   closeTauntWheel();
@@ -8362,28 +8390,44 @@ function riftSwapWorld(into){
 /* ==== HALLOWEEN PASS BEGIN ==== */
 /* ============================================================
    THE HALLOWEEN PASS
-   One free track, 50 levels, one month. XP comes from playing (more for a
-   win) or from yen, and every level hands its reward out the moment you
-   reach it. Levels 15, 30 and 40 are a skin with the weapon that goes with
-   it; level 50 is Blood Rift. Nothing on the pass comes from anywhere else:
-   no chest, no shop, no code, and it cannot be sold.
+   One free track, 100 levels, to the end of Halloween. XP comes from playing
+   (more for a win) or from yen, and every level hands its reward out the
+   moment you reach it. Levels 15, 30, 40, 60, 70, 80 and 90 are a skin with
+   the weapon that goes with it; level 50 is Blood Rift; 55, 75 and 85 are
+   emotes and level 100 is the Witching Hour. Past 50 every level costs more
+   XP than the one before. Nothing on the pass comes from anywhere else: no
+   chest, no shop, no code, and it cannot be sold.
    ============================================================ */
 var PASS={id:"hw26",name:"HALLOWEEN PASS",
-  // one month from launch: the last second of Oct 24, Pacific time
-  end:Date.UTC(2026,9,25,6,59,59),
-  max:50,xpPer:100,xpGame:15,xpWin:25,yenPer:200,
+  // through Halloween: the last second of Oct 31, Pacific time
+  end:Date.UTC(2026,10,1,6,59,59),
+  // levels 1-50 cost xpPer each; from 51 they cost xpPer2, then xpStep more
+  // every level (150 at 51, 346 at 100), and a level bought past 50 is yenPer2
+  max:100,xpPer:100,xpPer2:150,xpStep:4,xpGame:15,xpWin:25,yenPer:200,yenPer2:350,
   // a pass that took twenty minutes was no pass at all: a match has to be a real
   // match to count, and only so many count an hour (the server holds the same line)
   minSecs:30,perHour:20};
-// c coins, y yen, s free chest spins; the big ones name what they give.
-// No level pays 200 yen or more: a level bought for 200 must never be free.
+// c coins, y yen, s free chest spins, emote an emote; the big ones name what
+// they give. No level pays more than 100 yen.
 var PASS_TIERS=[
- {c:250},{s:1},{y:80},{c:300},{s:2},{y:100},{c:350},{s:1},{y:120},{c:1000},
- {c:400},{s:2},{y:140},{c:450},{skin:"scarecrow",sword:"carver"},{y:150},{c:500},{s:2},{y:160},{c:1500},
- {y:170},{c:550},{s:3},{y:180},{c:2000},{c:600},{y:190},{s:3},{c:650},{skin:"horseman",sword:"harvester"},
- {y:180},{c:700},{s:3},{y:185},{c:2500},{c:750},{y:190},{s:4},{c:800},{skin:"hexwitch",sword:"hexblade"},
- {y:190},{c:850},{s:4},{y:190},{c:3000},{y:190},{c:900},{s:5},{c:5000},{abil:"bloodrift"}
+ {c:250},{s:1},{y:80},{c:300},{s:2},{y:100},{c:350},{s:1},{y:100},{c:1000},
+ {c:400},{s:2},{y:100},{c:450},{skin:"scarecrow",sword:"carver"},{y:100},{c:500},{s:2},{y:100},{c:1500},
+ {y:100},{c:550},{s:3},{y:100},{c:2000},{c:600},{y:100},{s:3},{c:650},{skin:"horseman",sword:"harvester"},
+ {y:100},{c:700},{s:3},{y:100},{c:2500},{c:750},{y:100},{s:4},{c:800},{skin:"hexwitch",sword:"hexblade"},
+ {y:100},{c:850},{s:4},{y:100},{c:3000},{y:100},{c:900},{s:5},{c:5000},{abil:"bloodrift"},
+ // the second half: dearer every level, and stranger
+ {c:800},{s:3},{y:100},{c:1000},{emote:"boo"},{c:1100},{y:100},{s:3},{c:1200},{skin:"patchwork",sword:"tesla"},
+ {y:100},{c:1300},{s:4},{c:1400},{c:3000},{y:100},{c:1500},{s:4},{c:1600},{skin:"werewolf",sword:"silvermoon"},
+ {y:100},{c:1700},{s:4},{c:1800},{emote:"zombie"},{y:100},{c:2000},{s:5},{c:2200},{skin:"mummy",sword:"bonesaw"},
+ {y:100},{c:2400},{s:5},{c:2600},{emote:"cauldron"},{y:100},{c:2800},{s:5},{c:3000},{skin:"count",sword:"wick"},
+ {y:100},{c:3200},{s:6},{c:3500},{c:7500},{y:100},{c:4000},{s:6},{c:5000},{emote:"witching"}
 ];
+// what a level costs, and the total XP that reaches it
+function passCost(lv){return lv<=50?PASS.xpPer:PASS.xpPer2+(lv-51)*PASS.xpStep;}
+var PASS_XP=[0];
+for(var _pl=1;_pl<=PASS.max;_pl++)PASS_XP[_pl]=PASS_XP[_pl-1]+passCost(_pl);
+function passLvAt(xp){var lv=0;while(lv<PASS.max&&xp>=PASS_XP[lv+1])lv++;return lv;}
+function passYenFor(lv){return lv>=50?PASS.yenPer2:PASS.yenPer;}
 function passLive(){return Date.now()<PASS.end;}
 function passState(){
   var p=SAVE.pass;
@@ -8394,18 +8438,19 @@ function passState(){
   // you cannot have been paid for levels you are not on. A save that lost its
   // XP (the blank-save wipe) kept its paid-out count, which left the whole pass
   // looking claimed at level 0 with nothing left to earn
-  var lv=Math.min(PASS.max,Math.floor(p.xp/PASS.xpPer));
+  var lv=passLvAt(p.xp);
   if(p.got>lv)p.got=lv;
   return p;
 }
-function passLevel(){return Math.min(PASS.max,Math.floor(passState().xp/PASS.xpPer));}
-function passInto(){var lv=passLevel();return lv>=PASS.max?PASS.xpPer:passState().xp-lv*PASS.xpPer;}
+function passLevel(){return passLvAt(passState().xp);}
+function passInto(){var lv=passLevel();return lv>=PASS.max?passCost(PASS.max):passState().xp-PASS_XP[lv];}
 function passWhat(lv){
   var t=PASS_TIERS[lv-1],out=[];
   if(!t)return "";
   if(t.c)return t.c.toLocaleString()+" coins";
   if(t.y)return t.y.toLocaleString()+" yen";
   if(t.s)return t.s+" free chest spin"+(t.s>1?"s":"");
+  if(t.emote)return "the "+tauntById(t.emote).txt+" emote";
   if(t.skin)out.push(skinById(t.skin).name);if(t.sword)out.push(swordById(t.sword).name);if(t.abil)out.push(abilById(t.abil).name);
   return out.join(" + ");
 }
@@ -8415,6 +8460,7 @@ function passGive(lv){
   if(t.c){addCoins(t.c);return t.c.toLocaleString()+" coins";}
   if(t.y){addYen(t.y);return t.y.toLocaleString()+" yen";}
   if(t.s){SAVE.freeSpins=(SAVE.freeSpins|0)+t.s;return t.s+" free chest spin"+(t.s>1?"s":"");}
+  if(t.emote){SAVE.emotes=SAVE.emotes||{};SAVE.emotes[t.emote]=1;return "the "+tauntById(t.emote).txt+" emote";}
   if(t.skin){SAVE.skins[t.skin]=1;out.push(skinById(t.skin).name);}
   if(t.sword){SAVE.swords[t.sword]=1;out.push(swordById(t.sword).name);}
   if(t.abil){SAVE.abils[t.abil]=1;out.push(abilById(t.abil).name);}
@@ -8431,7 +8477,7 @@ function passCatchUp(){
 }
 function passAddXp(n){
   var p=passState();
-  p.xp=Math.min(PASS.max*PASS.xpPer,p.xp+n);
+  p.xp=Math.min(PASS_XP[PASS.max],p.xp+n);
   return passCatchUp();
 }
 // the end of a match, won or not
@@ -8446,13 +8492,15 @@ function passAward(won){
   var got=passAddXp(gain);
   return {gain:gain,lv:passLevel(),got:got};
 }
-// a level for yen: a full level's XP, so progress into the next one is kept
+// a level for yen: the next level's whole cost in XP, so progress into the one
+// after is kept (costs never go down, so it is always exactly one level)
 function passBuy(){
   if(!passLive())return "The Halloween Pass has ended.";
-  if(passLevel()>=PASS.max)return "You are already at level 50.";
-  if(SAVE.yen<PASS.yenPer)return "You need "+PASS.yenPer+" yen for a level.";
-  addYen(-PASS.yenPer);
-  var got=passAddXp(PASS.xpPer);
+  var lv=passLevel(),cost=passYenFor(lv);
+  if(lv>=PASS.max)return "You are already at level "+PASS.max+".";
+  if(SAVE.yen<cost)return "You need "+cost+" yen for a level.";
+  addYen(-cost);
+  var got=passAddXp(passCost(lv+1));
   writeSave();
   return got;
 }
@@ -8467,9 +8515,9 @@ function passResultHtml(r){
   if(!r)return "";
   if(r.skip==="short")return "<span class='hwres'>HALLOWEEN PASS &middot; MATCHES UNDER 30 SECONDS EARN NO XP</span>";
   if(r.skip==="hour")return "<span class='hwres'>HALLOWEEN PASS &middot; HOURLY XP LIMIT REACHED &middot; BACK SOON</span>";
-  if(!r.gain)return "<span class='hwres'>HALLOWEEN PASS &middot; LEVEL 50 &middot; COMPLETE</span>";
+  if(!r.gain)return "<span class='hwres'>HALLOWEEN PASS &middot; LEVEL "+PASS.max+" &middot; COMPLETE</span>";
   var s="<span class='hwres'><b>+"+r.gain+" PASS XP</b> &middot; LEVEL "+r.lv+
-    (r.lv<PASS.max?" &middot; "+passInto()+" / "+PASS.xpPer:"")+"</span>";
+    (r.lv<PASS.max?" &middot; "+passInto()+" / "+passCost(r.lv+1):"")+"</span>";
   for(var i=0;i<r.got.length;i++)
     s+="<div class='hwup'>PASS LEVEL "+r.got[i].lv+"! "+r.got[i].what.toUpperCase()+"</div>";
   return s;
@@ -8502,6 +8550,7 @@ function passTierIcon(t){
   if(t.c)return UI_ICO.COIN;
   if(t.y)return UI_ICO.YEN;
   if(t.s)return PASS_ICO.spin;
+  if(t.emote)return emoteIcon(tauntById(t.emote)).replace("width='34' height='34'","width='52' height='52'");
   if(t.abil)return abilIcon(abilById(t.abil),40);
   return skinIcon(skinById(t.skin)).replace("width='34' height='34'","width='44' height='44'")+
     swordIcon(swordById(t.sword)).replace("width='34' height='34'","width='44' height='44'");
@@ -8511,6 +8560,7 @@ function passTierLabel(t){
   if(t.y)return t.y.toLocaleString()+" YEN";
   if(t.s)return t.s+" SPIN"+(t.s>1?"S":"");
   if(t.abil)return abilById(t.abil).name.toUpperCase();
+  if(t.emote)return tauntById(t.emote).txt.replace(/\.+$/,"");
   return skinById(t.skin).name.toUpperCase();
 }
 function openPass(){
@@ -8523,17 +8573,20 @@ function renderPass(fresh){
   var p=passState(),lv=passLevel(),live=passLive(),into=passInto();
   $("passLv").textContent=lv;
   $("passLvName").innerHTML="LEVEL <b>"+lv+"</b><span> / "+PASS.max+"</span>";
-  $("passBar").style.width=(lv>=PASS.max?100:into/PASS.xpPer*100).toFixed(1)+"%";
-  $("passXp").textContent=lv>=PASS.max?"COMPLETE":into+" / "+PASS.xpPer+" XP";
+  var need=passCost(Math.min(PASS.max,lv+1)),yc=passYenFor(lv);
+  $("passBar").style.width=(lv>=PASS.max?100:into/need*100).toFixed(1)+"%";
+  $("passXp").textContent=lv>=PASS.max?"COMPLETE":into+" / "+need+" XP";
+  $("passSub").innerHTML="+"+PASS.xpGame+" XP every match &middot; +"+PASS.xpWin+" for a win"+(lv>=50&&lv<PASS.max?" &middot; <b>LEVELS 51+ COST MORE</b>":"");
+  $("passCost").textContent=yc;
   $("passEnds").textContent=passLeftText();
   $("passEnds").classList.toggle("over",!live);
-  $("passBuy").classList.toggle("off",!live||lv>=PASS.max||SAVE.yen<PASS.yenPer);
+  $("passBuy").classList.toggle("off",!live||lv>=PASS.max||SAVE.yen<yc);
   $("passBuyTxt").textContent=lv>=PASS.max?"MAXED OUT":"BUY A LEVEL";
   $("passYen").textContent=SAVE.yen.toLocaleString();
   var html="";
   for(var i=0;i<PASS_TIERS.length;i++){
-    var t=PASS_TIERS[i],n=i+1,big=!!(t.skin||t.abil);
-    var cls="pcard"+(big?" big":"")+(t.abil?" ultra":"")+(n<=p.got?" got":(n===lv+1&&live?" now":""))+(n===passSel?" sel":"");
+    var t=PASS_TIERS[i],n=i+1,big=!!(t.skin||t.abil||t.emote);
+    var cls="pcard"+(big?" big":"")+(t.abil||t.emote==="witching"?" ultra":"")+(t.emote?" emo":"")+(n<=p.got?" got":(n===lv+1&&live?" now":""))+(n===passSel?" sel":"");
     html+="<button class='"+cls+"' data-lv='"+n+"'><span class='pl'>"+n+"</span>"+
       "<span class='pi'>"+passTierIcon(t)+"</span><span class='pn'>"+passTierLabel(t)+"</span>"+
       (n<=p.got?"<span class='pk'>"+UI_ICO.CHECK+"</span>":"")+"</button>";
@@ -8564,6 +8617,9 @@ function renderPassDetail(n){
     if(t.skin)list.push(["skin",skinById(t.skin)]);
     if(t.sword)list.push(["sword",swordById(t.sword)]);
     if(t.abil)list.push(["abil",abilById(t.abil)]);
+    if(t.emote){var tk=tauntById(t.emote);
+      h+="<div class='pdrow item'><span class='pdi lg r-halloween'>"+emoteIcon(tk)+"</span><div><div class='pdn'>"+tk.txt+
+        " <span class='pdt r-halloween'>EMOTE</span></div><div class='pdd'>"+tk.desc+"</div></div></div>";}
     for(var i=0;i<list.length;i++){
       var d=shopData(list[i][0]),it=list[i][1];
       h+="<div class='pdrow item'><span class='pdi lg r-"+itemTier(it)+"'>"+d.icon(it)+"</span><div><div class='pdn'>"+it.name+
@@ -12698,7 +12754,50 @@ function v4Mine(o){return (o.isPlayer&&!o.isRemote)||(o.isBot&&(!NET.on||NET.isH
    you are facing. Everyone it passes is carried with it; the ball, when it is
    reached, is thrown on much faster at whoever is ahead of it. Then the flood
    drains away. */
-var WAVE={speed:26,h:7,w:14,push:12,pop:7,boost:0.35,stun:0};
+var WAVE={speed:26,h:7,w:14,carry:9,carryT:.42,pop:13,boost:0.35,stun:0};
+// the wave's side view, extruded across the lane: ends taper so it reads as
+// one swell, not a cut pipe. Colour runs deep blue at the foot to pale at the crest
+function greyWaveGeo(W){
+  var sh=new THREE.Shape();
+  sh.moveTo(-4.6,0);
+  sh.quadraticCurveTo(-1.8,1.0,-.4,4.8);       // the back, rising
+  sh.quadraticCurveTo(.5,7.3,2.6,7.1);         // over the crest
+  sh.quadraticCurveTo(4.6,6.7,4.2,5.0);        // the lip, curling down
+  sh.quadraticCurveTo(3.9,4.3,3.2,4.8);        // its underside
+  sh.quadraticCurveTo(1.6,5.6,1.4,3.4);        // the hollow
+  sh.quadraticCurveTo(1.4,1.0,3.0,0);          // the face, down to the foot
+  sh.lineTo(-4.6,0);
+  var geo=new THREE.ExtrudeGeometry(sh,{depth:W,steps:14,bevelEnabled:false,curveSegments:10});
+  geo.translate(0,0,-W/2);geo.rotateY(-Math.PI/2);
+  var p=geo.attributes.position,col=new Float32Array(p.count*3),c=new THREE.Color(),lo=new THREE.Color(0x082a78),hi=new THREE.Color(0x2fa8f0);
+  for(var i=0;i<p.count;i++){
+    var x=p.getX(i),y=p.getY(i),z=p.getZ(i),u=Math.abs(x)/(W/2),tp=1-Math.pow(u,5)*.75;
+    p.setY(i,y*tp);p.setZ(i,z*(1-Math.pow(u,5)*.3));
+    c.copy(lo).lerp(hi,clamp((y-.5)/6.4,0,1));
+    col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;
+  }
+  geo.setAttribute("color",new THREE.BufferAttribute(col,3));
+  geo.computeVertexNormals();
+  return geo;
+}
+// a band of white foam riding the crest and the curl of the lip
+function greyLipGeo(W){
+  var sh=new THREE.Shape();
+  sh.moveTo(-.2,6.0);
+  sh.quadraticCurveTo(.6,7.6,2.7,7.35);
+  sh.quadraticCurveTo(4.95,6.85,4.4,4.9);
+  sh.quadraticCurveTo(4.0,4.1,3.3,4.55);
+  sh.quadraticCurveTo(4.0,4.8,3.95,5.4);
+  sh.quadraticCurveTo(3.9,6.6,2.5,6.75);
+  sh.quadraticCurveTo(.9,6.9,-.2,6.0);
+  var geo=new THREE.ExtrudeGeometry(sh,{depth:W*.96,steps:14,bevelEnabled:false,curveSegments:8});
+  geo.translate(0,0,-W*.48);geo.rotateY(-Math.PI/2);
+  var p=geo.attributes.position;
+  for(var i=0;i<p.count;i++){var u=Math.abs(p.getX(i))/(W*.48),tp=1-Math.pow(u,5)*.75;
+    p.setY(i,p.getY(i)*tp+Math.sin(p.getX(i)*1.7)*.12);p.setZ(i,p.getZ(i)*(1-Math.pow(u,5)*.3));}
+  geo.computeVertexNormals();
+  return geo;
+}
 function greyWave(f,yaw){
   /* A wave you can read: it rises in FRONT of you, rolls away across a lane
      as wide as a few fighters, and crashes at the far side. Anyone it reaches
@@ -12707,24 +12806,22 @@ function greyWave(f,yaw){
   var dx=Math.sin(yaw),dz=Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw);
   var R=arenaEdgeFor(f),W=WAVE.w,startD=1.5,endD=R*1.7,ox=f.pos.x,oz=f.pos.z;
   var g=new THREE.Group();scene.add(g);
-  var deep=new THREE.MeshPhongMaterial({color:0x1a6ec8,shininess:140,specular:0xbfe8ff,emissive:0x0a2a5a,emissiveIntensity:.5,transparent:true,opacity:.92});
-  var light=new THREE.MeshPhongMaterial({color:0x4ab8ff,shininess:160,specular:0xffffff,emissive:0x0a3a6a,emissiveIntensity:.5,transparent:true,opacity:.86});
-  var foam=new THREE.MeshBasicMaterial({color:0xeaf8ff,transparent:true,opacity:.95});
-  // one smooth curl along the lane: a hollow C that opens forward, a lip of
-  // foam hanging over the front, foam boiling at its foot
-  var r=WAVE.h/2,body=new THREE.Group();g.add(body);
-  var curl=new THREE.Mesh(new THREE.CylinderGeometry(r,r,W,32,1,true,Math.PI/2-.8,Math.PI*1.5+.8-Math.PI/2+.0),light);
-  light.side=THREE.DoubleSide;curl.rotation.z=Math.PI/2;curl.position.y=r;body.add(curl);
-  var backs=new THREE.Mesh(new THREE.CylinderGeometry(r*1.02,r*1.02,W,32,1,true,Math.PI,Math.PI*.5),deep);
-  deep.side=THREE.DoubleSide;backs.rotation.z=Math.PI/2;backs.position.y=r;body.add(backs);
-  var lip=new THREE.Mesh(GEO.cyl,foam);lip.scale.set(.8,W,.8);lip.rotation.z=Math.PI/2;lip.position.set(0,r+r*Math.sin(.77),r*Math.cos(.77));body.add(lip);
-  var foot=new THREE.Mesh(GEO.box,foam);foot.scale.set(W,.45,2.2);foot.position.set(0,.2,.6);body.add(foot);
-  for(var e=-1;e<=1;e+=2){var cap=new THREE.Mesh(GEO.sph,deep);cap.scale.set(.6,r,r);cap.position.set(e*W/2,r,-r*.1);body.add(cap);}
+  // one breaking wave across the lane: a long back slope, a crest rolling
+  // forward, a white lip curling over a hollow, and foam boiling at its foot
+  var water=new THREE.MeshPhongMaterial({vertexColors:true,shininess:110,specular:0x9adcff,emissive:0x041c48,emissiveIntensity:.4,
+    transparent:true,opacity:.93,side:THREE.DoubleSide});
+  var foam=new THREE.MeshLambertMaterial({color:0xf2fbff,emissive:0x8ab8d8,emissiveIntensity:.5,transparent:true,opacity:.97});
+  var body=new THREE.Group();g.add(body);
+  var wg=greyWaveGeo(W),wave=new THREE.Mesh(wg,water);body.add(wave);
+  var lip=new THREE.Mesh(greyLipGeo(W),foam);body.add(lip);
+  var foot=new THREE.Group();body.add(foot);
+  for(var e=0;e<(QUAL>1?9:5);e++){var fb=new THREE.Mesh(GEO.sphLo,foam),fu=(e/((QUAL>1?9:5)-1)-.5)*W*.92;
+    fb.scale.set(W/(QUAL>1?7:4),.7,1.5);fb.position.set(fu,.25,2.9+(e%2)*.4);foot.add(fb);}
   g.rotation.y=yaw;
   var hit=[],ballHit={},dist=startD,t=0,crash=0,H=0;
   function place(){g.position.set(ox+dx*dist,0,oz+dz*dist);}
   function shape(h){var k=Math.max(.02,h/WAVE.h);body.scale.set(1,k,.6+.4*k);
-    lip.scale.set(.8+.15*Math.sin(t*9),W,.8);}
+    lip.position.z=Math.sin(t*9)*.12;foot.position.y=Math.sin(t*13)*.08;}
   place();shape(.5);
   try{noiseHit(1.4,.45,420);tone(110,45,1.2,"sine",.22);noiseHit(.8,.2,2400);}catch(e){}
   if(f===player)shakeCam(.18);
@@ -12743,8 +12840,14 @@ function greyWave(f,yaw){
         hit.push(o);
         burst(o.pos.x,o.y+1.2,o.pos.z,26,9,0xbfe8ff,1.4,.55,-6);
         // knocked back, never knocked out: gentler the nearer they are to the edge
-        var edge=clamp((R-Math.hypot(o.pos.x,o.pos.z))/10,.15,1),pw=WAVE.push*edge;
-        if(v4Mine(o)){o.vel.x=dx*pw;o.vel.z=dz*pw;o.vy=Math.max(o.vy,WAVE.pop);o.grounded=false;if(WAVE.stun)o.stun=Math.max(o.stun||0,WAVE.stun);}
+        var edge=clamp((R-Math.hypot(o.pos.x,o.pos.z))/10,.15,1);
+        // carried, not nudged: a push through vel was undone by the next frame's
+        // steering, so the wave rolled straight through people. The same glide
+        // Pull uses carries them with it, then they drop out of the top
+        if(v4Mine(o)){var cd=WAVE.carry*edge;
+          o.pullT=WAVE.carryT;o.pullDur=WAVE.carryT;o.pullFx={x:o.pos.x,z:o.pos.z};o.pullTo={x:o.pos.x+dx*cd,z:o.pos.z+dz*cd};
+          o.vy=Math.max(o.vy,WAVE.pop);o.grounded=false;o.jumps=Math.max(o.jumps,1);if(WAVE.stun)o.stun=Math.max(o.stun||0,WAVE.stun);}
+        if(NET.on&&NET.isHost&&NET.srv)mvGrant(o,WAVE.carryT+1.2);
       }
       if(!(NET.on&&!NET.isHost))for(var bi=0;bi<balls.length;bi++){var b=balls[bi];
         if(!b.active||b.held>0||ballHit[bi])continue;
@@ -12771,7 +12874,7 @@ function greyWave(f,yaw){
     crash+=dt;
     var k2=clamp(crash/.7,0,1);
     shape(H*(1-k2));g.position.y=-k2*.5;
-    deep.opacity=.92*(1-k2);light.opacity=.86*(1-k2);foam.opacity=.95*(1-k2);
+    water.opacity=.93*(1-k2);foam.opacity=.97*(1-k2);
     return crash<.7;
   },done:function(){scene.remove(g);disposeTree(g);}});
 }
@@ -13189,6 +13292,607 @@ function trickBotSteer(f){
 
 /* ==== 4.0 END ==== */
 
+/* ==== PASS PART TWO BEGIN ==== */
+/* ============================================================
+   THE HALLOWEEN PASS, LEVELS 51-100
+   Four more skins, each with the blade that goes with it: 60 The Monster and
+   the Tesla Coil, 70 the Werewolf and Silver Moon, 80 the Mummy and the Bone
+   Saw, 90 the Count and the Wick. Three emotes on the way (55 BOO!,
+   75 BRAINS..., 85 TOIL & TROUBLE) and, at 100, the Witching Hour.
+   ============================================================ */
+var _p2V=null;
+function p2World(o,x,y,z){_p2V=_p2V||new THREE.Vector3();_p2V.set(x||0,y||0,z||0);return o.localToWorld(_p2V);}
+
+/* ---------------- the four skins ---------------- */
+// THE MONSTER: a flat black top, a heavy brow, bolts through the neck that
+// arc now and then, a hunched coat too small for him, and stitches everywhere
+SIG_SKIN.patchwork=function(f,g,sk,box,glowM,darkM,bodyM){
+  var i,sd;
+  var hair=new THREE.MeshLambertMaterial({color:0x121418}),skin2=new THREE.MeshLambertMaterial({color:0x6e9a5c});
+  var stitch=new THREE.MeshBasicMaterial({color:0x14100a}),metal=new THREE.MeshPhongMaterial({color:0x9aa0aa,shininess:100,specular:0xffffff});
+  var boot=new THREE.MeshLambertMaterial({color:0x16141a}),sole=new THREE.MeshLambertMaterial({color:0x2a2a30});
+  box(.78,.22,.78,0,3.39,0,hair);                               // the flat top
+  for(i=0;i<6;i++)box(.14,.13+(i%2)*.07,.09,-.33+i*.13,3.25-(i%2)*.035,.36,hair);   // a hard fringe
+  box(.8,.11,.17,0,3.13,.33,f.mSkin);                            // the brow, heavy
+  box(.44,.028,.02,.04,3.155,.42,stitch);                        // a scar across it, stitched
+  for(i=0;i<6;i++)box(.025,.1,.02,-.14+i*.072,3.155,.425,stitch);
+  box(.2,.2,.03,.2,2.84,.345,skin2);                             // a patch sewn on under one eye
+  box(.025,.2,.02,.1,2.84,.365,stitch);
+  for(i=0;i<3;i++)box(.07,.022,.02,.1,2.77+i*.07,.37,stitch);
+  for(sd=-1;sd<=1;sd+=2)box(.13,.07,.03,sd*.17,3.0-(sd>0?.03:0),.375,glowM);       // the eyes, lit by the current
+  box(.3,.04,.03,0,2.72,.355,stitch);                            // a flat mouth
+  var bolts=[];
+  for(sd=-1;sd<=1;sd+=2){
+    var b=new THREE.Mesh(GEO.cyl,metal);b.scale.set(.13,.4,.13);b.rotation.z=Math.PI/2;b.position.set(sd*.42,2.88,-.02);g.add(b);
+    var n=new THREE.Mesh(GEO.cyl,metal);n.scale.set(.24,.1,.24);n.rotation.z=Math.PI/2;n.position.set(sd*.63,2.88,-.02);g.add(n);
+    bolts.push(n);
+  }
+  box(1.2,.36,.72,0,2.6,-.05,bodyM);                             // hunched shoulders
+  box(.36,.52,.03,0,2.2,.36,f.mSkin);                            // the coat will not close
+  box(.025,.48,.02,0,2.2,.375,stitch);
+  for(i=0;i<5;i++)box(.14,.025,.02,0,2.0+i*.1,.38,stitch);
+  for(sd=-1;sd<=1;sd+=2){
+    box(.28,.8,.06,sd*.3,2.08,.33,bodyM,[0,0,sd*.1]);            // lapels
+    var A=f.arms[sd>0?1:0],L=f.legs[sd>0?1:0];
+    var pa=new THREE.Mesh(GEO.box,skin2);pa.scale.set(.29,.2,.29);pa.position.set(0,-.84,0);A.add(pa);   // the sleeves stop short
+    var ps=new THREE.Mesh(GEO.box,stitch);ps.scale.set(.3,.03,.3);ps.position.set(0,-.75,0);A.add(ps);
+    var bt=new THREE.Mesh(GEO.box,boot);bt.scale.set(.48,.42,.56);bt.position.set(0,-1.08,.05);L.add(bt);
+    var so=new THREE.Mesh(GEO.box,sole);so.scale.set(.52,.12,.62);so.position.set(0,-1.28,.06);L.add(so);
+  }
+  for(i=0;i<5;i++)box(.22,.7+(i%3)*.16,.05,-.44+i*.22,1.28-(i%3)*.08,-.33,bodyM,[.08,0,(i-2)*.03]);   // ragged coat tails
+  f.sig={kind:"patchwork",bolts:bolts,glow:glowM};
+};
+// THE WEREWOLF: a wolf's head with the jaw hanging open, moon-yellow eyes, a
+// mane round the shoulders, a torn shirt, claws, and a tail that swings
+SIG_SKIN.werewolf=function(f,g,sk,box,glowM,darkM,bodyM){
+  var i,sd,hp=f.headParts||[];
+  for(i=0;i<hp.length;i++)hp[i].visible=false;
+  var fur=f.mSkin,fur2=new THREE.MeshLambertMaterial({color:0x9a8268}),dark=new THREE.MeshLambertMaterial({color:0x241a14});
+  var bone=new THREE.MeshLambertMaterial({color:0xf4ecd8}),nose=new THREE.MeshPhongMaterial({color:0x0c0a0a,shininess:120});
+  var mouth=new THREE.MeshBasicMaterial({color:0x3a080c}),pink=new THREE.MeshLambertMaterial({color:0x8a4a4a});
+  var hd=new THREE.Group();hd.position.set(0,3.0,0);g.add(hd);
+  function hb(w,h,d,x,y,z,m,r){var q=new THREE.Mesh(GEO.box,m);q.scale.set(w,h,d);q.position.set(x,y,z);if(r)q.rotation.set(r[0],r[1],r[2]);hd.add(q);return q;}
+  function hc(sx,sy,sz,x,y,z,m,r){var q=new THREE.Mesh(GEO.cone,m);q.scale.set(sx,sy,sz);q.position.set(x,y,z);if(r)q.rotation.set(r[0],r[1],r[2]);hd.add(q);return q;}
+  hb(.74,.6,.7,0,.06,-.04,fur);                                 // skull
+  hb(.4,.24,.46,0,-.04,.5,fur2);                                // muzzle
+  hb(.26,.09,.46,0,.08,.46,fur,[.2,0,0]);                       // the bridge, sloping down to the nose
+  hb(.17,.11,.11,0,.03,.75,nose);
+  hb(.32,.12,.4,0,-.17,.46,mouth);                              // the open mouth
+  var jaw=new THREE.Group();jaw.position.set(0,-.18,.28);hd.add(jaw);
+  var jw=new THREE.Mesh(GEO.box,fur2);jw.scale.set(.34,.1,.42);jw.position.set(0,-.04,.2);jaw.add(jw);
+  for(i=0;i<4;i++){
+    hc(.035,.1,.035,-.11+i*.073,-.15,.68,bone,[Math.PI,0,0]);  // top teeth
+    var lt=new THREE.Mesh(GEO.cone,bone);lt.scale.set(.03,.08,.03);lt.position.set(-.1+i*.067,.04,.36);jaw.add(lt);
+  }
+  for(sd=-1;sd<=1;sd+=2){
+    hc(.05,.18,.05,sd*.15,-.17,.6,bone,[Math.PI,0,0]);          // fangs
+    hb(.15,.075,.04,sd*.2,.19,.32,glowM,[0,0,sd*-.28]);         // the eyes, slanted
+    hb(.22,.07,.1,sd*.2,.27,.31,dark,[0,0,sd*.38]);             // a scowl over them
+    hc(.17,.42,.12,sd*.25,.5,-.1,fur,[0,0,sd*-.22]);            // ears
+    hc(.08,.24,.05,sd*.25,.46,-.04,pink,[0,0,sd*-.22]);
+    hc(.12,.34,.12,sd*.4,-.08,.02,fur,[0,0,sd*-1.9]);           // cheek tufts
+  }
+  for(i=0;i<10;i++){var a=i/10*TAU,mn=new THREE.Mesh(GEO.cone,i%2?fur:fur2);   // the mane
+    mn.scale.set(.26,.4,.22);mn.position.set(Math.sin(a)*.44,2.6,Math.cos(a)*.38-.04);
+    mn.rotation.set(Math.cos(a)*1.25,0,-Math.sin(a)*1.25);g.add(mn);}
+  for(i=0;i<4;i++){var tf=new THREE.Mesh(GEO.cone,fur2);           // fur through the torn shirt
+    tf.scale.set(.1,.24,.08);tf.position.set(-.18+i*.12,2.02+(i%2)*.14,.36);tf.rotation.x=1.2;g.add(tf);}
+  box(.3,.36,.03,.16,1.84,.27,dark,[0,0,.4]);                   // the rip
+  for(sd=0;sd<2;sd++){
+    var A=f.arms[sd],L=f.legs[sd];
+    for(i=0;i<3;i++){
+      var cl=new THREE.Mesh(GEO.cone,bone);cl.scale.set(.05,.17,.05);cl.position.set((i-1)*.08,-1.42,.07);cl.rotation.x=Math.PI-.2;A.add(cl);
+      var tc=new THREE.Mesh(GEO.cone,fur2);tc.scale.set(.09,.2,.09);tc.position.set((i-1)*.1,-.68,.15);tc.rotation.x=Math.PI-.5;A.add(tc);   // ripped sleeves
+      var fc=new THREE.Mesh(GEO.cone,bone);fc.scale.set(.05,.14,.05);fc.position.set((i-1)*.12,-1.3,.27);fc.rotation.x=Math.PI/2;L.add(fc);
+    }
+    var ft=new THREE.Mesh(GEO.box,fur);ft.scale.set(.42,.18,.5);ft.position.set(0,-1.2,.08);L.add(ft);       // bare feet
+  }
+  var tail=new THREE.Group();tail.position.set(0,1.52,-.3);g.add(tail);
+  var seg2=[],par=tail;
+  for(i=0;i<4;i++){var tg=new THREE.Group();tg.position.set(0,i?-.3:0,0);par.add(tg);
+    var tb=new THREE.Mesh(GEO.box,i%2?fur2:fur);tb.scale.set(.24-i*.03,.34,.24-i*.03);tb.position.y=-.15;tg.add(tb);
+    seg2.push(tg);par=tg;}
+  tail.rotation.x=-.75;
+  var tip=new THREE.Mesh(GEO.cone,fur2);tip.scale.set(.13,.26,.13);tip.position.y=-.4;tip.rotation.x=Math.PI;par.add(tip);
+  f.sig={kind:"werewolf",hd:hd,jaw:jaw,tail:seg2,glow:glowM};
+};
+// THE MUMMY: wrapped head to foot, one eye burning through a gap in the
+// bandages, a gold scarab on the chest, and loose ends trailing everywhere
+SIG_SKIN.mummy=function(f,g,sk,box,glowM,darkM,bodyM){
+  var i,sd,hp=f.headParts||[];
+  for(i=0;i<hp.length;i++)hp[i].visible=false;
+  var w1=new THREE.MeshLambertMaterial({color:0xe6dabb}),w2=new THREE.MeshLambertMaterial({color:0xc4b48c}),w3=new THREE.MeshLambertMaterial({color:0xa8946a});
+  var gap=new THREE.MeshBasicMaterial({color:0x140c06}),gold=new THREE.MeshPhongMaterial({color:0xe0b040,shininess:110,specular:0xfff0c0,emissive:0x3a2600,emissiveIntensity:.4});
+  box(.7,.5,.7,0,3.06,0,w1);box(.6,.28,.62,0,2.76,.02,w2);box(.3,.18,.3,0,2.54,0,w2);
+  for(i=0;i<6;i++)box(.75,.075,.74,0,2.68+i*.12,0,i%2?w1:w3,[0,(i%3)*.4,(i%2?.13:-.11)]);   // the wraps round the head
+  box(.52,.08,.03,0,3.0,.37,gap);                                // a gap at the eyes...
+  box(.12,.075,.035,-.15,3.0,.38,glowM);                        // ...and one eye burning in it
+  box(.2,.07,.03,.15,3.005,.39,w3,[0,0,.2]);                    // the other wrapped over
+  box(.08,.42,.04,.22,3.3,.3,w2,[0,0,-.5]);                     // a loose end over the brow
+  for(i=0;i<8;i++)box(1.06,.09,.62,0,1.48+i*.15,0,i%2?w1:(i%3?w2:w3),[0,0,(i%2?.09:-.07)]);   // the body
+  for(i=0;i<3;i++)box(.98,.08,.56,0,1.5+i*.4,0,w3,[(i%2?.25:-.2),0,0]);
+  // the scarab, gold, its wings turquoise
+  var sc=new THREE.Mesh(GEO.sphLo,gold);sc.scale.set(.15,.2,.08);sc.position.set(0,2.28,.38);g.add(sc);
+  var sh=new THREE.Mesh(GEO.sphLo,gold);sh.scale.set(.09,.08,.07);sh.position.set(0,2.47,.37);g.add(sh);
+  for(sd=-1;sd<=1;sd+=2)box(.22,.14,.04,sd*.17,2.3,.37,glowM,[0,0,sd*.35]);
+  box(.03,.42,.03,-.13,2.6,.33,gold,[0,0,.4]);box(.03,.42,.03,.13,2.6,.33,gold,[0,0,-.4]);
+  var loose=[];
+  for(sd=0;sd<2;sd++){
+    var A=f.arms[sd],L=f.legs[sd];
+    for(i=0;i<5;i++){var ab=new THREE.Mesh(GEO.box,i%2?w1:w2);ab.scale.set(.35,.07,.35);ab.position.set(0,-.12-i*.24,0);ab.rotation.z=(i%2?.18:-.15);A.add(ab);}
+    for(i=0;i<5;i++){var lb=new THREE.Mesh(GEO.box,i%2?w1:w3);lb.scale.set(.42,.08,.44);lb.position.set(0,-.1-i*.24,0);lb.rotation.z=(i%2?.14:-.12);L.add(lb);}
+    var hang=new THREE.Group();hang.position.set(sd?.12:-.12,-1.02,-.1);A.add(hang);       // a strip hanging off each arm
+    var hs=new THREE.Mesh(GEO.box,w2);hs.scale.set(.08,.62,.03);hs.position.y=-.3;hang.add(hs);loose.push(hang);
+  }
+  for(i=0;i<3;i++){var bk=new THREE.Group();bk.position.set(-.3+i*.3,(i===1?3.2:1.5),-.34);g.add(bk);   // and off the back
+    var bs=new THREE.Mesh(GEO.box,i===1?w1:w2);bs.scale.set(.1,i===1?.9:.6,.03);bs.position.y=-(i===1?.45:.3);bk.add(bs);loose.push(bk);}
+  f.sig={kind:"mummy",loose:loose,glow:glowM};
+};
+// THE COUNT: pale, hair slicked back to a point, red eyes and fangs, a white
+// shirt under a red waistcoat, a medallion, and a black cape lined in red
+// with a collar that stands up taller than his head
+SIG_SKIN.count=function(f,g,sk,box,glowM,darkM,bodyM){
+  var i,sd;
+  var hair=new THREE.MeshPhongMaterial({color:0x0c0a10,shininess:120,specular:0x8a80a0});
+  var black=new THREE.MeshLambertMaterial({color:0x0e0a12}),red=new THREE.MeshLambertMaterial({color:0x9a0a1e,emissive:0x3a0008,emissiveIntensity:.5});
+  var white=new THREE.MeshLambertMaterial({color:0xf2eee8}),bone=new THREE.MeshLambertMaterial({color:0xffffff});
+  var gold=new THREE.MeshPhongMaterial({color:0xf0c040,shininess:120,specular:0xfff0c0,emissive:0x4a3000,emissiveIntensity:.4});
+  // the hair, slicked back, with a widow's peak
+  box(.76,.15,.76,0,3.36,-.01,hair);
+  box(.76,.46,.2,0,3.12,-.29,hair);
+  for(sd=-1;sd<=1;sd+=2)box(.06,.3,.6,sd*.375,3.2,-.04,hair);
+  box(.24,.24,.04,0,3.3,.355,hair,[0,0,.785]);
+  for(sd=-1;sd<=1;sd+=2){
+    box(.22,.05,.03,sd*.17,3.11,.375,hair,[0,0,sd*.35]);          // brows, arched hard
+    box(.14,.09,.03,sd*.17,3.0,.375,glowM);                       // red eyes
+    var fg=new THREE.Mesh(GEO.cone,bone);fg.scale.set(.05,.11,.05);fg.position.set(sd*.08,2.66,.36);fg.rotation.x=Math.PI;g.add(fg);   // fangs
+    box(.03,.12,.02,sd*.24,2.82,.355,new THREE.MeshLambertMaterial({color:0xb8bccc}));   // hollow cheeks
+  }
+  // the collar: two tall panels flaring out behind the head, red inside
+  for(sd=-1;sd<=1;sd+=2){
+    box(.56,1.05,.05,sd*.4,3.08,-.24,black,[-.18,sd*.42,sd*-.32]);
+    box(.5,.98,.03,sd*.39,3.08,-.205,red,[-.18,sd*.42,sd*-.32]);
+  }
+  box(1.26,.24,.7,0,2.66,-.04,black);                             // the cape over the shoulders
+  // shirt, waistcoat, lapels and the medallion
+  box(.3,.62,.03,0,2.18,.36,white);
+  for(sd=-1;sd<=1;sd+=2){box(.17,.52,.035,sd*.2,2.12,.362,red);box(.2,.78,.05,sd*.36,2.12,.34,black,[0,0,sd*.12]);}
+  for(i=0;i<3;i++){var bt=new THREE.Mesh(GEO.sphLo,gold);bt.scale.setScalar(.06);bt.position.set(.2,2.3-i*.15,.385);g.add(bt);}
+  box(.05,.26,.02,-.07,2.5,.375,red,[0,0,.45]);box(.05,.26,.02,.07,2.5,.375,red,[0,0,-.45]);
+  var md=new THREE.Mesh(GEO.cyl,gold);md.scale.set(.2,.04,.2);md.rotation.x=Math.PI/2;md.position.set(0,2.36,.39);g.add(md);
+  var gm=new THREE.Mesh(GEO.sphLo,glowM);gm.scale.setScalar(.09);gm.position.set(0,2.36,.41);g.add(gm);
+  // the cape: hung from the shoulders so it can swing, black with a red lining
+  // and a hem cut into bat-wing points
+  var cape=new THREE.Group();cape.position.set(0,2.72,-.42);g.add(cape);
+  var cb=new THREE.Mesh(GEO.box,black);cb.scale.set(1.34,2.1,.06);cb.position.set(0,-1.05,-.02);cape.add(cb);
+  var cl=new THREE.Mesh(GEO.box,red);cl.scale.set(1.28,2.04,.03);cl.position.set(0,-1.03,.02);cape.add(cl);
+  for(i=0;i<5;i++){var hm=new THREE.Mesh(GEO.cone,black);hm.scale.set(.27,.34,.06);hm.position.set(-.54+i*.27,-2.22,-.02);hm.rotation.x=Math.PI;cape.add(hm);}
+  for(sd=0;sd<2;sd++){var cu=new THREE.Mesh(GEO.box,white);cu.scale.set(.32,.09,.32);cu.position.set(0,-1.1,0);f.arms[sd].add(cu);}
+  f.sig={kind:"count",cape:cape,glow:glowM};
+};
+// how they move: sparks off the bolts, the tail and the jaw, the loose
+// bandages, the candle in the pumpkin and the crown's gems
+Object.assign(SIG_TICK4,{
+  patchwork:function(f,s,dt,t){
+    var ph=(t*.7+f.phase)%3.2,on=ph<.35;
+    s.glow.color.setRGB(on?.85:.4,on?1:.8,on?.6:.3);
+    if(on&&QUAL>0&&f.mesh&&f.mesh.visible){
+      f._boltAcc=(f._boltAcc||0)+dt*(f===player?40:14);
+      if(f._boltAcc>=1){f.mesh.updateMatrixWorld(true);
+        while(f._boltAcc>=1){f._boltAcc-=1;var bq=s.bolts[Math.random()<.5?0:1],w=p2World(bq,0,0,0);
+          spark(w.x,w.y,w.z,hr(-2,2),hr(-.5,2.5),hr(-2,2),.7,1,.55,hr(.25,.45),hr(.1,.22),0);}}
+    }
+  },
+  werewolf:function(f,s,dt,t){
+    var sp=Math.hypot(f.vel.x,f.vel.z);
+    for(var i=0;i<s.tail.length;i++)s.tail[i].rotation.z=Math.sin(t*(2.4+sp*.1)+f.phase-i*.7)*(.18+i*.05);
+    s.jaw.rotation.x=.12+Math.abs(Math.sin(t*3.2+f.phase))*.18;      // panting
+    s.hd.rotation.z=Math.sin(t*.9+f.phase)*.05;
+    var gl=.75+.25*Math.sin(t*2.3+f.phase);s.glow.color.setRGB(1,.85*gl+.1,.25*gl);
+  },
+  mummy:function(f,s,dt,t){
+    var sp=Math.hypot(f.vel.x,f.vel.z);
+    for(var i=0;i<s.loose.length;i++){var q=s.loose[i];
+      q.rotation.x=.2+Math.min(.9,sp*.05)+Math.sin(t*3+i*1.3+f.phase)*.18;q.rotation.z=Math.sin(t*2.2+i)*.15;}
+    var fl=(t*1.1+f.phase)%2.6<.12?.2:1;s.glow.color.setRGB(.29*fl,1*fl,.82*fl);
+  },
+  count:function(f,s,dt,t){
+    var sp=Math.hypot(f.vel.x,f.vel.z);
+    s.cape.rotation.x=damp(s.cape.rotation.x,.06+Math.min(.65,sp*.045)+Math.sin(t*1.7+f.phase)*.04,6,dt);
+    var gl=.7+.3*Math.sin(t*2.6+f.phase);s.glow.color.setRGB(1,.1*gl,.16*gl);
+  }
+
+});
+
+/* ---------------- the four blades ---------------- */
+Object.assign(SIG_SHAPE,{
+  // TESLA COIL -- a rubber grip, a copper coil wound up a steel rod, and a
+  // glowing ball at the top with lightning running down it
+  tesla:function(g,seg,B,H,G){
+    var i,copper=new THREE.MeshPhongMaterial({color:0xd8743a,shininess:110,specular:0xffd0a0,emissive:0x4a1a04,emissiveIntensity:.45});
+    var rubber=new THREE.MeshLambertMaterial({color:0x121214});
+    seg(.27,.9,.27,.36,0,rubber);
+    for(i=0;i<3;i++){var d=new THREE.Mesh(GEO.cyl,H);d.scale.set(.66-i*.12,.08,.66-i*.12);d.position.y=.84+i*.12;g.add(d);}
+    seg(.13,3.0,.13,2.45);                                      // the rod
+    var tg=new THREE.TorusGeometry(.19,.045,6,14);
+    for(i=0;i<15;i++){var c=new THREE.Mesh(tg,copper);c.position.y=1.2+i*.165;c.rotation.x=Math.PI/2+.13;c.scale.setScalar(1-i*.018);g.add(c);}
+    var tr=new THREE.Mesh(new THREE.TorusGeometry(.38,.07,6,18),H);tr.position.y=3.9;tr.rotation.x=Math.PI/2;g.add(tr);
+    var ball=new THREE.Mesh(GEO.sphLo,G);ball.scale.setScalar(.6);ball.position.y=4.12;g.add(ball);g.userData.pulse=ball;
+    var arcs=new THREE.Group();arcs.userData.aura=true;
+    for(var k=0;k<3;k++){var a=k/3*TAU,y=4.0,x=0,z=0;
+      for(i=0;i<5;i++){var ny=y-.42,nx=Math.cos(a+i)*(.32+(i%2)*.14),nz=Math.sin(a+i)*(.32+(i%2)*.14);
+        var m=new THREE.Mesh(GEO.box,G),dx=nx-x,dy=ny-y,dz=nz-z,L=Math.hypot(dx,dy,dz);
+        m.scale.set(.035,L,.035);m.position.set((x+nx)/2,(y+ny)/2,(z+nz)/2);
+        m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(dx/L,dy/L,dz/L));arcs.add(m);
+        x=nx;y=ny;z=nz;}}
+    g.add(arcs);g.userData.spinY=arcs;
+    return 4.3;
+  },
+  // SILVER MOON -- a crescent of silver with a burning pale edge, a leather
+  // grip and three wolf claws for a guard
+  silvermoon:function(g,seg,B,H,G){
+    var i,claw=new THREE.MeshLambertMaterial({color:0xf0e8d4});
+    seg(.22,.9,.22,.38,0,H);
+    for(i=0;i<4;i++){var wr=new THREE.Mesh(GEO.box,new THREE.MeshLambertMaterial({color:0x1a120c}));wr.scale.set(.25,.04,.25);wr.position.y=.08+i*.22;wr.rotation.z=.3;g.add(wr);}
+    for(i=-1;i<=1;i++){var c=new THREE.Mesh(GEO.cone,claw);c.scale.set(.08,.38,.08);c.position.set(i*.2,.98,0);c.rotation.z=-i*.6;g.add(c);}
+    var cx=-.9,cy=2.6,R=1.75,a1=1.134,ix=-1.9,ir=2.357,ia=.74;
+    var sh=new THREE.Shape();
+    sh.absarc(cx,cy,R,-a1,a1,false);sh.absarc(ix,cy,ir,ia,-ia,true);
+    var geo=new THREE.ExtrudeGeometry(sh,{depth:.09,bevelEnabled:true,bevelThickness:.03,bevelSize:.03,bevelSegments:1,curveSegments:24});
+    geo.translate(0,0,-.045);
+    var moon=new THREE.Mesh(geo,B);moon.userData.core=true;moon.castShadow=QUAL>1;g.add(moon);
+    var e=new THREE.Shape();e.absarc(cx,cy,R+.02,-a1+.05,a1-.05,false);e.absarc(cx,cy,R-.09,a1-.05,-a1+.05,true);
+    var eg=new THREE.ExtrudeGeometry(e,{depth:.17,bevelEnabled:false,curveSegments:24});eg.translate(0,0,-.085);
+    g.add(new THREE.Mesh(eg,G));
+    var cra=new THREE.MeshLambertMaterial({color:0xaab4c4});
+    [[.25,2.6,.14],[.05,3.3,.09],[.12,1.9,.08],[-.05,3.75,.06]].forEach(function(q){for(var sd=-1;sd<=1;sd+=2){
+      var m=new THREE.Mesh(GEO.cyl,cra);m.scale.set(q[2]*2,.02,q[2]*2);m.rotation.x=Math.PI/2;m.position.set(q[0],q[1],sd*.08);g.add(m);}});
+    return 4.25;
+  },
+  // BONE SAW -- a blade of bone with teeth down the front, a spine of
+  // vertebrae down the back, a bandaged grip and a turquoise eye for a pommel
+  bonesaw:function(g,seg,B,H,G){
+    var i,wrap=new THREE.MeshLambertMaterial({color:0xd8ccae}),dark=new THREE.MeshLambertMaterial({color:0xa89a78});
+    seg(.24,.88,.24,.36,0,H);
+    for(i=0;i<5;i++){var w=new THREE.Mesh(GEO.box,wrap);w.scale.set(.27,.06,.27);w.position.y=.04+i*.18;w.rotation.z=(i%2?.25:-.25);g.add(w);}
+    var pm=new THREE.Mesh(GEO.sphLo,G);pm.scale.setScalar(.16);pm.position.y=-.1;g.add(pm);
+    seg(.74,.18,.3,.86,0,B);                                    // a vertebra for a guard
+    for(var sd=-1;sd<=1;sd+=2){var pr=new THREE.Mesh(GEO.cone,B);pr.scale.set(.09,.3,.09);pr.position.set(sd*.42,.9,0);pr.rotation.z=-sd*1.9;g.add(pr);}
+    seg(.6,2.75,.1,2.35);                                       // the blade
+    for(i=0;i<12;i++){var v=new THREE.Mesh(GEO.box,i%2?B:dark);v.scale.set(.17,.17,.17);v.position.set(-.31,1.1+i*.23,0);g.add(v);}
+    for(i=0;i<13;i++){var t=new THREE.Mesh(GEO.cone,B);t.scale.set(.09,.18,.06);t.position.set(.34,1.05+i*.21,0);t.rotation.z=-Math.PI/2-.35;g.add(t);}
+    var tp=new THREE.Mesh(GEO.cone,B);tp.scale.set(.32,.42,.1);tp.position.set(.02,3.92,0);g.add(tp);
+    [[.05,1.6],[.1,2.3],[0,3.0]].forEach(function(q,j){for(var s2=-1;s2<=1;s2+=2){   // glyphs, burning
+      var m=new THREE.Mesh(GEO.box,G);m.scale.set(j===1?.2:.06,j===1?.06:.22,.02);m.position.set(q[0],q[1],s2*.055);g.add(m);}});
+    return 4.05;
+  },
+  // THE WICK -- a candle as long as a sword, wax running down it, standing in
+  // a gold candlestick, with a flame on the end that never goes out
+  wick:function(g,seg,B,H,G){
+    var i;
+    seg(.2,.86,.2,.36,0,H);
+    var dish=new THREE.Mesh(GEO.cyl,H);dish.scale.set(.9,.09,.9);dish.position.y=.86;g.add(dish);
+    var lip=new THREE.Mesh(new THREE.TorusGeometry(.44,.05,6,20),H);lip.position.y=.92;lip.rotation.x=Math.PI/2;g.add(lip);
+    var hd=new THREE.Mesh(new THREE.TorusGeometry(.17,.045,6,14),H);hd.position.set(.5,.62,0);g.add(hd);
+    var wax=new THREE.Mesh(GEO.cyl,B);wax.scale.set(.42,2.95,.42);wax.position.y=2.42;wax.userData.core=true;g.add(wax);
+    var top=new THREE.Mesh(GEO.cyl,B);top.scale.set(.36,.08,.36);top.position.y=3.92;g.add(top);
+    for(i=0;i<9;i++){var a=i*2.4,dr=new THREE.Mesh(GEO.sphLo,B),L=.25+(i%3)*.16;
+      dr.scale.set(.09,L,.09);dr.position.set(Math.cos(a)*.205,3.82-L/2-(i%4)*.35,Math.sin(a)*.205);g.add(dr);}
+    for(i=0;i<5;i++){var pd=new THREE.Mesh(GEO.sphLo,B);pd.scale.set(.16,.07,.16);pd.position.set(Math.cos(i*1.3)*.28,.95,Math.sin(i*1.3)*.28);g.add(pd);}
+    var wk=new THREE.Mesh(GEO.box,new THREE.MeshBasicMaterial({color:0x14100c}));wk.scale.set(.04,.2,.04);wk.position.y=4.04;g.add(wk);
+    var fl=new THREE.Group();fl.position.y=4.16;fl.userData.aura=true;g.add(fl);
+    var o=new THREE.Mesh(GEO.sphLo,new THREE.MeshBasicMaterial({color:0xff7a12,transparent:true,opacity:.92}));
+    o.scale.set(.32,.62,.32);o.position.y=.4;fl.add(o);
+    var tipc=new THREE.Mesh(GEO.cone,o.material);tipc.scale.set(.24,.5,.24);tipc.position.y=.92;fl.add(tipc);
+    var mid=new THREE.Mesh(GEO.sphLo,new THREE.MeshBasicMaterial({color:0xffc83a}));mid.scale.set(.2,.42,.2);mid.position.y=.34;fl.add(mid);
+    var inn=new THREE.Mesh(GEO.sphLo,new THREE.MeshBasicMaterial({color:0xfff6d8}));inn.scale.set(.1,.22,.1);inn.position.y=.24;fl.add(inn);
+    var blu=new THREE.Mesh(GEO.sphLo,new THREE.MeshBasicMaterial({color:0x4ab8ff}));blu.scale.set(.13,.08,.13);blu.position.y=.04;fl.add(blu);
+    g.userData.pulse=o;g.userData.flareMul=1.5;
+    return 5.0;
+  }
+});
+FXD.teslafx={rate:42,c1:0x9aff5a,c2:0xeaffd8,vy:[-.6,1.6],sp:.62,g:0,sz:.5,life:.3,along:1.0,sheath:.5,arc:true,motes:3,ring:0x9aff5a};
+FXD.moonfx={rate:36,c1:0xe8f0ff,c2:0xffe9a0,vy:[.2,1.3],sp:.5,g:-.8,sz:.62,life:1.1,along:1.0,sheath:.6,motes:4,ring:0xdde8ff};
+FXD.cursefx={rate:32,c1:0x4affd0,c2:0xe8dcc0,vy:[-.6,.8],sp:.5,g:1.0,sz:.6,life:1.0,along:.95,sheath:.42,motes:3,inward:true,ring:0x4affd0};
+FXD.wickfx={rate:40,c1:0xffa030,c2:0x9fe8ff,vy:[.8,2.4],sp:.38,g:-.9,sz:.6,life:.9,along:1.0,sheath:.4,motes:3,ring:0xff8a1e};
+Object.assign(SWORD_FX,{tesla:"teslafx",silvermoon:"moonfx",bonesaw:"cursefx",wick:"wickfx"});
+Object.assign(SKIN_FX,{
+  patchwork:{c:0x9aff5a,rate:7,vy:[-.2,1.2],g:0,sz:.34,life:.28,r:.7},
+  werewolf:{c:0xffe9a0,rate:6,vy:[.1,.8],g:-.6,sz:.4,life:1.1,r:.75},
+  mummy:{c:0xd8c8a0,rate:9,vy:[-.4,.3],g:1.2,sz:.42,life:1.0,r:.7},
+  count:{c:0xd0102a,rate:9,vy:[-.3,.6],g:.6,sz:.5,life:1.1,r:.8}
+});
+Object.assign(SWORD_ICON,{
+  tesla:"<rect x='17' y='29' width='6' height='9' rx='1.5' fill='#141416' stroke='#0b1942' stroke-width='1.4'/><rect x='13' y='26' width='14' height='3.4' rx='1.4' fill='{H}' stroke='#0b1942' stroke-width='1.2'/>"+
+    "<rect x='18.5' y='8' width='3' height='18' fill='{B}' stroke='#0b1942' stroke-width='1'/>"+
+    "<path d='M15.5 11h9M15.5 14h9M15.5 17h9M15.5 20h9M15.5 23h9' stroke='#d8743a' stroke-width='2.2' stroke-linecap='round'/>"+
+    "<circle cx='20' cy='6' r='4.4' fill='{G}' stroke='#0b1942' stroke-width='1.4'/><path d='M24 7l4 3-2 1 4 4M16 7l-4 3 2 1-4 4' stroke='{G}' stroke-width='1.4' fill='none'/>",
+  silvermoon:"<rect x='18' y='28' width='4' height='10' rx='1.2' fill='{H}' stroke='#0b1942' stroke-width='1.2'/><path d='M15 28l-3-4M20 27v-4M25 28l3-4' stroke='#f0e8d4' stroke-width='2' stroke-linecap='round'/>"+
+    "<path d='M19 26C29 22 31 8 19 2 24 9 24 19 19 26z' fill='{B}' stroke='#0b1942' stroke-width='1.6'/><path d='M20.5 24C28 20 29 9 21.5 3.5' stroke='{G}' stroke-width='1.4' fill='none'/>"+
+    "<circle cx='24' cy='13' r='1.5' fill='#aab4c4'/><circle cx='23' cy='19' r='1' fill='#aab4c4'/>",
+  bonesaw:"<rect x='17.5' y='28' width='5' height='9' rx='1.5' fill='#d8ccae' stroke='#0b1942' stroke-width='1.2'/><circle cx='20' cy='38' r='1.8' fill='{G}'/>"+
+    "<rect x='12' y='25' width='16' height='3.4' rx='1.4' fill='{B}' stroke='#0b1942' stroke-width='1.2'/>"+
+    "<path d='M15 25V6l5-4 6 4v19z' fill='{B}' stroke='#0b1942' stroke-width='1.6'/><path d='M26 8l2 1.5-2 1.5 2 1.5-2 1.5 2 1.5-2 1.5 2 1.5-2 1.5 2 1.5-2 1.5' stroke='#0b1942' stroke-width='1' fill='{B}'/>"+
+    "<path d='M16.5 8h2M16.5 12h2M16.5 16h2M16.5 20h2' stroke='#a89a78' stroke-width='2'/><path d='M21.5 11v5M20 18h4' stroke='{G}' stroke-width='1.4'/>",
+  wick:"<rect x='18.5' y='29' width='3' height='9' fill='{H}' stroke='#0b1942' stroke-width='1.1'/><ellipse cx='20' cy='28' rx='8' ry='2.2' fill='{H}' stroke='#0b1942' stroke-width='1.3'/>"+
+    "<rect x='16.5' y='9' width='7' height='18' rx='1' fill='{B}' stroke='#0b1942' stroke-width='1.5'/><path d='M17.5 10v5M22 10v8M19.6 10v3' stroke='#e2d4b4' stroke-width='1.6' stroke-linecap='round'/>"+
+    "<path d='M20 1c3 3 3.5 6 0 8-3.5-2-3-5 0-8z' fill='#ffa030' stroke='#0b1942' stroke-width='1.1'/><path d='M20 4c1.2 1.5 1.2 3 0 4-1.2-1-1.2-2.5 0-4z' fill='#fff2c0'/>"
+});
+Object.assign(SIG_SKIN_ICON,{
+  patchwork:"<rect x='12' y='3' width='16' height='5' fill='#121418' stroke='#0b1942' stroke-width='1.4'/><rect x='12' y='7' width='16' height='13' rx='1.5' fill='#8ac87a' stroke='#0b1942' stroke-width='1.6'/>"+
+    "<path d='M13 9h14' stroke='#121418' stroke-width='2.4'/><rect x='14.5' y='12' width='3.4' height='2' fill='#9aff5a'/><rect x='22' y='12.6' width='3.4' height='2' fill='#9aff5a'/>"+
+    "<path d='M15 17.5h10M14 6.5l1 2M18 6.5l1 2M22 6.5l1 2' stroke='#14100a' stroke-width='1'/><rect x='7' y='16' width='5' height='3' rx='1' fill='#9aa0aa' stroke='#0b1942' stroke-width='1'/><rect x='28' y='16' width='5' height='3' rx='1' fill='#9aa0aa' stroke='#0b1942' stroke-width='1'/>"+
+    "<path d='M8 22h24l-2 16H10z' fill='#2a2e36' stroke='#0b1942' stroke-width='1.6'/><path d='M20 22v10M18 25h4M18 28h4' stroke='#8ac87a' stroke-width='1.4'/>",
+  werewolf:"<path d='M10 9l2-7 4 5M30 9l-2-7-4 5' fill='#6a5240' stroke='#0b1942' stroke-width='1.4'/><rect x='10' y='7' width='20' height='14' rx='3' fill='#6a5240' stroke='#0b1942' stroke-width='1.6'/>"+
+    "<path d='M14 21h12v6H14z' fill='#9a8268' stroke='#0b1942' stroke-width='1.4'/><rect x='18' y='19' width='4' height='3' rx='1' fill='#0c0a0a'/><path d='M15 24l1 2 1-2 1 2 1-2 1 2 1-2 1 2 1-2 1 2' stroke='#f4ecd8' stroke-width='1' fill='none'/>"+
+    "<path d='M13.5 13l4 1.5M26.5 13l-4 1.5' stroke='#ffd23f' stroke-width='2.2' stroke-linecap='round'/><path d='M6 28h28l-3 10H9z' fill='#3a2448' stroke='#0b1942' stroke-width='1.6'/><path d='M16 28l3 5 2-3 2 4' stroke='#9a8268' stroke-width='1.6' fill='none'/>",
+  mummy:"<rect x='12' y='4' width='16' height='16' rx='3' fill='#e6dabb' stroke='#0b1942' stroke-width='1.6'/><path d='M12 8l16-2M12 12.5l16 1M12 17l16-2' stroke='#a8946a' stroke-width='1.4'/>"+
+    "<rect x='14' y='10' width='12' height='3' fill='#140c06'/><rect x='15' y='10.3' width='3.2' height='2.4' fill='#4affd0'/>"+
+    "<path d='M8 22h24l-2 16H10z' fill='#d8c8a0' stroke='#0b1942' stroke-width='1.6'/><path d='M9 25l22-1M9 29l22 1M10 33l20-1' stroke='#a8946a' stroke-width='1.3'/>"+
+    "<ellipse cx='20' cy='27' rx='2.6' ry='3.2' fill='#e0b040' stroke='#0b1942' stroke-width='1'/><path d='M15 27l2.4-1.4M25 27l-2.4-1.4' stroke='#4affd0' stroke-width='2'/>",
+  count:"<path d='M5 23l5-15 8 9zM35 23l-5-15-8 9z' fill='#0e0a12' stroke='#0b1942' stroke-width='1.4'/><path d='M7.5 21l3.4-10.5 5.4 6zM32.5 21l-3.4-10.5-5.4 6z' fill='#9a0a1e'/>"+
+    "<rect x='13' y='6' width='14' height='15' rx='2.5' fill='#dfe2ec' stroke='#0b1942' stroke-width='1.6'/><path d='M13 6h14v4l-4-1-3 4-3-4-4 1z' fill='#0c0a10'/>"+
+    "<rect x='15' y='13' width='3.4' height='2' fill='#ff1a34'/><rect x='21.6' y='13' width='3.4' height='2' fill='#ff1a34'/><path d='M17 18h6M18 18l.6 2 .6-2M21 18l.6 2 .6-2' stroke='#0b1942' stroke-width='.9' fill='#fff'/>"+
+    "<path d='M8 38l3-15h18l3 15z' fill='#0e0a12' stroke='#0b1942' stroke-width='1.6'/><path d='M17 23h6v15h-6z' fill='#f2eee8'/><path d='M15.5 23h1.5v12h-1.5zM23 23h1.5v12H23z' fill='#9a0a1e'/><circle cx='20' cy='25' r='1.7' fill='#f0c040'/>"
+});
+
+/* ---------------- the four emotes ---------------- */
+// a pass emote takes as long as it needs: TAUNTS can carry their own dur
+function p2Pump(pkS){return sigPumpkin(pkS);}
+// BOO!: a sheet ghost rises over your shoulder, lunges with its mouth wide
+// open, and floats off into the air
+function p2BooFx(f){
+  var t=0,gh=new THREE.Group(),sm=new THREE.MeshLambertMaterial({color:0xf4f8ff,emissive:0x8aa8d8,emissiveIntensity:.55,transparent:true,opacity:.93});
+  var blk=new THREE.MeshBasicMaterial({color:0x101018});
+  var hd=new THREE.Mesh(GEO.sph,sm);hd.scale.set(1.24,1.24,1.24);hd.position.y=.25;gh.add(hd);
+  var sk=new THREE.Mesh(GEO.cone,sm);sk.scale.set(1.3,1.25,1.3);sk.position.y=-.3;gh.add(sk);
+  for(var i=0;i<6;i++){var a=i/6*TAU,tl=new THREE.Mesh(GEO.cone,sm);tl.scale.set(.2,.32,.2);tl.position.set(Math.sin(a)*.5,-.8,Math.cos(a)*.5);tl.rotation.x=Math.PI;gh.add(tl);}
+  for(var sd=-1;sd<=1;sd+=2){
+    var e=new THREE.Mesh(GEO.sphLo,blk);e.scale.set(.11,.17,.06);e.position.set(sd*.2,.38,.55);gh.add(e);
+    var ar=new THREE.Mesh(GEO.sphLo,sm);ar.scale.set(.18,.32,.18);ar.position.set(sd*.66,.05,.12);ar.rotation.z=sd*-.9;gh.add(ar);}
+  var mo=new THREE.Mesh(GEO.sphLo,blk);mo.scale.set(.15,.2,.06);mo.position.set(0,.08,.57);gh.add(mo);
+  var G2=1.6;gh.scale.setScalar(.01);scene.add(gh);
+  var boo=false;
+  V4FX.push({tick:function(dt){t+=dt;
+      if(!f.alive||!(f.tauntT>0)||f.tauntK!=="boo")return false;
+      var fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),rx=Math.cos(f.yaw),rz=-Math.sin(f.yaw),s,back,up,side;
+      if(t<.4){var u=t/.4;s=u*u*(3-2*u);back=-1.1;side=1.1;up=1.6+s*2.6;}
+      else if(t<.62){var u2=(t-.4)/.22;s=1+.35*Math.sin(u2*Math.PI);back=-1.1+u2*2.9;side=1.1-u2*.9;up=4.2-u2*1.2;
+        if(!boo){boo=true;try{tone(160,90,.4,"sawtooth",.06);noiseHit(.25,.18,900);}catch(e){}
+          burst(f.pos.x+fx*1,f.y+3.2,f.pos.z+fz*1,QUAL>1?16:8,5,0xe8f4ff,.9,.4,0);}}
+      else if(t<1.7){s=1;back=1.8;side=.2;up=3.0+Math.sin(t*5)*.15;}
+      else {var u3=(t-1.7)/.5;s=1-u3*.4;back=1.8+u3*1.5;side=.2+u3*.8;up=3.0+u3*3;sm.opacity=.93*(1-u3);}
+      gh.scale.setScalar(Math.max(.01,s*G2));
+      gh.position.set(f.pos.x+fx*back+rx*side,f.y+up,f.pos.z+fz*back+rz*side);
+      gh.rotation.set(Math.sin(t*4)*.08,f.yaw+(t<.4?Math.PI*.4:0),Math.sin(t*3)*.1);
+      return t<2.2;},
+    done:function(){scene.remove(gh);disposeTree(gh);}});
+}
+// BRAINS...: three hands claw up out of the ground round you and a green
+// mist rises while you shamble, arms out
+function p2ZombieFx(f){
+  var t=0,grp=new THREE.Group(),hm=new THREE.MeshLambertMaterial({color:0x8ac86a,emissive:0x1a3a0a,emissiveIntensity:.5}),sl=new THREE.MeshLambertMaterial({color:0x4a3a5a});
+  var dirt=new THREE.MeshLambertMaterial({color:0x3a2c1c}),hands=[],mounds=[];
+  for(var i=0;i<3;i++){var a=f.yaw+Math.PI*.35+i*TAU/3,h=new THREE.Group();
+    h.position.set(f.pos.x+Math.sin(a)*1.7,f.y-1.1,f.pos.z+Math.cos(a)*1.7);
+    var fa=new THREE.Mesh(GEO.box,sl);fa.scale.set(.24,.7,.24);fa.position.y=.35;h.add(fa);
+    var pa=new THREE.Mesh(GEO.box,hm);pa.scale.set(.3,.24,.14);pa.position.y=.82;h.add(pa);
+    for(var k=0;k<4;k++){var fg=new THREE.Mesh(GEO.box,hm);fg.scale.set(.06,.24,.06);fg.position.set(-.1+k*.068,1.02,0);fg.rotation.z=(k-1.5)*.18;h.add(fg);}
+    h.rotation.y=a;h.scale.setScalar(1.45);grp.add(h);hands.push(h);
+    var md=new THREE.Mesh(GEO.sphLo,dirt);md.scale.set(.01,.01,.01);md.position.set(h.position.x,f.y,h.position.z);grp.add(md);mounds.push(md);}
+  scene.add(grp);
+  try{tone(90,70,.9,"sawtooth",.05);}catch(e){}
+  V4FX.push({tick:function(dt){t+=dt;
+      if(!f.alive||!(f.tauntT>0)||f.tauntK!=="zombie")return false;
+      for(var i=0;i<hands.length;i++){var h=hands[i],d=t-i*.18,up=d<0?0:d<.35?d/.35:t>1.8?Math.max(0,1-(t-1.8)/.35):1;
+        h.position.y=f.y-1.6+up*1.45;h.rotation.z=Math.sin(t*9+i)*.25*up;h.rotation.x=Math.sin(t*7+i*2)*.15;
+        var mk=Math.min(1,Math.max(0,d/.2))*(t>1.9?Math.max(0,1-(t-1.9)/.3):1);mounds[i].scale.set(.55*mk+.01,.22*mk+.01,.55*mk+.01);
+        if(d>0&&d-dt<=0)burst(h.position.x,f.y+.1,h.position.z,QUAL>1?14:7,4,0x5a4a32,.7,.5,6);}
+      if(QUAL>0){f._zAcc=(f._zAcc||0)+dt*(QUAL>1?30:14);
+        while(f._zAcc>=1){f._zAcc-=1;var a2=Math.random()*TAU,r2=hr(.3,1.8);
+          spark(f.pos.x+Math.cos(a2)*r2,f.y+.15,f.pos.z+Math.sin(a2)*r2,hr(-.3,.3),hr(.3,1.1),hr(-.3,.3),.5,1,.35,hr(.5,.9),hr(.6,1.1),-.3);}}
+      return true;},
+    done:function(){scene.remove(grp);disposeTree(grp);}});
+}
+// TOIL & TROUBLE: a cauldron drops in front of you, you stir it, it bubbles
+// green, and a skull of green smoke rises out of it
+function p2CauldronFx(f){
+  var t=0,grp=new THREE.Group(),iron=new THREE.MeshPhongMaterial({color:0x1c1c22,shininess:60,specular:0x6a6a7a});
+  var brew=new THREE.MeshBasicMaterial({color:0x6aff3a}),wood=new THREE.MeshLambertMaterial({color:0x6a4424});
+  var pot=new THREE.Mesh(GEO.sph,iron);pot.scale.set(1.8,1.5,1.8);pot.position.y=.8;grp.add(pot);
+  var rim=new THREE.Mesh(new THREE.TorusGeometry(.6,.1,6,22),iron);rim.rotation.x=Math.PI/2;rim.position.y=1.34;grp.add(rim);
+  var top=new THREE.Mesh(GEO.cyl,brew);top.scale.set(1.16,.04,1.16);top.position.y=1.3;grp.add(top);
+  for(var i=0;i<3;i++){var a=i/3*TAU,lg=new THREE.Mesh(GEO.box,iron);lg.scale.set(.14,.36,.14);lg.position.set(Math.sin(a)*.5,.16,Math.cos(a)*.5);grp.add(lg);}
+  var stick=new THREE.Mesh(GEO.box,wood);stick.scale.set(.08,1.3,.08);grp.add(stick);
+  var bub=[];for(i=0;i<(QUAL>1?7:4);i++){var b=new THREE.Mesh(GEO.sphLo,brew);b.visible=false;grp.add(b);bub.push({m:b,t:-hr(0,.6)});}
+  // the skull that comes out of it at the end
+  var sk=new THREE.Group(),skM=new THREE.MeshBasicMaterial({color:0x8aff5a,transparent:true,opacity:.85,depthWrite:false}),holeM=new THREE.MeshBasicMaterial({color:0x0c2a06,transparent:true,opacity:.9,depthWrite:false});
+  var cr=new THREE.Mesh(GEO.sph,skM);cr.scale.set(1.0,.92,.92);sk.add(cr);
+  var jw=new THREE.Mesh(GEO.box,skM);jw.scale.set(.5,.26,.4);jw.position.set(0,-.42,.06);sk.add(jw);
+  for(var sd=-1;sd<=1;sd+=2){var ey=new THREE.Mesh(GEO.sphLo,holeM);ey.scale.set(.15,.16,.08);ey.position.set(sd*.19,-.04,.44);sk.add(ey);}
+  var ns=new THREE.Mesh(GEO.cone,holeM);ns.scale.set(.07,.1,.05);ns.position.set(0,-.2,.47);ns.rotation.z=Math.PI;sk.add(ns);
+  for(i=0;i<4;i++){var th=new THREE.Mesh(GEO.box,holeM);th.scale.set(.025,.14,.05);th.position.set(-.15+i*.1,-.42,.27);sk.add(th);}
+  sk.visible=false;grp.add(sk);
+  var fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),cx=f.pos.x+fx*1.55,cz=f.pos.z+fz*1.55,landed=false,skull=false;
+  grp.position.set(cx,f.y+6,cz);scene.add(grp);
+  V4FX.push({tick:function(dt){t+=dt;
+      if(!f.alive||!(f.tauntT>0)||f.tauntK!=="cauldron")return false;
+      if(t<.28){var u=t/.28;grp.position.y=f.y+6*(1-u*u);}
+      else{grp.position.y=f.y;
+        if(!landed){landed=true;try{noiseHit(.2,.35,300);tone(120,60,.3,"sine",.2);}catch(e){}
+          burst(cx,f.y+.2,cz,QUAL>1?18:9,5,0x8a8a9a,.8,.4,4);ringBurst(cx,f.y+.15,cz,QUAL>1?18:9,6,0x6aff3a,.9,.5);}}
+      var sq=t<.4&&t>.28?1-.25*Math.sin((t-.28)/.12*Math.PI):1;grp.scale.set(1/Math.sqrt(sq),sq,1/Math.sqrt(sq));
+      var sa=t*8;stick.position.set(Math.sin(sa)*.3,1.6,Math.cos(sa)*.3);stick.rotation.set(Math.cos(sa)*.35,0,-Math.sin(sa)*.35);
+      brew.color.setRGB(.35+.15*Math.sin(t*6),1,.25);
+      for(var i=0;i<bub.length;i++){var B=bub[i];B.t+=dt;if(B.t<0)continue;
+        if(!B.m.visible){B.m.visible=true;B.x=hr(-.4,.4);B.z=hr(-.4,.4);B.s=hr(.08,.16);}
+        var k=B.t/.5;B.m.position.set(B.x,1.28+k*.25,B.z);B.m.scale.setScalar(B.s*(.5+k));
+        if(k>=1){B.m.visible=false;B.t=-hr(0,.25);
+          spark(cx+B.x,grp.position.y+1.5,cz+B.z,hr(-.5,.5),hr(.8,1.6),hr(-.5,.5),.45,1,.3,.4,.5,-.5);}}
+      if(t>1.85&&!skull){skull=true;sk.visible=true;try{tone(300,120,.6,"triangle",.06);tone(150,60,.8,"sawtooth",.03);}catch(e){}
+        burst(cx,grp.position.y+1.5,cz,QUAL>1?22:10,5,0x8aff5a,.9,.5,-1);}
+      if(skull){var su=Math.min(1,(t-1.85)/.5);sk.position.set(0,1.7+su*1.3,0);sk.rotation.y=f.yaw-grp.rotation.y+Math.sin(t*4)*.15;
+        sk.scale.setScalar((.4+.8*su)/Math.max(.01,grp.scale.x));jw.position.y=-.42-Math.abs(Math.sin(t*14))*.1;
+        skM.opacity=.85*(t>2.4?Math.max(0,1-(t-2.4)/.35):1);holeM.opacity=skM.opacity;
+        if(QUAL>0&&Math.random()<.6)spark(cx+hr(-.4,.4),grp.position.y+sk.position.y+hr(-.3,.4),cz+hr(-.4,.4),0,hr(.4,1),0,.5,1,.35,.5,.6,-.2);}
+      if(t>2.45){var u2=Math.min(1,(t-2.45)/.35);pot.scale.set(1.8*(1-u2)+.01,1.5*(1-u2)+.01,1.8*(1-u2)+.01);rim.scale.setScalar(1-u2+.01);top.visible=u2<.5;stick.visible=u2<.5;}
+      return true;},
+    done:function(){scene.remove(grp);disposeTree(grp);}});
+}
+// THE WITCHING HOUR: the clock strikes, a rune circle burns into the floor,
+// a huge moon rises behind you, you float up into a storm of bats with
+// jack-o'-lanterns circling you, and it all ends in a lightning strike
+function p2MoonTex(){
+  var c=cvs(256,256),q=c.getContext("2d"),gr=q.createRadialGradient(128,128,60,128,128,128);
+  gr.addColorStop(0,"rgba(255,240,190,1)");gr.addColorStop(.72,"rgba(255,226,150,.35)");gr.addColorStop(1,"rgba(255,200,120,0)");
+  q.fillStyle=gr;q.fillRect(0,0,256,256);
+  q.beginPath();q.arc(128,128,82,0,TAU);var g2=q.createRadialGradient(110,105,10,128,128,82);
+  g2.addColorStop(0,"#fffbe8");g2.addColorStop(1,"#f2d890");q.fillStyle=g2;q.fill();
+  q.fillStyle="rgba(200,170,100,.45)";
+  [[100,100,16],[150,120,11],[125,160,20],[160,90,8],[90,145,9]].forEach(function(k){q.beginPath();q.arc(k[0],k[1],k[2],0,TAU);q.fill();});
+  return mkTex(c);
+}
+function p2RuneTex(){
+  var c=cvs(256,256),q=c.getContext("2d");q.translate(128,128);q.strokeStyle="#fff";q.lineCap="round";
+  q.lineWidth=6;q.beginPath();q.arc(0,0,120,0,TAU);q.stroke();q.lineWidth=3;q.beginPath();q.arc(0,0,98,0,TAU);q.stroke();
+  q.lineWidth=4;q.beginPath();for(var i=0;i<6;i++){var a=i/5*TAU*2-Math.PI/2;q[i?"lineTo":"moveTo"](Math.cos(a)*96,Math.sin(a)*96);}q.stroke();   // a star
+  q.lineWidth=3;for(i=0;i<12;i++){var b=i/12*TAU;q.save();q.rotate(b);q.beginPath();q.moveTo(-6,-110);q.lineTo(0,-104);q.lineTo(6,-110);q.moveTo(0,-104);q.lineTo(0,-115);q.stroke();q.restore();}
+  return mkTex(c);
+}
+var _p2BatWing=null;
+// a bat flying along its own +z: a body, a head with ears, and two wings
+// that lie flat out to the sides and flap about the body's long axis
+function p2Bat(mat,eyeM){
+  if(!_p2BatWing){var s=new THREE.Shape();
+    // the leading edge out to a hooked tip, then the scalloped trailing edge back
+    s.moveTo(0,.1);s.lineTo(.3,.22);s.lineTo(.62,.16);s.lineTo(.86,.3);s.lineTo(.8,.02);
+    s.quadraticCurveTo(.7,-.05,.62,-.16);s.quadraticCurveTo(.52,-.04,.42,-.2);s.quadraticCurveTo(.3,-.08,.2,-.24);s.quadraticCurveTo(.1,-.1,0,-.16);s.lineTo(0,.1);
+    _p2BatWing=new THREE.ShapeGeometry(s);_p2BatWing.rotateX(-Math.PI/2);GEO.p2batwing=_p2BatWing;}
+  var b=new THREE.Group(),bd=new THREE.Mesh(GEO.sphLo,mat);bd.scale.set(.13,.12,.24);b.add(bd);
+  var hd=new THREE.Mesh(GEO.sphLo,mat);hd.scale.setScalar(.11);hd.position.set(0,.05,.24);b.add(hd);
+  for(var e=-1;e<=1;e+=2){var ea=new THREE.Mesh(GEO.cone,mat);ea.scale.set(.04,.12,.04);ea.position.set(e*.06,.17,.24);b.add(ea);
+    if(eyeM){var ey=new THREE.Mesh(GEO.box,eyeM);ey.scale.set(.04,.025,.02);ey.position.set(e*.045,.08,.34);b.add(ey);}}
+  var w=[];for(var sd=-1;sd<=1;sd+=2){var pv=new THREE.Group(),m=new THREE.Mesh(_p2BatWing,mat);m.scale.set(sd,1,1);pv.add(m);pv.position.x=sd*.08;b.add(pv);w.push(pv);}
+  b.userData.w=w;b.scale.setScalar(1.35);return b;
+}
+function p2SoftTex(){
+  var c=cvs(128,128),q=c.getContext("2d"),gr=q.createRadialGradient(64,64,0,64,64,63);
+  gr.addColorStop(0,"rgba(255,255,255,1)");gr.addColorStop(.35,"rgba(255,255,255,.45)");gr.addColorStop(1,"rgba(255,255,255,0)");
+  q.fillStyle=gr;q.fillRect(0,0,128,128);return mkTex(c);
+}
+function p2WitchingFx(f){
+  var t=0,grp=new THREE.Group(),X=f.pos.x,Y=f.y,Z=f.pos.z,fx=Math.sin(f.yaw),fz=Math.cos(f.yaw);
+  scene.add(grp);
+  var runeM=new THREE.MeshBasicMaterial({map:p2RuneTex(),color:0xb44aff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
+  var rune=new THREE.Mesh(GEO.plane,runeM);rune.rotation.x=-Math.PI/2;rune.position.set(X,Y+.06,Z);rune.scale.setScalar(5.4);grp.add(rune);
+  var moonM=new THREE.MeshBasicMaterial({map:p2MoonTex(),transparent:true,opacity:0,depthWrite:false});
+  var moon=new THREE.Mesh(GEO.plane,moonM);moon.scale.setScalar(9);grp.add(moon);
+  var batM=new THREE.MeshLambertMaterial({color:0x1a0a24,emissive:0x2a0640,emissiveIntensity:.6,side:THREE.DoubleSide});
+  var eyeM=QUAL>1?new THREE.MeshBasicMaterial({color:0xff3a3a}):null;
+  var bats=[],nb=QUAL>1?20:QUAL>0?12:8;
+  for(var i=0;i<nb;i++){var b=p2Bat(batM,eyeM);b.userData.a=i/nb*TAU;b.userData.r=hr(1.5,2.7);b.userData.h=hr(0,3.2);b.userData.s=hr(1.6,2.6)*(i%2?1:-1);b.visible=false;grp.add(b);bats.push(b);}
+  var pks=[],np=QUAL>0?4:2;
+  for(i=0;i<np;i++){var p=sigPumpkin(.42);p.visible=false;grp.add(p);pks.push(p);}
+  var bolt=new THREE.Group(),boltM=new THREE.MeshBasicMaterial({color:0xe8d8ff,transparent:true,opacity:1,blending:THREE.AdditiveBlending,depthWrite:false});
+  (function(){var x=hr(-1,1),y=22,z=hr(-1,1);
+    while(y>2.4){var ny=y-hr(1.6,2.6),nx=x*.6+hr(-1.1,1.1),nz=z*.6+hr(-1.1,1.1);if(ny<2.4){ny=2.4;nx=0;nz=0;}
+      var dx=nx-x,dy=ny-y,dz=nz-z,L=Math.hypot(dx,dy,dz),m=new THREE.Mesh(GEO.box,boltM);
+      m.scale.set(.26,L,.26);m.position.set((x+nx)/2,(y+ny)/2,(z+nz)/2);
+      m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(dx/L,dy/L,dz/L));bolt.add(m);x=nx;y=ny;z=nz;}})();
+  bolt.position.set(X,Y,Z);bolt.visible=false;grp.add(bolt);
+  var flashM=new THREE.MeshBasicMaterial({map:p2SoftTex(),color:0xd8c0ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false});
+  var flash=new THREE.Mesh(GEO.plane,flashM);flash.scale.setScalar(14);grp.add(flash);
+  var chimes=0,struck=false,D=4.2,HIT=3.45;f.p2Lift=0;
+  // midnight: three bell strokes and a low chord under them
+  try{tone(65,65,2.4,"sawtooth",.035);tone(98,98,2.4,"triangle",.04);}catch(e){}
+  V4FX.push({tick:function(dt){t+=dt;
+      if(!f.alive||!(f.tauntT>0)||f.tauntK!=="witching")return false;
+      var i,k;
+      if(chimes<3&&t>=chimes*.55){chimes++;try{tone(392,392,1.4,"sine",.09);tone(784,784,.8,"sine",.03);}catch(e){}}
+      // the rune circle burns in and turns
+      runeM.opacity=Math.min(.95,t/.5)*(t>HIT?Math.max(0,1-(t-HIT)/.5):1);rune.rotation.z=t*.9;
+      rune.scale.setScalar(5.4*(1+.04*Math.sin(t*7)));
+      // the moon rises behind you as whoever is watching sees you, the emoter
+      // included (their camera is behind them), and always faces that camera
+      var mu=Math.min(1,Math.max(0,(t-.2)/1.2)),me=mu*mu*(3-2*mu);
+      var cdx=X-camera.position.x,cdz=Z-camera.position.z,cl=Math.hypot(cdx,cdz)||1;
+      moon.position.set(X+cdx/cl*12,Y+2+me*7,Z+cdz/cl*12);moon.quaternion.copy(camera.quaternion);
+      moonM.opacity=me*(t>D-.6?Math.max(0,(D-t)/.6):1);
+      // bats: a rising storm round you, then thrown out by the strike
+      for(i=0;i<bats.length;i++){var b=bats[i],u=b.userData,st=.35+i*.04;if(t<st)continue;b.visible=true;
+        if(!struck){u.a+=u.s*dt;var hh=Y+.6+((u.h+t*1.2)%3.6);
+          b.position.set(X+Math.sin(u.a)*u.r,hh,Z+Math.cos(u.a)*u.r);b.rotation.set(0,u.a+(u.s>0?Math.PI/2:-Math.PI/2),(u.s>0?-1:1)*.45+Math.sin(t*3+i)*.15);}
+        else{if(!u.vx){var oa=Math.atan2(b.position.x-X,b.position.z-Z);u.vx=Math.sin(oa)*hr(9,15);u.vz=Math.cos(oa)*hr(9,15);u.vy=hr(3,8);}
+          b.position.x+=u.vx*dt;b.position.z+=u.vz*dt;b.position.y+=u.vy*dt;b.rotation.y=Math.atan2(u.vx,u.vz);}
+        var fl=Math.sin(t*22+i*1.7)*.8;u.w[0].rotation.z=fl;u.w[1].rotation.z=-fl;}
+      // jack-o'-lanterns circling at head height, faces flickering
+      for(i=0;i<pks.length;i++){var p=pks[i];if(t<1.0||struck){p.visible=false;continue;}p.visible=true;
+        var pa=t*1.4+i/pks.length*TAU,pr=1.8;p.position.set(X+Math.sin(pa)*pr,Y+2.9+f.p2Lift+Math.sin(t*3+i)*.25,Z+Math.cos(pa)*pr);
+        p.rotation.y=pa+Math.PI/2;p.scale.setScalar(Math.min(1,(t-1.0)/.3));
+        var ff=.8+.2*Math.sin(t*13+i);p.userData.face.color.setRGB(1,.72*ff+.1,.2*ff);}
+      // purple mist off the circle
+      if(QUAL>0&&!struck){f._whAcc=(f._whAcc||0)+dt*(QUAL>1?36:16);
+        while(f._whAcc>=1){f._whAcc-=1;var a2=Math.random()*TAU,r2=hr(1.8,2.7);
+          spark(X+Math.cos(a2)*r2,Y+.1,Z+Math.sin(a2)*r2,hr(-.2,.2),hr(.6,1.8),hr(-.2,.2),.7,.35,1,hr(.5,.9),hr(.6,1.0),-.2);}}
+      // the strike
+      if(!struck&&t>=HIT){struck=true;bolt.visible=true;
+        try{noiseHit(1.2,.5,180);tone(70,30,1.2,"sine",.25);noiseHit(.3,.3,2600);}catch(e){}
+        if(f===player)shakeCam(.3);
+        for(i=0;i<pks.length;i++)burst(pks[i].position.x,pks[i].position.y,pks[i].position.z,QUAL>1?16:8,7,0xff8a1e,1,.5,-2);
+        burst(X,Y+2.4,Z,QUAL>1?40:18,12,0xd8c0ff,1.4,.5,-3);ringBurst(X,Y+.2,Z,QUAL>1?36:16,14,0xb44aff,1.5,.6);}
+      if(struck){k=(t-HIT)/.35;boltM.opacity=Math.max(0,1-k)*(.6+.4*Math.random());bolt.visible=k<1;
+        flash.position.set(X,Y+2.5,Z);flash.quaternion.copy(camera.quaternion);flashM.opacity=Math.max(0,.9*(1-(t-HIT)/.25));}
+      return t<D;},
+    done:function(){f.p2Lift=0;scene.remove(grp);disposeTree(grp);}});
+}
+// drawn icons for the pass's emotes, so they never depend on an emoji font
+var P2_EMOTE_ICON={
+  boo:"<path d='M12 31V17a8 8 0 0 1 16 0v14l-2.7-2.4L22.7 31 20 28.6 17.3 31l-2.6-2.4z' fill='#f4f8ff' stroke='#0b1942' stroke-width='1.5' stroke-linejoin='round'/>"+
+    "<ellipse cx='17' cy='17.5' rx='1.6' ry='2.3' fill='#101018'/><ellipse cx='23' cy='17.5' rx='1.6' ry='2.3' fill='#101018'/><ellipse cx='20' cy='23' rx='2' ry='2.6' fill='#101018'/>",
+  zombie:"<ellipse cx='20' cy='31' rx='11' ry='3.6' fill='#3a2c1c' stroke='#0b1942' stroke-width='1.3'/><rect x='16.5' y='19' width='7' height='12' fill='#4a3a5a' stroke='#0b1942' stroke-width='1.2'/>"+
+    "<path d='M14.5 19l.5-8h2l.5 5 .8-8h2l.3 8 .9-7h2l-.2 7 1.2-4h1.8l-1 7z' fill='#8ac86a' stroke='#0b1942' stroke-width='1.2' stroke-linejoin='round'/>",
+  cauldron:"<circle cx='16' cy='9' r='2' fill='#8aff5a'/><circle cx='22' cy='6' r='1.4' fill='#8aff5a'/><circle cx='24' cy='11' r='1.8' fill='#8aff5a'/>"+
+    "<path d='M11 26l-2 6M29 26l2 6' stroke='#1c1c22' stroke-width='2.4' stroke-linecap='round'/><path d='M9 17h22c0 9-4.5 14-11 14S9 26 9 17z' fill='#1c1c22' stroke='#0b1942' stroke-width='1.5'/>"+
+    "<ellipse cx='20' cy='17' rx='12' ry='2.6' fill='#6aff3a' stroke='#0b1942' stroke-width='1.3'/>",
+  witching:"<circle cx='22' cy='18' r='11' fill='#fff0be' stroke='#0b1942' stroke-width='1.4'/><circle cx='18' cy='15' r='2.2' fill='#e8d090'/><circle cx='25' cy='22' r='3' fill='#e8d090'/>"+
+    "<path d='M5 30l5-4 2 2 2-3 2 3 2-2 5 4-5-1-2 2-2-2-2 2-2-2z' fill='#1a0a24'/><path d='M25 12l3-2 1 1 1-2 1 2 1-1 3 2-3 0-1 1-1-1-1 1-1-1z' fill='#1a0a24'/>"+
+    "<path d='M12 21l4-9 1.5 3 2 6z' fill='#2a0e3a' stroke='#c86aff' stroke-width='.8'/>"
+};
+var P2_EMOTE_FX={boo:p2BooFx,zombie:p2ZombieFx,cauldron:p2CauldronFx,witching:p2WitchingFx};
+// the poses, called from tauntPose with a (seconds in), the arms and the body
+var P2_EMOTE_POSE={
+  boo:function(f,a,R,L,g,set){
+    // a crouch, then up on the toes with both hands thrown up like claws
+    var s=a<.35?a/.35:1;
+    if(a<.4){set(R,-.4,.3);set(L,-.4,-.3);g.position.y-=.2*s;}
+    else{var j=Math.min(1,(a-.4)/.12);set(R,-2.7,.45);set(L,-2.7,-.45);g.rotation.x=.18*j;g.position.y+=.15*j*Math.max(0,1-(a-.6));}
+  },
+  zombie:function(f,a,R,L,g,set){
+    // arms out in front, a lurch from foot to foot, the head lolling
+    var s=Math.sin(a*4.2);set(R,-1.5+Math.sin(a*3)*.08,.06);set(L,-1.5-Math.sin(a*3)*.08,-.06);
+    g.rotation.z=s*.13;g.rotation.x=.14;g.position.y-=Math.abs(s)*.08;
+    f.legs[0].rotation.x=s*.3;f.legs[1].rotation.x=-s*.3;
+  },
+  cauldron:function(f,a,R,L,g,set){
+    // one hand stirring the pot, the other on the hip, leaning in
+    var sa=a*8;set(R,-1.05+Math.cos(sa)*.22,.15+Math.sin(sa)*.3);set(L,-.2,-.75);
+    g.rotation.x=.16+(a>1.9&&a<2.4?-.3*Math.sin((a-1.9)/.5*Math.PI):0);
+  },
+  witching:function(f,a,R,L,g,set){
+    // rise with the arms opening, turn slowly in the air, and come down
+    // with the lightning
+    var HIT=3.45,up=a<.4?0:a<1.4?(a-.4):1,lift;
+    up=up*up*(3-2*up);
+    lift=a<HIT?up*1.9+Math.sin(a*2.4)*.12*up:Math.max(0,1.9*(1-(a-HIT)/.3));
+    f.p2Lift=lift;g.position.y+=lift;
+    if(a<HIT){set(R,-.3*up,.4+1.5*up);set(L,-.3*up,-.4-1.5*up);g.rotation.x=-.22*up;g.rotation.y+=Math.sin(a*.9)*.5*up;
+      f.legs[0].rotation.x=.25*up;f.legs[1].rotation.x=.1*up;}
+    else{var k=Math.min(1,(a-HIT)/.25);set(R,-2.9,.3);set(L,-2.9,-.3);g.rotation.x=-.1*(1-k);}
+  }
+};
+/* ==== PASS PART TWO END ==== */
+
+
 function useAbility(f,remoteCast){
   if(f&&f.isPlayer&&!remoteCast&&(MODAL_NOW||modalOpen()))return;
   if(f&&f.isPlayer&&f.stdT>0&&!remoteCast){stdChoose("dark");return;}
@@ -13196,6 +13900,9 @@ function useAbility(f,remoteCast){
   // bots only ever get here from the frame loop, which is already stopped while
   // paused -- this guard is for the player's own keypress
   if(paused)return;
+  // the countdown: you may walk about, but nothing it casts would run until
+  // the match starts (the wave sat frozen while its 36s cooldown ticked away)
+  if(STATE==="countdown"&&!remoteCast)return;
   if(f.alive&&(riftOn()||a.id==="bloodrift")&&riftAbilityPress(f,remoteCast))return;
   if(a.passive||f.abilCd>0||!f.alive||f.stun>0||f.frozen>0)return;
   if(lastTwoBan(a)&&!remoteCast){if(f.isPlayer)flashWarn(a.name.toUpperCase()+" IS OFF \u2014 LAST TWO",0.9,"#ff6b6b");return;}
@@ -18349,7 +19056,9 @@ function renderPickDetail(it){
 }
 /* ---- EMOTES: every emote, and the eight in your wheel ---- */
 var EMOTE_SEL=null;
-function emoteIcon(tk){return "<svg viewBox='0 0 40 40' width='34' height='34'><circle cx='20' cy='20' r='17' fill='"+(tk.fx?"#163a12":"#14204a")+"' stroke='#0b1942' stroke-width='2'/><text x='20' y='27' font-size='18' text-anchor='middle'>"+tk.e+"</text></svg>";}
+function emoteIcon(tk){
+  if(P2_EMOTE_ICON[tk.id])return "<svg viewBox='0 0 40 40' width='34' height='34'><circle cx='20' cy='20' r='17' fill='#2a0e3a' stroke='#0b1942' stroke-width='2'/>"+P2_EMOTE_ICON[tk.id]+"</svg>";
+  return "<svg viewBox='0 0 40 40' width='34' height='34'><circle cx='20' cy='20' r='17' fill='"+(tk.pass?"#2a0e3a":tk.fx?"#163a12":"#14204a")+"' stroke='#0b1942' stroke-width='2'/><text x='20' y='27' font-size='18' text-anchor='middle'>"+tk.e+"</text></svg>";}
 function renderEmotePicker(){
   var host=$("pickGrid"),wheel=wheelEmotes().map(function(t){return t.id;});
   var list=TAUNTS.slice().sort(function(a,b){return (emoteOwned(b.id)?1:0)-(emoteOwned(a.id)?1:0);});
@@ -18375,6 +19084,9 @@ function renderEmoteDetail(){
     h+="<div class='dnote' style='margin-top:6px'>Your wheel: tap a slot to put <b>"+tk.txt+"</b> there.</div><div class='emslots'>";
     for(var i=0;i<8;i++){var w=wheel[i];h+="<button class='emslot"+(w&&w.id===tk.id?" on":"")+"' data-i='"+i+"'><b>"+(w?w.e:"")+"</b><i>"+(i+1)+"</i></button>";}
     h+="</div><div class='dnote'>Hold <b>"+keyName(bindKey("emote"))+"</b> (or the TAUNT button) in a match, point, and let go.</div>";
+  } else if(tk.pass){
+    h+=passLive()?"<button class='big hwgo' id='pdPass'>HALLOWEEN PASS &middot; LEVEL "+tk.pass+"</button><div class='dnote'>Only on the Halloween Pass. Reach level "+tk.pass+" before it ends to keep it for good.</div>":
+      "<button class='big ghost' disabled>GONE FOREVER</button>";
   } else if(tk.pack){
     var PK=PACKS[tk.pack],pn=Date.now();
     h+=pn>=PK.to?"<button class='big ghost' disabled>GONE FOREVER</button>":"<button class='big' id='pdAct'>PACK STAND &middot; "+PK.yen.toLocaleString()+" YEN</button><div class='dnote'>Only in the "+packTitle(PK)+".</div>";
@@ -18385,6 +19097,7 @@ function renderEmoteDetail(){
     if(was>=0)cur[was]=cur[i];          // already in the wheel: the two swap places
     cur[i]=tk.id;SAVE.eqEmotes=cur;writeSave();sfx("coin");renderEmotePicker();});});
   var act=box.querySelector("#pdAct");if(act)act.addEventListener("click",function(){openPackStand();});
+  var pp=box.querySelector("#pdPass");if(pp)pp.addEventListener("click",function(){openPass();});
 }
 /* ---- Dev2: choose how you carry them ----
    SNIPER, KARAMBIT, or BOTH (which needs both). The choice is saved, and what
