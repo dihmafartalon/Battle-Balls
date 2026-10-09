@@ -1509,10 +1509,26 @@ button.chip:active{transform:translateY(2px)}
   <div class="stripes"></div>
   <div class="wnd updwrap">
     <div class="win-title gold">WHAT'S NEW</div>
-    <div class="updbadge">4.3</div>
-    <div class="updtitle">BATTLE BALLS <span>4.3</span></div>
-    <div class="updsub">The Halloween Pass goes to level 100, and Grey's 14 Inches is fixed.</div>
+    <div class="updbadge">4.4</div>
+    <div class="updtitle">BATTLE BALLS <span>4.4</span></div>
+    <div class="updsub">The After Hours Pack, a new DEV skin, and real swings for the pass's new blades.</div>
     <div class="notes">
+      <div class="note new">
+        <h5>AFTER HOURS PACK &middot; OCTOBER 15&ndash;22</h5>
+        <p>Some shows never end. <b>Dreddy</b> and <b>Fluffles</b> (mythic skins, with idles that never quite loop and ears that actually move), the two-handed <b>Nightshift Axe</b> (mythic blade, fire on every swing) and the <b>System Failure</b> emote. <b>1,800 yen</b> at the pack stand the moment the Rap Pack closes. Watch the trailer from the stand.</p>
+      </div>
+      <div class="note new">
+        <h5>INSPECT</h5>
+        <p>Press <b>V</b> with a blade in your hand to lift it up and look it over. Rebind it in Settings &rarr; Controls.</p>
+      </div>
+      <div class="note new">
+        <h5>THE PASS'S BLADES, PROPERLY</h5>
+        <p>The <b>Tesla Coil</b> calls down lightning, <b>Silver Moon</b> raises a moon over you, the <b>Bone Saw</b> burns a cursed eye into the floor, and <b>The Wick</b> sweeps a ring of fire. Each has its own swing now.</p>
+      </div>
+      <div class="note new">
+        <h5>DEV, REBUILT</h5>
+        <p>The DEV skin is now <b>The Architect</b>: a monitor for a head with a live face, floating brackets, a wireframe core, orbiting code and a cape of falling code.</p>
+      </div>
       <div class="note new">
         <h5>HALLOWEEN PASS: LEVELS 51&ndash;100</h5>
         <p>Fifty more levels, and every one costs more than the last. Four new skins, each with its own blade: <b>The Monster</b> + Tesla Coil (60), <b>Werewolf</b> + Silver Moon (70), <b>Mummy</b> + Bone Saw (80), <b>The Count</b> + The Wick (90). New emotes at 55, 75 and 85, and at <b>level 100: THE WITCHING HOUR</b>. The pass now runs <b>through Halloween</b>. Yen rewards are now 100 a level at most.</p>
@@ -2619,7 +2635,7 @@ var STORE_OK=true,SAVEKEY="battleballs_v1",LAST_SAVE=0;
    save on the way out -- and before START that wrote the blank starting save
    over your real one. That is what "logged in, but everything is gone" was. */
 var SAVE_LOADED=false;
-var VERSION="4.3";
+var VERSION="4.4";
 // what an item is worth in yen, by rarity
 var SELL={common:15,rare:40,epic:85,legendary:190,mythic:465};
 function itemValue(it){
@@ -3084,6 +3100,7 @@ function trailerNudge(){
     if(tries>90)return;
     if(STATE!=="venue"||venueKind!=="lobby"||!$("evt").classList.contains("hide")||document.querySelector(".giftpop,.admsg,#banNote,.apexu")){
       setTimeout(function(){wait(tries+1);},2000);return;}
+    if(packItems(P).every(function(q){return q.own;}))return;   // bought it all while it waited
     trailerShow(key,false);
   })(0);
 }
@@ -16093,14 +16110,14 @@ function ahIdle(f,s,dt){
 }
 // four jointed fingers and a thumb, metal, each on its own pivot
 function ahFingers(arm,metal,claw,w){
-  var out=[],xs=[-.105,-.035,.035,.105];
-  for(var i=0;i<5;i++){
-    var p=new THREE.Group(),th=i===4;
+  var out=[],xs=QUAL>0?[-.105,-.035,.035,.105]:[-.09,0,.09];
+  for(var i=0;i<xs.length+1;i++){
+    var p=new THREE.Group(),th=i===xs.length;
     p.position.set(th?.13:xs[i],th?-1.2:-1.35,th?.1:.02);if(th)p.rotation.z=-.5;
     var s1=new THREE.Mesh(GEO.box,metal);s1.scale.set(w,th?.13:.15,w);s1.position.y=-.07;p.add(s1);
     var k=new THREE.Group();k.position.y=-.15;p.add(k);
     var s2=new THREE.Mesh(GEO.box,metal);s2.scale.set(w*.9,.1,w*.9);s2.position.y=-.05;k.add(s2);
-    var c=new THREE.Mesh(GEO.cone,claw);c.scale.set(w*.8,.09,w*.8);c.position.y=-.13;c.rotation.x=Math.PI;k.add(c);
+    if(QUAL>0){var c=new THREE.Mesh(GEO.cone,claw);c.scale.set(w*.8,.09,w*.8);c.position.y=-.13;c.rotation.x=Math.PI;k.add(c);}
     p.userData.k=k;p.userData.cur=0;p.userData.tgt=0;arm.add(p);out.push(p);
   }
   return out;
@@ -16113,12 +16130,14 @@ function ahFingerTick(fs,s,t,dt,grip,rate){
     p.rotation.x=-u.cur*.7;u.k.rotation.x=-u.cur*.9;}
 }
 function ahWires(par,x,y,z,n,len){
+  if(QUAL===0)return;
   var cols=[0x9a1a1a,0xd8a020,0x2a5ad8,0x1a1a1a];
   for(var i=0;i<n;i++){var w=new THREE.Mesh(GEO.box,new THREE.MeshLambertMaterial({color:cols[i%cols.length]}));
     w.scale.set(.025,len*(.7+.3*((i*37)%10)/10),.025);w.position.set(x+(i-n/2)*.05,y-len*.35,z);w.rotation.z=(i%2?.25:-.2);par.add(w);}
 }
 function ahRibs(par,x,y,z,w,h,metal,hole){
   var b=new THREE.Mesh(GEO.box,hole);b.scale.set(w,h,.03);b.position.set(x,y,z);par.add(b);
+  if(QUAL===0)return;
   for(var i=0;i<3;i++){var r=new THREE.Mesh(GEO.box,metal);r.scale.set(w*.85,.035,.03);r.position.set(x,y-h*.3+i*h*.3,z+.012);par.add(r);}
   var sp=new THREE.Mesh(GEO.box,metal);sp.scale.set(.04,h*.9,.03);sp.position.set(x,y,z+.018);par.add(sp);
 }
@@ -16172,7 +16191,7 @@ SIG_SKIN.dreddy=function(f,g,sk,box,glowM,darkM,bodyM){
   ahRibs(chest,-.26,2.34,.35,.26,.24,metal,hole);ahWires(chest,-.26,2.2,.36,3,.32);
   ahRibs(chest,.3,1.76,.315,.2,.18,metal,hole);
   cb(.4,.3,.03,0,2.2,-.345,hole);
-  for(i=0;i<3;i++){var spg=new THREE.Mesh(new THREE.TorusGeometry(.07,.018,5,10),metal);spg.position.set(-.1+i*.1,2.2,-.35);chest.add(spg);}
+  if(QUAL>0)for(i=0;i<3;i++){var spg=new THREE.Mesh(new THREE.TorusGeometry(.07,.018,5,10),metal);spg.position.set(-.1+i*.1,2.2,-.35);chest.add(spg);}
   cb(.16,.1,.02,.34,2.44,.345,rust);cb(.12,.14,.02,-.4,1.8,.315,rust);
   // the bow tie
   for(sd=-1;sd<=1;sd+=2)box(.2,.14,.06,sd*.12,2.62,.37,bow,[0,0,sd*.15]);
@@ -16263,7 +16282,7 @@ SIG_SKIN.fluffles=function(f,g,sk,box,glowM,darkM,bodyM){
   cb(.16,.1,.02,-.3,2.4,.32,grime);cb(.2,.08,.02,.2,1.9,.3,grime);
   // the bow tie and the frill
   for(sd=-1;sd<=1;sd+=2)box(.18,.13,.06,sd*.11,2.6,.34,bow,[0,0,sd*.18]);box(.07,.09,.08,0,2.6,.35,bow);
-  for(i=0;i<12;i++){var a=i/12*TAU,fr=new THREE.Mesh(GEO.cone,i%2?pink:inner);fr.scale.set(.24,.3,.12);
+  for(i=0;i<(QUAL>0?12:8);i++){var a=i/(QUAL>0?12:8)*TAU,fr=new THREE.Mesh(GEO.cone,i%2?pink:inner);fr.scale.set(.24,.3,.12);
     fr.position.set(Math.sin(a)*.5,1.36,Math.cos(a)*.34);fr.rotation.set(Math.PI+Math.cos(a)*.5,0,-Math.sin(a)*.5);g.add(fr);}
   var fingers=[];
   for(sd=0;sd<2;sd++){
