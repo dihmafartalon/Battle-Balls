@@ -17111,6 +17111,7 @@ function bossAbilPicker(then){
 // from the modes screen: on the server when signed in (rewards), practice otherwise
 function bossEntry(){
   if(!bossAbilReady()){bossAbilPicker(bossEntry);return;}
+  if(typeof partyLeadWithOthers==="function"&&partyLeadWithOthers()&&serverBase()){partyBossHost();return;}
   if(econOn()&&serverBase())soloServerStart("boss");
   else bossLocalStart();
 }
@@ -17214,7 +17215,54 @@ function socialAutoParty(){
     SOCIAL.pend["auto"+v.id]=1;socialJoinInvite(v.id);
   }
 }
-setInterval(function(){if(NET.srv)return;if(SOCIAL.st&&STATE!=="playing"&&STATE!=="countdown")socialAutoParty();},2000);
+setInterval(function(){if(NET.srv)return;if(SOCIAL.st&&STATE!=="playing"&&STATE!=="countdown")socialAutoParty();partyFollowTick();},2000);
+/* ---- the party sticks to its leader ----
+   The leader walking into any online lobby (hosting one, joining one, a public
+   one) takes the party along: their game tells the server, which holds a seat
+   for everyone and sends them in. A member who reloads, comes back online or
+   joins the party late catches up with the leader on their own. Nobody is ever
+   pulled out of a match: it waits until theirs is over. */
+var PFOL={key:"",tried:{}};
+function partyRoomNow(){return (NET.ws&&NET.code&&!NET.solo&&!NET.queue&&(NET.status==="lobby"||NET.status==="playing"))?NET.code:"";}
+function partyFollowTick(){
+  var st=SOCIAL.st,p=st&&st.party;
+  if(!p||!SOCIAL.ws||SOCIAL.ws.readyState!==1)return;
+  var me=st.me.sub,lead=p.leader===me,room=partyRoomNow();
+  var others=p.members.filter(function(m){return m.sub!==me&&m.on;});
+  if(lead){
+    // in a lobby, with people who aren't here yet: bring them (once per lobby + line-up)
+    if(!room||NET.status!=="lobby"||!others.length)return;
+    var key=room+"|"+others.map(function(m){return m.sub;}).sort().join(",");
+    if(key===PFOL.key)return;
+    PFOL.key=key;
+    socialSend({t:"pgo",room:room},function(r){
+      if(r.err){PFOL.key="";if(!/not in that lobby/i.test(r.err))notify({kind:"info",id:"pgo",title:"PARTY",text:r.err,ttl:5});}
+      else if(r.sent)notify({kind:"info",id:"pgo",title:"PARTY",text:"Bringing your party in",ttl:3});
+    });
+    return;
+  }
+  // a member: the leader is in a lobby we're not in -- catch up (never out of a match)
+  if(!p.room||room===p.room||STATE==="playing"||STATE==="countdown")return;
+  // once per lobby (leave it on purpose and you stay out); a failed try is retried a few times
+  var tr=PFOL.tried[p.room]||(PFOL.tried[p.room]={n:0,at:0,ok:false});
+  if(tr.ok||tr.n>=3||Date.now()-tr.at<6000)return;
+  tr.n++;tr.at=Date.now();
+  socialSend({t:"pfollow"},function(r){if(!r.err)tr.ok=true;});
+}
+// Boss Rally from the Casual card, in a party: the leader opens a Boss Rally lobby and everyone comes
+function partyBossHost(){
+  var st=SOCIAL.st,p=st&&st.party;
+  if(p.members.length>4){notify({kind:"info",id:"bossmax",title:"BOSS RALLY",text:"Boss Rally takes up to 4 \u2014 your party has "+p.members.length+".",ttl:6});return;}
+  openMPScreen();
+  SAVE.netName=(SAVE.netName||CLOUD.name||"Player").slice(0,14);
+  NETPICK.gm="boss";NETPICK.bots=0;NETPICK.map=SAVE.eqMap||"sky";NETPICK.priv=true;
+  netConnect(makeRoomCode(),function(){mpSendLoadout(false);netSetup();renderNetSetup();
+    notify({kind:"info",id:"bossparty",title:"BOSS RALLY",text:"Your party is on its way \u2014 press START when everyone's in",ttl:6});});
+}
+function partyLeadWithOthers(){
+  var st=SOCIAL.st,p=st&&st.party;
+  return !!(p&&p.leader===st.me.sub&&p.members.some(function(m){return m.sub!==st.me.sub&&m.on;}));
+}
 function socialJoinInvite(id){
   if(STATE==="playing"||STATE==="countdown"){notify({kind:"info",id:"busy",title:"IN A MATCH",text:"Finish your match first — the invite will wait.",ttl:4});return;}
   socialSend({t:"lacc",id:id},function(r){
@@ -17398,13 +17446,16 @@ function socialParty(body,st){
   row2.appendChild(shBtn(mine&&mine.ready?"NOT READY":"READY",mine&&mine.ready?"":"gold",function(){socialAct({t:"pready",r:!(mine&&mine.ready)});}));
   if(lead){
     var inRoom=NET.ws&&NET.code&&!NET.solo&&!NET.queue&&NET.status==="lobby";
-    row2.appendChild(shBtn("BRING PARTY TO MY LOBBY","gold",function(){socialAct({t:"pgo",room:NET.code},"Bringing the party in");},!inRoom));
+    row2.appendChild(shBtn("BRING PARTY TO MY LOBBY","gold",function(){PFOL.key="";socialAct({t:"pgo",room:NET.code},"Bringing the party in");},!inRoom));
     row2.appendChild(shBtn("DISBAND","red",function(){socialAct({t:"pdisband"});}));
   }
   row2.appendChild(shBtn("LEAVE","",function(){socialAct({t:"pleave"});}));
   body.appendChild(row2);
-  if(lead)body.appendChild(sh("div","fine",(NET.ws&&NET.code?"":"Host or join a lobby first, then bring everyone in. ")+
-    (p.members.length>4?"Boss Rally takes up to 4 — your party has "+p.members.length+".":"")));
+  if(lead)body.appendChild(sh("div","fine","Your party follows you: host or join any lobby (or pick Boss Rally) and everyone comes with you. "+
+    (p.members.length>4?"Boss Rally takes up to 4 \u2014 your party has "+p.members.length+".":"")));
+  else if(p.room&&partyRoomNow()!==p.room){
+    var jr=sh("div","socsets");jr.appendChild(shBtn("JOIN YOUR LEADER'S LOBBY","gold",function(){PFOL.tried={};socialAct({t:"pfollow"});}));body.appendChild(jr);
+  } else body.appendChild(sh("div","fine",p.room?"You're in your leader's lobby.":"When your leader goes into a lobby, you'll be brought along."));
 }
 function socialMsgs(body,st){
   var wrap=sh("div","socmsgs"),list=sh("div","soclist"),pane=sh("div","socpane");

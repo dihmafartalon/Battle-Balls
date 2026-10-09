@@ -222,6 +222,16 @@ for (const [s, n] of [["ann", "Annie"], ["bob", "Bob"], ["cat", "Cat"], ["dan", 
   assert.ok(r.ok && r.sent === 3, "everyone else is sent: " + JSON.stringify(r));
   const pi = Object.values(S("dan").linvIn).find(x => x.party);
   assert.ok(pi && pi.code === "ROOM9", "a party invite to the lobby");
+  assert.equal(S("ann").partyView.room, "ROOM9", "everyone knows which lobby the leader took the party to");
+  // a member who missed it (a reload) catches up on their own
+  S("dan").linvIn = {};
+  r = await say("dan", { t: "pfollow" });
+  assert.ok(r.ok && Object.values(S("dan").linvIn).some(x => x.party && x.code === "ROOM9"), "follow sends them to the leader's lobby: " + JSON.stringify(r));
+  // a member already in that lobby is not sent again
+  seat("ROOM9", "dan"); S("dan").linvIn = {};
+  r = await say("dan", { t: "pfollow" });
+  assert.equal(Object.keys(S("dan").linvIn).length, 0, "already there: nothing sent");
+  unseat("ROOM9", "dan");
   // the leader goes offline: leadership moves to someone who is here
   await games.bob.hub.setPres("offline");
   assert.notEqual(S("ann").partyView.leader, "bob");
