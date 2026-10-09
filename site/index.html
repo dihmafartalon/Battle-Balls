@@ -2088,13 +2088,13 @@ var SWORDS=[
   desc:"A scythe with a lit jack-o'-lantern where the blade meets the shaft. Reaps a full circle of fire."},
  {id:"hexblade",name:"Hexblade",rarity:"halloween",pass:40,price:-1,blade:0xd9a8ff,hilt:0x1c0a33,glow:0xb14aff,shape:"hexblade",hold:"one",swing:"hex",idle:"orbit",
   desc:"A violet crystal blade circled by two turning rings of runes. Rises, whirls overhead and brands a hex into the floor."},
- {id:"tesla",name:"Tesla Coil",rarity:"halloween",pass:60,price:-1,blade:0xc8ccd4,hilt:0x3a3e46,glow:0x9aff5a,shape:"tesla",hold:"one",swing:"uppercut",idle:"crackle",
+ {id:"tesla",name:"Tesla Coil",rarity:"halloween",pass:60,price:-1,blade:0xc8ccd4,hilt:0x3a3e46,glow:0x9aff5a,shape:"tesla",hold:"one",swing:"teslarc",idle:"crackle",
   desc:"A copper coil wound up a steel rod, a ball of green lightning on the end. The Monster's own. It crackles when it waits and arcs when it cuts."},
- {id:"silvermoon",name:"Silver Moon",rarity:"halloween",pass:70,price:-1,blade:0xdfe6f2,hilt:0x3a2418,glow:0xfff0b0,shape:"silvermoon",hold:"one",swing:"spin",idle:"shimmer",
+ {id:"silvermoon",name:"Silver Moon",rarity:"halloween",pass:70,price:-1,blade:0xdfe6f2,hilt:0x3a2418,glow:0xfff0b0,shape:"silvermoon",hold:"one",swing:"moonfall",idle:"shimmer",
   desc:"A crescent moon of solid silver with a burning pale edge, held behind three wolf claws. Swung all the way round, the way a full moon turns a man."},
- {id:"bonesaw",name:"Bone Saw",rarity:"halloween",pass:80,price:-1,blade:0xe8dcc0,hilt:0x2a2014,glow:0x4affd0,shape:"bonesaw",hold:"one",swing:"overhead",idle:"none",
+ {id:"bonesaw",name:"Bone Saw",rarity:"halloween",pass:80,price:-1,blade:0xe8dcc0,hilt:0x2a2014,glow:0x4affd0,shape:"bonesaw",hold:"one",swing:"sawrip",idle:"none",
   desc:"A blade of old bone with teeth down the front and a spine down the back. Glyphs burn turquoise in it, and the eye in the pommel is open."},
- {id:"wick",name:"The Wick",rarity:"halloween",pass:90,price:-1,blade:0xf0dcb8,hilt:0xe0b040,glow:0xffa030,shape:"wick",hold:"one",swing:"slash",idle:"ember",
+ {id:"wick",name:"The Wick",rarity:"halloween",pass:90,price:-1,blade:0xf0dcb8,hilt:0xe0b040,glow:0xffa030,shape:"wick",hold:"one",swing:"wickfire",idle:"ember",
   desc:"A candle as long as a sword in a gold candlestick, taken from the Count's own castle. Wax runs down it, and the flame on the end has never once gone out."},
  // ULTRA, and only ever from its own shrine beside Gnorman, for one week (see EVENT_SHOPS)
  {id:"wendigo",name:"Wendigo Katana",rarity:"ultra",price:-1,ultra:true,event:"wendigo",blade:0xe8eaf0,hilt:0x2a1a0a,glow:0x4ab8ff,shape:"wendigo",hold:"hip",swing:"wendigo",idle:"breathe",
@@ -2329,7 +2329,7 @@ function resolveAbility(id){return abilityAllowed(id)?id:"dash";}
 function botAbility(rnd){var it=rollItem("abil",rnd);return resolveAbility(it?it.id:"dash");}
 var SKINS=[
  {id:"devarmor",name:"DEV",rarity:"rank",style:"devcore",price:-1,rank:"dev",code:true,body:0x07070e,limb:0x040408,skin:0x121218,glow:0x9a4bff,
-  desc:"The void knight. Black plate split by a rift with a core beating in it, circuit traces up every limb, a crown of rift shards, code turning round the helm, and a cape that will not hold still."},
+  desc:"The Architect: whoever wrote the game, stepped into it. A monitor for a head with a live face on it, brackets floating either side, a wireframe core turning in a glass chest, code panels orbiting the shoulders, a cape of falling code, and boots coming apart into voxels."},
  {id:"aurora",name:"Aurora",price:12000,yen:355,rarity:"mythic",style:"aurora",body:0x1b2b5e,limb:0x0c1330,skin:0xdff4ff,glow:0x7afcff,
   desc:"Polar light worn as armour: a halo, six crystals and a curtain that never settles."},
  {id:"static",name:"Static",price:1200,yen:15,rarity:"common",style:"static2",body:0x7d8794,limb:0x24272e,skin:0xe8ecf2,glow:0xbfe6ff,
@@ -10677,6 +10677,8 @@ function sigAnimate(f,p,arm,la,sw,h,bx,by,bz){
   sw.position.set(h.sp[0],h.sp[1],h.sp[2]);
   sw.rotation.set(h.sr[0],h.sr[1],h.sr[2]);
   arm.position.set(bx,by,bz);
+  if(SIG_ANIM5[style]){SIG_ANIM5[style](f,p,arm,la,sw,h,bx,by,bz);return;}
+  style=SIG_ANIM_AS[style]||style;
   if(style==="frenzy"){
     // an X: forehand down-left, backhand down-right, then up over the head
     // and driven straight down
@@ -10817,6 +10819,7 @@ function sigBeat(f,S,b,i){
   if(!near)return;
   var X=f.pos.x,Y=f.y,Z=f.pos.z,fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),c,k,a;
   if(st!=="frenzy"&&st!=="gunshot")spawnSlash(f,b.st,col,b.rev);
+  if(SIG_BEAT5[st]){SIG_BEAT5[st](f,b,i,tip,X,Y,Z,fx,fz);return;}
   if(st==="gunshot"){
     gunBlast(f,!!b.fin,col);
   } else if(st==="fetus"){
@@ -10945,6 +10948,7 @@ function sigBeat(f,S,b,i){
 }
 function sigSwingSfx(d){
   var st=d.swing;
+  if(SIG_SFX5[st]){SIG_SFX5[st](d);return;}
   if(st==="frenzy"){
     [60,220,400].forEach(function(ms,i){setTimeout(function(){
       noiseHit(.09,.24,i===2?1400:2800);tone(i===2?600:1400,i===2?140:480,.09,"sawtooth",.12);
@@ -14270,65 +14274,126 @@ var SIG_TICK4={
   pharaoh:function(f,s,dt,t){s.glow.color.setHSL(.5,1,.5+.1*Math.sin(t*3));},
   butcher:function(){}
 };
-// DEV (redone for 4.0) -- the void knight to match the Dev blade: black plate
-// split by a rift down the chest with a core beating in it, circuit traces
-// lit up the limbs, a slitted helm under a crown of floating rift shards, a
-// ring of code glyphs turning round the head, and a cape that glitches
-SIG_SKIN.devcore=function(f,g,sk,box,glowM,darkM,bodyM){
-  var i,sd,plate=v4Phong(0x0c0a14,120,0x100820,.5),edge=new THREE.MeshBasicMaterial({color:0x9a4bff});
-  var hot=new THREE.MeshBasicMaterial({color:0xe0c8ff}),core=v4Add(0xb06aff,.9);
-  box(1.04,.98,.62,0,2.26,0,plate);                                   // breastplate
-  box(.94,.12,.6,0,2.74,.02,edge);                                    // lit collar
-  // the rift down the chest, and the core in it
-  for(i=0;i<5;i++)box(.07,.2,.04,(i%2?.05:-.05),2.62-i*.16,.32,edge,[0,0,(i%2?.5:-.5)]);
-  var cr=new THREE.Mesh(GEO.sphLo,core);cr.scale.setScalar(.2);cr.position.set(0,2.3,.34);cr.userData.aura=true;g.add(cr);
-  var crh=new THREE.Mesh(GEO.sphLo,hot);crh.scale.setScalar(.09);crh.position.set(0,2.3,.36);g.add(crh);
-  for(sd=-1;sd<=1;sd+=2){
-    box(.4,.26,.7,sd*.62,2.8,0,plate,[0,0,sd*-.3]);                   // layered pauldrons, edged in light
-    box(.36,.22,.64,sd*.66,2.58,0,plate,[0,0,sd*-.2]);
-    box(.42,.035,.72,sd*.64,2.94,0,edge,[0,0,sd*-.3]);
-    box(.24,.44,.3,sd*.46,1.76,.02,plate);box(.26,.035,.32,sd*.46,1.55,.02,edge);   // tassets
-    // circuit traces on the limbs
-    var ar=f.arms[sd<0?0:1],lg=f.legs[sd<0?0:1];
-    [[.17,-.3,.4],[.14,-.9,.36]].forEach(function(p){var q=new THREE.Mesh(GEO.box,edge);q.scale.set(.03,p[2],.03);q.position.set(0,p[1],p[0]);ar.add(q);
-      var n=new THREE.Mesh(GEO.box,edge);n.scale.set(.1,.03,.03);n.position.set(.04,p[1]-p[2]/2,p[0]);ar.add(n);});
-    [[.21,-.34,.46],[.18,-.9,.44]].forEach(function(p){var q=new THREE.Mesh(GEO.box,edge);q.scale.set(.03,p[2],.03);q.position.set(-.08,p[1],p[0]);lg.add(q);
-      var n=new THREE.Mesh(GEO.box,edge);n.scale.set(.12,.03,.03);n.position.set(-.03,p[1]+p[2]/2,p[0]);lg.add(n);});
+// DEV (rebuilt for 4.4) -- THE ARCHITECT: whoever wrote the game, stepped
+// into it. A monitor for a head with a live face on its screen, a pair of
+// curly brackets floating either side of it, a wireframe core turning in a
+// glass chest, holographic code panels orbiting the shoulders, a cape that is
+// three streams of falling code, and boots that come apart into voxels.
+var _devCodeTex=null;
+function devCodeTex(){
+  if(_devCodeTex)return _devCodeTex;
+  var c=cvs(64,256),x=c.getContext("2d");
+  x.fillStyle="rgba(0,0,0,0)";x.fillRect(0,0,64,256);
+  for(var r=0;r<32;r++){var ind=(r*7)%4*5,w=8+((r*37)%40);
+    x.fillStyle=r%5===0?"rgba(255,255,255,.95)":r%3?"rgba(180,110,255,.9)":"rgba(120,220,255,.85)";
+    for(var cx=ind;cx<ind+w&&cx<62;cx+=3+((r+cx)%3===0?3:0))x.fillRect(cx+2,r*8+2,2,3);}
+  _devCodeTex=mkTex(c);_devCodeTex.wrapS=_devCodeTex.wrapT=THREE.RepeatWrapping;GEO.devcodetex=_devCodeTex;
+  return _devCodeTex;
+}
+function devFaceDraw(s,t){
+  var x=s.fx,W=64,H=48,blink=((t*.6+s.ph)%4)<.12,err=s.err>0;
+  x.fillStyle=err?"#2a0410":"#08031a";x.fillRect(0,0,W,H);
+  // faint code scrolling up behind the face
+  x.fillStyle=err?"rgba(255,60,90,.35)":"rgba(140,80,255,.28)";
+  var off=Math.floor(t*14)%6;
+  for(var r=0;r<9;r++){var w=10+((r*13+Math.floor(t*14/6))%30);x.fillRect(4+(r*5)%9,r*6-off+3,w,2);}
+  if(err){x.fillStyle="#ff3a5a";x.font="bold 15px monospace";x.fillText("ERR",14,30);}
+  else{
+    // two eyes and a cursor for a mouth
+    x.fillStyle="#e8d8ff";
+    if(blink){x.fillRect(14,20,10,3);x.fillRect(40,20,10,3);}
+    else{x.fillRect(14,14,10,12);x.fillRect(40,14,10,12);x.fillStyle="#9a4bff";x.fillRect(17,18,4,5);x.fillRect(43,18,4,5);}
+    if(((t*2)%1)<.6){x.fillStyle="#b06aff";x.fillRect(28,34,10,3);}
   }
-  box(.94,.1,.62,0,1.92,0,edge);                                      // belt
-  // the helm, the slit, and the shards over it
-  box(.86,.88,.82,0,2.96,0,plate);
-  box(.9,.1,.86,0,3.36,0,plate);
-  var slit=new THREE.Mesh(GEO.box,hot);slit.scale.set(.56,.08,.06);slit.position.set(0,2.98,.42);g.add(slit);
-  box(.06,.3,.06,0,2.78,.42,edge);
-  var crown=new THREE.Group();crown.position.y=3.7;g.add(crown);
-  for(i=0;i<6;i++){var a=i/6*TAU,sh=new THREE.Mesh(new THREE.OctahedronGeometry(.1),i%2?edge:hot);sh.scale.y=2.4;
-    sh.position.set(Math.cos(a)*.42,Math.sin(i*1.7)*.06,Math.sin(a)*.42);crown.add(sh);}
-  // code glyphs turning round the head
-  var ring=new THREE.Group();ring.position.y=2.98;g.add(ring);
-  for(i=0;i<14;i++){var a2=i/14*TAU,gl=new THREE.Mesh(GEO.box,i%3?edge:hot);
-    gl.scale.set(i%4?.07:.14,i%2?.14:.07,.02);gl.position.set(Math.cos(a2)*.95,Math.sin(i*2.3)*.08,Math.sin(a2)*.95);gl.rotation.y=-a2+Math.PI/2;gl.userData.aura=true;ring.add(gl);}
-  // the cape, in slices that slip sideways now and then
-  var cape=[];
-  for(i=0;i<6;i++){var cs=new THREE.Group();cs.position.set(0,2.62-i*.3,-.36-i*.05);cs.rotation.x=i*.06;g.add(cs);
-    var cm=new THREE.Mesh(GEO.box,i%2?darkM:plate);cm.scale.set(.86-i*.05,.3,.05);cs.add(cm);
-    var ce=new THREE.Mesh(GEO.box,edge);ce.scale.set(.86-i*.05,.025,.06);ce.position.y=-.15;cs.add(ce);
-    cape.push(cs);}
-  f.sig={kind:"devcore",core:cr,crown:crown,ring:ring,cape:cape,slit:slit,edge:edge};
+  s.ft.needsUpdate=true;
+}
+SIG_SKIN.devcore=function(f,g,sk,box,glowM,darkM,bodyM){
+  var i,sd,hp=f.headParts||[];
+  for(i=0;i<hp.length;i++)hp[i].visible=false;
+  var glass=v4Phong(0x07060e,160,0x0a0418,.6),plate=v4Phong(0x0c0a14,120,0x100820,.5);
+  var edge=new THREE.MeshBasicMaterial({color:0x9a4bff}),hot=new THREE.MeshBasicMaterial({color:0xe8d8ff}),cyan=new THREE.MeshBasicMaterial({color:0x6ad8ff});
+  var lineM=new THREE.LineBasicMaterial({color:0xb06aff,transparent:true,opacity:.9});
+  function wire(w,h,d,x,y,z,par){var l=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w,h,d)),lineM);l.position.set(x,y,z);(par||g).add(l);return l;}
+  // the monitor head and its live face
+  var hd=new THREE.Group();hd.position.set(0,3.06,0);g.add(hd);
+  var mon=new THREE.Mesh(GEO.box,glass);mon.scale.set(.92,.76,.62);hd.add(mon);
+  wire(.94,.78,.64,0,0,0,hd);
+  var fc=cvs(64,48),ft=mkTex(fc);ft.wrapS=ft.wrapT=THREE.ClampToEdgeWrapping;ft.repeat.set(1,1);
+  var scr=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({map:ft,toneMapped:false}));scr.scale.set(.78,.6,1);scr.position.z=.316;hd.add(scr);
+  var bz=new THREE.Mesh(GEO.box,edge);bz.scale.set(.86,.04,.04);bz.position.set(0,-.33,.31);hd.add(bz);
+  var nk=new THREE.Mesh(GEO.box,plate);nk.scale.set(.3,.22,.3);nk.position.y=-.48;hd.add(nk);
+  // { } either side of the head
+  var br=[];
+  for(sd=-1;sd<=1;sd+=2){var bg=new THREE.Group();bg.position.set(sd*.78,3.08,.05);g.add(bg);
+    [[.05,.62,0,0],[.12,.05,sd*-.05,.29],[.12,.05,sd*-.05,-.29],[.1,.05,sd*.05,0]].forEach(function(q){
+      var m=new THREE.Mesh(GEO.box,edge);m.scale.set(q[0],q[1],.05);m.position.set(q[2],q[3],0);bg.add(m);});
+    br.push(bg);}
+  // a ring of nodes turning over the head
+  var halo=new THREE.Group();halo.position.y=3.72;g.add(halo);
+  var hr0=new THREE.Mesh(new THREE.TorusGeometry(.48,.018,6,40),edge);hr0.rotation.x=Math.PI/2;halo.add(hr0);
+  for(i=0;i<6;i++){var a=i/6*TAU,nd=new THREE.Mesh(GEO.box,i%2?hot:cyan);nd.scale.setScalar(.07);nd.position.set(Math.cos(a)*.48,0,Math.sin(a)*.48);halo.add(nd);}
+  // the chest: a glass window with a wireframe cube turning in it
+  box(1.06,1.0,.6,0,2.24,0,plate);
+  box(.56,.5,.04,0,2.3,.31,glass);
+  wire(.6,.54,.06,0,2.3,.31);
+  var coreG=new THREE.Group();coreG.position.set(0,2.3,.36);g.add(coreG);
+  var cw=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(.24,.24,.24)),new THREE.LineBasicMaterial({color:0xe8d8ff}));coreG.add(cw);
+  var cs=new THREE.Mesh(GEO.sphLo,v4Add(0xb06aff,.9));cs.scale.setScalar(.15);coreG.add(cs);
+  box(.98,.07,.62,0,1.52,0,edge);box(.98,.05,.62,0,2.76,0,edge);                          // belt and collar light
+  for(sd=-1;sd<=1;sd+=2){
+    // shoulder plates that float clear of the body
+    var sp=new THREE.Group();sp.position.set(sd*.7,2.86,0);g.add(sp);
+    var spm=new THREE.Mesh(GEO.box,plate);spm.scale.set(.42,.18,.62);spm.rotation.z=sd*-.28;sp.add(spm);
+    wire(.42,.18,.62,0,0,0,sp).rotation.z=sd*-.28;
+    sp.userData.sd=sd;br.push(sp);
+    var ar=f.arms[sd<0?0:1],lg=f.legs[sd<0?0:1];
+    [[.17,-.3,.4],[.14,-.9,.36]].forEach(function(p){var q=new THREE.Mesh(GEO.box,edge);q.scale.set(.03,p[2],.03);q.position.set(0,p[1],p[0]);ar.add(q);});
+    var kn=new THREE.Mesh(GEO.box,cyan);kn.scale.set(.3,.04,.04);kn.position.set(0,-1.2,.15);ar.add(kn);
+    [[.21,-.34,.46],[.18,-.9,.44]].forEach(function(p){var q=new THREE.Mesh(GEO.box,edge);q.scale.set(.03,p[2],.03);q.position.set(-.08,p[1],p[0]);lg.add(q);});
+  }
+  // the cape: three streams of code running down the back
+  var codeT=devCodeTex(),strips=[];
+  for(i=0;i<3;i++){var tm=new THREE.MeshBasicMaterial({map:codeT.clone(),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,toneMapped:false});
+    tm.map.needsUpdate=true;tm.map.repeat.set(1,.5);
+    var st=new THREE.Mesh(GEO.plane,tm);st.scale.set(.42,2.2,1);st.position.set((i-1)*.36,1.62,-.4-Math.abs(i-1)*.04);st.rotation.set(.08,(i-1)*-.25,0);g.add(st);strips.push(st);}
+  // two code panels orbiting the shoulders
+  var pans=[];
+  for(i=0;i<2;i++){var pm=new THREE.MeshBasicMaterial({map:codeT,transparent:true,opacity:.55,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,toneMapped:false,color:i?0x6ad8ff:0xb06aff});
+    var pn=new THREE.Mesh(GEO.plane,pm);pn.scale.set(.42,.56,1);g.add(pn);
+    var pf=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(1,1)),lineM);pn.add(pf);pans.push(pn);}
+  // voxels breaking off the boots and rising
+  var vox=[];
+  for(i=0;i<(QUAL>1?10:QUAL>0?6:0);i++){var v=new THREE.Mesh(GEO.box,i%3?edge:hot);v.scale.setScalar(.07);g.add(v);vox.push({m:v,p:i/10,x:(i%2?.22:-.22)+hr(-.12,.12),z:hr(-.15,.2)});}
+  var sObj={kind:"devcore",hd:hd,core:coreG,halo:halo,br:br,strips:strips,pans:pans,vox:vox,fx:fc.getContext("2d"),ft:ft,ph:f.phase||0,err:0,last:-1,edge:edge};
+  devFaceDraw(sObj,0);
+  f.sig=sObj;
 };
 SIG_TICK4.devcore=function(f,s,dt,t){
-  var beat=(t*1.2+f.phase)%1,p=beat<.12?1-beat/.12:0;
-  s.core.scale.setScalar(.2+.1*p);
-  s.crown.rotation.y=t*.7;s.crown.position.y=3.7+Math.sin(t*1.8)*.05;
-  s.ring.rotation.y=-t*.9;
-  var gl=((t*2.7+f.phase)%2.3)<.08;
-  for(var i=0;i<s.cape.length;i++)s.cape[i].position.x=gl?(Math.random()-.5)*.24:0;
-  s.slit.material.color.setHex(gl?0xffffff:0xe0c8ff);s.ring.visible=!gl||Math.random()<.5;
+  var i,near=f===player||!player||dist2(f.pos.x,f.pos.z,player.pos.x,player.pos.z)<40*40;
+  // the face redraws about ten times a second when anyone is close enough to read it
+  if(near&&t-s.last>.1){s.last=t;devFaceDraw(s,t);}
+  if(s.err>0)s.err-=dt;
+  else if(((t*.37+s.ph*3.1)%7.3)<dt*1.1){s.err=.35;}
+  var gl=s.err>0;
+  s.hd.position.x=gl?(Math.random()-.5)*.08:0;s.hd.rotation.z=gl?(Math.random()-.5)*.1:Math.sin(t*.9+s.ph)*.03;
+  s.core.rotation.set(t*.8,t*1.3,0);s.core.children[1].scale.setScalar(.15*(1+.25*Math.max(0,Math.sin(t*5))));
+  s.halo.rotation.y=t*.6;s.halo.position.y=3.72+Math.sin(t*1.7)*.04;
+  for(i=0;i<s.br.length;i++){var b=s.br[i];
+    if(b.userData.sd)b.position.y=2.86+Math.sin(t*2+b.userData.sd)*.035;
+    else b.position.y=3.08+Math.sin(t*2.3+i*1.4)*.05;}
+  for(i=0;i<s.strips.length;i++){var m=s.strips[i].material.map;m.offset.y=(t*(.35+i*.08))%1;s.strips[i].position.x=gl?(i-1)*.36+(Math.random()-.5)*.2:(i-1)*.36;}
+  for(i=0;i<s.pans.length;i++){var a=t*.7+i*Math.PI,p=s.pans[i];
+    p.position.set(Math.cos(a)*1.25,2.5+Math.sin(t*1.3+i)*.15,Math.sin(a)*1.25);p.rotation.y=-a+Math.PI/2;
+    p.material.map.offset.y=(t*.2)%1;p.visible=!gl||Math.random()<.5;}
+  for(i=0;i<s.vox.length;i++){var v=s.vox[i];v.p=(v.p+dt*.55)%1;
+    v.m.position.set(v.x+Math.sin(v.p*9+i)*.08,.05+v.p*1.1,v.z);v.m.scale.setScalar(.08*(1-v.p));v.m.rotation.set(v.p*6,v.p*4,0);}
 };
-SIG_SKIN_ICON.devarmor="<rect x='12' y='4' width='16' height='14' rx='1.5' fill='#0c0a14' stroke='#9a4bff' stroke-width='1.4'/><rect x='14' y='10' width='12' height='2.4' fill='#e0c8ff'/>"+
-  "<path d='M14 2l1.4 2M20 0.5v3M26 2l-1.4 2' stroke='#9a4bff' stroke-width='1.4'/>"+
-  "<rect x='10' y='19' width='20' height='19' rx='2' fill='#0c0a14' stroke='#9a4bff' stroke-width='1.4'/><path d='M20 20l-1.5 3 3 3-1.5 3 1 3' stroke='#b06aff' stroke-width='1.4' fill='none'/><circle cx='20' cy='26' r='2' fill='#e0c8ff'/>"+
-  "<path d='M6 12h2M32 14h2M5 17h2M33 9h2' stroke='#9a4bff' stroke-width='1.6'/>";
+SIG_SKIN_ICON.devarmor="<rect x='11' y='3' width='18' height='15' rx='1.5' fill='#08031a' stroke='#b06aff' stroke-width='1.4'/>"+
+  "<rect x='14' y='7' width='4' height='5' fill='#e8d8ff'/><rect x='22' y='7' width='4' height='5' fill='#e8d8ff'/><rect x='18' y='14' width='4' height='1.6' fill='#b06aff'/>"+
+  "<path d='M8 4c-2 0-2 2-2 4v2l-1.5 1L6 12v2c0 2 0 4 2 4M32 4c2 0 2 2 2 4v2l1.5 1L34 12v2c0 2 0 4-2 4' stroke='#9a4bff' stroke-width='1.5' fill='none'/>"+
+  "<rect x='10' y='20' width='20' height='18' rx='2' fill='#0c0a14' stroke='#9a4bff' stroke-width='1.4'/><rect x='15.5' y='23.5' width='9' height='8' fill='#07060e' stroke='#b06aff' stroke-width='1'/>"+
+  "<path d='M17.5 25.5h5v4h-5zM17.5 25.5l1.5-1h5l-1.5 1M22.5 29.5l1.5-1v-4' stroke='#e8d8ff' stroke-width='.8' fill='none'/>"+
+  "<path d='M4 30v8M7 27v11M33 29v9M36 26v12' stroke='#b06aff' stroke-width='1.6' stroke-dasharray='1.5 1.5'/>";
 /* ============================================================
    4.0 -- the old gear, redone
    ============================================================ */
@@ -15698,6 +15763,301 @@ var P2_EMOTE_POSE={
   }
 };
 /* ==== PASS PART TWO END ==== */
+
+/* ==== 4.4 BEGIN ==== */
+/* ============================================================
+   4.4 -- signature swings for the pass's four new blades, the DEV skin
+   rebuilt, and the After Hours Pack (Dreddy, Fluffles, the Nightshift Axe
+   and System Failure). Everything here is cosmetic: no hitbox, timing,
+   parry window or balance number is touched.
+   ============================================================ */
+
+/* ---------------- lightning, pooled ----------------
+   A jagged bolt from one point to another: a handful of thin glowing boxes,
+   re-cut every few frames so it crackles, fading over its life. */
+var P4_BOLTS=[];
+function p4Bolt(x0,y0,z0,x1,y1,z1,hex,life,thick){
+  if(typeof THREE==="undefined"||!scene)return;
+  var r=null,i;
+  for(i=0;i<P4_BOLTS.length;i++)if(P4_BOLTS[i].t<0){r=P4_BOLTS[i];break;}
+  if(!r){
+    if(P4_BOLTS.length>=(QUAL>1?10:5))return;
+    var g=new THREE.Group(),m=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:1,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false});
+    for(i=0;i<8;i++){var s=new THREE.Mesh(GEO.box,m);s.frustumCulled=false;g.add(s);}
+    g.visible=false;scene.add(g);r={g:g,m:m,t:-1};P4_BOLTS.push(r);
+    if(P4_BOLTS.length===1)V4FX.push({tick:p4BoltTick,keep:true});
+  }
+  r.a=[x0,y0,z0];r.b=[x1,y1,z1];r.t=0;r.life=life||.3;r.thick=thick||.09;r.cut=0;
+  r.m.color.setHex(hex);r.g.visible=true;p4BoltCut(r);
+}
+function p4BoltCut(r){
+  var n=r.g.children.length,px=r.a[0],py=r.a[1],pz=r.a[2],dx=r.b[0]-px,dy=r.b[1]-py,dz=r.b[2]-pz,L=Math.hypot(dx,dy,dz)||1,j=L*.12;
+  for(var i=0;i<n;i++){
+    var u=(i+1)/n,nx=r.a[0]+dx*u+(i<n-1?hr(-j,j):0),ny=r.a[1]+dy*u+(i<n-1?hr(-j,j):0),nz=r.a[2]+dz*u+(i<n-1?hr(-j,j):0);
+    var s=r.g.children[i],ex=nx-px,ey=ny-py,ez=nz-pz,l=Math.hypot(ex,ey,ez)||.001;
+    s.scale.set(r.thick,l,r.thick);s.position.set((px+nx)/2,(py+ny)/2,(pz+nz)/2);
+    _cv1.set(ex/l,ey/l,ez/l);s.quaternion.setFromUnitVectors(_RY,_cv1);
+    px=nx;py=ny;pz=nz;
+  }
+}
+function p4BoltTick(dt){
+  for(var i=0;i<P4_BOLTS.length;i++){var r=P4_BOLTS[i];if(r.t<0)continue;
+    r.t+=dt;if(r.t>=r.life){r.t=-1;r.g.visible=false;continue;}
+    r.cut+=dt;if(r.cut>.045){r.cut=0;p4BoltCut(r);}
+    r.m.opacity=(1-r.t/r.life)*(.65+.35*Math.random());}
+  return true;
+}
+/* ---------------- a billboard, pooled: the moon over a Silver Moon swing,
+   the static round a System Failure ---------------- */
+var P4_SPR=[];
+function p4Sprite(x,y,z,tex,hex,size,life,rise,add){
+  var r=null,i;
+  for(i=0;i<P4_SPR.length;i++)if(P4_SPR[i].t<0){r=P4_SPR[i];break;}
+  if(!r){
+    if(P4_SPR.length>=8)return null;
+    var m=new THREE.Mesh(GEO.plane,new THREE.MeshBasicMaterial({transparent:true,depthWrite:false,toneMapped:false,side:THREE.DoubleSide}));
+    m.frustumCulled=false;m.visible=false;m.renderOrder=6;scene.add(m);r={m:m,t:-1};P4_SPR.push(r);
+    if(P4_SPR.length===1)V4FX.push({tick:p4SprTick,keep:true});
+  }
+  r.m.material.map=tex;r.m.material.color.setHex(hex);r.m.material.blending=add===false?THREE.NormalBlending:THREE.AdditiveBlending;r.m.material.needsUpdate=true;
+  r.x=x;r.y=y;r.z=z;r.t=0;r.life=life;r.size=size;r.rise=rise||0;r.m.visible=true;
+  return r;
+}
+function p4SprTick(dt){
+  for(var i=0;i<P4_SPR.length;i++){var r=P4_SPR[i];if(r.t<0)continue;
+    r.t+=dt;var u=r.t/r.life;if(u>=1){r.t=-1;r.m.visible=false;continue;}
+    var inn=Math.min(1,u/.15),out=u>.6?1-(u-.6)/.4:1;
+    r.m.position.set(r.x,r.y+r.rise*u,r.z);r.m.quaternion.copy(camera.quaternion);
+    r.m.scale.setScalar(r.size*(.7+.3*inn));r.m.material.opacity=inn*out;
+    if(r.onTick)r.onTick(r,u);}
+  return true;
+}
+// V4FX is cleared between matches; the pools put their tickers back when used
+var _p4v4Clear=v4Clear;
+v4Clear=function(){
+  _p4v4Clear();
+  for(var i=0;i<P4_BOLTS.length;i++){P4_BOLTS[i].t=-1;P4_BOLTS[i].g.visible=false;}
+  for(i=0;i<P4_SPR.length;i++){P4_SPR[i].t=-1;P4_SPR[i].m.visible=false;}
+  if(P4_BOLTS.length)V4FX.push({tick:p4BoltTick,keep:true});
+  if(P4_SPR.length)V4FX.push({tick:p4SprTick,keep:true});
+};
+var P4_TEX={};
+function p4Tex(kind){
+  if(P4_TEX[kind])return P4_TEX[kind];
+  var c=cvs(128,128),x=c.getContext("2d");x.translate(64,64);
+  if(kind==="moon"){
+    x.fillStyle="#fff";x.beginPath();x.arc(0,0,40,0,TAU);x.fill();
+    x.globalCompositeOperation="destination-out";x.beginPath();x.arc(18,-10,36,0,TAU);x.fill();
+    // the glow goes in behind the crescent afterwards, so the cut does not take it too
+    x.globalCompositeOperation="destination-over";
+    var gl=x.createRadialGradient(-8,6,16,-8,6,58);gl.addColorStop(0,"rgba(255,250,230,.4)");gl.addColorStop(1,"rgba(255,250,230,0)");
+    x.fillStyle=gl;x.fillRect(-64,-64,128,128);x.globalCompositeOperation="source-over";
+  } else if(kind==="static"){
+    for(var i=0;i<900;i++){var a=Math.random()*TAU,r=Math.sqrt(Math.random())*60,v=Math.random();
+      x.fillStyle="rgba("+(v<.15?"120,255,255":v<.3?"255,80,120":"255,255,255")+","+(.25+Math.random()*.6)+")";
+      x.fillRect(Math.cos(a)*r,Math.sin(a)*r,Math.random()<.2?6:2,Math.random()<.85?1.5:3);}
+    for(i=0;i<9;i++){x.fillStyle="rgba(255,255,255,"+(.3+Math.random()*.4)+")";x.fillRect(-60,-56+i*13+Math.random()*6,120,1+Math.random()*2);}
+  }
+  return (P4_TEX[kind]=mkTex(c));
+}
+// three more floor marks: the coil's circuit ring, a crescent and stars, the cursed eye
+var _p4DecalTex=hwDecalTex;
+hwDecalTex=function(kind){
+  if(HW_DEC.tex[kind]||!/^(tesla|crescent|cursedeye|flamering|axe)$/.test(kind))return _p4DecalTex(kind);
+  var c=cvs(256,256),x=c.getContext("2d"),i,a;
+  x.strokeStyle="#fff";x.fillStyle="#fff";x.lineCap="round";x.lineJoin="round";
+  if(kind==="tesla"){
+    x.lineWidth=6;x.beginPath();x.arc(128,128,114,0,TAU);x.stroke();
+    x.lineWidth=3;x.beginPath();x.arc(128,128,40,0,TAU);x.stroke();
+    for(i=0;i<10;i++){a=i/10*TAU;var r0=44,px=128+Math.cos(a)*r0,py=128+Math.sin(a)*r0;x.lineWidth=3;x.beginPath();x.moveTo(px,py);
+      var r1=78,a2=a+(i%2?.18:-.18);x.lineTo(128+Math.cos(a)*62,128+Math.sin(a)*62);x.lineTo(128+Math.cos(a2)*r1,128+Math.sin(a2)*r1);x.lineTo(128+Math.cos(a2)*110,128+Math.sin(a2)*110);x.stroke();
+      x.beginPath();x.arc(128+Math.cos(a2)*r1,128+Math.sin(a2)*r1,5,0,TAU);x.fill();}
+    x.lineWidth=5;x.beginPath();x.moveTo(118,98);x.lineTo(138,124);x.lineTo(120,132);x.lineTo(140,160);x.stroke();
+  } else if(kind==="crescent"){
+    x.beginPath();x.arc(128,128,96,0,TAU);x.fill();x.globalCompositeOperation="destination-out";x.beginPath();x.arc(166,108,88,0,TAU);x.fill();x.globalCompositeOperation="source-over";
+    for(i=0;i<7;i++){var sx=150+((i*47)%80),sy=60+((i*71)%140),sr=i%3?4:7;x.beginPath();
+      for(var k=0;k<8;k++){var ka=k/8*TAU,kr=k%2?sr*.35:sr;x.lineTo(sx+Math.cos(ka)*kr,sy+Math.sin(ka)*kr);}x.closePath();x.fill();}
+  } else if(kind==="cursedeye"){
+    x.lineWidth=6;x.beginPath();x.arc(128,128,116,0,TAU);x.stroke();
+    x.lineWidth=3;for(i=0;i<20;i++){a=i/20*TAU;x.beginPath();x.moveTo(128+Math.cos(a)*100,128+Math.sin(a)*100);x.lineTo(128+Math.cos(a)*(i%2?92:84),128+Math.sin(a)*(i%2?92:84));x.stroke();}
+    x.lineWidth=7;x.beginPath();x.moveTo(54,128);x.quadraticCurveTo(128,64,202,128);x.quadraticCurveTo(128,186,54,128);x.stroke();
+    x.beginPath();x.arc(128,126,24,0,TAU);x.fill();
+    x.lineWidth=5;x.beginPath();x.moveTo(118,152);x.lineTo(110,196);x.quadraticCurveTo(122,206,132,196);x.moveTo(146,150);x.quadraticCurveTo(168,176,186,168);x.stroke();
+  } else if(kind==="flamering"){
+    for(i=0;i<12;i++){a=i/12*TAU;x.save();x.translate(128+Math.cos(a)*86,128+Math.sin(a)*86);x.rotate(a+Math.PI/2);
+      x.beginPath();x.moveTo(0,-30);x.quadraticCurveTo(16,-4,0,14);x.quadraticCurveTo(-16,-4,0,-30);x.fill();x.restore();}
+    x.lineWidth=5;x.beginPath();x.arc(128,128,62,0,TAU);x.stroke();x.lineWidth=2.5;x.beginPath();x.arc(128,128,116,0,TAU);x.stroke();
+  } else if(kind==="axe"){
+    // a deep scorched gash with cracks running off it
+    x.lineWidth=16;x.beginPath();x.moveTo(40,150);x.quadraticCurveTo(128,96,216,112);x.stroke();
+    x.lineWidth=4;for(i=0;i<9;i++){var t=i/8,bx=40+176*t,by=150-54*Math.sin(t*Math.PI*.9)-t*10,ca=(i%2?-1:1)*(.9+Math.random()*.5);
+      x.beginPath();x.moveTo(bx,by);x.lineTo(bx+Math.sin(ca)*22,by+Math.cos(ca)*26*(i%2?-1:1));x.lineTo(bx+Math.sin(ca)*30+6,by+Math.cos(ca)*42*(i%2?-1:1));x.stroke();}
+  }
+  return (HW_DEC.tex[kind]=mkTex(c));
+};
+function p4Hex(h){return hex2rgb(h);}
+
+/* ---------------- the signature swings ----------------
+   TESLA COIL: up off the hip, whirled overhead, then planted -- three bolts of
+   green lightning come down off the coil onto the floor in front.
+   SILVER MOON: one whole turn with the crescent held out level; a pale moon
+   rises over you and claw marks are torn into the floor all round.
+   BONE SAW: two ripping cuts in an X, then hauled overhead and chopped down;
+   bone chips fly, and a cursed eye burns turquoise in the floor.
+   THE WICK: the flame raised high and flaring, swept round in a ring of fire,
+   then a jet of fire driven forward off the end. */
+Object.assign(SIG_SWING,{
+  teslarc:{dur:.60,col:0x9aff5a,beats:[
+    {w:.25,st:{span:3.0,tilt:-1.0,r:1.05,w:1.0,hot:1}},
+    {w:.66,st:{span:2.6,tilt:1.45,r:1.8,w:1.0,back:1.6,dy:.4,hot:1},col:0xeaffd8,fin:true}]},
+  moonfall:{dur:.68,col:0xe8f0ff,beats:[
+    {w:.42,st:{span:6.25,tilt:.10,r:1.9,w:1.3,hot:1},fin:true},
+    {w:.56,st:{span:5.6,tilt:.28,r:1.35,w:.8,hot:1},col:0xffe9a0}]},
+  sawrip:{dur:.58,col:0x4affd0,beats:[
+    {w:.19,st:{span:1.5,tilt:.85,r:1.8,w:.8,back:2.6,dy:.25,hot:1}},
+    {w:.43,st:{span:1.5,tilt:-.85,r:1.8,w:.8,back:2.6,dy:.25,hot:1},rev:true},
+    {w:.70,st:{span:1.7,tilt:1.5,r:1.7,w:.9,back:2.0,dy:.3,hot:1},col:0xe8dcc0,fin:true}]},
+  wickfire:{dur:.62,col:0xff7a12,beats:[
+    {w:.30,st:{span:1.2,tilt:1.3,r:1.2,w:.6,hot:1},col:0xffd84a},
+    {w:.52,st:{span:4.4,tilt:.12,r:2.0,w:1.25,hot:1}},
+    {w:.78,st:{span:1.6,tilt:1.5,r:1.6,w:.8,back:2.1,dy:.3,hot:1},col:0xffd84a,fin:true}]}
+});
+// how each moves: the coil and the saw borrow the hexblade's and the knife's
+// shapes, the moon the scythe's turn; the candle and the axe have their own
+var SIG_ANIM_AS={teslarc:"hex",moonfall:"reap",sawrip:"frenzy"};
+var SIG_ANIM5={
+  wickfire:function(f,p,arm,la,sw,h,bx,by,bz){
+    var k=keyed,ra0=h.ra[0],rz=h.ra[2],s2=h.sr[2],eRest=h.sr[0]+h.ra[0],E,tw;
+    // up overhead (the flame flares), swept round level, then driven forward
+    arm.rotation.x=k(p,[[0,ra0],[.18,-2.95],[.32,-2.75],[.50,-1.45],[.62,-1.5],[.74,-1.95],[.84,-1.6],[1,ra0]]);
+    arm.rotation.z=k(p,[[0,rz],[.18,.25],[.32,.45],[.50,-1.25],[.62,-1.3],[.74,.05],[.84,0],[1,rz]]);
+    E=k(p,[[0,eRest],[.18,-.15],[.32,-.05],[.50,1.6],[.62,1.62],[.74,1.45],[.84,1.6],[1,eRest]]);
+    sw.rotation.z=k(p,[[0,s2],[.32,s2-.3],[.50,s2+.6],[.74,s2],[1,s2]]);
+    arm.position.z=bz+k(p,[[0,0],[.5,.15],[.78,.4],[1,0]]);
+    f.legs[1].rotation.x=k(p,[[0,0],[.70,.3],[.80,-.6],[1,0]]);
+    f.legs[0].rotation.x=k(p,[[0,0],[.70,-.2],[.80,.42],[1,0]]);
+    tw=k(p,[[0,0],[.18,.3],[.32,.55],[.50,-.62],[.62,-.66],[.74,0],[1,0]]);
+    sw.rotation.x=E-arm.rotation.x;
+    if(f.mesh)f.mesh.rotation.y=f.yaw+tw;
+  }
+};
+var SIG_BEAT5={
+  teslarc:function(f,b,i,tip,X,Y,Z,fx,fz){
+    var k,a,G=p4Hex(0x9aff5a);
+    if(!b.fin){
+      for(k=0;k<(QUAL>1?18:9);k++){a=k/9*Math.PI;
+        spark(tip.x,tip.y-k*.1,tip.z,Math.cos(a)*2.6,hr(3,5.5),Math.sin(a)*2.6,G[0],G[1],G[2],hr(.5,.9),hr(.3,.55),-1);}
+      for(k=0;k<2;k++)p4Bolt(tip.x,tip.y,tip.z,tip.x+hr(-1.4,1.4),tip.y+hr(-1.2,.6),tip.z+hr(-1.4,1.4),0xcfffa8,.18,.06);
+      return;
+    }
+    // the strike: bolts off the coil onto the floor in front, a ring burnt in
+    var gx=X+fx*3,gz=Z+fz*3;
+    for(k=0;k<3;k++){var sa=f.yaw+(k-1)*.5,sr=hr(2.4,3.6),px=X+Math.sin(sa)*sr,pz=Z+Math.cos(sa)*sr;
+      p4Bolt(tip.x,tip.y,tip.z,px,Y+.05,pz,k===1?0xeaffd8:0x9aff5a,.42,.2);
+      burst(px,Y+.2,pz,QUAL>1?14:7,7,0x9aff5a,1.1,.3,-6);
+      for(var q=0;q<(QUAL>1?10:5);q++)spark(px,Y+.1,pz,hr(-4,4),hr(2,6),hr(-4,4),.9,1,.7,hr(.25,.45),hr(.2,.45),-12);}
+    p4Bolt(tip.x,tip.y+.2,tip.z,tip.x+hr(-.5,.5),tip.y+5,tip.z+hr(-.5,.5),0xeaffd8,.3,.08);
+    hwDecal(gx,Y+.07,gz,"tesla",0x9aff5a,8.5,1.2,1.2,f.yaw);
+    hwBeam(gx,Y,gz,0x9aff5a,.8,.3);
+    slashRing(gx,Y+.25,gz,0x9aff5a,0,0);slashRing(gx,Y+.25,gz,0xffffff,.06,0);
+    ringBurst(gx,Y+.4,gz,QUAL>1?28:14,10,0xcfffa8,1.1,.45);
+    if(f===player)shakeCam(.16);
+  },
+  moonfall:function(f,b,i,tip,X,Y,Z,fx,fz){
+    var k,a;
+    if(b.fin){
+      // the moon comes up over you, claw marks are torn into the floor all round
+      p4Sprite(X-fx*.4,Y+4.6,Z-fz*.4,p4Tex("moon"),0xfff4d0,3.4,1.1,1.2);
+      hwDecal(X,Y+.07,Z,"crescent",0xdde8ff,7.5,1.1,.6,f.yaw);
+      for(k=0;k<3;k++){a=f.yaw+k*TAU/3+.5;hwDecal(X+Math.sin(a)*2.7,Y+.06,Z+Math.cos(a)*2.7,"claw",0xe8f0ff,2.4,1.0,0,a);}
+      slashRing(X,Y+1.1,Z,0xe8f0ff,0,.05);slashRing(X,Y+1.6,Z,0xffe9a0,.08,-.08);
+      hwBeam(X,Y,Z,0xdde8ff,1.4,.5);
+      var c=QUAL>1?40:20,W=p4Hex(0xe8f0ff),Y2=p4Hex(0xffe9a0);
+      for(k=0;k<c;k++){a=k/c*TAU;var cc=k%3?W:Y2;
+        spark(X+Math.cos(a)*1.9,Y+1.6,Z+Math.sin(a)*1.9,Math.cos(a)*hr(5,9),hr(.5,3),Math.sin(a)*hr(5,9),cc[0],cc[1],cc[2],hr(.6,1.1),hr(.5,.8),-2);}
+      for(k=0;k<(QUAL>1?22:10);k++){a=Math.random()*TAU;var r=hr(.5,2.6);
+        spark(X+Math.cos(a)*r,Y+hr(.2,.8),Z+Math.sin(a)*r,0,hr(1.5,3.5),0,1,.97,.85,hr(.4,.7),hr(1,1.6),-.6);}
+      if(f===player)shakeCam(.14);
+    } else {
+      burst(tip.x,tip.y,tip.z,QUAL>1?14:8,6,0xffe9a0,1.2,.3,-2);
+    }
+  },
+  sawrip:function(f,b,i,tip,X,Y,Z,fx,fz){
+    var k,roll=b.fin?Math.PI/2:(i===0?-.78:.78),T=p4Hex(0x4affd0),B=p4Hex(0xe8dcc0);
+    hwStreak(X+fx*3.0,Y+2.3,Z+fz*3.0,f.yaw,roll,b.fin?6.4:7.6,b.fin?1.5:1.6,b.fin?.45:.5,"froststreak");
+    var st=HW_DEC.last;if(st)st.mesh.material.color.setHex(0x4affd0);
+    // bone chips thrown off the teeth
+    for(k=0;k<(QUAL>1?16:8);k++)spark(tip.x,tip.y,tip.z,hr(-5,5),hr(1,6),hr(-5,5),B[0],B[1],B[2],hr(.25,.5),hr(.4,.7),-14);
+    burst(tip.x,tip.y,tip.z,8,5,0xffffff,1.4,.16,0);
+    if(b.fin){
+      var gx=X+fx*2.5,gz=Z+fz*2.5;
+      hwDecal(gx,Y+.07,gz,"cursedeye",0x4affd0,8,1.3,0,f.yaw);
+      hwBeam(gx,Y,gz,0x4affd0,1.3,.5);
+      slashRing(gx,Y+.25,gz,0x4affd0,0,0);slashRing(gx,Y+.25,gz,0xe8dcc0,.08,0);
+      for(k=0;k<(QUAL>1?30:14);k++){var a=Math.random()*TAU,r=hr(.3,2.2);
+        spark(gx+Math.cos(a)*r,Y+.15,gz+Math.sin(a)*r,Math.cos(a)*hr(1,3),hr(.4,2),Math.sin(a)*hr(1,3),.85,.78,.6,hr(.8,1.4),hr(.7,1.2),1.2);}   // sand
+      ringBurst(gx,Y+.5,gz,QUAL>1?24:12,9,0x4affd0,1.2,.5);
+      if(f===player)shakeCam(.15);
+    }
+  },
+  wickfire:function(f,b,i,tip,X,Y,Z,fx,fz){
+    var k,a,O=p4Hex(0xff7a12),Yl=p4Hex(0xffd84a);
+    if(i===0){
+      // the flame flares as it goes up
+      burst(tip.x,tip.y+.3,tip.z,QUAL>1?22:11,5,0xffb030,1.5,.4,-6);
+      for(k=0;k<(QUAL>1?14:7);k++)spark(tip.x,tip.y+.2,tip.z,hr(-.6,.6),hr(3,6),hr(-.6,.6),1,hr(.5,.85),.15,hr(.6,1),hr(.5,.8),-2);
+      return;
+    }
+    if(!b.fin){
+      // a ring of fire swept round at blade height
+      var c=QUAL>1?36:18;
+      for(k=0;k<c;k++){a=f.yaw+1.6-k/c*3.4;var r=hr(1.8,2.3),cc=k%2?O:Yl;
+        spark(X+Math.sin(a)*r,Y+hr(1.6,2.2),Z+Math.cos(a)*r,Math.cos(a)*hr(-1,1),hr(1,3),-Math.sin(a)*hr(-1,1),cc[0],cc[1],cc[2],hr(.7,1.2),hr(.4,.75),-2.5);}
+      hwStreak(X+fx*2.2,Y+2.0,Z+fz*2.2,f.yaw,.12,8.4,1.8,.5);
+      return;
+    }
+    // the jet: fire driven forward off the end of the candle
+    var n=QUAL>1?44:20;
+    for(k=0;k<n;k++){var sp=hr(7,15),ox=hr(-.35,.35),oy=hr(-.3,.3),cc2=k%3?O:Yl;
+      spark(tip.x,tip.y,tip.z,fx*sp+Math.cos(f.yaw)*ox*sp*.3,oy*sp*.3+hr(0,1.5),fz*sp-Math.sin(f.yaw)*ox*sp*.3,cc2[0],cc2[1],cc2[2],hr(.7,1.3),hr(.25,.5),-3);}
+    for(k=0;k<(QUAL>1?14:6);k++)spark(tip.x+fx*hr(1,3),tip.y+hr(0,.5),tip.z+fz*hr(1,3),hr(-.4,.4),hr(.8,2),hr(-.4,.4),.35,.32,.3,hr(1,1.6),hr(.9,1.4),-.8);   // smoke
+    var gx=X+fx*2.6,gz=Z+fz*2.6;
+    hwDecal(gx,Y+.07,gz,"flamering",0xff7a12,7.5,1.1,1.0,f.yaw);
+    hwBeam(gx,Y,gz,0xff8a1e,1.2,.45);
+    slashRing(X,Y+1.2,Z,0xff7a12,0,.1);
+    ringBurst(tip.x,tip.y,tip.z,QUAL>1?22:12,10,0xffd84a,1.2,.4);
+    if(f===player)shakeCam(.14);
+  }
+};
+var SIG_SFX5={
+  teslarc:function(d){
+    var dd=SIG_SWING.teslarc.dur*1000;
+    tone(120,240,.2,"sawtooth",.05);
+    setTimeout(function(){noiseHit(.12,.2,3800);tone(900,1600,.08,"square",.05);},dd*.25);
+    setTimeout(function(){noiseHit(.45,.5,2400);tone(70,35,.5,"sawtooth",.28);tone(1800,600,.25,"square",.06);
+      setTimeout(function(){noiseHit(.15,.25,5200);},90);},dd*.66);
+  },
+  moonfall:function(d){
+    var dd=SIG_SWING.moonfall.dur*1000;
+    noiseHit(.25,.14,1200);tone(520,1040,.3,"sine",.06);
+    setTimeout(function(){noiseHit(.5,.3,700);tone(1318,1318,.9,"sine",.05);tone(1975,1975,.7,"sine",.035);tone(330,880,.5,"triangle",.05);},dd*.42);
+  },
+  sawrip:function(d){
+    [60,220,400].forEach(function(ms,i){setTimeout(function(){
+      noiseHit(.12,.28,i===2?900:2000);tone(i===2?260:480,i===2?70:180,.12,"sawtooth",.14);tone(160,110,.1,"square",.06);},ms);});
+  },
+  wickfire:function(d){
+    var dd=SIG_SWING.wickfire.dur*1000;
+    setTimeout(function(){noiseHit(.3,.16,1400);tone(200,420,.25,"triangle",.05);},dd*.3);
+    setTimeout(function(){noiseHit(.4,.24,900);},dd*.52);
+    setTimeout(function(){noiseHit(.6,.42,600);tone(90,40,.5,"sawtooth",.22);},dd*.78);
+  }
+};
+SLASH_STYLE.teslarc=SIG_SWING.teslarc.beats[0].st;SWEEP.teslarc=SWEEP.uppercut;
+SLASH_STYLE.moonfall=SIG_SWING.moonfall.beats[0].st;SWEEP.moonfall=SWEEP.spin;
+SLASH_STYLE.sawrip=SIG_SWING.sawrip.beats[0].st;SWEEP.sawrip=SWEEP.slash;
+SLASH_STYLE.wickfire=SIG_SWING.wickfire.beats[1].st;SWEEP.wickfire=SWEEP.slash;
+/* ==== 4.4 END ==== */
 
 
 function useAbility(f,remoteCast){
