@@ -1514,7 +1514,7 @@ button.chip:active{transform:translateY(2px)}
     <div class="notes">
       <div class="note new">
         <h5>HALLOWEEN PASS: LEVELS 51&ndash;100</h5>
-        <p>Fifty more levels, and every one costs more than the last. Four new skins, each with its own blade: <b>The Monster</b> + Tesla Coil (60), <b>Werewolf</b> + Silver Moon (70), <b>Mummy</b> + Bone Saw (80), <b>Pumpkin King</b> + The Wick (90). New emotes at 55, 75 and 85, and at <b>level 100: THE WITCHING HOUR</b>. The pass now runs <b>through Halloween</b>. Yen rewards are now 100 a level at most.</p>
+        <p>Fifty more levels, and every one costs more than the last. Four new skins, each with its own blade: <b>The Monster</b> + Tesla Coil (60), <b>Werewolf</b> + Silver Moon (70), <b>Mummy</b> + Bone Saw (80), <b>The Count</b> + The Wick (90). New emotes at 55, 75 and 85, and at <b>level 100: THE WITCHING HOUR</b>. The pass now runs <b>through Halloween</b>. Yen rewards are now 100 a level at most.</p>
       </div>
       <div class="note new">
         <h5>GREY'S 14 INCHES, FIXED</h5>
@@ -2095,7 +2095,7 @@ var SWORDS=[
  {id:"bonesaw",name:"Bone Saw",rarity:"halloween",pass:80,price:-1,blade:0xe8dcc0,hilt:0x2a2014,glow:0x4affd0,shape:"bonesaw",hold:"one",swing:"overhead",idle:"none",
   desc:"A blade of old bone with teeth down the front and a spine down the back. Glyphs burn turquoise in it, and the eye in the pommel is open."},
  {id:"wick",name:"The Wick",rarity:"halloween",pass:90,price:-1,blade:0xf0dcb8,hilt:0xe0b040,glow:0xffa030,shape:"wick",hold:"one",swing:"slash",idle:"ember",
-  desc:"A candle as long as a sword in a gold candlestick, wax running down it. The flame on the end has never once gone out."},
+  desc:"A candle as long as a sword in a gold candlestick, taken from the Count's own castle. Wax runs down it, and the flame on the end has never once gone out."},
  // ULTRA, and only ever from its own shrine beside Gnorman, for one week (see EVENT_SHOPS)
  {id:"wendigo",name:"Wendigo Katana",rarity:"ultra",price:-1,ultra:true,event:"wendigo",blade:0xe8eaf0,hilt:0x2a1a0a,glow:0x4ab8ff,shape:"wendigo",hold:"hip",swing:"wendigo",idle:"breathe",
   desc:"A blade that grew, not forged. Roots creep up from the grip, and the cracks are where the cold gets in. Sold at its shrine for one week only, then never again."},
@@ -2412,8 +2412,8 @@ var SKINS=[
   desc:"Moon-yellow eyes, a jaw that hangs open, a mane, claws, a tail, and what is left of a shirt."},
  {id:"mummy",name:"Mummy",rarity:"halloween",pass:80,style:"mummy",price:-1,body:0xd8c8a0,limb:0xc8b890,skin:0xd8c8a0,glow:0x4affd0,bodyGlow:0x0a2a22,
   desc:"Wrapped head to foot, a gold scarab on the chest, loose ends trailing, and one eye burning through a gap in the bandages."},
- {id:"pumpkinking",name:"Pumpkin King",rarity:"halloween",pass:90,style:"pumpkinking",price:-1,body:0x1c1024,limb:0x120a16,skin:0xff7a12,glow:0xffb030,bodyGlow:0x2a0a00,
-  desc:"A lit jack-o'-lantern under a gold crown, a royal coat, vines at the throat and a long cape lined in fire. The king of Halloween."},
+ {id:"count",name:"The Count",rarity:"halloween",pass:90,style:"count",price:-1,body:0x14101a,limb:0x0e0a12,skin:0xdfe2ec,glow:0xff1a34,bodyGlow:0x2a0008,
+  desc:"Pale as the moon, hair slicked back to a point, red eyes, fangs, and a cape with a collar taller than his head. He only comes out at night."},
  // ---- 4.0 ----
  {id:"blackcat",name:"Black Cat",rarity:"halloween",yen:340,price:-1,style:"blackcat",body:0x141218,limb:0x0a090c,skin:0x1a181e,glow:0x0a0808,
   desc:"Pointed ears, a tail that never stops moving and two gold eyes in the dark. On Gnorman's stall for one week of October, then gone."},
@@ -10226,7 +10226,7 @@ var PASS_TIERS=[
  {c:800},{s:3},{y:100},{c:1000},{emote:"boo"},{c:1100},{y:100},{s:3},{c:1200},{skin:"patchwork",sword:"tesla"},
  {y:100},{c:1300},{s:4},{c:1400},{c:3000},{y:100},{c:1500},{s:4},{c:1600},{skin:"werewolf",sword:"silvermoon"},
  {y:100},{c:1700},{s:4},{c:1800},{emote:"zombie"},{y:100},{c:2000},{s:5},{c:2200},{skin:"mummy",sword:"bonesaw"},
- {y:100},{c:2400},{s:5},{c:2600},{emote:"cauldron"},{y:100},{c:2800},{s:5},{c:3000},{skin:"pumpkinking",sword:"wick"},
+ {y:100},{c:2400},{s:5},{c:2600},{emote:"cauldron"},{y:100},{c:2800},{s:5},{c:3000},{skin:"count",sword:"wick"},
  {y:100},{c:3200},{s:6},{c:3500},{c:7500},{y:100},{c:4000},{s:6},{c:5000},{emote:"witching"}
 ];
 // what a level costs, and the total XP that reaches it
@@ -15104,7 +15104,7 @@ function trickBotSteer(f){
    THE HALLOWEEN PASS, LEVELS 51-100
    Four more skins, each with the blade that goes with it: 60 The Monster and
    the Tesla Coil, 70 the Werewolf and Silver Moon, 80 the Mummy and the Bone
-   Saw, 90 the Pumpkin King and the Wick. Three emotes on the way (55 BOO!,
+   Saw, 90 the Count and the Wick. Three emotes on the way (55 BOO!,
    75 BRAINS..., 85 TOIL & TROUBLE) and, at 100, the Witching Hour.
    ============================================================ */
 var _p2V=null;
@@ -15235,38 +15235,47 @@ SIG_SKIN.mummy=function(f,g,sk,box,glowM,darkM,bodyM){
     var bs=new THREE.Mesh(GEO.box,i===1?w1:w2);bs.scale.set(.1,i===1?.9:.6,.03);bs.position.y=-(i===1?.45:.3);bk.add(bs);loose.push(bk);}
   f.sig={kind:"mummy",loose:loose,glow:glowM};
 };
-// THE PUMPKIN KING: a lit jack-o'-lantern for a head under a gold crown, a
-// royal coat with gold trim, a high collar, vines at the throat and a long
-// cape with a burning orange lining
-SIG_SKIN.pumpkinking=function(f,g,sk,box,glowM,darkM,bodyM){
-  var i,sd,hp=f.headParts||[];
-  for(i=0;i<hp.length;i++)hp[i].visible=false;
-  var gold=new THREE.MeshPhongMaterial({color:0xf0c040,shininess:120,specular:0xfff0c0,emissive:0x4a3000,emissiveIntensity:.45});
-  var cape=new THREE.MeshLambertMaterial({color:0x2c0e3a}),vine=new THREE.MeshLambertMaterial({color:0x2e6a1a}),leaf=new THREE.MeshLambertMaterial({color:0x4a8a24});
-  var lining=new THREE.MeshLambertMaterial({color:0xe8650c,emissive:0x8a2a00,emissiveIntensity:.5});
-  var pk=sigPumpkin(.68);pk.position.set(0,3.1,0);g.add(pk);
-  var cr=new THREE.Group();cr.position.set(0,3.62,0);cr.rotation.z=.08;g.add(cr);
-  var band=new THREE.Mesh(GEO.cyl,gold);band.scale.set(.66,.18,.66);cr.add(band);
-  var gems=[];
-  for(i=0;i<6;i++){var a=i/6*TAU,sp=new THREE.Mesh(GEO.cone,gold);sp.scale.set(.1,.3,.1);sp.position.set(Math.sin(a)*.3,.22,Math.cos(a)*.3);cr.add(sp);
-    var gm=new THREE.Mesh(GEO.sphLo,new THREE.MeshBasicMaterial({color:i%2?0xff7a12:0xb04aff}));gm.scale.setScalar(.13);gm.position.set(Math.sin(a)*.335,.02,Math.cos(a)*.335);cr.add(gm);gems.push(gm);}
-  box(1.0,.46,.08,0,2.86,-.32,cape,[-.38,0,0]);                 // the high collar
-  for(sd=-1;sd<=1;sd+=2)box(.08,.42,.5,sd*.5,2.86,-.1,cape,[0,0,sd*.3]);
-  for(i=0;i<8;i++){var va=i/8*TAU;                               // vines at the throat
-    box(.12,.1,.12,Math.sin(va)*.33,2.6+Math.sin(i*2.3)*.03,Math.cos(va)*.3,i%2?vine:leaf,[0,va,.4]);}
-  for(sd=-1;sd<=1;sd+=2){var lf=new THREE.Mesh(GEO.cone,leaf);lf.scale.set(.14,.28,.05);lf.position.set(sd*.24,2.62,.33);lf.rotation.z=sd*-1.1;g.add(lf);}
-  box(.06,.7,.04,0,2.06,.32,gold);                               // gold down the front
-  for(i=0;i<4;i++){var bt=new THREE.Mesh(GEO.sphLo,gold);bt.scale.setScalar(.075);bt.position.set(.12,2.32-i*.17,.34);g.add(bt);}
-  box(.96,.13,.56,0,1.47,0,gold);                                // belt
+// THE COUNT: pale, hair slicked back to a point, red eyes and fangs, a white
+// shirt under a red waistcoat, a medallion, and a black cape lined in red
+// with a collar that stands up taller than his head
+SIG_SKIN.count=function(f,g,sk,box,glowM,darkM,bodyM){
+  var i,sd;
+  var hair=new THREE.MeshPhongMaterial({color:0x0c0a10,shininess:120,specular:0x8a80a0});
+  var black=new THREE.MeshLambertMaterial({color:0x0e0a12}),red=new THREE.MeshLambertMaterial({color:0x9a0a1e,emissive:0x3a0008,emissiveIntensity:.5});
+  var white=new THREE.MeshLambertMaterial({color:0xf2eee8}),bone=new THREE.MeshLambertMaterial({color:0xffffff});
+  var gold=new THREE.MeshPhongMaterial({color:0xf0c040,shininess:120,specular:0xfff0c0,emissive:0x4a3000,emissiveIntensity:.4});
+  // the hair, slicked back, with a widow's peak
+  box(.76,.15,.76,0,3.36,-.01,hair);
+  box(.76,.46,.2,0,3.12,-.29,hair);
+  for(sd=-1;sd<=1;sd+=2)box(.06,.3,.6,sd*.375,3.2,-.04,hair);
+  box(.24,.24,.04,0,3.3,.355,hair,[0,0,.785]);
   for(sd=-1;sd<=1;sd+=2){
-    box(.42,.14,.62,sd*.64,2.72,0,gold,[0,0,sd*-.25]);           // epaulettes
-    for(i=0;i<4;i++)box(.04,.2,.04,sd*(.48+i*.09),2.56,.27,gold);
+    box(.22,.05,.03,sd*.17,3.11,.375,hair,[0,0,sd*.35]);          // brows, arched hard
+    box(.14,.09,.03,sd*.17,3.0,.375,glowM);                       // red eyes
+    var fg=new THREE.Mesh(GEO.cone,bone);fg.scale.set(.05,.11,.05);fg.position.set(sd*.08,2.66,.36);fg.rotation.x=Math.PI;g.add(fg);   // fangs
+    box(.03,.12,.02,sd*.24,2.82,.355,new THREE.MeshLambertMaterial({color:0xb8bccc}));   // hollow cheeks
   }
-  box(1.32,2.05,.06,0,1.66,-.46,cape,[.12,0,0]);                 // the cape...
-  box(1.26,1.98,.03,0,1.68,-.42,lining,[.12,0,0]);               // ...lined in orange
-  for(i=0;i<6;i++){var hm=new THREE.Mesh(GEO.cone,cape);hm.scale.set(.13,.3,.05);hm.position.set(-.55+i*.22,.52,-.6);hm.rotation.set(.12+Math.PI,0,0);g.add(hm);}
-  for(sd=0;sd<2;sd++){var cu=new THREE.Mesh(GEO.box,gold);cu.scale.set(.33,.1,.33);cu.position.set(0,-1.08,0);f.arms[sd].add(cu);}
-  f.sig={kind:"pumpkinking",pk:pk,gems:gems,glow:glowM};
+  // the collar: two tall panels flaring out behind the head, red inside
+  for(sd=-1;sd<=1;sd+=2){
+    box(.56,1.05,.05,sd*.4,3.08,-.24,black,[-.18,sd*.42,sd*-.32]);
+    box(.5,.98,.03,sd*.39,3.08,-.205,red,[-.18,sd*.42,sd*-.32]);
+  }
+  box(1.26,.24,.7,0,2.66,-.04,black);                             // the cape over the shoulders
+  // shirt, waistcoat, lapels and the medallion
+  box(.3,.62,.03,0,2.18,.36,white);
+  for(sd=-1;sd<=1;sd+=2){box(.17,.52,.035,sd*.2,2.12,.362,red);box(.2,.78,.05,sd*.36,2.12,.34,black,[0,0,sd*.12]);}
+  for(i=0;i<3;i++){var bt=new THREE.Mesh(GEO.sphLo,gold);bt.scale.setScalar(.06);bt.position.set(.2,2.3-i*.15,.385);g.add(bt);}
+  box(.05,.26,.02,-.07,2.5,.375,red,[0,0,.45]);box(.05,.26,.02,.07,2.5,.375,red,[0,0,-.45]);
+  var md=new THREE.Mesh(GEO.cyl,gold);md.scale.set(.2,.04,.2);md.rotation.x=Math.PI/2;md.position.set(0,2.36,.39);g.add(md);
+  var gm=new THREE.Mesh(GEO.sphLo,glowM);gm.scale.setScalar(.09);gm.position.set(0,2.36,.41);g.add(gm);
+  // the cape: hung from the shoulders so it can swing, black with a red lining
+  // and a hem cut into bat-wing points
+  var cape=new THREE.Group();cape.position.set(0,2.72,-.42);g.add(cape);
+  var cb=new THREE.Mesh(GEO.box,black);cb.scale.set(1.34,2.1,.06);cb.position.set(0,-1.05,-.02);cape.add(cb);
+  var cl=new THREE.Mesh(GEO.box,red);cl.scale.set(1.28,2.04,.03);cl.position.set(0,-1.03,.02);cape.add(cl);
+  for(i=0;i<5;i++){var hm=new THREE.Mesh(GEO.cone,black);hm.scale.set(.27,.34,.06);hm.position.set(-.54+i*.27,-2.22,-.02);hm.rotation.x=Math.PI;cape.add(hm);}
+  for(sd=0;sd<2;sd++){var cu=new THREE.Mesh(GEO.box,white);cu.scale.set(.32,.09,.32);cu.position.set(0,-1.1,0);f.arms[sd].add(cu);}
+  f.sig={kind:"count",cape:cape,glow:glowM};
 };
 // how they move: sparks off the bolts, the tail and the jaw, the loose
 // bandages, the candle in the pumpkin and the crown's gems
@@ -15294,11 +15303,12 @@ Object.assign(SIG_TICK4,{
       q.rotation.x=.2+Math.min(.9,sp*.05)+Math.sin(t*3+i*1.3+f.phase)*.18;q.rotation.z=Math.sin(t*2.2+i)*.15;}
     var fl=(t*1.1+f.phase)%2.6<.12?.2:1;s.glow.color.setRGB(.29*fl,1*fl,.82*fl);
   },
-  pumpkinking:function(f,s,dt,t){
-    var fl=.8+.2*Math.sin(t*11+f.phase)*Math.sin(t*6.1);
-    s.pk.userData.face.color.setRGB(1,.72*fl+.1,.22*fl);
-    for(var i=0;i<s.gems.length;i++){var k=.6+.4*Math.max(0,Math.sin(t*2+i*1.05));s.gems[i].scale.setScalar(.13*(.8+.4*k));}
+  count:function(f,s,dt,t){
+    var sp=Math.hypot(f.vel.x,f.vel.z);
+    s.cape.rotation.x=damp(s.cape.rotation.x,.06+Math.min(.65,sp*.045)+Math.sin(t*1.7+f.phase)*.04,6,dt);
+    var gl=.7+.3*Math.sin(t*2.6+f.phase);s.glow.color.setRGB(1,.1*gl,.16*gl);
   }
+
 });
 
 /* ---------------- the four blades ---------------- */
@@ -15397,7 +15407,7 @@ Object.assign(SKIN_FX,{
   patchwork:{c:0x9aff5a,rate:7,vy:[-.2,1.2],g:0,sz:.34,life:.28,r:.7},
   werewolf:{c:0xffe9a0,rate:6,vy:[.1,.8],g:-.6,sz:.4,life:1.1,r:.75},
   mummy:{c:0xd8c8a0,rate:9,vy:[-.4,.3],g:1.2,sz:.42,life:1.0,r:.7},
-  pumpkinking:{c:0xff8a1e,rate:12,vy:[.4,1.5],g:-.9,sz:.48,life:.95,r:.8}
+  count:{c:0xd0102a,rate:9,vy:[-.3,.6],g:.6,sz:.5,life:1.1,r:.8}
 });
 Object.assign(SWORD_ICON,{
   tesla:"<rect x='17' y='29' width='6' height='9' rx='1.5' fill='#141416' stroke='#0b1942' stroke-width='1.4'/><rect x='13' y='26' width='14' height='3.4' rx='1.4' fill='{H}' stroke='#0b1942' stroke-width='1.2'/>"+
@@ -15427,10 +15437,10 @@ Object.assign(SIG_SKIN_ICON,{
     "<rect x='14' y='10' width='12' height='3' fill='#140c06'/><rect x='15' y='10.3' width='3.2' height='2.4' fill='#4affd0'/>"+
     "<path d='M8 22h24l-2 16H10z' fill='#d8c8a0' stroke='#0b1942' stroke-width='1.6'/><path d='M9 25l22-1M9 29l22 1M10 33l20-1' stroke='#a8946a' stroke-width='1.3'/>"+
     "<ellipse cx='20' cy='27' rx='2.6' ry='3.2' fill='#e0b040' stroke='#0b1942' stroke-width='1'/><path d='M15 27l2.4-1.4M25 27l-2.4-1.4' stroke='#4affd0' stroke-width='2'/>",
-  pumpkinking:"<path d='M12 7l2-5 3 3 3-4 3 4 3-3 2 5z' fill='#f0c040' stroke='#0b1942' stroke-width='1.3'/><circle cx='20' cy='4' r='1.2' fill='#b04aff'/>"+
-    "<ellipse cx='20' cy='15' rx='10' ry='8' fill='#ff7a12' stroke='#0b1942' stroke-width='1.6'/><path d='M17 15c0 3 6 3 6 0' stroke='#ff7a12' fill='none'/>"+
-    "<path d='M14 12l2.5 2.5h-4zM26 12l-2.5 2.5h4zM14 18c3 2.4 9 2.4 12 0l-2 .6-2-1.2-2 1.2-2-1.2-2 1.2z' fill='#ffe25a'/>"+
-    "<path d='M5 38l4-15h22l4 15z' fill='#2c0e3a' stroke='#0b1942' stroke-width='1.6'/><path d='M11 23h18l-1 15H12z' fill='#1a1020'/><path d='M20 23v15' stroke='#f0c040' stroke-width='1.6'/>"
+  count:"<path d='M5 23l5-15 8 9zM35 23l-5-15-8 9z' fill='#0e0a12' stroke='#0b1942' stroke-width='1.4'/><path d='M7.5 21l3.4-10.5 5.4 6zM32.5 21l-3.4-10.5-5.4 6z' fill='#9a0a1e'/>"+
+    "<rect x='13' y='6' width='14' height='15' rx='2.5' fill='#dfe2ec' stroke='#0b1942' stroke-width='1.6'/><path d='M13 6h14v4l-4-1-3 4-3-4-4 1z' fill='#0c0a10'/>"+
+    "<rect x='15' y='13' width='3.4' height='2' fill='#ff1a34'/><rect x='21.6' y='13' width='3.4' height='2' fill='#ff1a34'/><path d='M17 18h6M18 18l.6 2 .6-2M21 18l.6 2 .6-2' stroke='#0b1942' stroke-width='.9' fill='#fff'/>"+
+    "<path d='M8 38l3-15h18l3 15z' fill='#0e0a12' stroke='#0b1942' stroke-width='1.6'/><path d='M17 23h6v15h-6z' fill='#f2eee8'/><path d='M15.5 23h1.5v12h-1.5zM23 23h1.5v12H23z' fill='#9a0a1e'/><circle cx='20' cy='25' r='1.7' fill='#f0c040'/>"
 });
 
 /* ---------------- the four emotes ---------------- */
@@ -15609,9 +15619,11 @@ function p2WitchingFx(f){
       // the rune circle burns in and turns
       runeM.opacity=Math.min(.95,t/.5)*(t>HIT?Math.max(0,1-(t-HIT)/.5):1);rune.rotation.z=t*.9;
       rune.scale.setScalar(5.4*(1+.04*Math.sin(t*7)));
-      // the moon, rising behind you, always facing the camera
+      // the moon rises behind you as whoever is watching sees you, the emoter
+      // included (their camera is behind them), and always faces that camera
       var mu=Math.min(1,Math.max(0,(t-.2)/1.2)),me=mu*mu*(3-2*mu);
-      moon.position.set(X-fx*9,Y+3+me*6,Z-fz*9);moon.quaternion.copy(camera.quaternion);
+      var cdx=X-camera.position.x,cdz=Z-camera.position.z,cl=Math.hypot(cdx,cdz)||1;
+      moon.position.set(X+cdx/cl*12,Y+2+me*7,Z+cdz/cl*12);moon.quaternion.copy(camera.quaternion);
       moonM.opacity=me*(t>D-.6?Math.max(0,(D-t)/.6):1);
       // bats: a rising storm round you, then thrown out by the strike
       for(i=0;i<bats.length;i++){var b=bats[i],u=b.userData,st=.35+i*.04;if(t<st)continue;b.visible=true;

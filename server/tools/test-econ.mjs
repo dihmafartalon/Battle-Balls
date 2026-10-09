@@ -212,7 +212,7 @@ console.log("currency split tests passed"); }
   for (let i = 0; i < 50; i++) { r = applyAct(s, { k: "passbuy" }, { now: oct10 }); assert.ok(r.ok, i + JSON.stringify(r)); }
   assert.equal(s.pass.got, 100); assert.equal(s.pass.xp, P.xpAt[100]);
   for (const id of ["boo", "zombie", "cauldron", "witching"]) assert.ok(s.emotes[id], "emote " + id);
-  for (const id of ["patchwork", "werewolf", "mummy", "pumpkinking"]) assert.ok(s.skins[id], "skin " + id);
+  for (const id of ["patchwork", "werewolf", "mummy", "count"]) assert.ok(s.skins[id], "skin " + id);
   for (const id of ["tesla", "silvermoon", "bonesaw", "wick"]) assert.ok(s.swords[id], "sword " + id);
   r = applyAct(s, { k: "passbuy" }, { now: oct10 }); assert.equal(r.ok, false, "nothing past 100");
   // match XP stops at the top too
@@ -220,7 +220,7 @@ console.log("currency split tests passed"); }
   assert.equal(s.pass.xp, xp0);
   // pass items stay out of chests, the Limited stall and selling
   for (let i = 0; i < 300; i++) { const t = ensure({ coins: 1e6 }); for (const tab of ["skin", "sword"]) { const rr = applyAct(t, { k: "chest", tab, grade: "normal", n: 10 }, { now: oct10, rnd: Math.random });
-    for (const w of rr.res.won) assert.ok(!["patchwork", "werewolf", "mummy", "pumpkinking", "tesla", "silvermoon", "bonesaw", "wick"].includes(w.id), w.id); } }
+    for (const w of rr.res.won) assert.ok(!["patchwork", "werewolf", "mummy", "count", "tesla", "silvermoon", "bonesaw", "wick"].includes(w.id), w.id); } }
   r = applyAct(s, { k: "sell", tab: "skin", id: "mummy" }, { now: oct10 }); assert.equal(r.ok, false, "a pass skin cannot be sold");
   console.log("pass 51-100 tests passed");
 }
