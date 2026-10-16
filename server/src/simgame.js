@@ -299,6 +299,11 @@ var SWORDS=[
   desc:"Grey, chunky and humming, with a tube of something green sloshing on top. A block is a shot: the ball goes back through a portal of green light."},
  {id:"nightshift",name:"Nightshift Axe",rarity:"mythic",event:"pack",price:-1,yen:345,blade:0xb01c1c,hilt:0x3a2418,glow:0xff6a1a,shape:"fireaxe",hold:"axe2",swing:"axefire",idle:"ember",size:.92,
   desc:"A fire axe off the wall of a pizzeria that closed for good: chipped red paint, a blackened edge with cracks still burning in it, a brass token on a chain. Held in both hands. From the After Hours Pack."},
+ // ---- 4.5: next week's pack, unreleased for now (gift only) ----
+ {id:"jbobfire",name:"Blue Blaze",rarity:"secret",price:-1,alt:true,blade:0x6ad8ff,hilt:0x0a2a6a,glow:0x2a8aff,shape:"bfire",hold:"orbs",swing:"bfire",idle:"none",size:1,
+  desc:"Jbob's. No blade, just a ball of blue fire in each fist. Every swing throws from the other hand, and the fireball goes flying."},
+ {id:"moakslayer",name:"The Moak Slayer",rarity:"secret",price:-1,blade:0xff86cc,hilt:0xc8327e,glow:0xff3aa8,shape:"moak",hold:"moak",swing:"moakslam",idle:"none",size:1,
+  desc:"Jdog's. A greatsword far too big for anyone, pink from the heart on the pommel to the point. Hauled up over the head and brought straight down."},
  {id:"plaque",name:"Platinum Plaque",rarity:"mythic",event:"pack",price:-1,yen:345,blade:0xe8eef6,hilt:0x141416,glow:0xdfe8ff,shape:"plaque",hold:"two",swing:"hammer",idle:"none",size:.82,
   desc:"A framed platinum record, swung like a bat. Every block lands with a flash of PARRY!"},
  {id:"vampfang",name:"Vamp Fang",rarity:"mythic",event:"pack",secret:true,price:-1,yen:345,blade:0xf2ead8,hilt:0x141016,glow:0xff1a34,shape:"vampfang",hold:"one",swing:"slash",idle:"none",
@@ -581,6 +586,10 @@ var SKINS=[
   desc:"The stage's star bear, left running after closing. A charcoal suit torn open on its metal, a little top hat, a faded bow tie, and one orange eye that will not stay lit. From the After Hours Pack."},
  {id:"fluffles",name:"Fluffles",price:-1,yen:330,rarity:"mythic",event:"pack",style:"fluffles",body:0xc0848e,limb:0x9a626e,skin:0xc0848e,glow:0xff4ad8,
   desc:"A faded pink rabbit with mismatched eyes, a cracked shell, metal where the fabric gave up, and long jointed ears that never quite keep still. From the After Hours Pack."},
+ {id:"jbob",name:"Jbob",price:-1,rarity:"secret",style:"jbob",body:0x5a5c62,limb:0x3a4a6a,skin:0xf2c8aa,glow:0x000000,
+  desc:"Dark hair swept across, chunky black glasses and an easy smile. A grey henley, two buttons done."},
+ {id:"jdog",name:"Jdog",price:-1,rarity:"secret",style:"jdog",body:0x161618,limb:0x3a4a6a,skin:0xf4cdb0,glow:0x000000,
+  desc:"A big shaggy mop down to his glasses, thin silver frames and a grin full of teeth. A black 73 tee."},
  {id:"cartwheel",name:"Playboi Cartwheel",price:-1,yen:330,rarity:"mythic",event:"pack",style:"cartwheel",body:0x141416,limb:0x141416,skin:0x7b4a2d,glow:0x000000,
   desc:"Black dreads, one red eye open and one winking, fangs in the grin. A black long-sleeve with red marks, a silver chain and cross, a red belt with a chain hanging off it."},
  {id:"lilvertigo",name:"Lil Vertigo",price:-1,yen:330,rarity:"mythic",event:"pack",style:"vertigo",body:0x141416,limb:0x141416,skin:0x6e4228,glow:0x000000,
@@ -1267,7 +1276,7 @@ function trailerNudge(){
   if(TRAILER_SHOWN)return;
   // the soonest pack with a trailer that is not over: on sale, or still to come
   var key=null,now=Date.now();
-  for(var k in PACKS){var Q=PACKS[k];if(Q.trailer&&now<Q.to&&(!key||(Q.teaser&&!PACKS[key].teaser)||(!!Q.teaser===!!PACKS[key].teaser&&Q.from<PACKS[key].from)))key=k;}
+  for(var k in PACKS){var Q=PACKS[k];if(Q.trailer&&!Q.off&&now<Q.to&&(!key||(Q.teaser&&!PACKS[key].teaser)||(!!Q.teaser===!!PACKS[key].teaser&&Q.from<PACKS[key].from)))key=k;}
   var P=key&&PACKS[key];
   if(!P||trailerOff(key))return;
   if(packItems(P).every(function(q){return q.own;}))return;   // they have it all already
@@ -5228,7 +5237,7 @@ Fighter.prototype.setSword=function(id){
   if(this.groundRing)disposeTree(this.groundRing);
   this.groundRing=this.sword.userData.fxRing||null;
   if(this.groundRing)this.mesh.add(this.groundRing);   // stays on the floor
-  if(hold==="dual"){
+  if(hold==="dual"||hold==="orbs"){
     this.sword2=buildSword(this.swordDef);
     this.arms[0].add(this.sword2);
   }
@@ -5973,6 +5982,9 @@ var TAUNTS=[
   // the After Hours Pack's: a malfunction, any skin
   {id:"sysfail",e:"\u26a0\ufe0f",txt:"SYSTEM FAILURE",col:"#ff3a3a",pack:"afterhours",fx:"sysfail",rarity:"mythic",dur:5.6,
   desc:"Freeze. The head snaps over, the arms twitch, and down you go in a heap, jerking on the floor like something is trying to get back online -- then you snap upright. From the After Hours Pack."},
+  // next week's pack (unreleased for now): charge up until your hair goes gold
+  {id:"powersurge",e:"\u26a1",txt:"POWER SURGE",col:"#ffd83a",pack:"jays",fx:"powersurge",rarity:"secret",dur:4.4,
+  desc:"Fists clenched, charge up. A gold aura, lightning, the floor lifting round you, until your hair stands up gold and it all goes off."},
   {id:"boo",e:"\ud83d\udc7b",txt:"BOO!",col:"#e8f4ff",pass:55,fx:"boo",rarity:"halloween",
   desc:"A sheet ghost rises over your shoulder and lunges at whoever is looking. From the Halloween Pass, level 55."},
   {id:"zombie",e:"\ud83e\udddf",txt:"BRAINS...",col:"#8aff6a",pass:75,fx:"zombie",rarity:"halloween",
@@ -6293,7 +6305,7 @@ function bodyGap(f,x,y,z){
 }
 function touching(b,f){return bodyGap(f,b.pos.x,b.pos.y,b.pos.z)<=BALL_R;}
 // Dev2 BOTH: each press is the gun or the knife, in turn -- every local press goes through here
-function phStep(f){if(f&&f.swordDef&&f.swordDef.phantom==="both"){f.phAnim=f.phAlt|0;f.phAlt=f.phAnim^1;}}
+function phStep(f){if(f&&f.swordDef&&(f.swordDef.phantom==="both"||f.swordDef.alt)){f.phAnim=f.phAlt|0;f.phAlt=f.phAnim^1;}}
 // raise a block, if the rules allow one right now
 function pressBlock(f){
   if(!f||!f.alive)return false;
@@ -14817,10 +14829,486 @@ P2_EMOTE_POSE.inspect=function(f,a,R,L,g,set){
 var PACK_LOOK={
   interdim:{metal:0x2a2e34,trim:0x9aa2ac,accent:0x6bff3a,strip:0x4cff1a,bg:"rgba(6,18,8,.9)",stroke:"#041004",title:"#e8ffe0",sub:"#9aff7a",italic:false,weapon:"portalgun",wscale:.9,cls:"portal",spark:[.5,1,.4]},
   rap:{metal:0x141016,trim:0xc8ccd4,accent:0xff1a34,strip:0xff1a34,bg:"rgba(16,6,10,.92)",stroke:"#120408",title:"#ffffff",sub:"#ff6a7a",italic:true,weapon:"plaque",wscale:.7,cls:"rap",spark:[1,.1,.2],spot:0x5a0010},
-  afterhours:{metal:0x1a1614,trim:0x6a5a4a,accent:0xff7a12,strip:0xff5a12,bg:"rgba(14,8,6,.93)",stroke:"#0a0402",title:"#ffe8d0",sub:"#ff9a4a",italic:true,weapon:"nightshift",wscale:.62,cls:"afterhours",spark:[1,.5,.1],spot:0x3a1404}
+  afterhours:{metal:0x1a1614,trim:0x6a5a4a,accent:0xff7a12,strip:0xff5a12,bg:"rgba(14,8,6,.93)",stroke:"#0a0402",title:"#ffe8d0",sub:"#ff9a4a",italic:true,weapon:"nightshift",wscale:.62,cls:"afterhours",spark:[1,.5,.1],spot:0x3a1404},
+  jays:{metal:0x16181e,trim:0xff86cc,accent:0x4ac0ff,strip:0xff4ab8,bg:"rgba(6,10,20,.92)",stroke:"#040814",title:"#ffffff",sub:"#8adcff",italic:true,weapon:"moakslayer",wscale:.42,cls:"jays",spark:[.3,.7,1],spot:0x0a1a3a}
 };
 function packLook(key){return PACK_LOOK[key]||PACK_LOOK.interdim;}
 /* ==== 4.4 END ==== */
+/* ==== 4.5 BEGIN ==== */
+/* ---------------- JBOB AND JDOG ----------------
+   Two real people, drawn over the standard body so every pose still drives
+   them: a plain shirt over the armour, bare forearms, their own hair, glasses
+   and faces. Unreleased for now: only ever a gift. */
+// glasses over the eyes. thick: chunky black rectangles; thin: a fine top bar
+// with barely-there lower rims (semi-rimless)
+function jbGlasses(box,frame,thick,lens){
+  var y=3.0,z=.38;
+  for(var sd=-1;sd<=1;sd+=2){
+    var x=sd*.175,w=thick?.25:.24,h=thick?.19:.15,t=thick?.05:.02,tb=thick?t:.026,lo=thick?t:.01;
+    box(w,tb,.035,x,y+h/2,z,frame);box(w,lo,.03,x,y-h/2,z,frame);
+    box(t,h,.03,x-w/2,y,z,frame);box(t,h,.03,x+w/2,y,z,frame);
+    if(lens)box(w-.02,h-.02,.005,x,y,z+.012,lens);
+    box(t*.8,t*.8,.4,sd*.37,y+.05,.18,frame);                            // the arm back to the ear
+  }
+  box(.1,thick?.045:.016,.03,0,y+.04,z,frame);                           // bridge
+}
+// a plain shirt over the armoured base: smooth torso, short sleeves, bare
+// forearms, a crew collar
+function jbTee(f,box,bodyM,collarM){
+  box(1.04,.9,.72,0,2.16,0,bodyM);box(.94,.5,.6,0,1.72,0,bodyM);
+  for(var sd=-1;sd<=1;sd+=2)box(.3,.34,.62,sd*.6,2.42,0,bodyM);
+  box(.66,.08,.62,0,2.62,0,bodyM);                                       // shoulders to the neck
+  box(.4,.07,.05,0,2.6,.33,collarM);                                     // the collar's front edge
+  for(sd=-1;sd<=1;sd+=2)box(.08,.07,.05,sd*.22,2.63,.31,collarM,[0,0,sd*.5]);
+  for(var i=0;i<2;i++){var A=f.arms[i];
+    var sl=new THREE.Mesh(GEO.box,bodyM);sl.scale.set(.37,.42,.37);sl.position.y=-.22;A.add(sl);
+    var hm=new THREE.Mesh(GEO.box,collarM);hm.scale.set(.38,.04,.38);hm.position.y=-.43;A.add(hm);
+    var fa=new THREE.Mesh(GEO.box,f.mSkin);fa.scale.set(.31,.8,.31);fa.position.y=-.84;A.add(fa);}
+}
+// the base head's brow band and temples are in the limb colour: skin over them,
+// then a nose
+function jbNose(f,box){
+  box(.735,.1,.1,0,3.1,.336,f.mSkin);for(var sd=-1;sd<=1;sd+=2)box(.07,.28,.44,sd*.365,3.02,0,f.mSkin);
+  box(.08,.12,.06,0,2.88,.375,f.mSkin);box(.1,.03,.04,0,2.82,.385,f.mSkin);
+}
+// eyes with whites and an iris, over the base's dark squares; the iris is
+// handed back so an emote can light it
+function jbEyes(box,iris){var w=new THREE.MeshBasicMaterial({color:0xf4f0ea}),ir=new THREE.MeshBasicMaterial({color:iris}),pu=new THREE.MeshBasicMaterial({color:0x0c0806});
+  for(var sd=-1;sd<=1;sd+=2){box(.15,.09,.01,sd*.17,3.0,.383,w);box(.07,.09,.01,sd*.17+sd*.01,3.0,.386,ir);box(.035,.05,.01,sd*.17+sd*.01,3.0,.389,pu);}
+  return ir;}
+// JBOB: dark brown hair, full on top and parted to one side, swept across
+// over the forehead; chunky black glasses; a heather grey henley
+SIG_SKIN.jbob=function(f,g,sk,box,glowM,darkM,bodyM){
+  var hair=new THREE.MeshLambertMaterial({color:0x3e2616}),hair2=new THREE.MeshLambertMaterial({color:0x4e3220}),hair3=new THREE.MeshLambertMaterial({color:0x2e1c10});
+  var frame=new THREE.MeshPhongMaterial({color:0x0c0c0e,shininess:90}),lens=new THREE.MeshPhongMaterial({color:0xeef4ff,transparent:true,opacity:.07,shininess:150});
+  var brow=new THREE.MeshBasicMaterial({color:0x24160c}),lip=new THREE.MeshLambertMaterial({color:0xc4807a});
+  var collar=new THREE.MeshLambertMaterial({color:0x46484e}),btn=new THREE.MeshLambertMaterial({color:0x2a2c30});
+  var H=[];function hb(){var m=box.apply(null,arguments);H.push(m);return m;}
+  // volume on top, higher toward the swept side
+  hb(.78,.18,.78,0,3.36,-.01,hair);hb(.6,.12,.62,.06,3.49,.0,hair2,[0,0,-.08]);
+  hb(.78,.42,.14,0,3.12,-.33,hair3);                                     // the back, short
+  for(var sd=-1;sd<=1;sd+=2)hb(.06,.24,.52,sd*.375,3.14,-.06,hair3);     // the sides, cut short over the ears
+  // the part on his right; the fringe sweeps across and down over his left brow
+  hb(.22,.14,.16,-.24,3.42,.28,hair2,[.2,0,.18]);
+  hb(.34,.14,.14,-.02,3.33,.33,hair,[0,0,-.14]);
+  hb(.3,.15,.13,.2,3.25,.34,hair2,[0,0,-.3]);
+  hb(.14,.1,.1,.32,3.17,.33,hair,[0,0,-.5]);
+  for(sd=-1;sd<=1;sd+=2)box(.18,.045,.02,sd*.175,3.135,.385,brow,[0,0,sd*-.06]);   // full brows
+  var ir=jbEyes(box,0x5a4028);jbGlasses(box,frame,true,lens);
+  jbNose(f,box);
+  box(.18,.03,.02,0,2.72,.36,lip);box(.04,.025,.02,.1,2.73,.36,lip,[0,0,.35]);box(.04,.025,.02,-.1,2.73,.36,lip,[0,0,-.35]);   // a closed, easy smile
+  jbTee(f,box,bodyM,collar);
+  box(.05,.34,.02,0,2.42,.365,collar);                                   // the henley's placket
+  for(var i=0;i<2;i++)box(.045,.045,.02,0,2.5-i*.13,.38,btn);
+  f.sig={kind:"jbob",hair:H,iris:ir,iris0:0x5a4028};
+};
+// JDOG: a big shaggy brown mop, fringe down to the glasses, ends flicking out
+// over the ears; thin semi-rimless glasses; a wide toothy grin; a black tee
+// with a white print
+SIG_SKIN.jdog=function(f,g,sk,box,glowM,darkM,bodyM){
+  var hair=new THREE.MeshLambertMaterial({color:0x4a2e18}),hair2=new THREE.MeshLambertMaterial({color:0x6a4426}),hair3=new THREE.MeshLambertMaterial({color:0x38220f});
+  var frame=new THREE.MeshPhongMaterial({color:0xb8b8c0,shininess:120,specular:0xffffff}),lens=new THREE.MeshPhongMaterial({color:0xeef4ff,transparent:true,opacity:.06,shininess:150});
+  var white=new THREE.MeshLambertMaterial({color:0xf2eee6}),mouth=new THREE.MeshBasicMaterial({color:0x3a1212}),brow=new THREE.MeshBasicMaterial({color:0x2e1c0e});
+  var collar=new THREE.MeshLambertMaterial({color:0x26262a});
+  var H=[];function hb(){var m=box.apply(null,arguments);H.push(m);return m;}
+  // the mop: a wide dome, with messy chunks on top
+  hb(.9,.3,.88,0,3.38,-.01,hair);
+  [[-.2,3.56,.1,.3],[.12,3.58,-.05,-.25],[.28,3.52,.12,.4],[-.3,3.5,-.15,-.3],[0,3.6,.2,.15]].forEach(function(q,k){
+    hb(.32,.14,.3,q[0],q[1],q[2],k%2?hair2:hair,[q[3]*.5,q[3],q[3]*.4]);});
+  hb(.9,.7,.2,0,3.04,-.37,hair3);                                        // down the back to the collar
+  for(var sd=-1;sd<=1;sd+=2){
+    hb(.16,.6,.76,sd*.41,3.08,-.02,hair);                                // over the ears
+    hb(.16,.2,.22,sd*.47,2.8,.12,hair2,[0,0,sd*.45]);                    // the ends flick out by the cheeks
+    hb(.14,.16,.2,sd*.46,2.86,-.2,hair3,[0,0,sd*.35]);
+  }
+  // the fringe: thick uneven strands right down to the top of the glasses,
+  // splitting a little off-centre
+  var fx=[-.31,-.19,-.08,.04,.15,.27,.34],fl=[.32,.36,.3,.2,.34,.3,.24];
+  for(var i=0;i<fx.length;i++)hb(.13,fl[i],.12,fx[i],3.36-fl[i]/2+.05,.37,i%2?hair2:hair,[0,0,(i-3)*.06+(i===3?.2:0)]);
+  for(sd=-1;sd<=1;sd+=2)box(.15,.03,.02,sd*.175,3.12,.39,brow);
+  var ir=jbEyes(box,0x3a2a1c);jbGlasses(box,frame,false,lens);
+  jbNose(f,box);
+  // the grin: wide, open, a row of teeth
+  box(.28,.09,.02,0,2.735,.36,mouth);box(.25,.045,.02,0,2.758,.366,white);
+  var lipM=new THREE.MeshLambertMaterial({color:0xd08c80});box(.3,.022,.02,0,2.688,.362,lipM);
+  for(sd=-1;sd<=1;sd+=2)box(.06,.03,.02,sd*.155,2.768,.362,mouth,[0,0,sd*-.5]);
+  jbTee(f,box,bodyM,collar);
+  // the white print, running off the bottom of the shirt
+  var pc=cvs(128,64),px=pc.getContext("2d");px.fillStyle="#f2eee6";px.font="900 44px Arial Black, Arial";px.textAlign="center";px.fillText("73",64,46);
+  px.fillRect(10,52,108,5);
+  var pm=new THREE.Mesh(GEO.plane,new THREE.MeshLambertMaterial({map:mkTex(pc),transparent:true}));pm.scale.set(.56,.28,1);pm.position.set(-.05,1.86,.361);g.add(pm);
+  f.sig={kind:"jdog",hair:H,iris:ir,iris0:0x3a2a1c};
+};
+Object.assign(SIG_SKIN_ICON,{
+  jbob:"<path d='M10 12c0-6 4-9 10-9s10 3 10 8l-1 3c-3-3-8-4-14-3-2 0-4 1-5 2z' fill='#3e2616' stroke='#0b1942' stroke-width='1.3'/><path d='M12 9c4-3 11-3 16 1' stroke='#4e3220' stroke-width='2' fill='none'/>"+
+    "<rect x='10' y='10' width='20' height='15' rx='4' fill='#f2c8aa' stroke='#0b1942' stroke-width='1.6'/><path d='M10 12c3-2 10-3 18-1l2 3c-4-2-12-3-20 0z' fill='#3e2616'/>"+
+    "<rect x='11.5' y='14.5' width='7.5' height='5.5' rx='1' fill='#fff' stroke='#0c0c0e' stroke-width='1.8'/><rect x='21' y='14.5' width='7.5' height='5.5' rx='1' fill='#fff' stroke='#0c0c0e' stroke-width='1.8'/><path d='M19 16.5h2' stroke='#0c0c0e' stroke-width='1.6'/>"+
+    "<circle cx='15.5' cy='17.3' r='1.3' fill='#5a4028'/><circle cx='24.7' cy='17.3' r='1.3' fill='#5a4028'/><path d='M17 22.5q3 1.6 6 0' stroke='#a8605a' stroke-width='1.3' fill='none'/>"+
+    "<path d='M6 38l2-12h24l2 12z' fill='#5a5c62' stroke='#0b1942' stroke-width='1.6'/><path d='M20 26v8' stroke='#46484e' stroke-width='1.6'/><circle cx='20' cy='28.5' r='.9' fill='#2a2c30'/><circle cx='20' cy='31.5' r='.9' fill='#2a2c30'/>",
+  jdog:"<path d='M8 16c-1-9 4-13 12-13s13 4 12 13l-1 6-2-3-1-7c-5 1-11 1-16 0l-1 7-2 3z' fill='#4a2e18' stroke='#0b1942' stroke-width='1.3'/>"+
+    "<rect x='10.5' y='10' width='19' height='15' rx='4' fill='#f4cdb0' stroke='#0b1942' stroke-width='1.6'/><path d='M10 9.5h20v5l-2-1.5-2 2-2-2.5-2 2-2-2-2 2-2-2.5-2 2-2-1.5z' fill='#6a4426'/>"+
+    "<rect x='12' y='15.5' width='7' height='4.5' rx='1' fill='#fff' stroke='#b8b8c0' stroke-width='1'/><rect x='21' y='15.5' width='7' height='4.5' rx='1' fill='#fff' stroke='#b8b8c0' stroke-width='1'/>"+
+    "<circle cx='15.5' cy='17.8' r='1.2' fill='#3a2a1c'/><circle cx='24.5' cy='17.8' r='1.2' fill='#3a2a1c'/><path d='M15 21.5h10q-1 3-5 3t-5-3z' fill='#3a1212'/><path d='M15.6 21.6h8.8v1.2h-8.8z' fill='#fff'/>"+
+    "<path d='M6 38l2-12h24l2 12z' fill='#161618' stroke='#0b1942' stroke-width='1.6'/><text x='20' y='35' text-anchor='middle' font-size='7' font-weight='900' font-family='Arial Black,Arial' fill='#f2eee6'>73</text>"
+});
+
+/* ---------------- BLUE BLAZE: Jbob's fireballs ----------------
+   No blade: a ball of blue fire in each fist. Every swing throws from the
+   other hand, in turn (the same alternation as Dev2 BOTH, so everyone in the
+   room sees the same hand), and the fireball flies off ahead of you. All of
+   it is cosmetic: the parry is the parry it always was. */
+function jbAdd(c,o){return new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false});}
+SIG_SHAPE.bfire=function(g,seg,B,H,G){
+  var core=new THREE.Mesh(GEO.sphLo,new THREE.MeshBasicMaterial({color:0xeaf8ff,toneMapped:false}));core.scale.setScalar(.36);core.userData.core=true;g.add(core);
+  var mid=new THREE.Mesh(GEO.sphLo,jbAdd(0x4ac0ff,.75));mid.scale.setScalar(.6);mid.userData.aura=true;g.add(mid);
+  var out=new THREE.Mesh(GEO.sphLo,jbAdd(0x1a5aff,.35));out.scale.setScalar(.9);out.userData.aura=true;g.add(out);
+  var fl=new THREE.Group();g.add(fl);var T=[];
+  for(var i=0;i<8;i++){var c=new THREE.Mesh(GEO.cone,jbAdd(i===7?0x8adcff:i%2?0x1a6aff:0x3aa8ff,i===7?.5:.42));
+    c.userData.a=i/7*TAU;c.userData.ph=i*1.93;c.userData.top=i===7;c.userData.aura=true;fl.add(c);T.push(c);}
+  g.userData.bfire={mid:mid,out:out,fl:fl,T:T};
+  // the flames lick upward in the world whichever way the fist is turned
+  core.onBeforeRender=function(){jbFlicker(g);};jbFlicker(g);
+  return .05;
+};
+var _jbQ=new THREE.Quaternion();
+function jbFlicker(g){
+  var B=g.userData.bfire,t=performance.now()/1000,ph=(g.id%17)*.37,i;
+  g.getWorldQuaternion(_jbQ);B.fl.quaternion.copy(_jbQ.invert());
+  B.mid.scale.setScalar(.6+.06*Math.sin(t*17+ph));
+  B.out.scale.setScalar(.9+.1*Math.sin(t*9.3+ph*2));
+  for(i=0;i<B.T.length;i++){var c=B.T[i],u=c.userData,h;
+    if(u.top){h=.85+.3*Math.sin(t*13+ph);c.scale.set(.34,h,.34);c.position.set(0,.3+h*.42,0);continue;}
+    var a=u.a+t*1.6;h=.4+.32*(.5+.5*Math.sin(t*(10+i)+ph+u.ph));
+    c.scale.set(.22,h,.22);c.position.set(Math.cos(a)*.24,.12+h*.42,Math.sin(a)*.24);c.rotation.set(Math.sin(a)*.35,0,-Math.cos(a)*.35);}
+}
+HOLD.orbs={sp:[0,-1.46,.1],sr:[0,0,0],ra:[-0.9,0,0.26],la:[-0.9,0,-0.26]};
+IN_HAND.jbobfire=1;OWN_GRIP.bfire=1;
+FXD.bfirefx={rate:26,c1:0x3aa8ff,c2:0xcfeeff,vy:[.8,2.0],sp:.25,g:-.4,sz:.5,life:.6,along:0,sheath:0,motes:0,ring:0x2a7aff};
+SWORD_FX.jbobfire="bfirefx";
+SWORD_ICON.bfire="<circle cx='12' cy='26' r='7' fill='#4ac0ff' stroke='#0b1942' stroke-width='1.4'/><circle cx='12' cy='26' r='3.6' fill='#eaf8ff'/><path d='M6 23q2-9 6-15 1 6 4 8 2-4 1-8 4 5 3 13' fill='#3aa0ff' opacity='.85'/>"+
+  "<circle cx='29' cy='17' r='6' fill='#4ac0ff' stroke='#0b1942' stroke-width='1.4'/><circle cx='29' cy='17' r='3' fill='#eaf8ff'/><path d='M24 14q2-8 5-12 1 5 3 6 1-3 1-6 3 5 2 11' fill='#3aa0ff' opacity='.85'/>"+
+  "<path d='M35 22l4 2M34 26l4 4M19 31l4 4' stroke='#8adcff' stroke-width='1.6' stroke-linecap='round'/>";
+// the left fist's fire flickers and sheds sparks like the right one's
+var _jbIdle=Fighter.prototype.idleWeapon;
+Fighter.prototype.idleWeapon=function(dt,t){
+  _jbIdle.call(this,dt,t);
+  if(this.sword2&&this.sword2.userData.bfire&&QUAL>0&&Math.random()<dt*(this===player?22:6)){
+    var p=this.sword2.getWorldPosition(_bladeV);
+    spark(p.x+hr(-.15,.15),p.y+hr(0,.2),p.z+hr(-.15,.15),hr(-.25,.25),hr(.8,2),hr(-.25,.25),.3,.68,1,hr(.35,.55),hr(.4,.6),-.4);
+  }
+};
+// the hand that threw is the one the swing's effects come out of
+var _jbPoint=Fighter.prototype.bladePoint;
+Fighter.prototype.bladePoint=function(along){
+  if(this.swordDef&&this.swordDef.alt&&this.sword2&&(this.phAnim|0)===1&&this.mesh){
+    var s=this.sword;this.sword=this.sword2;var r=_jbPoint.call(this,along);this.sword=s;return r;}
+  return _jbPoint.call(this,along);
+};
+SIG_SWING.bfire={dur:.4,col:0x3aa8ff,beats:[{w:.3,shot:true,fin:true}]};
+SWEEP.bfire=SWEEP.slash;
+// a jab from the shoulder, one motion and one step: the throwing hand snaps
+// back, punches out and comes home, the body turns into it, the other fist
+// stays up at guard
+SIG_ANIM5.bfire=function(f,p,arm,la,sw,h,bx,by,bz){
+  var k=keyed,left=(f.phAnim|0)===1,A=left?la:arm,O=left?arm:la,H=left?h.la:h.ra,HO=left?h.ra:h.la,s=left?-1:1,tw;
+  var a0=A.userData,lx=a0.baseX||0,ly=a0.baseY||2.42,lz=a0.baseZ||0;
+  A.rotation.x=k(p,[[0,H[0]],[.12,.15],[.3,-1.58],[1,H[0]]]);
+  A.rotation.z=k(p,[[0,H[2]],[.12,H[2]+s*.25],[.3,-s*.1],[1,H[2]]]);
+  A.position.set(lx,ly,lz+k(p,[[0,0],[.12,-.14],[.3,.3],[1,0]]));
+  O.rotation.x=HO[0]-.15*Math.sin(Math.PI*clamp(p/.6,0,1));O.rotation.z=HO[2];
+  tw=k(p,[[0,0],[.12,.32],[.3,-.42],[1,0]])*s;
+  f.legs[left?0:1].rotation.x=k(p,[[0,0],[.3,-.38],[1,0]]);
+  f.legs[left?1:0].rotation.x=k(p,[[0,0],[.3,.26],[1,0]]);
+  if(f.mesh)f.mesh.rotation.y=f.yaw+tw;
+};
+SIG_BEAT5.bfire=function(f,b,i,tip,X,Y,Z,fx,fz){
+  // a flash off the knuckles, and away it goes
+  burst(tip.x,tip.y,tip.z,QUAL>1?16:8,6,0xcfeeff,.9,.22,0);
+  jbShot(f,tip);
+};
+SIG_SFX5.bfire=function(d){
+  try{noiseHit(.22,.22,1400);tone(320,90,.22,"sawtooth",.06);tone(900,1800,.12,"sine",.04);}catch(e){}
+};
+// the fireball: a white-hot core in blue fire with a comet tail, shedding
+// sparks behind it; it bursts at the end of its run
+function jbShot(f,p){
+  if(typeof scene==="undefined"||!scene)return;
+  var fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),g=new THREE.Group(),M=[];
+  function mk(c,o,s){var m=new THREE.Mesh(GEO.sphLo,jbAdd(c,o));m.scale.setScalar(s);m.frustumCulled=false;g.add(m);M.push(m);return m;}
+  mk(0xeaf8ff,1,.5);mk(0x4ac0ff,.75,.9);var o=mk(0x1a5aff,.38,1.4);
+  var tl=mk(0x3aa0ff,.42,1);tl.scale.set(.75,.75,3.2);tl.position.z=-1.5;
+  var tl2=mk(0x8adcff,.35,1);tl2.scale.set(.4,.4,2.2);tl2.position.z=-1.0;
+  g.position.set(p.x,p.y,p.z);g.rotation.y=f.yaw;scene.add(g);
+  var t=0,L=.55,sp=34,Yg=f.y;
+  V4FX.push({tick:function(dt){t+=dt;
+      var gp=g.position;
+      if(t>=L||gp.y<Yg+.3){
+        burst(gp.x,gp.y,gp.z,QUAL>1?26:12,9,0x4ac0ff,1.2,.4,-3);
+        ringBurst(gp.x,gp.y,gp.z,QUAL>1?14:8,7,0xcfeeff,.9,.3);
+        if(QUAL>1)for(var k2=0;k2<10;k2++)spark(gp.x,gp.y,gp.z,hr(-4,4),hr(1,5),hr(-4,4),.5,.85,1,hr(.4,.7),hr(.5,.9),-5);
+        try{if(f===player||(player&&dist2(f.pos.x,f.pos.z,player.pos.x,player.pos.z)<30*30)){noiseHit(.18,.16,900);tone(200,70,.2,"sine",.08);}}catch(e){}
+        return false;}
+      gp.x+=fx*sp*dt;gp.z+=fz*sp*dt;gp.y-=dt*.6;
+      o.scale.setScalar(1.4+.18*Math.sin(t*44));
+      if(QUAL>0)for(var k=0;k<(QUAL>1?3:1);k++)
+        spark(gp.x-fx*hr(.2,1.2)+hr(-.25,.25),gp.y+hr(-.25,.3),gp.z-fz*hr(.2,1.2)+hr(-.25,.25),-fx*hr(.5,2)+hr(-.4,.4),hr(.2,1.4),-fz*hr(.5,2)+hr(-.4,.4),
+          k%2?.8:.25,k%2?.95:.65,1,hr(.45,.8),hr(.3,.5),-.5);
+      return true;},
+    done:function(){if(g.parent)g.parent.remove(g);M.forEach(function(m){m.material.dispose();});}});
+}
+
+/* ---------------- THE MOAK SLAYER: Jdog's ----------------
+   A greatsword far too big for anyone: a broad pink blade with pale pink
+   edges, a glowing fuller with its name cut down it, a swept guard, a long
+   two-hand grip and a heart for a pommel. Everything about it is pink. Held
+   in both hands; swung up over the head and brought straight down. */
+function jbHeart(s){
+  var h=new THREE.Shape();
+  h.moveTo(0,-.5*s);h.bezierCurveTo(-.15*s,-.32*s,-.55*s,-.12*s,-.55*s,.15*s);
+  h.bezierCurveTo(-.55*s,.42*s,-.25*s,.55*s,0,.3*s);
+  h.bezierCurveTo(.25*s,.55*s,.55*s,.42*s,.55*s,.15*s);
+  h.bezierCurveTo(.55*s,-.12*s,.15*s,-.32*s,0,-.5*s);
+  return h;
+}
+SIG_SHAPE.moak=function(g,seg,B,H,G){
+  var i,sd;
+  var P=function(c,sh,em,ei){return new THREE.MeshPhongMaterial({color:c,shininess:sh,specular:0xffe0f0,emissive:em||0,emissiveIntensity:ei||0});};
+  var pale=P(0xffc4e6,130,0xff8ad0,.22),hot=P(0xff3a9a,70,0xff1a7a,.5),deep=P(0xc8327e,40),gem=P(0xff1a8a,150,0xff2a9a,.8);
+  var wA=new THREE.MeshLambertMaterial({color:0xff78c0}),wB=new THREE.MeshLambertMaterial({color:0xb82a70});
+  B.color.setHex(0xff86cc);B.emissive.setHex(0xff3aa8);B.emissiveIntensity=.2;B.shininess=120;
+  // the grip: long enough for both hands, wrapped
+  var gp=new THREE.Mesh(GEO.cyl8,deep);gp.scale.set(.24,1.75,.24);gp.position.y=.3;g.add(gp);
+  for(i=0;i<9;i++){var w=new THREE.Mesh(GEO.box,i%2?wA:wB);w.scale.set(.28,.1,.28);w.position.y=-.45+i*.17;w.rotation.set(0,i*.55,i%2?.22:-.22);g.add(w);}
+  // the heart pommel, a ring round its neck
+  var hg=new THREE.ExtrudeGeometry(jbHeart(.7),{depth:.16,bevelEnabled:true,bevelThickness:.04,bevelSize:.04,bevelSegments:2,curveSegments:10});hg.translate(0,0,-.08);
+  var hp=new THREE.Mesh(hg,hot);hp.position.y=-.82;g.add(hp);
+  var nr=new THREE.Mesh(GEO.cyl8,pale);nr.scale.set(.32,.08,.32);nr.position.y=-.52;g.add(nr);
+  // the guard: a wide bar swept up into wings, a gem in the middle
+  var gd=new THREE.Mesh(GEO.box,hot);gd.scale.set(1.7,.26,.38);gd.position.y=1.3;g.add(gd);
+  for(sd=-1;sd<=1;sd+=2){
+    var wg=new THREE.Mesh(GEO.box,hot);wg.scale.set(.62,.22,.34);wg.position.set(sd*1.02,1.44,0);wg.rotation.z=sd*.55;g.add(wg);
+    var wt=new THREE.Mesh(GEO.cone,pale);wt.scale.set(.26,.5,.26);wt.position.set(sd*1.32,1.74,0);wt.rotation.z=-sd*.55;g.add(wt);
+    var sg=new THREE.Mesh(GEO.sphLo,gem);sg.scale.setScalar(.16);sg.position.set(sd*.62,1.3,sd*0+.2);g.add(sg);
+  }
+  var hc=new THREE.ExtrudeGeometry(jbHeart(.42),{depth:.1,bevelEnabled:true,bevelThickness:.03,bevelSize:.03,bevelSegments:1,curveSegments:8});
+  for(sd=-1;sd<=1;sd+=2){var hm=new THREE.Mesh(hc,gem);hm.position.set(0,1.3,sd*.2);if(sd<0)hm.rotation.y=Math.PI;g.add(hm);}
+  // the blade: broad and long, on a paler edge that shows round it as a rim
+  var Y0=1.42,Y1=5.6,Y2=7.0;
+  var es=new THREE.Shape();es.moveTo(-.66,Y0);es.lineTo(-.72,Y1);es.lineTo(0,Y2+.18);es.lineTo(.72,Y1);es.lineTo(.66,Y0);es.lineTo(-.66,Y0);
+  var eg=new THREE.ExtrudeGeometry(es,{depth:.08,bevelEnabled:false});eg.translate(0,0,-.04);g.add(new THREE.Mesh(eg,pale));
+  var bs=new THREE.Shape();bs.moveTo(-.54,Y0);bs.lineTo(-.58,Y1);bs.lineTo(0,Y2);bs.lineTo(.58,Y1);bs.lineTo(.54,Y0);bs.lineTo(-.54,Y0);
+  var bg=new THREE.ExtrudeGeometry(bs,{depth:.16,bevelEnabled:true,bevelThickness:.03,bevelSize:.02,bevelSegments:1});bg.translate(0,0,-.08);
+  var bl=new THREE.Mesh(bg,B);bl.userData.core=true;bl.castShadow=QUAL>1;g.add(bl);
+  // the fuller, glowing, with the name cut down it on both faces
+  var fu=new THREE.Mesh(GEO.box,new THREE.MeshBasicMaterial({color:0xff4ab8,toneMapped:false}));fu.scale.set(.3,3.7,.26);fu.position.y=3.55;g.add(fu);
+  var c=cvs(64,512),x=c.getContext("2d");x.translate(32,256);x.rotate(-Math.PI/2);
+  x.fillStyle="#fff4fb";x.font="900 40px Arial Black, Arial";x.textAlign="center";x.textBaseline="middle";x.fillText("MOAK SLAYER",0,2);
+  var nm=new THREE.MeshBasicMaterial({map:mkTex(c),transparent:true,depthWrite:false,toneMapped:false});
+  for(sd=-1;sd<=1;sd+=2){var pl=new THREE.Mesh(GEO.plane,nm);pl.scale.set(.27,3.5,1);pl.position.set(0,3.55,sd*.134);if(sd<0)pl.rotation.y=Math.PI;g.add(pl);}
+  // studs down each side of the fuller
+  for(i=0;i<5;i++)for(sd=-1;sd<=1;sd+=2){var st=new THREE.Mesh(GEO.sphLo,pale);st.scale.set(.1,.1,.06);st.position.set(sd*.32,1.9+i*.82,.09);g.add(st);
+    var st2=st.clone();st2.position.z=-.09;g.add(st2);}
+  // a soft pink glow round all of it
+  var glw=new THREE.Mesh(GEO.sphLo,jbAdd(0xff4ab8,.22));glw.scale.set(1.9,6.4,.5);glw.position.y=4.2;glw.userData.aura=true;g.add(glw);
+  g.userData.moakGlow=fu.material;g.userData.flareMul=.5;
+  return 7.0;
+};
+// one hand on it at rest, the blade up over the shoulder behind him: held
+// across the front, a sword this size hid his whole face
+HOLD.moak={sp:[0,-1.26,.1],sr:[-0.3,0,0.22],ra:[-0.25,0,0.2],la:[-0.12,0,-0.12]};
+IN_HAND.moakslayer=1;OWN_GRIP.moak=1;
+FXD.moakfx={rate:30,c1:0xff4ab8,c2:0xffc4e6,vy:[.3,1.6],sp:.4,g:-.5,sz:.55,life:.9,along:.9,sheath:.3,motes:4,ring:0xff3aa8};
+SWORD_FX.moakslayer="moakfx";
+SWORD_ICON.moak="<path d='M7 37l5-5' stroke='#b82a70' stroke-width='4' stroke-linecap='round'/><path d='M4.5 39.5a2.2 2.2 0 1 1 3-3 2.2 2.2 0 1 1 3 3l-3 2z' fill='#ff3a9a' stroke='#0b1942' stroke-width='1'/>"+
+  "<path d='M8 27l6 6M6.5 29.5l-2-2 3-1zM15.5 34.5l2 2-1-3z' stroke='#ff3a9a' stroke-width='3.4' stroke-linecap='round' fill='#ffc4e6'/>"+
+  "<path d='M12 30L33 5l4-2-2 4-21 25z' fill='#ff86cc' stroke='#0b1942' stroke-width='1.5'/><path d='M15 29L34 6' stroke='#ff4ab8' stroke-width='1.8'/><path d='M33 5l4-2-2 4' stroke='#ffc4e6' stroke-width='1.2' fill='none'/>";
+SIG_SWING.moakslam={dur:.7,col:0xff3aa8,beats:[
+  {w:.3,windup:true},
+  {w:.52,st:{span:3.0,tilt:1.5,r:3.2,w:1.8,hot:1},col:0xff6ad0,fin:true}]};
+SLASH_STYLE.moakslam=SIG_SWING.moakslam.beats[1].st;SWEEP.moakslam=SWEEP.slash;
+// both hands on it, one motion and one step: up over the head and straight
+// down in front, with no hang at the top or the bottom
+SIG_ANIM5.moakslam=function(f,p,arm,la,sw,h,bx,by,bz){
+  var k=keyed,E,eRest=h.sr[0]+h.ra[0];
+  arm.rotation.x=k(p,[[0,h.ra[0]],[.3,-2.95],[.52,-.62],[1,h.ra[0]]]);
+  arm.rotation.z=k(p,[[0,h.ra[2]],[.3,-.12],[.52,-.3],[1,h.ra[2]]]);
+  la.rotation.x=k(p,[[0,h.la[0]],[.3,-2.85],[.52,-.75],[1,h.la[0]]]);
+  la.rotation.z=k(p,[[0,h.la[2]],[.3,.2],[.52,.35],[1,h.la[2]]]);
+  E=k(p,[[0,eRest],[.3,-.95],[.52,1.68],[1,eRest]]);
+  sw.rotation.z=k(p,[[0,h.sr[2]],[.3,.05],[.52,0],[1,h.sr[2]]]);
+  arm.position.z=bz+k(p,[[0,0],[.3,-.1],[.52,.32],[1,0]]);
+  f.legs[1].rotation.x=k(p,[[0,0],[.52,-.75],[1,0]]);                    // one step in with the lead foot
+  f.legs[0].rotation.x=k(p,[[0,0],[.52,.5],[1,0]]);
+  sw.rotation.x=E-arm.rotation.x;
+  if(f.mesh){f.mesh.rotation.y=f.yaw+k(p,[[0,0],[.3,.22],[.52,-.12],[1,0]]);
+    f.mesh.position.y+=k(p,[[0,0],[.3,.1],[.52,-.32],[1,0]]);}
+};
+SIG_BEAT5.moakslam=function(f,b,i,tip,X,Y,Z,fx,fz){
+  var k,a,Pk=p4Hex(0xff4ab8),Pl=p4Hex(0xffc4e6),Hp=p4Hex(0xff1a8a);
+  var fm=f.sword&&f.sword.userData.moakGlow;
+  if(b.windup){
+    // pink light runs up the blade as it goes up
+    for(k=0;k<(QUAL>1?18:8);k++){a=Math.random()*TAU;
+      spark(tip.x+Math.cos(a)*1.4,tip.y+hr(-.8,.8),tip.z+Math.sin(a)*1.4,-Math.cos(a)*2.6,hr(-.5,1),-Math.sin(a)*2.6,Pk[0],Pk[1],Pk[2],hr(.4,.75),hr(.35,.55),0);}
+    if(fm)fm.color.setHex(0xffd0ee);
+    return;
+  }
+  // the slam: where the point meets the floor, a heart cracked into it, two
+  // shockwaves, a pillar of pink light, the floor thrown up, hearts rising
+  var gx=tip.x,gz=tip.z,d2=Math.hypot(gx-X,gz-Z);
+  if(d2<2.5||d2>7){gx=X+fx*4.4;gz=Z+fz*4.4;}
+  hwDecal(gx,Y+.07,gz,"moakheart",0xff3aa8,7.5,1.5,0,f.yaw);
+  hwBeam(gx,Y,gz,0xff4ab8,1.3,.4);
+  slashRing(gx,Y+.1,gz,0xff4ab8,0,0);slashRing(gx,Y+.1,gz,0xffc4e6,.09,0);
+  ringBurst(gx,Y+.4,gz,QUAL>1?28:12,12,0xff8ad0,1.25,.45);
+  burst(gx,Y+.5,gz,QUAL>1?30:14,10,0xffc4e6,1.2,.4,-6);
+  var n=QUAL>1?34:14;
+  for(k=0;k<n;k++){a=hr(0,TAU);var sp=hr(2.5,8),cc=k%3?Pk:(k%2?Pl:Hp);
+    spark(gx+Math.sin(a)*.5,Y+.3,gz+Math.cos(a)*.5,Math.sin(a)*sp,hr(3,9),Math.cos(a)*sp,cc[0],cc[1],cc[2],hr(.5,1),hr(.6,1.1),-16);}
+  for(k=0;k<(QUAL>1?14:6);k++){a=hr(0,TAU);var dd=hr(.6,2.4);    // chunks of floor
+    spark(gx+Math.sin(a)*dd,Y+.2,gz+Math.cos(a)*dd,Math.sin(a)*hr(1,4),hr(5,10),Math.cos(a)*hr(1,4),.42,.34,.4,hr(.35,.55),hr(.8,1.2),-22);}
+  if(QUAL>0){var ht=p4Tex("heart");for(k=0;k<3;k++)p4Sprite(gx+hr(-1.4,1.4),Y+hr(1,2.4),gz+hr(-1.4,1.4),ht,k?0xff6ad0:0xffc4e6,hr(1,1.6),hr(.9,1.3),hr(1.6,2.6));}
+  // pink dust left hanging over it
+  for(k=0;k<(QUAL>1?16:7);k++){a=hr(0,TAU);var r=hr(1,3.4);
+    spark(gx+Math.sin(a)*r,Y+hr(.2,1.2),gz+Math.cos(a)*r,hr(-.4,.4),hr(.5,1.4),hr(-.4,.4),1,.72,.86,hr(1,1.7),hr(1.4,2),-.4);}
+  if(fm)setTimeout(function(){fm.color.setHex(0xff4ab8);},250);
+  if(f===player)shakeCam(.34);
+};
+SIG_SFX5.moakslam=function(d){
+  var dd=SIG_SWING.moakslam.dur*1000;
+  tone(110,240,.3,"sawtooth",.05);noiseHit(.3,.1,600);
+  setTimeout(function(){noiseHit(.7,.55,450);tone(85,28,.75,"sine",.34);tone(160,50,.5,"sawtooth",.14);
+    tone(1400,700,.3,"triangle",.06);setTimeout(function(){tone(1800,2400,.25,"sine",.04);noiseHit(.5,.16,3000);},90);},dd*.5);
+};
+// a heart for the floor and for the sprites
+var _jbDecalTex=hwDecalTex;
+hwDecalTex=function(kind){
+  if(HW_DEC.tex[kind]||kind!=="moakheart")return _jbDecalTex(kind);
+  var c=cvs(256,256),x=c.getContext("2d"),i;
+  x.strokeStyle="#fff";x.fillStyle="#fff";x.lineCap="round";x.lineJoin="round";
+  x.translate(128,136);x.lineWidth=12;x.beginPath();
+  x.moveTo(0,80);x.bezierCurveTo(-30,52,-100,20,-100,-26);x.bezierCurveTo(-100,-72,-44,-92,0,-46);
+  x.bezierCurveTo(44,-92,100,-72,100,-26);x.bezierCurveTo(100,20,30,52,0,80);x.stroke();
+  // cracked down the middle, and outward
+  x.lineWidth=6;x.beginPath();x.moveTo(0,-46);x.lineTo(-12,-14);x.lineTo(10,8);x.lineTo(-8,34);x.lineTo(4,64);x.stroke();
+  x.lineWidth=4;for(i=0;i<10;i++){var a=i/10*TAU,r0=96,r1=120;x.beginPath();x.moveTo(Math.cos(a)*r0*.8,Math.sin(a)*r0*.8);x.lineTo(Math.cos(a+.1)*r1,Math.sin(a+.1)*r1);x.stroke();}
+  return (HW_DEC.tex[kind]=mkTex(c));
+};
+var _jbTex=p4Tex;
+p4Tex=function(kind){
+  if(kind!=="heart"||P4_TEX.heart)return _jbTex(kind);
+  var c=cvs(128,128),x=c.getContext("2d");x.translate(64,66);
+  var gl=x.createRadialGradient(0,0,8,0,0,62);gl.addColorStop(0,"rgba(255,255,255,.5)");gl.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=gl;x.fillRect(-64,-66,128,128);
+  x.fillStyle="#fff";x.beginPath();x.moveTo(0,38);x.bezierCurveTo(-14,24,-44,10,-44,-12);x.bezierCurveTo(-44,-34,-18,-42,0,-20);
+  x.bezierCurveTo(18,-42,44,-34,44,-12);x.bezierCurveTo(44,10,14,24,0,38);x.fill();
+  return (P4_TEX.heart=mkTex(c));
+};
+
+/* ---------------- POWER SURGE: Jbob's emote ----------------
+   Fists clenched at your sides, you crouch and start to charge: a golden aura
+   flares up round you, the floor's rubble lifts into the air, lightning
+   crackles over you, and it builds and builds until your hair stands up gold
+   and it all goes off in one shockwave. Anyone can use it; on Jbob his own
+   hair goes and his eyes turn. The fighter never moves. */
+var PS={crouch:.35,hair:2.55,boom:2.85,fade:4.0,end:4.4};
+P2_EMOTE_POSE.powersurge=function(f,a,R,L,g,set){
+  var I=clamp((a-PS.crouch)/(PS.boom-PS.crouch),0,1),LL=f.legs,c=Math.min(1,a/PS.crouch),out=a>PS.fade?1-(a-PS.fade)/(PS.end-PS.fade):1;
+  if(a<PS.boom){
+    // tensed: fists down and out, the whole body shaking harder as it builds
+    set(R,.28,.5+.12*I);set(L,.28,-.5-.12*I);
+    g.position.y-=.16*c;g.rotation.x=-.07*I;
+    if(I>0){g.position.x+=hr(-1,1)*.03*I;g.position.z+=hr(-1,1)*.03*I;}
+  } else if(a<PS.boom+.35){
+    // it goes off: arms flung out and down, head back, up off the floor a touch
+    var u=(a-PS.boom)/.35;
+    set(R,.05,1.05);set(L,.05,-1.05);
+    g.rotation.x=-.2*(1-u*.4);g.position.y+=.12*Math.sin(u*Math.PI);
+  } else {
+    // powered up: stood tall, fists at the hips, the aura still burning
+    set(R,.2,.42);set(L,.2,-.42);g.rotation.x=-.04*out;
+    g.position.y+=.04*Math.sin(a*6)*out;
+  }
+  LL[0].rotation.z=-.16*c*out;LL[1].rotation.z=.16*c*out;
+};
+function jbSurgeFx(f){
+  var t=0,boomed=false,hairOn=false,X=f.pos.x,Y=f.y,Z=f.pos.z,mine=f===player;
+  // the aura: two shells of gold fire round the body
+  var au=new THREE.Group(),A1=new THREE.Mesh(GEO.cone,jbAdd(0xffc82a,.0)),A2=new THREE.Mesh(GEO.cone,jbAdd(0xfff0a0,.0)),A3=new THREE.Mesh(GEO.sphLo,jbAdd(0xffd84a,0));
+  [A1,A2].forEach(function(m){m.material.side=THREE.DoubleSide;au.add(m);});au.add(A3);
+  f.mesh.add(au);
+  // the hair: gold spikes, up and back
+  var hr2=new THREE.Group(),hm=new THREE.MeshBasicMaterial({color:0xffcc1a,toneMapped:false}),hg=jbAdd(0xffe070,.3);
+  [[0,.5,.1,.3,.95],[.22,.42,.08,.26,.8],[-.22,.42,.08,.26,.8],[.38,.18,0,.22,.65],[-.38,.18,0,.22,.65],[.14,.38,-.3,.26,.85],[-.14,.38,-.3,.26,.85],[0,.2,-.45,.26,.75],
+   [.28,0,.34,.16,.4],[-.1,.05,.38,.16,.45],[.1,.1,.38,.14,.38]].forEach(function(q){
+    var d=new THREE.Vector3(q[0],q[1]+.35,q[2]).normalize(),m=new THREE.Mesh(GEO.cone,hm),m2=new THREE.Mesh(GEO.cone,hg);
+    m.scale.set(q[3],q[4],q[3]);m2.scale.set(q[3]*1.5,q[4]*1.25,q[3]*1.5);
+    [m,m2].forEach(function(s){s.quaternion.setFromUnitVectors(_RY,d);s.position.set(q[0]*.7+d.x*q[4]*.42,3.32+q[1]*.25+d.y*q[4]*.42,q[2]*.7+d.z*q[4]*.42);hr2.add(s);});});
+  var cap=new THREE.Mesh(GEO.sphLo,hm);cap.scale.set(.82,.4,.82);cap.position.set(0,3.36,-.02);hr2.add(cap);
+  hr2.visible=false;f.mesh.add(hr2);
+  // rubble round the feet, lifted by it
+  var rk=[],rm=new THREE.MeshLambertMaterial({color:0x7a7480});
+  for(var i=0;i<(QUAL>1?12:6);i++){var a=i/(QUAL>1?12:6)*TAU+hr(-.2,.2),r=hr(1.4,3.2),m=new THREE.Mesh(GEO.box,rm),s=hr(.14,.34);
+    m.scale.set(s,s*hr(.6,1),s*hr(.7,1.2));m.position.set(X+Math.cos(a)*r,Y+s/2,Z+Math.sin(a)*r);scene.add(m);
+    rk.push({m:m,x:m.position.x,z:m.position.z,a:a,r:r,st:hr(.35,1.6),h:hr(.9,2.8),sp:[hr(-2,2),hr(-2,2)],vy:0,vx:0,vz:0,y0:Y+s/2});}
+  var jb=f.sig&&f.sig.kind==="jbob"?f.sig:null;
+  try{tone(60,150,2.7,"sawtooth",.05);tone(120,300,2.7,"sine",.04);noiseHit(.6,.06,300);}catch(e){}
+  V4FX.push({tick:function(dt){t+=dt;
+      if(!f.alive||!(f.tauntT>0)||f.tauntK!=="powersurge")return false;
+      var I=clamp((t-PS.crouch)/(PS.boom-PS.crouch),0,1),out=t>PS.fade?Math.max(0,1-(t-PS.fade)/(PS.end-PS.fade)):1,k,a2,r2;
+      var pw=boomed?1:I,fl=.8+.2*Math.sin(t*31)+.1*Math.sin(t*13);
+      // aura
+      var S=(boomed?1.15:.6+.5*I)*out;
+      A1.scale.set(2.6*S*fl,4.9*S,2.6*S*fl);A1.position.y=2.2+.3*S;A1.rotation.y=t*3;
+      A2.scale.set(1.9*S,4.1*S*fl,1.9*S);A2.position.y=2.0+.25*S;A2.rotation.y=-t*4;
+      A3.scale.set(2.4*S,3.4*S,2.4*S);A3.position.y=1.9;
+      A1.material.opacity=(.05+.1*pw)*out*fl;A2.material.opacity=(.04+.11*pw)*out;A3.material.opacity=(.025+.05*pw)*out;
+      if(QUAL>0){
+        // gold fire streaming up off you
+        var n=dt*(mine?1:.4)*(20+90*pw)*out;
+        for(;n>0;n--){if(n<1&&Math.random()>n)break;a2=hr(0,TAU);r2=hr(.5,1.3);
+          spark(X+Math.cos(a2)*r2,Y+hr(.1,2.6),Z+Math.sin(a2)*r2,Math.cos(a2)*.3,hr(2.5,5.5),Math.sin(a2)*.3,1,hr(.75,.95),hr(.2,.5),hr(.4,.75),hr(.4,.7),1.5);}
+        // dust running out along the floor
+        if(!boomed&&Math.random()<dt*24*I){a2=hr(0,TAU);spark(X+Math.cos(a2)*.8,Y+.15,Z+Math.sin(a2)*.8,Math.cos(a2)*hr(3,6),hr(0,.5),Math.sin(a2)*hr(3,6),.75,.7,.62,hr(.6,1),hr(.5,.8),0);}
+        // lightning over the body
+        if(t>1.0&&Math.random()<dt*(3+14*pw)*out){a2=hr(0,TAU);var b2=a2+hr(.8,2.2),y1=Y+hr(.4,3.4);
+          p4Bolt(X+Math.cos(a2)*hr(.6,1.3),y1,Z+Math.sin(a2)*hr(.6,1.3),X+Math.cos(b2)*hr(.6,1.4),y1+hr(-1.2,1.2),Z+Math.sin(b2)*hr(.6,1.4),Math.random()<.5?0x9fe8ff:0xfff4b0,hr(.08,.16),hr(.04,.08));
+          if(mine&&Math.random()<.5)try{noiseHit(.04,.06,4500+Math.random()*2000);}catch(e){}}
+      }
+      // rubble: lifted, bobbing; blown out by the blast and dropped
+      rk.forEach(function(q){var m=q.m;
+        if(!boomed){var u2=clamp((t-q.st)/1.1,0,1),e2=u2*u2*(3-2*u2);m.visible=t>q.st*.5;
+          m.position.set(q.x+hr(-1,1)*.02*I,q.y0+q.h*e2+Math.sin(t*3+q.a)*.08*e2,q.z+hr(-1,1)*.02*I);
+          m.rotation.x+=q.sp[0]*dt*e2;m.rotation.y+=q.sp[1]*dt*e2;}
+        else{q.vy-=22*dt;m.position.x+=q.vx*dt;m.position.y+=q.vy*dt;m.position.z+=q.vz*dt;m.rotation.x+=q.sp[0]*dt*3;
+          if(m.position.y<q.y0){m.position.y=q.y0;q.vx*=.5;q.vz*=.5;q.vy=0;}}});
+      // the hair goes up
+      if(!hairOn&&t>=PS.hair){hairOn=true;hr2.visible=true;
+        if(jb){jb.hair.forEach(function(m){m.visible=false;});jb.iris.color.setHex(0x3affd8);}
+        if(QUAL>0)burst(X,Y+3.4,Z,QUAL>1?20:10,6,0xffe060,1,.3,0);
+        try{noiseHit(.2,.2,2500);tone(600,1400,.25,"square",.04);}catch(e){}}
+      if(hairOn){hg.opacity=.2+.12*Math.sin(t*20);hr2.scale.setScalar(1+.03*Math.sin(t*24));}
+      // and it all goes off
+      if(!boomed&&t>=PS.boom){boomed=true;
+        rk.forEach(function(q){q.vx=Math.cos(q.a)*hr(6,12);q.vz=Math.sin(q.a)*hr(6,12);q.vy=hr(3,8);});
+        if(QUAL>0){slashRing(X,Y+.1,Z,0xffd84a,0,0);slashRing(X,Y+.1,Z,0xfff4b0,.1,0);
+          ringBurst(X,Y+1.4,Z,QUAL>1?30:14,13,0xffe060,1.3,.5);burst(X,Y+1.8,Z,QUAL>1?40:18,12,0xfff4b0,1.4,.45,-2);
+          hwBeam(X,Y,Z,0xffd84a,1.6,.55);hwDecal(X,Y+.07,Z,"tesla",0xffc82a,7,1.6,0,f.yaw);
+          for(k=0;k<(QUAL>1?6:3);k++){a2=hr(0,TAU);p4Bolt(X,Y+2,Z,X+Math.cos(a2)*hr(3,5),Y+hr(.2,4),Z+Math.sin(a2)*hr(3,5),0xfff4b0,.25,.1);}}
+        if(mine)shakeCam(.45);
+        try{noiseHit(.9,.5,500);tone(220,40,.9,"sawtooth",.24);tone(110,30,1.0,"sine",.3);tone(900,1600,.4,"square",.04);}catch(e){}}
+      return true;},
+    done:function(){
+      if(au.parent)au.parent.remove(au);[A1,A2,A3].forEach(function(m){m.material.dispose();});
+      if(hr2.parent)hr2.parent.remove(hr2);hm.dispose();hg.dispose();
+      rk.forEach(function(q){if(q.m.parent)q.m.parent.remove(q.m);});rm.dispose();
+      if(jb){jb.hair.forEach(function(m){m.visible=true;});jb.iris.color.setHex(jb.iris0);}}});
+}
+P2_EMOTE_FX.powersurge=jbSurgeFx;
+P2_EMOTE_ICON.powersurge="<path d='M20 4c-3 5-9 6-10 13-1 8 4 15 10 17 6-2 11-9 10-17-1-7-7-8-10-13z' fill='#ffc82a' opacity='.5'/>"+
+  "<path d='M13 17l2-9 3 5 2-8 2 8 3-5 2 9z' fill='#ffd83a' stroke='#0b1942' stroke-width='1.2'/><circle cx='20' cy='21' r='5.5' fill='#f2c8aa' stroke='#0b1942' stroke-width='1.3'/>"+
+  "<path d='M14 34l2-6h8l2 6' fill='#5a5c62' stroke='#0b1942' stroke-width='1.3'/><path d='M7 12l3 2-2 2 3 2M33 12l-3 2 2 2-3 2' stroke='#9fe8ff' stroke-width='1.4' fill='none'/>";
+/* ==== 4.5 END ==== */
+
 
 
 function useAbility(f,remoteCast){
@@ -17951,7 +18439,7 @@ function netRemoteSwing(m){
   var f=NET.remote[m.from];
   if(f&&f.alive){phTake(f,m);f.swing();}
 }
-function phTake(f,m){if(typeof m.pa==="number"&&f.swordDef&&f.swordDef.phantom==="both"){f.phAnim=m.pa&1;f.phAlt=f.phAnim^1;}}
+function phTake(f,m){if(typeof m.pa==="number"&&f.swordDef&&(f.swordDef.phantom==="both"||f.swordDef.alt)){f.phAnim=m.pa&1;f.phAlt=f.phAnim^1;}}
 function netRemoteAbility(m){
   if(m.only==="rift"||m.only==="riftsnap"){riftNet(m);return;}
   if(m.only==="flash"){screenFlash(AURA_T,"aura");return;}   // a bot's aura, on the host
@@ -19466,11 +19954,18 @@ var PACKS={
   afterhours:{name:"AFTER HOURS PACK",yen:1800,col:"#ff7a12",trailer:"afterhours_trailer.mp4",poster:"afterhours_trailer.jpg",teaser:true,
     items:[["skin","dreddy"],["skin","fluffles"],["sword","nightshift"],["emote","sysfail"]],
     desc:"Dreddy and Fluffles (skins), the Nightshift Axe (blade) and the System Failure emote. Some shows never end. Only in this pack, and only for one week.",
-    from:EVENT_SHOPS.wendigo.to+7*864e5,to:EVENT_SHOPS.wendigo.to+14*864e5}
+    from:EVENT_SHOPS.wendigo.to+7*864e5,to:EVENT_SHOPS.wendigo.to+14*864e5},
+  // next week's: Jbob and Jdog. `off` until it is released: no stand, no
+  // popup, and the server will not sell it. The items are UNRELEASED until
+  // then too, so the only way to have them is a gift
+  jays:{name:"JBOB & JDOG PACK",yen:1800,col:"#4ac0ff",off:true,
+    items:[["skin","jbob"],["skin","jdog"],["sword","jbobfire"],["sword","moakslayer"],["emote","powersurge"]],
+    desc:"Jbob and Jdog (skins), Blue Blaze and The Moak Slayer (blades) and the Power Surge emote. Only in this pack, and only for one week.",
+    from:EVENT_SHOPS.wendigo.to+14*864e5,to:EVENT_SHOPS.wendigo.to+21*864e5}
 };
 // the pack the stand is showing: the one on sale, or the next to open
 function curPackKey(){var now=Date.now(),best=null;
-  for(var k in PACKS){var P=PACKS[k];if(now>=P.to)continue;if(!best||P.from<PACKS[best].from)best=k;}
+  for(var k in PACKS){var P=PACKS[k];if(P.off||now>=P.to)continue;if(!best||P.from<PACKS[best].from)best=k;}
   return best;}
 // which pack an item comes from
 function packOf(tab,id){for(var k in PACKS)if(PACKS[k].items.some(function(q){return q[0]===tab&&q[1]===id;}))return k;return null;}
