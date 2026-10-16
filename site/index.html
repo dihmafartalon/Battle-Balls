@@ -2129,6 +2129,12 @@ var SWORDS=[
   desc:"Jbob's. No blade, just a ball of blue fire in each fist. Every swing throws from the other hand, and the fireball goes flying."},
  {id:"moakslayer",name:"The Moak Slayer",rarity:"secret",price:-1,blade:0xff86cc,hilt:0xc8327e,glow:0xff3aa8,shape:"moak",hold:"moak",swing:"moakslam",idle:"none",size:1,
   desc:"Jdog's. A greatsword far too big for anyone, pink from the heart on the pommel to the point. Hauled up over the head and brought straight down."},
+ {id:"demonyart",name:"Demon Yart",rarity:"secret",price:-1,blade:0x6a0a16,hilt:0x141014,glow:0xff1a2a,shape:"dpen",hold:"one",swing:"yartslash",idle:"breathe",size:.9,
+  desc:"Zandeezy's. A pen far too big, crimson and gold, with horns on the cap and a nib that glows. Every stroke writes a red line through the air, and a demon's face looms out of it."},
+ {id:"dutrocannon",name:"Dutro Cannon",rarity:"secret",price:-1,blade:0xff6ab8,hilt:0xc8307e,glow:0xff8ad0,shape:"dcannon",hold:"cannon",swing:"dutroshot",idle:"none",size:1,
+  desc:"Big Onion 1's. A big pink hand cannon held at the hip. Every swing fires it, and every hit goes off in a white blast."},
+ {id:"rampteslacam",name:"Ramp Tesla Cam",rarity:"secret",price:-1,blade:0xf2f4f6,hilt:0x1a2230,glow:0xcfe4ff,shape:"evcar",hold:"toycar",swing:"carslam",idle:"none",size:1,
+  desc:"Smg's. A little white electric car, held by the bumper. Swung overhead, it grows the whole way down, and lands the size of a real one."},
  {id:"plaque",name:"Platinum Plaque",rarity:"mythic",event:"pack",price:-1,yen:345,blade:0xe8eef6,hilt:0x141416,glow:0xdfe8ff,shape:"plaque",hold:"two",swing:"hammer",idle:"none",size:.82,
   desc:"A framed platinum record, swung like a bat. Every block lands with a flash of PARRY!"},
  {id:"vampfang",name:"Vamp Fang",rarity:"mythic",event:"pack",secret:true,price:-1,yen:345,blade:0xf2ead8,hilt:0x141016,glow:0xff1a34,shape:"vampfang",hold:"one",swing:"slash",idle:"none",
@@ -2415,6 +2421,12 @@ var SKINS=[
   desc:"Dark hair swept across, chunky black glasses and an easy smile. A grey henley, two buttons done."},
  {id:"jdog",name:"Jdog",price:-1,rarity:"secret",style:"jdog",body:0x161618,limb:0x3a4a6a,skin:0xf4cdb0,glow:0x000000,
   desc:"A big shaggy mop down to his glasses, thin silver frames and a grin full of teeth. A black 73 tee."},
+ {id:"zandeezy",name:"Zandeezy",price:-1,rarity:"secret",style:"zandeezy",body:0x202024,limb:0x3a4a6a,skin:0xf2c8aa,glow:0x000000,
+  desc:"A big messy mop of golden blonde swept up and over, and a grin to match. A black tee with white type down the chest."},
+ {id:"bigonion",name:"Big Onion 1",price:-1,rarity:"secret",style:"bigonion",body:0x202024,limb:0x3a4a6a,skin:0xf2caa8,glow:0x000000,
+  desc:"A tall head of tight brown curls, ears out, braces in the grin, and a neck that keeps going. A black tee."},
+ {id:"smg",name:"Smg",price:-1,rarity:"secret",style:"smg",body:0xe8e2d4,limb:0x3a4a6a,skin:0xe6c09c,glow:0x000000,
+  desc:"Thick dark curls piled high, heavy brows and the widest grin of the lot. A cream tee."},
  {id:"cartwheel",name:"Playboi Cartwheel",price:-1,yen:330,rarity:"mythic",event:"pack",style:"cartwheel",body:0x141416,limb:0x141416,skin:0x7b4a2d,glow:0x000000,
   desc:"Black dreads, one red eye open and one winking, fangs in the grin. A black long-sleeve with red marks, a silver chain and cross, a red belt with a chain hanging off it."},
  {id:"lilvertigo",name:"Lil Vertigo",price:-1,yen:330,rarity:"mythic",event:"pack",style:"vertigo",body:0x141416,limb:0x141416,skin:0x6e4228,glow:0x000000,
@@ -16682,7 +16694,7 @@ function jbGlasses(box,frame,thick,lens){
 function jbTee(f,box,bodyM,collarM){
   box(1.04,.9,.72,0,2.16,0,bodyM);box(.94,.5,.6,0,1.72,0,bodyM);
   for(var sd=-1;sd<=1;sd+=2)box(.3,.34,.62,sd*.6,2.42,0,bodyM);
-  box(.66,.08,.62,0,2.62,0,bodyM);                                       // shoulders to the neck
+  box(.86,.08,.6,0,2.62,0,bodyM);                                        // shoulders to the neck, over the base collar
   box(.4,.07,.05,0,2.6,.33,collarM);                                     // the collar's front edge
   for(sd=-1;sd<=1;sd+=2)box(.08,.07,.05,sd*.22,2.63,.31,collarM,[0,0,sd*.5]);
   for(var i=0;i<2;i++){var A=f.arms[i];
@@ -16696,10 +16708,10 @@ function jbNose(f,box){
   box(.735,.1,.1,0,3.1,.336,f.mSkin);for(var sd=-1;sd<=1;sd+=2)box(.07,.28,.44,sd*.365,3.02,0,f.mSkin);
   box(.08,.12,.06,0,2.88,.375,f.mSkin);box(.1,.03,.04,0,2.82,.385,f.mSkin);
 }
-// eyes with whites and an iris, over the base's dark squares; the iris is
-// handed back so an emote can light it
-function jbEyes(box,iris){var w=new THREE.MeshBasicMaterial({color:0xf4f0ea}),ir=new THREE.MeshBasicMaterial({color:iris}),pu=new THREE.MeshBasicMaterial({color:0x0c0806});
-  for(var sd=-1;sd<=1;sd+=2){box(.15,.09,.01,sd*.17,3.0,.383,w);box(.07,.09,.01,sd*.17+sd*.01,3.0,.386,ir);box(.035,.05,.01,sd*.17+sd*.01,3.0,.389,pu);}
+// eyes with whites and an iris, over the base's dark squares, with skin under
+// them to hide the base's blue; the iris is handed back so an emote can light it
+function jbEyes(box,iris,skinM){var w=new THREE.MeshBasicMaterial({color:0xf4f0ea}),ir=new THREE.MeshBasicMaterial({color:iris}),pu=new THREE.MeshBasicMaterial({color:0x0c0806});
+  for(var sd=-1;sd<=1;sd+=2){box(.17,.035,.01,sd*.17,2.94,.382,skinM);box(.15,.09,.01,sd*.17,3.0,.383,w);box(.07,.09,.01,sd*.17+sd*.01,3.0,.386,ir);box(.035,.05,.01,sd*.17+sd*.01,3.0,.389,pu);}
   return ir;}
 // JBOB: dark brown hair, full on top and parted to one side, swept across
 // over the forehead; chunky black glasses; a heather grey henley
@@ -16719,7 +16731,7 @@ SIG_SKIN.jbob=function(f,g,sk,box,glowM,darkM,bodyM){
   hb(.3,.15,.13,.2,3.25,.34,hair2,[0,0,-.3]);
   hb(.14,.1,.1,.32,3.17,.33,hair,[0,0,-.5]);
   for(sd=-1;sd<=1;sd+=2)box(.18,.045,.02,sd*.175,3.135,.385,brow,[0,0,sd*-.06]);   // full brows
-  var ir=jbEyes(box,0x5a4028);jbGlasses(box,frame,true,lens);
+  var ir=jbEyes(box,0x5a4028,f.mSkin);jbGlasses(box,frame,true,lens);
   jbNose(f,box);
   box(.18,.03,.02,0,2.72,.36,lip);box(.04,.025,.02,.1,2.73,.36,lip,[0,0,.35]);box(.04,.025,.02,-.1,2.73,.36,lip,[0,0,-.35]);   // a closed, easy smile
   jbTee(f,box,bodyM,collar);
@@ -16751,7 +16763,7 @@ SIG_SKIN.jdog=function(f,g,sk,box,glowM,darkM,bodyM){
   var fx=[-.31,-.19,-.08,.04,.15,.27,.34],fl=[.32,.36,.3,.2,.34,.3,.24];
   for(var i=0;i<fx.length;i++)hb(.13,fl[i],.12,fx[i],3.36-fl[i]/2+.05,.37,i%2?hair2:hair,[0,0,(i-3)*.06+(i===3?.2:0)]);
   for(sd=-1;sd<=1;sd+=2)box(.15,.03,.02,sd*.175,3.12,.39,brow);
-  var ir=jbEyes(box,0x3a2a1c);jbGlasses(box,frame,false,lens);
+  var ir=jbEyes(box,0x3a2a1c,f.mSkin);jbGlasses(box,frame,false,lens);
   jbNose(f,box);
   // the grin: wide, open, a row of teeth
   box(.28,.09,.02,0,2.735,.36,mouth);box(.25,.045,.02,0,2.758,.366,white);
@@ -17133,6 +17145,398 @@ P2_EMOTE_ICON.powersurge="<path d='M20 4c-3 5-9 6-10 13-1 8 4 15 10 17 6-2 11-9 
   "<path d='M13 17l2-9 3 5 2-8 2 8 3-5 2 9z' fill='#ffd83a' stroke='#0b1942' stroke-width='1.2'/><circle cx='20' cy='21' r='5.5' fill='#f2c8aa' stroke='#0b1942' stroke-width='1.3'/>"+
   "<path d='M14 34l2-6h8l2 6' fill='#5a5c62' stroke='#0b1942' stroke-width='1.3'/><path d='M7 12l3 2-2 2 3 2M33 12l-3 2 2 2-3 2' stroke='#9fe8ff' stroke-width='1.4' fill='none'/>";
 /* ==== 4.5 END ==== */
+/* ==== 4.6 BEGIN ==== */
+/* ---------------- ZANDEEZY, BIG ONION 1, SMG ----------------
+   Three more for the same pack, drawn the same way as Jbob and Jdog. */
+// a seeded jitter, so a head of curls comes out the same every time
+function jbRnd(s){var x=Math.sin(s*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+// a head of curls: small chunks packed over a dome, in three tones
+function jbCurls(hb,y0,R,n,mats,seed,frontY){
+  for(var i=0;i<n;i++){var u=jbRnd(seed+i),v=jbRnd(seed+i*1.7+3);
+    var a=u*TAU,el=Math.acos(1-v*.95),r=R*(1+.12*(jbRnd(seed+i*2.3)-.5));
+    var x=Math.sin(el)*Math.cos(a)*r*1.05,z=Math.sin(el)*Math.sin(a)*r,y=y0+Math.cos(el)*r*.62;
+    if(z>.26&&y<frontY)continue;                                          // keep the forehead clear
+    var s=.15+.07*jbRnd(seed+i*3.1);
+    hb(s,s*.9,s,x,y,z-.02,mats[i%mats.length],[jbRnd(seed+i*4.4)*2,jbRnd(seed+i*5.5)*2,jbRnd(seed+i*6.6)*2]);}
+}
+// a smile with teeth showing; braces optional
+function jbSmile(box,y,w,braces,skinM){
+  var mouth=new THREE.MeshBasicMaterial({color:0x1a0606}),teeth=new THREE.MeshLambertMaterial({color:0xf4f0e6}),lip=new THREE.MeshLambertMaterial({color:0xc98a80});
+  box(.34,.1,.01,0,2.72,.362,skinM);                                       // over the base's mouth
+  box(w,.05,.01,0,y+.012,.368,mouth);box(w*.72,.035,.01,0,y-.026,.368,mouth);box(w*.4,.02,.01,0,y-.048,.368,mouth);   // the mouth curves under
+  box(w*.9,.042,.01,0,y+.016,.372,teeth);box(w*.46,.014,.01,0,y-.064,.368,lip);
+  for(var sd=-1;sd<=1;sd+=2)box(.035,.02,.01,sd*(w/2+.004),y+.03,.368,mouth,[0,0,sd*-.6]);
+  if(braces){var br=new THREE.MeshPhongMaterial({color:0xc8ccd4,shininess:140});box(w*.84,.012,.01,0,y+.017,.376,br);
+    for(var i=0;i<5;i++)box(.018,.022,.01,(i-2)*w*.17,y+.017,.378,br);}
+}
+function jbBrows(box,y,col,thick,tilt){var m=new THREE.MeshBasicMaterial({color:col});for(var sd=-1;sd<=1;sd+=2)box(.17,thick,.02,sd*.175,y,.385,m,[0,0,sd*(tilt||0)]);}
+// ZANDEEZY: a big messy mop of golden blonde, swept up and over to one side,
+// darker at the roots; a big grin; a black tee with white type down the chest
+SIG_SKIN.zandeezy=function(f,g,sk,box,glowM,darkM,bodyM){
+  var b1=new THREE.MeshLambertMaterial({color:0xd8b06a}),b2=new THREE.MeshLambertMaterial({color:0xecd296}),b3=new THREE.MeshLambertMaterial({color:0x9a7444});
+  var collar=new THREE.MeshLambertMaterial({color:0x202024});
+  var H=[];function hb(){var m=box.apply(null,arguments);H.push(m);return m;}
+  hb(.8,.22,.8,0,3.34,-.02,b3);                                           // roots, under it all
+  hb(.84,.36,.3,0,3.12,-.3,b1);for(var sd=-1;sd<=1;sd+=2)hb(.08,.3,.6,sd*.38,3.16,-.04,b3);
+  // the top: chunks swept up and over, lighter toward the ends
+  [[-.24,3.52,.12,.5,.3],[.02,3.6,.08,.2,-.1],[.26,3.55,.0,-.3,-.35],[-.1,3.62,-.18,.1,.2],[.22,3.48,-.24,-.4,0],[-.3,3.46,-.22,.6,.2],
+   [.06,3.5,.26,.3,-.2],[-.18,3.4,.3,.6,.1],[.3,3.42,.24,-.2,-.6]].forEach(function(q,k){
+    hb(.34,.2,.3,q[0],q[1],q[2],k%3===0?b2:k%3===1?b1:b2,[q[4]*.6,q[4],q[3]]);});
+  // the front lifts off the forehead and flips up to the side
+  hb(.36,.14,.12,-.12,3.36,.36,b2,[.5,0,.35]);hb(.26,.12,.1,.18,3.34,.37,b1,[.4,0,-.4]);hb(.16,.12,.1,.36,3.3,.32,b2,[.2,0,-.9]);
+  jbBrows(box,3.13,0x8a6a44,.035,-.04);
+  jbEyes(box,0x5a7a8a,f.mSkin);jbNose(f,box);jbSmile(box,2.74,.26,false,f.mSkin);
+  jbTee(f,box,bodyM,collar);
+  // white type running down his right side of the chest
+  var c=cvs(32,128),x=c.getContext("2d");x.fillStyle="#f2eee6";x.translate(16,64);x.rotate(Math.PI/2);x.font="900 22px Arial Black, Arial";x.textAlign="center";x.textBaseline="middle";x.fillText("ZNDZY",0,0);
+  var pm=new THREE.Mesh(GEO.plane,new THREE.MeshLambertMaterial({map:mkTex(c),transparent:true}));pm.scale.set(.1,.42,1);pm.position.set(-.3,2.18,.361);g.add(pm);
+  f.sig={kind:"zandeezy",hair:H};
+};
+// BIG ONION 1: a tall head of tight brown curls, short at the sides with the
+// ears out; a long neck; braces in the grin; a black tee
+SIG_SKIN.bigonion=function(f,g,sk,box,glowM,darkM,bodyM){
+  var NY=.3,i,sd;
+  // the neck: the whole head goes up and a long neck goes in under it
+  (f.headParts||[]).forEach(function(m){m.position.y+=NY;});
+  box(.3,.36+NY,.3,0,2.62+NY/2,0,f.mSkin);
+  function bx(w,h,d,x,y,z,m,r){return box(w,h,d,x,y+NY,z,m,r);}
+  var c1=new THREE.MeshLambertMaterial({color:0x6a4428}),c2=new THREE.MeshLambertMaterial({color:0x8a5c34}),c3=new THREE.MeshLambertMaterial({color:0x4a2e18});
+  var collar=new THREE.MeshLambertMaterial({color:0x202024});
+  var H=[];function hb(){var m=bx.apply(null,arguments);H.push(m);return m;}
+  hb(.76,.24,.76,0,3.34,-.02,c3);hb(.78,.3,.16,0,3.14,-.32,c3);
+  for(sd=-1;sd<=1;sd+=2)hb(.05,.2,.44,sd*.37,3.18,-.08,c3);              // short at the sides
+  jbCurls(hb,3.36,.42,QUAL>1?34:24,[c1,c2,c3],7.3,3.42);
+  for(i=0;i<5;i++)hb(.15,.14,.13,-.24+i*.12,3.36+jbRnd(i+9)*.04,.32,i%2?c2:c1,[jbRnd(i)*2,jbRnd(i+2)*2,0]);   // curls over the forehead
+  for(sd=-1;sd<=1;sd+=2)bx(.08,.16,.1,sd*.4,3.0,0,f.mSkin);                // the ears, out
+  jbBrows(bx,3.135,0x4a2e18,.032,.04);
+  jbEyes(bx,0x6a7a52,f.mSkin);jbNose(f,bx);jbSmile(bx,2.75,.24,true,f.mSkin);
+  jbTee(f,box,bodyM,collar);
+  var pc=cvs(64,32),px=pc.getContext("2d");px.fillStyle="#f2eee6";px.beginPath();px.arc(32,18,11,0,TAU);px.fill();px.fillStyle="#202024";px.fillRect(26,12,12,4);px.fillRect(30,12,4,14);
+  var pm=new THREE.Mesh(GEO.plane,new THREE.MeshLambertMaterial({map:mkTex(pc),transparent:true}));pm.scale.set(.2,.1,1);pm.position.set(0,1.66,.311);g.add(pm);
+  f.sig={kind:"bigonion",hair:H,headY:NY};
+};
+// SMG: thick dark curls piled high, short at the sides; heavy dark brows; the
+// widest grin of the lot; a cream tee
+SIG_SKIN.smg=function(f,g,sk,box,glowM,darkM,bodyM){
+  var d1=new THREE.MeshLambertMaterial({color:0x1e1612}),d2=new THREE.MeshLambertMaterial({color:0x2e221a}),d3=new THREE.MeshLambertMaterial({color:0x140e0a});
+  var collar=new THREE.MeshLambertMaterial({color:0xd4ccbc});
+  var H=[];function hb(){var m=box.apply(null,arguments);H.push(m);return m;}
+  hb(.78,.24,.78,0,3.34,-.02,d3);hb(.8,.32,.16,0,3.14,-.32,d3);
+  for(var sd=-1;sd<=1;sd+=2)hb(.05,.22,.46,sd*.37,3.16,-.06,d3);
+  jbCurls(hb,3.38,.44,QUAL>1?36:24,[d1,d2,d3],2.9,3.4);
+  for(var i=0;i<6;i++)hb(.15,.15,.13,-.3+i*.12,3.34+jbRnd(i+4)*.05,.32,i%2?d2:d1,[jbRnd(i+1)*2,jbRnd(i+3)*2,0]);
+  jbBrows(box,3.13,0x140e0a,.05,.02);
+  jbEyes(box,0x3a2414,f.mSkin);jbNose(f,box);jbSmile(box,2.74,.3,false,f.mSkin);
+  jbTee(f,box,bodyM,collar);
+  f.sig={kind:"smg",hair:H};
+};
+Object.assign(SIG_SKIN_ICON,{
+  zandeezy:"<path d='M8 15c-2-8 4-13 11-13 8 0 14 4 13 11l-3 1c-3-3-8-5-14-4-3 0-5 2-7 5z' fill='#d8b06a' stroke='#0b1942' stroke-width='1.3'/><path d='M12 7c5-3 12-3 17 2M14 4l5 5M24 3l2 6' stroke='#ecd296' stroke-width='1.8' fill='none'/>"+
+    "<rect x='10.5' y='10' width='19' height='15' rx='4' fill='#f2c8aa' stroke='#0b1942' stroke-width='1.6'/><path d='M10 12c4-3 10-4 20-1l-1 3c-5-2-11-3-18 0z' fill='#ecd296'/>"+
+    "<circle cx='15.5' cy='16.5' r='1.4' fill='#5a7a8a'/><circle cx='24.5' cy='16.5' r='1.4' fill='#5a7a8a'/><path d='M14.5 20.5h11q-1 3.5-5.5 3.5t-5.5-3.5z' fill='#3a1414'/><path d='M15.2 20.6h9.6v1.3h-9.6z' fill='#fff'/>"+
+    "<path d='M6 38l2-12h24l2 12z' fill='#202024' stroke='#0b1942' stroke-width='1.6'/><path d='M13 28v7' stroke='#f2eee6' stroke-width='1.6' stroke-dasharray='1.4 .8'/>",
+  bigonion:"<g fill='#6a4428' stroke='#0b1942' stroke-width='.8'><circle cx='13' cy='6' r='3.4'/><circle cx='19' cy='4' r='3.6'/><circle cx='25' cy='5' r='3.4'/><circle cx='29' cy='9' r='3'/><circle cx='11' cy='10' r='3'/><circle cx='16' cy='8' r='3'/><circle cx='22' cy='8' r='3'/></g>"+
+    "<rect x='12' y='9' width='16' height='13' rx='4' fill='#f2c8aa' stroke='#0b1942' stroke-width='1.5'/><rect x='10.5' y='14' width='2' height='4' rx='1' fill='#f2c8aa' stroke='#0b1942' stroke-width='.8'/><rect x='27.5' y='14' width='2' height='4' rx='1' fill='#f2c8aa' stroke='#0b1942' stroke-width='.8'/>"+
+    "<circle cx='17' cy='14.5' r='1.2' fill='#6a7a52'/><circle cx='23' cy='14.5' r='1.2' fill='#6a7a52'/><path d='M16 18h8q-1 3-4 3t-4-3z' fill='#3a1414'/><path d='M16.5 18.2h7' stroke='#c8ccd4' stroke-width='1'/>"+
+    "<rect x='17.5' y='21' width='5' height='7' fill='#f2c8aa' stroke='#0b1942' stroke-width='1'/><path d='M7 38l2-10h22l2 10z' fill='#202024' stroke='#0b1942' stroke-width='1.6'/><circle cx='20' cy='34' r='1.8' fill='#f2eee6'/>",
+  smg:"<g fill='#1e1612' stroke='#0b1942' stroke-width='.8'><circle cx='12' cy='8' r='3.6'/><circle cx='18' cy='5' r='3.8'/><circle cx='24' cy='5' r='3.8'/><circle cx='29' cy='9' r='3.4'/><circle cx='15' cy='10' r='3'/><circle cx='21' cy='9' r='3'/><circle cx='27' cy='12' r='2.6'/></g>"+
+    "<rect x='10.5' y='11' width='19' height='14' rx='4' fill='#e6c09c' stroke='#0b1942' stroke-width='1.6'/><path d='M12.5 14.4h5M22.5 14.4h5' stroke='#140e0a' stroke-width='1.8'/>"+
+    "<circle cx='15.5' cy='17' r='1.3' fill='#3a2414'/><circle cx='24.5' cy='17' r='1.3' fill='#3a2414'/><path d='M13.5 20.5h13q-1.5 4-6.5 4t-6.5-4z' fill='#3a1414'/><path d='M14.2 20.6h11.6v1.4h-11.6z' fill='#fff'/>"+
+    "<path d='M6 38l2-12h24l2 12z' fill='#e8e2d4' stroke='#0b1942' stroke-width='1.6'/>"
+});
+
+// a pooled billboard comes back with no per-use tick left over from whoever had it last
+var _jbSpr=p4Sprite;
+p4Sprite=function(){var r=_jbSpr.apply(this,arguments);if(r)r.onTick=null;return r;};
+
+/* ---------------- DEMON YART: Zandeezy's ----------------
+   A pen, far too big: a deep crimson barrel with gold bands, a ridged grip, a
+   gold clip, two little horns on the end cap and a gold nib with a slit that
+   glows red. Every stroke writes a red line through the air, and a demon's
+   face looms up out of it. */
+SIG_SHAPE.dpen=function(g,seg,B,H,G){
+  var i,sd;
+  var red=new THREE.MeshPhongMaterial({color:0x6a0a16,shininess:140,specular:0xff8090,emissive:0x2a0006,emissiveIntensity:.5});
+  var gold=new THREE.MeshPhongMaterial({color:0xe0b040,shininess:150,specular:0xfff0c0,emissive:0x3a2600,emissiveIntensity:.3});
+  var blk=new THREE.MeshLambertMaterial({color:0x141014});
+  var glow=new THREE.MeshBasicMaterial({color:0xff2a3a,toneMapped:false});
+  function cyl(r,h,y,m){var c=new THREE.Mesh(GEO.cyl8,m);c.scale.set(r*2,h,r*2);c.position.y=y;g.add(c);return c;}
+  cyl(.2,.3,-.3,gold);                                                     // end cap
+  for(sd=-1;sd<=1;sd+=2){var hn=new THREE.Mesh(GEO.cone,red);hn.scale.set(.1,.32,.1);hn.position.set(sd*.13,-.5,0);hn.rotation.z=Math.PI+sd*.5;g.add(hn);}
+  cyl(.19,.9,.3,blk);for(i=0;i<6;i++)cyl(.2,.05,-.05+i*.14,red);           // the grip, ridged
+  cyl(.22,.08,.8,gold);
+  var br=cyl(.21,2.1,1.9,red);br.userData.core=true;
+  cyl(.22,.08,2.95,gold);cyl(.22,.06,1.6,gold);
+  var cl=new THREE.Mesh(GEO.box,gold);cl.scale.set(.07,1.0,.06);cl.position.set(0,.55,.24);g.add(cl);   // the clip
+  var ct=new THREE.Mesh(GEO.sphLo,gold);ct.scale.setScalar(.1);ct.position.set(0,.08,.25);g.add(ct);
+  var tp=new THREE.Mesh(GEO.cone,red);tp.scale.set(.42,.6,.42);tp.position.y=3.28;g.add(tp);   // tapering to the nib
+  // the nib: a flat gold blade with a red slit and a breather hole
+  var ns=new THREE.Shape();ns.moveTo(-.16,0);ns.quadraticCurveTo(-.17,.4,0,.85);ns.quadraticCurveTo(.17,.4,.16,0);ns.lineTo(-.16,0);
+  var ng=new THREE.ExtrudeGeometry(ns,{depth:.04,bevelEnabled:false});ng.translate(0,0,-.02);
+  var nib=new THREE.Mesh(ng,gold);nib.position.y=3.45;g.add(nib);
+  var sl=new THREE.Mesh(GEO.box,glow);sl.scale.set(.02,.5,.06);sl.position.y=3.98;g.add(sl);
+  var hole=new THREE.Mesh(GEO.sphLo,glow);hole.scale.setScalar(.07);hole.position.y=3.72;g.add(hole);
+  var ink=new THREE.Mesh(GEO.sphLo,jbAdd(0xff1a2a,.5));ink.scale.setScalar(.42);ink.position.y=4.25;ink.userData.aura=true;g.add(ink);
+  g.userData.pulse=ink;
+  return 4.3;
+};
+IN_HAND.demonyart=1;OWN_GRIP.dpen=1;
+FXD.yartfx={rate:18,c1:0xff1a2a,c2:0x2a0004,vy:[-.6,.4],sp:.25,g:-1.4,sz:.45,life:.8,along:.15,sheath:.12,motes:2};
+SWORD_FX.demonyart="yartfx";
+SWORD_ICON.dpen="<path d='M6 36l3-3' stroke='#e0b040' stroke-width='3.4' stroke-linecap='round'/><path d='M4 34l-1.5-3M8 38l-3 1.5' stroke='#6a0a16' stroke-width='1.8' stroke-linecap='round'/>"+
+  "<path d='M9 33L28 14' stroke='#6a0a16' stroke-width='5.6' stroke-linecap='round'/><path d='M10 32l5-5' stroke='#141014' stroke-width='5.8'/><path d='M17 25l1.6 1.6M26 16l1.6 1.6' stroke='#e0b040' stroke-width='2'/>"+
+  "<path d='M27 12l5 5 5-14z' fill='#e0b040' stroke='#0b1942' stroke-width='1.2'/><path d='M32 12l3-6' stroke='#ff2a3a' stroke-width='1.2'/>"+
+  "<path d='M33 26c2 3 3 4 2 6' stroke='#ff2a3a' stroke-width='1.6' fill='none'/>";
+SIG_SWING.yartslash={dur:.5,col:0xff1a2a,beats:[{w:.34,st:{span:3.6,tilt:-.62,r:2.0,w:1.1,hot:1},col:0xff3a4a,fin:true,demon:true}]};
+SLASH_STYLE.yartslash=SIG_SWING.yartslash.beats[0].st;SWEEP.yartslash=SWEEP.slash;
+// one stroke, one step: up across the body and a long diagonal slash down through it
+SIG_ANIM5.yartslash=function(f,p,arm,la,sw,h,bx,by,bz){
+  var k=keyed,eRest=h.sr[0]+h.ra[0],E;
+  arm.rotation.x=k(p,[[0,h.ra[0]],[.16,-2.6],[.36,-.45],[1,h.ra[0]]]);
+  arm.rotation.z=k(p,[[0,h.ra[2]],[.16,.75],[.36,-.95],[1,h.ra[2]]]);
+  E=k(p,[[0,eRest],[.16,-.35],[.36,2.25],[1,eRest]]);
+  sw.rotation.z=k(p,[[0,h.sr[2]],[.16,h.sr[2]-.4],[.36,h.sr[2]+.6],[1,h.sr[2]]]);
+  arm.position.z=bz+k(p,[[0,0],[.36,.28],[1,0]]);
+  f.legs[1].rotation.x=k(p,[[0,0],[.36,-.55],[1,0]]);f.legs[0].rotation.x=k(p,[[0,0],[.36,.38],[1,0]]);
+  sw.rotation.x=E-arm.rotation.x;
+  if(f.mesh)f.mesh.rotation.y=f.yaw+k(p,[[0,0],[.16,.45],[.36,-.5],[1,0]]);
+};
+SIG_BEAT5.yartslash=function(f,b,i,tip,X,Y,Z,fx,fz){
+  var k,a,R=p4Hex(0xff1a2a);
+  // the red line it writes, hanging in the air
+  hwStreak(X+fx*2.4,Y+2.0,Z+fz*2.4,f.yaw,-.62,8.4,1.6,.7);
+  for(k=0;k<(QUAL>1?30:14);k++){a=f.yaw+1.2-k/30*2.6;var r=hr(1.6,2.6);
+    spark(X+Math.sin(a)*r,Y+3-k/30*2.4,Z+Math.cos(a)*r,Math.sin(a)*hr(1,3),hr(-1,1),Math.cos(a)*hr(1,3),k%3?R[0]:.12,k%3?R[1]:0,k%3?R[2]:.02,hr(.5,.9),hr(.5,.9),-6);}   // ink thrown off it
+  // and out of it, the face
+  var tex=p4Tex("demon"),dx=X+fx*3.6,dz=Z+fz*3.6;
+  var r1=p4Sprite(dx,Y+3.4,dz,tex,0xffffff,7.5,1.1,.5,false);
+  if(r1)r1.onTick=function(r,u){r.m.scale.setScalar(r.size*(.55+.6*Math.min(1,u*2.4)));r.m.position.x+=Math.sin(u*90)*.05*(1-u);};
+  var r2=p4Sprite(dx,Y+3.4,dz,p4Tex("demonglow"),0xff2a2a,9,.9,.5);
+  hwDecal(X+fx*2.6,Y+.07,Z+fz*2.6,"demonsig",0xff1a2a,6,1.4,.4,f.yaw);
+  if(f===player)shakeCam(.2);
+};
+SIG_SFX5.yartslash=function(d){
+  var dd=SIG_SWING.yartslash.dur*1000;
+  tone(500,1400,.12,"sawtooth",.04);
+  setTimeout(function(){noiseHit(.45,.3,700);tone(90,45,.8,"sawtooth",.22);tone(60,30,.9,"sine",.25);tone(1300,400,.35,"square",.035);},dd*.2);
+};
+// the face: horns, a heavy brow, slit yellow eyes, a grin full of teeth
+var _jbTex2=p4Tex;
+p4Tex=function(kind){
+  if((kind!=="demon"&&kind!=="demonglow")||P4_TEX[kind])return _jbTex2(kind);
+  var c=cvs(256,256),x=c.getContext("2d");x.translate(128,136);
+  if(kind==="demonglow"){var gl=x.createRadialGradient(0,0,10,0,0,124);gl.addColorStop(0,"rgba(255,255,255,.7)");gl.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=gl;x.fillRect(-128,-136,256,256);return (P4_TEX[kind]=mkTex(c));}
+  x.lineJoin="round";
+  // horns
+  x.fillStyle="#2a0408";x.strokeStyle="#000";x.lineWidth=4;
+  for(var sd=-1;sd<=1;sd+=2){x.beginPath();x.moveTo(sd*44,-60);x.quadraticCurveTo(sd*100,-90,sd*92,-128);x.quadraticCurveTo(sd*80,-84,sd*24,-72);x.closePath();x.fill();x.stroke();}
+  // the head
+  var hg=x.createRadialGradient(0,-10,10,0,0,100);hg.addColorStop(0,"#d01a24");hg.addColorStop(.7,"#7a0810");hg.addColorStop(1,"#3a0206");
+  x.fillStyle=hg;x.beginPath();x.moveTo(0,-84);x.bezierCurveTo(70,-84,92,-30,84,20);x.bezierCurveTo(76,70,36,104,0,108);x.bezierCurveTo(-36,104,-76,70,-84,20);x.bezierCurveTo(-92,-30,-70,-84,0,-84);x.fill();x.stroke();
+  // the brow, and the eyes under it
+  x.fillStyle="#3a0206";x.beginPath();x.moveTo(-74,-26);x.lineTo(-8,-6);x.lineTo(0,-20);x.lineTo(8,-6);x.lineTo(74,-26);x.lineTo(70,-40);x.lineTo(0,-30);x.lineTo(-70,-40);x.closePath();x.fill();
+  for(sd=-1;sd<=1;sd+=2){x.fillStyle="#ffe040";x.beginPath();x.moveTo(sd*12,-6);x.lineTo(sd*60,-20);x.lineTo(sd*54,2);x.closePath();x.fill();
+    x.fillStyle="#000";x.fillRect(sd*36-3,-16,6,16);}
+  // nostrils, the grin and its teeth
+  x.fillStyle="#2a0004";x.beginPath();x.ellipse(-9,24,5,8,.3,0,TAU);x.ellipse(9,24,5,8,-.3,0,TAU);x.fill();
+  x.fillStyle="#120002";x.beginPath();x.moveTo(-60,42);x.quadraticCurveTo(0,64,60,42);x.quadraticCurveTo(40,96,0,96);x.quadraticCurveTo(-40,96,-60,42);x.fill();
+  x.fillStyle="#f4ecd8";for(var i=0;i<8;i++){var tx=-50+i*14.3;x.beginPath();x.moveTo(tx,46+Math.abs(i-3.5)*1.5+4);x.lineTo(tx+7,70);x.lineTo(tx+14,47+Math.abs(i-3.5)*1.5+4);x.fill();}
+  for(i=0;i<6;i++){var bx2=-36+i*14.4;x.beginPath();x.moveTo(bx2,92);x.lineTo(bx2+7,76);x.lineTo(bx2+14,92);x.fill();}
+  return (P4_TEX[kind]=mkTex(c));
+};
+var _jbDecal2=hwDecalTex;
+hwDecalTex=function(kind){
+  if(HW_DEC.tex[kind]||kind!=="demonsig")return _jbDecal2(kind);
+  var c=cvs(256,256),x=c.getContext("2d"),i;x.strokeStyle="#fff";x.lineCap="round";x.lineJoin="round";x.translate(128,128);
+  x.lineWidth=7;x.beginPath();x.arc(0,0,112,0,TAU);x.stroke();x.lineWidth=3;x.beginPath();x.arc(0,0,96,0,TAU);x.stroke();
+  x.lineWidth=6;x.beginPath();for(i=0;i<=5;i++){var a=-Math.PI/2+i*TAU*2/5;x.lineTo(Math.cos(a)*96,Math.sin(a)*96);}x.stroke();
+  x.lineWidth=3;for(i=0;i<10;i++){var a2=i/10*TAU;x.beginPath();x.moveTo(Math.cos(a2)*100,Math.sin(a2)*100);x.lineTo(Math.cos(a2)*108,Math.sin(a2)*108);x.stroke();}
+  return (HW_DEC.tex[kind]=mkTex(c));
+};
+
+/* ---------------- DUTRO CANNON: Big Onion 1's ----------------
+   A big pink hand cannon held at the hip: a fat barrel in rings, a flared
+   muzzle, a pistol grip and a front grip. Every swing fires it, and the shot
+   goes off in a white blast; a parry blows up white right on the ball. */
+SIG_SHAPE.dcannon=function(g,seg,B,H,G){
+  var i,sd,Z=-.46;
+  var pk=new THREE.MeshPhongMaterial({color:0xff6ab8,shininess:110,specular:0xffe0f0,emissive:0x3a0820,emissiveIntensity:.35});
+  var dk=new THREE.MeshPhongMaterial({color:0xc8307e,shininess:80});
+  var wh=new THREE.MeshPhongMaterial({color:0xfff4fa,shininess:120});
+  var blk=new THREE.MeshBasicMaterial({color:0x140810});
+  var cg=new THREE.CylinderGeometry(.5,.5,1,16);
+  function ring(r,h,y,m){var c=new THREE.Mesh(cg,m);c.scale.set(r*2,h,r*2);c.position.set(0,y,Z);g.add(c);return c;}
+  var bar=ring(.42,3.1,1.0,pk);bar.userData.core=true;
+  var bk=new THREE.Mesh(GEO.sphLo,pk);bk.scale.set(.86,.6,.86);bk.position.set(0,-.55,Z);g.add(bk);       // the breech
+  var kn=new THREE.Mesh(GEO.sphLo,dk);kn.scale.setScalar(.28);kn.position.set(0,-.86,Z);g.add(kn);
+  [-.3,.35,1.2,2.05].forEach(function(y,k){ring(.47,.14,y,k%2?wh:dk);});
+  ring(.56,.34,2.62,dk);ring(.6,.12,2.84,wh);                              // the flared muzzle
+  var bo=new THREE.Mesh(GEO.cyl8,blk);bo.scale.set(.62,.02,.62);bo.position.set(0,2.91,Z);g.add(bo);
+  // grips: the pistol grip the hand is on, and one forward for the other hand
+  var gp=new THREE.Mesh(GEO.box,dk);gp.scale.set(.22,.36,.5);gp.position.set(0,0,-.08);gp.rotation.x=-.25;g.add(gp);
+  var tg=new THREE.Mesh(GEO.box,dk);tg.scale.set(.06,.4,.26);tg.position.set(0,.3,-.22);g.add(tg);
+  var fg=new THREE.Mesh(GEO.box,dk);fg.scale.set(.2,.24,.44);fg.position.set(0,1.55,-.14);g.add(fg);
+  // a sight on top, white hearts on the sides
+  var st=new THREE.Mesh(GEO.box,wh);st.scale.set(.08,.5,.18);st.position.set(0,.6,Z-.5);g.add(st);
+  var hgeo=new THREE.ExtrudeGeometry(jbHeart(.36),{depth:.03,bevelEnabled:false,curveSegments:8});
+  for(sd=-1;sd<=1;sd+=2){var hm=new THREE.Mesh(hgeo,wh);hm.rotation.y=sd*Math.PI/2;hm.rotation.x=Math.PI/2;hm.position.set(sd*.43,1.62,Z);g.add(hm);}
+  var mg=new THREE.Mesh(GEO.sphLo,jbAdd(0xff8ad0,.0));mg.scale.setScalar(1.1);mg.position.set(0,3.05,Z);mg.userData.aura=true;g.add(mg);
+  g.userData.muzzle=mg;
+  return 3.0;
+};
+// pointed straight ahead from the hip, the other hand on the front grip
+HOLD.cannon={sp:[0,-1.3,.04],sr:[2.02,0,0],ra:[-0.45,0,0.12],la:[-1.05,0.55,0.62]};
+IN_HAND.dutrocannon=1;OWN_GRIP.dcannon=1;
+FXD.dutrofx={rate:10,c1:0xff8ad0,c2:0xffffff,vy:[.3,1.2],sp:.2,g:-.4,sz:.4,life:.6,along:.1,sheath:0,motes:0,ring:0xff6ab8};
+SWORD_FX.dutrocannon="dutrofx";
+SWORD_ICON.dcannon="<path d='M8 22l20-8 4 9-20 8z' fill='#ff6ab8' stroke='#0b1942' stroke-width='1.5'/><path d='M27 13l4-2 5 11-4 2z' fill='#c8307e' stroke='#0b1942' stroke-width='1.3'/>"+
+  "<ellipse cx='34' cy='17' rx='2.2' ry='5' transform='rotate(-24 34 17)' fill='#140810'/><path d='M14 20l3 7M20 17.5l3 7' stroke='#fff' stroke-width='1.6'/><circle cx='8' cy='26' r='4' fill='#ff6ab8' stroke='#0b1942' stroke-width='1.3'/>"+
+  "<path d='M14 30l-2 6h4l2-5' fill='#c8307e' stroke='#0b1942' stroke-width='1.2'/><path d='M37 8l2-3M38 13l3-1M35 4l0-3' stroke='#fff' stroke-width='1.4' stroke-linecap='round'/>";
+SIG_SWING.dutroshot={dur:.48,col:0xff6ab8,beats:[{w:.12,shot:true,fin:true}]};
+SWEEP.dutroshot=SWEEP.slash;
+// one shot, one step: the kick throws the barrel up and the body back a step
+SIG_ANIM5.dutroshot=function(f,p,arm,la,sw,h,bx,by,bz){
+  var k=keyed;
+  var kick=k(p,[[0,0],[.12,0],[.2,1],[.55,.15],[1,0]]);
+  arm.rotation.x=h.ra[0]-.55*kick;arm.rotation.z=h.ra[2];
+  la.rotation.x=h.la[0]-.5*kick;la.rotation.y=h.la[1];la.rotation.z=h.la[2];
+  sw.rotation.x=(h.sr[0]+h.ra[0])-arm.rotation.x-.25*kick;
+  arm.position.z=bz-.25*kick;
+  f.legs[0].rotation.x=k(p,[[0,0],[.2,-.35],[1,0]]);f.legs[1].rotation.x=k(p,[[0,0],[.2,.22],[1,0]]);
+  if(f.mesh){f.mesh.rotation.y=f.yaw+.12*kick;f.mesh.rotation.x=-.08*kick;}
+};
+SIG_BEAT5.dutroshot=function(f,b,i,tip,X,Y,Z,fx,fz){
+  var k,P=p4Hex(0xff6ab8);
+  burst(tip.x,tip.y,tip.z,QUAL>1?26:12,10,0xffc4e6,1.2,.3,0);
+  ringBurst(tip.x,tip.y,tip.z,QUAL>1?16:8,8,0xff6ab8,1,.3);
+  for(k=0;k<(QUAL>1?14:6);k++)spark(tip.x,tip.y,tip.z,fx*hr(1,3)+hr(-.6,.6),hr(.3,1.4),fz*hr(1,3)+hr(-.6,.6),.85,.8,.84,hr(.9,1.5),hr(.8,1.3),-.6);   // smoke
+  var mz=f.sword&&f.sword.userData.muzzle;
+  if(mz){mz.material.opacity=.9;setTimeout(function(){if(mz.material)mz.material.opacity=0;},70);}
+  jbBall(f,tip);
+  if(f===player)shakeCam(.18);
+};
+SIG_SFX5.dutroshot=function(d){
+  setTimeout(function(){noiseHit(.5,.5,500);tone(140,35,.45,"sawtooth",.25);tone(80,30,.6,"sine",.3);},SIG_SWING.dutroshot.dur*1000*.08);
+};
+// a white blast: a flash, a ring, a white pillar, smoke rolling off it
+function jbWhiteBoom(x,y,z,big){
+  burst(x,y,z,QUAL>1?(big?44:30):16,big?14:11,0xffffff,big?1.7:1.3,.45,-2);
+  ringBurst(x,y,z,QUAL>1?22:10,big?14:10,0xfff4fa,1.3,.4);
+  if(QUAL>0){var t=p4Tex("demonglow");p4Sprite(x,y,z,t,0xffffff,big?7:5,.35,0);
+    for(var k=0;k<(QUAL>1?16:6);k++)spark(x+hr(-.8,.8),y+hr(-.5,.8),z+hr(-.8,.8),hr(-1.5,1.5),hr(.4,2),hr(-1.5,1.5),.92,.9,.92,hr(1.2,2),hr(1,1.6),-.3);}
+}
+// the cannonball: pink, trailing white sparks, white blast where it lands
+function jbBall(f,p){
+  if(typeof scene==="undefined"||!scene)return;
+  var fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),g=new THREE.Group(),M=[];
+  function mk(c,o,s,add){var m=new THREE.Mesh(GEO.sphLo,add?jbAdd(c,o):new THREE.MeshPhongMaterial({color:c,shininess:120,emissive:0x3a0820}));m.scale.setScalar(s);m.frustumCulled=false;g.add(m);M.push(m);return m;}
+  mk(0xff6ab8,1,.7,false);mk(0xffc4e6,.4,1.2,true);
+  g.position.set(p.x,p.y,p.z);scene.add(g);
+  var t=0,L=.5,sp=32,Yg=f.y;
+  V4FX.push({tick:function(dt){t+=dt;var gp=g.position;
+      if(t>=L||gp.y<Yg+.4){jbWhiteBoom(gp.x,Math.max(gp.y,Yg+.6),gp.z,false);
+        if(QUAL>0)hwBeam(gp.x,Yg,gp.z,0xffffff,1.1,.3);
+        try{if(f===player||(player&&dist2(f.pos.x,f.pos.z,player.pos.x,player.pos.z)<30*30)){noiseHit(.4,.35,600);tone(100,30,.4,"sine",.18);}}catch(e){}
+        return false;}
+      gp.x+=fx*sp*dt;gp.z+=fz*sp*dt;gp.y-=dt*1.2;
+      if(QUAL>0&&Math.random()<.8)spark(gp.x-fx*.4,gp.y,gp.z-fz*.4,hr(-.3,.3),hr(0,.6),hr(-.3,.3),1,hr(.8,1),hr(.9,1),hr(.4,.7),hr(.3,.5),0);
+      return true;},
+    done:function(){if(g.parent)g.parent.remove(g);M.forEach(function(m){m.material.dispose();});}});
+}
+SWORD_PARRY_FX.dutrocannon=function(by,tip){
+  if(NET.srv||QUAL===0)return;
+  var fx=Math.sin(by.yaw),fz=Math.cos(by.yaw);
+  jbWhiteBoom(tip.x+fx*.8,tip.y,tip.z+fz*.8,true);
+  try{noiseHit(.5,.4,900);tone(160,40,.4,"square",.06);}catch(e){}
+};
+
+/* ---------------- RAMP TESLA CAM: Smg's ----------------
+   A little white electric car, held by the back bumper. Swung overhead and
+   down, it grows the whole way, and at the moment it lands it is the size of
+   a real car. Then it shrinks back into his hand. */
+SIG_SHAPE.evcar=function(g,seg,B,H,G){
+  var i,sd,U=-1;           // the roof is on -z: held out, that is up
+  var body=new THREE.MeshPhongMaterial({color:0xf2f4f6,shininess:140,specular:0xffffff});
+  var glass=new THREE.MeshPhongMaterial({color:0x1a2230,shininess:160,specular:0xaabbdd});
+  var tyre=new THREE.MeshLambertMaterial({color:0x141416}),hub=new THREE.MeshPhongMaterial({color:0x9aa0a8,shininess:90});
+  var lite=new THREE.MeshBasicMaterial({color:0xffffff,toneMapped:false}),tail=new THREE.MeshBasicMaterial({color:0xff1a2a,toneMapped:false});
+  var trim=new THREE.MeshLambertMaterial({color:0x2a2c30});
+  function bx(w,l,h,x,y,z,m,r){var q=new THREE.Mesh(GEO.box,m);q.scale.set(w,l,h);q.position.set(x,y,z);if(r)q.rotation.set(r[0]||0,r[1]||0,r[2]||0);g.add(q);return q;}
+  // the body: low, long, a smooth nose
+  var lo=bx(.64,1.3,.2,0,.7,0,body);lo.userData.core=true;
+  bx(.6,.2,.16,0,1.4,.02,body,[-.35,0,0]);                                 // the nose, sloped down
+  bx(.6,.12,.18,0,.02,-.01,body);                                          // the tail
+  // the glasshouse: windscreen, roof, rear glass
+  bx(.54,.3,.04,0,1.06,U*.18,glass,[.85,0,0]);
+  bx(.56,.5,.05,0,.7,U*.26,glass);
+  bx(.54,.36,.04,0,.3,U*.18,glass,[-.6,0,0]);
+  for(sd=-1;sd<=1;sd+=2){bx(.03,.82,.12,sd*.29,.7,U*.17,glass);bx(.06,.05,.04,sd*.36,1.0,U*.12,body);}   // side windows, mirrors
+  // lights: a bar across the nose, a red strip across the tail
+  bx(.52,.03,.04,0,1.47,U*.02,lite);bx(.58,.03,.04,0,-.05,U*.04,tail);
+  bx(.5,.02,.06,0,1.5,.07,trim);
+  // wheels, set in under the arches
+  var wg=new THREE.CylinderGeometry(.5,.5,1,12);
+  for(sd=-1;sd<=1;sd+=2)for(i=0;i<2;i++){var y=i?1.08:.28;
+    var w=new THREE.Mesh(wg,tyre);w.scale.set(.28,.1,.28);w.rotation.z=Math.PI/2;w.position.set(sd*.31,y,.1);g.add(w);
+    var hb=new THREE.Mesh(wg,hub);hb.scale.set(.17,.02,.17);hb.rotation.z=Math.PI/2;hb.position.set(sd*.365,y,.1);g.add(hb);}
+  g.userData.carLite=lite;
+  return 1.5;
+};
+HOLD.toycar={sp:[0,-1.32,.12],sr:[1.55,0,0.1],ra:[-0.35,0,0.14],la:[-0.12,0,-0.12]};
+IN_HAND.rampteslacam=1;OWN_GRIP.evcar=1;
+FXD.carfx={rate:0,sheath:0};
+SWORD_FX.rampteslacam="carfx";
+SWORD_ICON.evcar="<path d='M4 27l3-7c2-1 6-2 9-2l5-5c4-1 9-1 12 1l4 6 2 1v6z' fill='#f2f4f6' stroke='#0b1942' stroke-width='1.5'/><path d='M17 18l4-4c3-1 7-1 10 0l3 4z' fill='#1a2230'/>"+
+  "<circle cx='12' cy='28' r='3.4' fill='#141416' stroke='#0b1942' stroke-width='1'/><circle cx='31' cy='28' r='3.4' fill='#141416' stroke='#0b1942' stroke-width='1'/><circle cx='12' cy='28' r='1.4' fill='#9aa0a8'/><circle cx='31' cy='28' r='1.4' fill='#9aa0a8'/>"+
+  "<path d='M38 22h2M4 23h2' stroke='#ff1a2a' stroke-width='1.6'/><path d='M3 11l4 3M2 17h4M8 7l2 4' stroke='#8adcff' stroke-width='1.4' stroke-linecap='round'/>";
+SIG_SWING.carslam={dur:.72,col:0xe8f0ff,beats:[{w:.3,grow:true},{w:.52,crash:true,fin:true}]};
+SWEEP.carslam=SWEEP.slash;
+// how big it is through the swing: a toy at the start, full size at the hit
+var CAR_GROW=[[0,1],[.3,1.6],[.52,6.2],[.66,6.2],[.86,1.4],[1,1]];
+SIG_ANIM5.carslam=function(f,p,arm,la,sw,h,bx,by,bz){
+  var k=keyed,E,eRest=h.sr[0]+h.ra[0];
+  arm.rotation.x=k(p,[[0,h.ra[0]],[.3,-2.95],[.52,-.7],[1,h.ra[0]]]);
+  arm.rotation.z=k(p,[[0,h.ra[2]],[.3,-.1],[.52,-.2],[1,h.ra[2]]]);
+  la.rotation.x=k(p,[[0,h.la[0]],[.3,-2.8],[.52,-.8],[1,h.la[0]]]);
+  la.rotation.z=k(p,[[0,h.la[2]],[.3,.15],[.52,.3],[1,h.la[2]]]);
+  E=k(p,[[0,eRest],[.3,-.9],[.52,1.62],[1,eRest]]);
+  sw.rotation.z=k(p,[[0,h.sr[2]],[.3,0],[.52,0],[1,h.sr[2]]]);
+  arm.position.z=bz+k(p,[[0,0],[.52,.3],[1,0]]);
+  f.legs[1].rotation.x=k(p,[[0,0],[.52,-.7],[1,0]]);f.legs[0].rotation.x=k(p,[[0,0],[.52,.48],[1,0]]);
+  sw.rotation.x=E-arm.rotation.x;
+  sw.scale.setScalar((f.swordScale||1)*k(p,CAR_GROW));
+  if(f.mesh){f.mesh.rotation.y=f.yaw+k(p,[[0,0],[.3,.2],[.52,-.1],[1,0]]);f.mesh.position.y+=k(p,[[0,0],[.3,.08],[.52,-.3],[1,0]]);}
+};
+// put it back to toy size whenever it is not being swung (a swing cut short
+// would otherwise leave it huge)
+var _jbIdle2=Fighter.prototype.idleWeapon;
+Fighter.prototype.idleWeapon=function(dt,t){
+  _jbIdle2.call(this,dt,t);
+  if(this.sword&&this.swordDef&&this.swordDef.swing==="carslam"){var s=this.swordScale||1;if(Math.abs(this.sword.scale.x-s)>1e-4)this.sword.scale.setScalar(s);}
+};
+SIG_BEAT5.carslam=function(f,b,i,tip,X,Y,Z,fx,fz){
+  var k,a;
+  if(b.grow)return;                    // up over the head, still toy-sized
+  // where the nose came down: glass, sparks, dust, a dent in the floor
+  var gx=tip.x,gz=tip.z,d2=Math.hypot(gx-X,gz-Z);if(d2<3||d2>12){gx=X+fx*7;gz=Z+fz*7;}
+  var mx=(X+gx)/2,mz=(Z+gz)/2;
+  hwDecal(mx,Y+.07,mz,"axe",0xcfe4ff,9,1.4,0,f.yaw+Math.PI/2);
+  slashRing(gx,Y+.1,gz,0xffffff,0,0);slashRing(mx,Y+.1,mz,0xcfe4ff,.08,0);
+  ringBurst(gx,Y+.5,gz,QUAL>1?24:12,12,0xffffff,1.2,.4);
+  for(k=0;k<(QUAL>1?26:12);k++){a=hr(0,TAU);spark(mx+hr(-3,3)*fx,Y+.4,mz+hr(-3,3)*fz,Math.sin(a)*hr(2,6),hr(3,8),Math.cos(a)*hr(2,6),.7,.9,1,hr(.25,.45),hr(.6,1),-18);}   // glass
+  for(k=0;k<(QUAL>1?22:10);k++){var u=k/22;spark(X+(gx-X)*u+hr(-1,1),Y+.2,Z+(gz-Z)*u+hr(-1,1),hr(-6,6),hr(1,5),hr(-6,6),1,hr(.7,.95),.4,hr(.25,.4),hr(.3,.6),-14);}   // sparks
+  for(k=0;k<(QUAL>1?18:8);k++){a=hr(0,TAU);var r=hr(1,4);spark(mx+Math.sin(a)*r,Y+hr(.2,1),mz+Math.cos(a)*r,Math.sin(a)*hr(.5,2),hr(.3,1.2),Math.cos(a)*hr(.5,2),.78,.76,.74,hr(1.2,2),hr(1.2,1.8),-.3);}   // dust
+  var L=f.sword&&f.sword.userData.carLite;if(L){L.color.setHex(0xfff4b0);setTimeout(function(){L.color.setHex(0xffffff);},180);}
+  if(f===player)shakeCam(.4);
+};
+SIG_SFX5.carslam=function(d){
+  var dd=SIG_SWING.carslam.dur*1000;
+  tone(200,600,.35,"sine",.04);
+  setTimeout(function(){noiseHit(.8,.6,350);tone(70,30,.7,"sawtooth",.3);noiseHit(.35,.3,4500);
+    setTimeout(function(){tone(392,392,.22,"square",.05);tone(494,494,.22,"square",.05);},140);},dd*.3);   // the crunch, then the horn
+};
+/* ==== 4.6 END ==== */
+
 
 
 
@@ -21784,8 +22188,9 @@ var PACKS={
   // popup, and the server will not sell it. The items are UNRELEASED until
   // then too, so the only way to have them is a gift
   jays:{name:"JBOB & JDOG PACK",yen:1800,col:"#4ac0ff",off:true,
-    items:[["skin","jbob"],["skin","jdog"],["sword","jbobfire"],["sword","moakslayer"],["emote","powersurge"]],
-    desc:"Jbob and Jdog (skins), Blue Blaze and The Moak Slayer (blades) and the Power Surge emote. Only in this pack, and only for one week.",
+    items:[["skin","jbob"],["skin","jdog"],["skin","zandeezy"],["skin","bigonion"],["skin","smg"],
+      ["sword","jbobfire"],["sword","moakslayer"],["sword","demonyart"],["sword","dutrocannon"],["sword","rampteslacam"],["emote","powersurge"]],
+    desc:"Jbob, Jdog, Zandeezy, Big Onion 1 and Smg (skins), Blue Blaze, The Moak Slayer, Demon Yart, Dutro Cannon and Ramp Tesla Cam (blades) and the Power Surge emote. Only in this pack, and only for one week.",
     from:EVENT_SHOPS.wendigo.to+14*864e5,to:EVENT_SHOPS.wendigo.to+21*864e5}
 };
 // the pack the stand is showing: the one on sale, or the next to open
