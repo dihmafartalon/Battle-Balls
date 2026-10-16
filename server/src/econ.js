@@ -383,7 +383,7 @@ export function applyAct(s, a, ctx) {
   /* ---- packs: everything in it, for one price, while you are missing any of it ---- */
   if (a.k === "pack") {
     const P = CAT.packs && typeof a.pack === "string" && Object.prototype.hasOwnProperty.call(CAT.packs, a.pack) ? CAT.packs[a.pack] : null;
-    if (!P || (P.from && now < P.from) || (P.to && now >= P.to)) return { ok: false, why: "That pack is not for sale." };
+    if (!P || P.off || (P.from && now < P.from) || (P.to && now >= P.to)) return { ok: false, why: "That pack is not for sale." };
     const has = ([t, id]) => t === "emote" ? !!s.emotes[id] : own(s, t, id);
     if (P.items.every(has)) return { ok: false, why: "You already own everything in it." };
     if (s.yen < P.yen) return { ok: false, why: "Not enough yen." };
