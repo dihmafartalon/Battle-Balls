@@ -272,9 +272,9 @@ console.log("currency split tests passed"); }
     assert.ok(!s.skins.jbob && !s.skins.smg && !s.swords.moakslayer && !s.swords.rampteslacam && !s.emotes.powersurge);
   }
   const it = (t, id) => CAT.items[t].list.find(x => x.id === id);
-  const ALL = [["skin", "jbob"], ["skin", "jdog"], ["skin", "zandeezy"], ["skin", "bigonion"], ["skin", "smg"],
+  const ALL = [["skin", "jbob"], ["skin", "jdog"], ["skin", "zandeezy"], ["skin", "bigonion"], ["skin", "smg"], ["skin", "ricky"],
     ["sword", "jbobfire"], ["sword", "moakslayer"], ["sword", "demonyart"], ["sword", "dutrocannon"], ["sword", "rampteslacam"]];
-  assert.deepEqual(P.items.filter(q => q[0] !== "emote").map(q => q[1]).sort(), ALL.map(q => q[1]).sort(), "all ten are in the pack");
+  assert.deepEqual(P.items.filter(q => q[0] !== "emote").map(q => q[1]).sort(), ALL.map(q => q[1]).sort(), "every skin and blade is in the pack");
   for (const [t, id] of ALL) {
     assert.ok(it(t, id), id); assert.equal(it(t, id).r, "secret", id + " is unreleased"); assert.equal(it(t, id).v, 0, id + " has no value");
   }
@@ -287,7 +287,10 @@ console.log("currency split tests passed"); }
   g.skins.smg = 1; g.swords.rampteslacam = 1;
   assert.equal(applyAct(g, { k: "sell", tab: "skin", id: "smg" }, { now: P.from }).ok, false);
   assert.equal(applyAct(g, { k: "sell", tab: "sword", id: "rampteslacam" }, { now: P.from }).ok, false);
-  assert.ok(!CAT.emotes.find(e => e.id === "powersurge").base, "the emote is not one everybody has");
+  for (const id of ["powersurge", "cammy"]) {
+    assert.ok(P.items.some(q => q[0] === "emote" && q[1] === id), id + " is in the pack");
+    assert.ok(!CAT.emotes.find(e => e.id === id).base, id + " is not one everybody has");
+  }
   // the After Hours Pack is untouched
   const s4 = ensure({ yen: 5000, econ: { v: 1 } });
   assert.ok(applyAct(s4, { k: "pack", pack: "afterhours" }, { now: A.from + 864e5 }).ok);
