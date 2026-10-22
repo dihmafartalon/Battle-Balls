@@ -2135,6 +2135,8 @@ var SWORDS=[
   desc:"Big Onion 1's. A big pink hand cannon held at the hip. Every swing fires it, and every hit goes off in a white blast."},
  {id:"rampteslacam",name:"Ramp Tesla Cam",rarity:"secret",price:-1,blade:0xf2f4f6,hilt:0x1a2230,glow:0xcfe4ff,shape:"evcar",hold:"toycar",swing:"carslam",idle:"none",size:1,
   desc:"Smg's. A little white electric car, held by the bumper. Swung overhead, it grows the whole way down, and lands the size of a real one."},
+ {id:"thehog",name:"The Hog",rarity:"secret",price:-1,blade:0xa02a5a,hilt:0x3a0c22,glow:0xc84a8a,shape:"tentacle",hold:"hog",swing:"hogslap",idle:"none",size:1,
+  desc:"Ricky's. A big octopus tentacle, suckers and all. It never quite holds still, and it cracks like a whip -- one wet slap and there's ink on the floor."},
  {id:"plaque",name:"Platinum Plaque",rarity:"mythic",event:"pack",price:-1,yen:345,blade:0xe8eef6,hilt:0x141416,glow:0xdfe8ff,shape:"plaque",hold:"two",swing:"hammer",idle:"none",size:.82,
   desc:"A framed platinum record, swung like a bat. Every block lands with a flash of PARRY!"},
  {id:"vampfang",name:"Vamp Fang",rarity:"mythic",event:"pack",secret:true,price:-1,yen:345,blade:0xf2ead8,hilt:0x141016,glow:0xff1a34,shape:"vampfang",hold:"one",swing:"slash",idle:"none",
@@ -17654,6 +17656,99 @@ hwDecalTex=function(kind){
 };
 P2_EMOTE_ICON.cammy="<path d='M5 27l2-6 5-1 3-5h9l4 5 6 1 1 6z' fill='#121216' stroke='#2ad8ff' stroke-width='1.3'/><circle cx='12' cy='28' r='3.2' fill='#0c0c0e' stroke='#b8bec8' stroke-width='1.2'/><circle cx='29' cy='28' r='3.2' fill='#0c0c0e' stroke='#b8bec8' stroke-width='1.2'/>"+
   "<circle cx='19' cy='12' r='3.2' fill='#d9a882' stroke='#0b1942' stroke-width='1'/><path d='M16 11c0-3 6-3 6 0' fill='#221810'/><path d='M36 22l3-1M36 24h3' stroke='#fffbe0' stroke-width='1.4'/><path d='M2 30c1-2 3-2 4 0' stroke='#d8d8dc' stroke-width='1.4' fill='none'/>";
+
+/* ---------------- THE HOG: Ricky's ----------------
+   A big octopus tentacle, gripped at the thick end: deep red-purple, mottled,
+   with two rows of pale suckers down the inside. It is a chain of joints, so
+   it never holds still -- it sways and curls at rest, and in a swing it lags
+   behind the hand and cracks through like a whip. */
+var HOG_N=11,HOG_L=.44;
+SIG_SHAPE.tentacle=function(g,seg,B,H,G){
+  var skin=new THREE.MeshPhongMaterial({color:0xa02a5a,shininess:90,specular:0xffc0d8,emissive:0x2a0414,emissiveIntensity:.4});
+  var dark=new THREE.MeshPhongMaterial({color:0x6a1438,shininess:60});
+  var suck=new THREE.MeshPhongMaterial({color:0xf2b8c8,shininess:120}),cup=new THREE.MeshLambertMaterial({color:0x8a2a4a});
+  var grip=new THREE.MeshLambertMaterial({color:0x3a0c22});
+  var gc=new THREE.CylinderGeometry(.5,.5,1,10);
+  // the cut end in the fist, wrapped
+  var gp=new THREE.Mesh(gc,grip);gp.scale.set(.5,.62,.5);gp.position.y=.1;g.add(gp);
+  var J=[],parent=g,y0=.42;
+  for(var i=0;i<HOG_N;i++){
+    var u=i/(HOG_N-1),r=.3*(1-u)+.07*u,jt=new THREE.Group();jt.position.y=i?HOG_L:y0;parent.add(jt);J.push(jt);
+    var s=new THREE.Mesh(gc,i%3===1?dark:skin);s.scale.set(r*2,HOG_L*1.08,r*2);s.position.y=HOG_L/2;jt.add(s);
+    if(i===0)s.userData.core=true;
+    var kn=new THREE.Mesh(GEO.sphLo,skin);kn.scale.setScalar(r*2.02);jt.add(kn);   // rounds off each joint
+    // two rows of suckers down the inside (+z), smaller toward the tip
+    for(var sd=-1;sd<=1;sd+=2){var c=new THREE.Mesh(GEO.sphLo,suck);var cs=r*.62;c.scale.set(cs,cs,cs*.5);c.position.set(sd*r*.42,HOG_L*.5,r*.86);jt.add(c);
+      var c2=new THREE.Mesh(GEO.sphLo,cup);c2.scale.set(cs*.45,cs*.45,cs*.3);c2.position.set(sd*r*.42,HOG_L*.5,r*.86+cs*.22);jt.add(c2);}
+    parent=jt;
+  }
+  var tp=new THREE.Mesh(GEO.cone,skin);tp.scale.set(.14,.36,.14);tp.position.y=HOG_L+.12;parent.add(tp);
+  g.userData.hog={J:J,lash:0,at:-1};
+  gp.onBeforeRender=function(){jbHogCurl(g);};jbHogCurl(g);
+  return y0+HOG_N*HOG_L;
+};
+// the curl: at rest a slow sway and a coiled tip; in a swing (lash set by the
+// animation) a wave that runs from the hand out to the tip a beat behind it
+function jbHogCurl(g){
+  var Hd=g.userData.hog,J=Hd.J,t=performance.now()/1000,ph=(g.id%13)*.5;
+  var live=t-Hd.at<.12,p=Hd.lash;
+  for(var i=0;i<J.length;i++){var u=i/(J.length-1),a,z;
+    if(live){var q=p-u*.09;                                              // each joint a little later than the last
+      a=keyed(clamp(q,0,1),[[0,.1],[.28,-.32],[.44,-.1],[.54,.42],[.66,.16],[1,.1]])*(.6+u*.8);z=Math.sin(q*9)*.05*u;}
+    else{a=.06+.05*Math.sin(t*1.8-i*.55+ph)+(u>.6?(u-.6)*.9:0);z=.06*Math.sin(t*1.3-i*.4+ph);}
+    J[i].rotation.x=a;J[i].rotation.z=z;}
+}
+HOLD.hog={sp:[0,-1.24,.12],sr:[1.0,0,0.08],ra:[-0.4,0,0.14],la:null};
+IN_HAND.thehog=1;OWN_GRIP.tentacle=1;
+FXD.hogfx={rate:10,c1:0x9adcff,c2:0xffffff,vy:[-1.4,-.2],sp:.15,g:-4,sz:.3,life:.6,along:.9,sheath:0,motes:0};     // it drips
+SWORD_FX.thehog="hogfx";
+SWORD_ICON.tentacle="<path d='M6 36c2-2 4-3 6-3' stroke='#3a0c22' stroke-width='5' stroke-linecap='round'/>"+
+  "<path d='M10 33C18 30 22 24 24 17 26 10 31 5 35 7 38 9 36 14 32 13' stroke='#a02a5a' stroke-width='7' fill='none' stroke-linecap='round'/>"+
+  "<g fill='#f2b8c8' stroke='#8a2a4a' stroke-width='.7'><circle cx='14' cy='33' r='1.6'/><circle cx='19' cy='29.5' r='1.5'/><circle cx='22.5' cy='24.5' r='1.4'/><circle cx='24.8' cy='18.8' r='1.3'/><circle cx='27.5' cy='12.5' r='1.1'/><circle cx='31.5' cy='9' r='1'/></g>"+
+  "<path d='M34 18l1 3M30 20l-1 3M37 16l2 2' stroke='#9adcff' stroke-width='1.3' stroke-linecap='round'/>";
+SIG_SWING.hogslap={dur:.62,col:0xc84a8a,beats:[{w:.3,coil:true},{w:.54,st:{span:3.2,tilt:-.75,r:2.4,w:1.2,hot:1},col:0xd86aa0,fin:true}]};
+SLASH_STYLE.hogslap=SIG_SWING.hogslap.beats[1].st;SWEEP.hogslap=SWEEP.slash;
+// one motion, one step: the arm goes up and back with the tentacle trailing,
+// then comes down across and the tentacle cracks through after it
+SIG_ANIM5.hogslap=function(f,p,arm,la,sw,h,bx,by,bz){
+  var k=keyed,eRest=h.sr[0]+h.ra[0],E;
+  arm.rotation.x=k(p,[[0,h.ra[0]],[.3,-2.7],[.54,-.55],[1,h.ra[0]]]);
+  arm.rotation.z=k(p,[[0,h.ra[2]],[.3,.6],[.54,-.8],[1,h.ra[2]]]);
+  E=k(p,[[0,eRest],[.3,-.6],[.54,2.0],[1,eRest]]);
+  sw.rotation.z=k(p,[[0,h.sr[2]],[.3,h.sr[2]-.3],[.54,h.sr[2]+.5],[1,h.sr[2]]]);
+  arm.position.z=bz+k(p,[[0,0],[.54,.3],[1,0]]);
+  f.legs[1].rotation.x=k(p,[[0,0],[.54,-.6],[1,0]]);f.legs[0].rotation.x=k(p,[[0,0],[.54,.42],[1,0]]);
+  sw.rotation.x=E-arm.rotation.x;
+  if(f.mesh)f.mesh.rotation.y=f.yaw+k(p,[[0,0],[.3,.4],[.54,-.45],[1,0]]);
+  var Hd=f.sword&&f.sword.userData.hog;if(Hd){Hd.lash=p;Hd.at=performance.now()/1000;}
+};
+SIG_BEAT5.hogslap=function(f,b,i,tip,X,Y,Z,fx,fz){
+  var k,a,I=p4Hex(0x2a0a2a);
+  if(b.coil){for(k=0;k<(QUAL>1?10:4);k++)spark(tip.x,tip.y,tip.z,hr(-1,1),hr(-.5,1),hr(-1,1),.6,.86,1,hr(.25,.4),hr(.4,.6),-6);return;}
+  // the slap: a splat of ink on the floor, spray, ink thrown off the end
+  var gx=X+fx*3.4,gz=Z+fz*3.4;
+  hwDecal(gx,Y+.07,gz,"inksplat",0x8a2a8a,6.5,1.8,0,f.yaw);
+  ringBurst(gx,Y+.5,gz,QUAL>1?22:10,10,0x9adcff,1.1,.4);
+  for(k=0;k<(QUAL>1?34:14);k++){a=hr(0,TAU);var sp=hr(2,7);
+    spark(gx,Y+.4,gz,Math.sin(a)*sp,hr(3,8),Math.cos(a)*sp,k%3?.62:I[0],k%3?.88:I[1],k%3?1:I[2],hr(.3,.6),hr(.5,.9),-14);}   // water, and ink
+  for(k=0;k<(QUAL>1?12:5);k++){a=hr(0,TAU);var r=hr(.6,2);
+    spark(gx+Math.sin(a)*r,Y+.15,gz+Math.cos(a)*r,0,hr(0,.4),0,I[0]*2,I[1]*2,I[2]*2,hr(.8,1.2),hr(1,1.5),0);}       // ink pooling
+  if(f===player)shakeCam(.24);
+};
+SIG_SFX5.hogslap=function(d){
+  var dd=SIG_SWING.hogslap.dur*1000;
+  tone(220,520,.2,"sine",.04);
+  setTimeout(function(){noiseHit(.35,.5,350);tone(90,40,.3,"sine",.3);noiseHit(.5,.18,2400);},dd*.3);   // a wet slap, then the spray
+};
+var _jbDecal4=hwDecalTex;
+hwDecalTex=function(kind){
+  if(HW_DEC.tex[kind]||kind!=="inksplat")return _jbDecal4(kind);
+  var c=cvs(256,256),x=c.getContext("2d"),i;x.translate(128,128);x.fillStyle="#fff";
+  x.beginPath();for(i=0;i<=24;i++){var a=i/24*TAU,r=54+(i%2?18:-4)+Math.sin(i*2.7)*10;x.lineTo(Math.cos(a)*r,Math.sin(a)*r);}x.fill();
+  for(i=0;i<14;i++){var a2=i*2.4,d=80+((i*37)%40),rr=4+(i%4)*3;x.beginPath();x.arc(Math.cos(a2)*d,Math.sin(a2)*d,rr,0,TAU);x.fill();
+    x.lineWidth=rr*.8;x.strokeStyle="#fff";x.beginPath();x.moveTo(Math.cos(a2)*60,Math.sin(a2)*60);x.lineTo(Math.cos(a2)*(d-rr),Math.sin(a2)*(d-rr));x.stroke();}
+  return (HW_DEC.tex[kind]=mkTex(c));
+};
 /* ==== 4.7 END ==== */
 
 
@@ -22309,8 +22404,8 @@ var PACKS={
   // then too, so the only way to have them is a gift
   jays:{name:"JBOB & JDOG PACK",yen:1800,col:"#4ac0ff",off:true,
     items:[["skin","jbob"],["skin","jdog"],["skin","zandeezy"],["skin","bigonion"],["skin","smg"],["skin","ricky"],
-      ["sword","jbobfire"],["sword","moakslayer"],["sword","demonyart"],["sword","dutrocannon"],["sword","rampteslacam"],["emote","powersurge"],["emote","cammy"]],
-    desc:"Jbob, Jdog, Zandeezy, Big Onion 1, Smg and Ricky (skins), Blue Blaze, The Moak Slayer, Demon Yart, Dutro Cannon and Ramp Tesla Cam (blades) and the Power Surge and Cammy emotes. Only in this pack, and only for one week.",
+      ["sword","jbobfire"],["sword","moakslayer"],["sword","demonyart"],["sword","dutrocannon"],["sword","rampteslacam"],["sword","thehog"],["emote","powersurge"],["emote","cammy"]],
+    desc:"Jbob, Jdog, Zandeezy, Big Onion 1, Smg and Ricky (skins), Blue Blaze, The Moak Slayer, Demon Yart, Dutro Cannon, Ramp Tesla Cam and The Hog (blades) and the Power Surge and Cammy emotes. Only in this pack, and only for one week.",
     from:EVENT_SHOPS.wendigo.to+14*864e5,to:EVENT_SHOPS.wendigo.to+21*864e5}
 };
 // the pack the stand is showing: the one on sale, or the next to open

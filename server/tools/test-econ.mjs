@@ -273,7 +273,7 @@ console.log("currency split tests passed"); }
   }
   const it = (t, id) => CAT.items[t].list.find(x => x.id === id);
   const ALL = [["skin", "jbob"], ["skin", "jdog"], ["skin", "zandeezy"], ["skin", "bigonion"], ["skin", "smg"], ["skin", "ricky"],
-    ["sword", "jbobfire"], ["sword", "moakslayer"], ["sword", "demonyart"], ["sword", "dutrocannon"], ["sword", "rampteslacam"]];
+    ["sword", "jbobfire"], ["sword", "moakslayer"], ["sword", "demonyart"], ["sword", "dutrocannon"], ["sword", "rampteslacam"], ["sword", "thehog"]];
   assert.deepEqual(P.items.filter(q => q[0] !== "emote").map(q => q[1]).sort(), ALL.map(q => q[1]).sort(), "every skin and blade is in the pack");
   for (const [t, id] of ALL) {
     assert.ok(it(t, id), id); assert.equal(it(t, id).r, "secret", id + " is unreleased"); assert.equal(it(t, id).v, 0, id + " has no value");
