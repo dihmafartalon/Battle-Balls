@@ -299,19 +299,19 @@ var SWORDS=[
   desc:"Grey, chunky and humming, with a tube of something green sloshing on top. A block is a shot: the ball goes back through a portal of green light."},
  {id:"nightshift",name:"Nightshift Axe",rarity:"mythic",event:"pack",price:-1,yen:345,blade:0xb01c1c,hilt:0x3a2418,glow:0xff6a1a,shape:"fireaxe",hold:"axe2",swing:"axefire",idle:"ember",size:.92,
   desc:"A fire axe off the wall of a pizzeria that closed for good: chipped red paint, a blackened edge with cracks still burning in it, a brass token on a chain. Held in both hands. From the After Hours Pack."},
- // ---- 4.5: next week's pack, unreleased for now (gift only) ----
- {id:"jbobfire",name:"Blue Blaze",rarity:"secret",price:-1,alt:true,blade:0x6ad8ff,hilt:0x0a2a6a,glow:0x2a8aff,shape:"bfire",hold:"orbs",swing:"bfire",idle:"none",size:1,
-  desc:"Jbob's. No blade, just a ball of blue fire in each fist. Every swing throws from the other hand, and the fireball goes flying."},
- {id:"moakslayer",name:"The Moak Slayer",rarity:"secret",price:-1,blade:0xff86cc,hilt:0xc8327e,glow:0xff3aa8,shape:"moak",hold:"moak",swing:"moakslam",idle:"none",size:1,
-  desc:"Jdog's. A greatsword far too big for anyone, pink from the heart on the pommel to the point. Hauled up over the head and brought straight down."},
- {id:"demonyart",name:"Demon Yart",rarity:"secret",price:-1,blade:0x6a0a16,hilt:0x141014,glow:0xff1a2a,shape:"dpen",hold:"one",swing:"yartslash",idle:"breathe",size:.9,
-  desc:"Zandeezy's. A pen far too big, crimson and gold, with horns on the cap and a nib that glows. Every stroke writes a red line through the air, and a demon's face looms out of it."},
- {id:"dutrocannon",name:"Dutro Cannon",rarity:"secret",price:-1,blade:0xff6ab8,hilt:0xc8307e,glow:0xff8ad0,shape:"dcannon",hold:"cannon",swing:"dutroshot",idle:"none",size:1,
-  desc:"Big Onion 1's. A big pink hand cannon held at the hip. Every swing fires it, and every hit goes off in a white blast."},
- {id:"rampteslacam",name:"Ramp Tesla Cam",rarity:"secret",price:-1,blade:0xf2f4f6,hilt:0x1a2230,glow:0xcfe4ff,shape:"evcar",hold:"toycar",swing:"carslam",idle:"none",size:1,
-  desc:"Smg's. A little white electric car, held by the bumper. Swung overhead, it grows the whole way down, and lands the size of a real one."},
- {id:"thehog",name:"The Hog",rarity:"secret",price:-1,blade:0xa02a5a,hilt:0x3a0c22,glow:0xc84a8a,shape:"tentacle",hold:"hog",swing:"hogslap",idle:"none",size:1,
-  desc:"Ricky's. A big octopus tentacle, suckers and all. It never quite holds still, and it cracks like a whip -- one wet slap and there's ink on the floor."},
+ // ---- 4.5-4.7: the Jbob & Jdog Pack, out Oct 22 ----
+ {id:"jbobfire",name:"Blue Blaze",rarity:"mythic",event:"pack",price:-1,yen:345,alt:true,blade:0x6ad8ff,hilt:0x0a2a6a,glow:0x2a8aff,shape:"bfire",hold:"orbs",swing:"bfire",idle:"none",size:1,
+  desc:"Jbob's. No blade, just a ball of blue fire in each fist. Every swing throws from the other hand, and the fireball goes flying. From the Jbob & Jdog Pack."},
+ {id:"moakslayer",name:"The Moak Slayer",rarity:"mythic",event:"pack",price:-1,yen:345,blade:0xff86cc,hilt:0xc8327e,glow:0xff3aa8,shape:"moak",hold:"moak",swing:"moakslam",idle:"none",size:1,
+  desc:"Jdog's. A greatsword far too big for anyone, pink from the heart on the pommel to the point. Hauled up over the head and brought straight down. From the Jbob & Jdog Pack."},
+ {id:"demonyart",name:"Demon Yart",rarity:"mythic",event:"pack",price:-1,yen:345,blade:0x6a0a16,hilt:0x141014,glow:0xff1a2a,shape:"dpen",hold:"one",swing:"yartslash",idle:"breathe",size:.9,
+  desc:"Zandeezy's. A pen far too big, crimson and gold, with horns on the cap and a nib that glows. Every stroke writes a red line through the air, and a demon's face looms out of it. From the Jbob & Jdog Pack."},
+ {id:"dutrocannon",name:"Dutro Cannon",rarity:"mythic",event:"pack",price:-1,yen:345,blade:0xff6ab8,hilt:0xc8307e,glow:0xff8ad0,shape:"dcannon",hold:"cannon",swing:"dutroshot",idle:"none",size:1,
+  desc:"Big Onion 1's. A big pink hand cannon held at the hip. Every swing fires it, and every hit goes off in a white blast. From the Jbob & Jdog Pack."},
+ {id:"rampteslacam",name:"Ramp Tesla Cam",rarity:"mythic",event:"pack",price:-1,yen:345,blade:0xf2f4f6,hilt:0x1a2230,glow:0xcfe4ff,shape:"evcar",hold:"toycar",swing:"carslam",idle:"none",size:1,
+  desc:"Smg's. A little white electric car, held by the bumper. Swung overhead, it grows the whole way down, and lands the size of a real one. From the Jbob & Jdog Pack."},
+ {id:"thehog",name:"The Hog",rarity:"mythic",event:"pack",price:-1,yen:345,blade:0xa02a5a,hilt:0x3a0c22,glow:0xc84a8a,shape:"tentacle",hold:"hog",swing:"hogslap",idle:"none",size:1,
+  desc:"Ricky's. A big octopus tentacle, suckers and all. It never quite holds still, and it cracks like a whip -- one wet slap and there's ink on the floor. From the Jbob & Jdog Pack."},
  {id:"plaque",name:"Platinum Plaque",rarity:"mythic",event:"pack",price:-1,yen:345,blade:0xe8eef6,hilt:0x141416,glow:0xdfe8ff,shape:"plaque",hold:"two",swing:"hammer",idle:"none",size:.82,
   desc:"A framed platinum record, swung like a bat. Every block lands with a flash of PARRY!"},
  {id:"vampfang",name:"Vamp Fang",rarity:"mythic",event:"pack",secret:true,price:-1,yen:345,blade:0xf2ead8,hilt:0x141016,glow:0xff1a34,shape:"vampfang",hold:"one",swing:"slash",idle:"none",
@@ -594,18 +594,18 @@ var SKINS=[
   desc:"The stage's star bear, left running after closing. A charcoal suit torn open on its metal, a little top hat, a faded bow tie, and one orange eye that will not stay lit. From the After Hours Pack."},
  {id:"fluffles",name:"Fluffles",price:-1,yen:330,rarity:"mythic",event:"pack",style:"fluffles",body:0xc0848e,limb:0x9a626e,skin:0xc0848e,glow:0xff4ad8,
   desc:"A faded pink rabbit with mismatched eyes, a cracked shell, metal where the fabric gave up, and long jointed ears that never quite keep still. From the After Hours Pack."},
- {id:"jbob",name:"Jbob",price:-1,rarity:"secret",style:"jbob",body:0x5a5c62,limb:0x3a4a6a,skin:0xf2c8aa,glow:0x000000,
-  desc:"Dark hair swept across, chunky black glasses and an easy smile. A grey henley, two buttons done."},
- {id:"jdog",name:"Jdog",price:-1,rarity:"secret",style:"jdog",body:0x161618,limb:0x3a4a6a,skin:0xf4cdb0,glow:0x000000,
-  desc:"A big shaggy mop down to his glasses, thin silver frames and a grin full of teeth. A black 73 tee."},
- {id:"zandeezy",name:"Zandeezy",price:-1,rarity:"secret",style:"zandeezy",body:0x202024,limb:0x3a4a6a,skin:0xf2c8aa,glow:0x000000,
-  desc:"A big messy mop of golden blonde swept up and over, and a grin to match. A black tee with white type down the chest."},
- {id:"bigonion",name:"Big Onion 1",price:-1,rarity:"secret",style:"bigonion",body:0x202024,limb:0x3a4a6a,skin:0xf2caa8,glow:0x000000,
-  desc:"A tall head of tight brown curls, ears out, braces in the grin, and a neck that keeps going. A black tee."},
- {id:"smg",name:"Smg",price:-1,rarity:"secret",style:"smg",body:0xe8e2d4,limb:0x3a4a6a,skin:0xe6c09c,glow:0x000000,
-  desc:"Thick dark curls piled high, heavy brows and the widest grin of the lot. A cream tee."},
- {id:"ricky",name:"Ricky",price:-1,rarity:"secret",style:"ricky",body:0x18181a,limb:0x3a4a6a,skin:0xd9a882,glow:0x000000,
-  desc:"Tight dark curls falling over his forehead, a small closed smile, and a black polo buttoned up."},
+ {id:"jbob",name:"Jbob",price:-1,yen:330,rarity:"mythic",event:"pack",style:"jbob",body:0x5a5c62,limb:0x3a4a6a,skin:0xf2c8aa,glow:0x000000,
+  desc:"Dark hair swept across, chunky black glasses and an easy smile. A grey henley, two buttons done. From the Jbob & Jdog Pack."},
+ {id:"jdog",name:"Jdog",price:-1,yen:330,rarity:"mythic",event:"pack",style:"jdog",body:0x161618,limb:0x3a4a6a,skin:0xf4cdb0,glow:0x000000,
+  desc:"A big shaggy mop down to his glasses, thin silver frames and a grin full of teeth. A black 73 tee. From the Jbob & Jdog Pack."},
+ {id:"zandeezy",name:"Zandeezy",price:-1,yen:330,rarity:"mythic",event:"pack",style:"zandeezy",body:0x202024,limb:0x3a4a6a,skin:0xf2c8aa,glow:0x000000,
+  desc:"A big messy mop of golden blonde swept up and over, and a grin to match. A black tee with white type down the chest. From the Jbob & Jdog Pack."},
+ {id:"bigonion",name:"Big Onion 1",price:-1,yen:330,rarity:"mythic",event:"pack",style:"bigonion",body:0x202024,limb:0x3a4a6a,skin:0xf2caa8,glow:0x000000,
+  desc:"A tall head of tight brown curls, ears out, braces in the grin, and a neck that keeps going. A black tee. From the Jbob & Jdog Pack."},
+ {id:"smg",name:"Smg",price:-1,yen:330,rarity:"mythic",event:"pack",style:"smg",body:0xe8e2d4,limb:0x3a4a6a,skin:0xe6c09c,glow:0x000000,
+  desc:"Thick dark curls piled high, heavy brows and the widest grin of the lot. A cream tee. From the Jbob & Jdog Pack."},
+ {id:"ricky",name:"Ricky",price:-1,yen:330,rarity:"mythic",event:"pack",style:"ricky",body:0x18181a,limb:0x3a4a6a,skin:0xd9a882,glow:0x000000,
+  desc:"Tight dark curls falling over his forehead, a small closed smile, and a black polo buttoned up. From the Jbob & Jdog Pack."},
  {id:"cartwheel",name:"Playboi Cartwheel",price:-1,yen:330,rarity:"mythic",event:"pack",style:"cartwheel",body:0x141416,limb:0x141416,skin:0x7b4a2d,glow:0x000000,
   desc:"Black dreads, one red eye open and one winking, fangs in the grin. A black long-sleeve with red marks, a silver chain and cross, a red belt with a chain hanging off it."},
  {id:"lilvertigo",name:"Lil Vertigo",price:-1,yen:330,rarity:"mythic",event:"pack",style:"vertigo",body:0x141416,limb:0x141416,skin:0x6e4228,glow:0x000000,
@@ -836,7 +836,7 @@ var STORE_OK=true,SAVEKEY="battleballs_v1",LAST_SAVE=0;
    save on the way out -- and before START that wrote the blank starting save
    over your real one. That is what "logged in, but everything is gone" was. */
 var SAVE_LOADED=false;
-var VERSION="4.4";
+var VERSION="4.8";
 // what an item is worth in yen, by rarity
 var SELL={common:15,rare:40,epic:85,legendary:190,mythic:465};
 function itemValue(it){
@@ -5999,11 +5999,11 @@ var TAUNTS=[
   {id:"sysfail",e:"\u26a0\ufe0f",txt:"SYSTEM FAILURE",col:"#ff3a3a",pack:"afterhours",fx:"sysfail",rarity:"mythic",dur:5.6,
   desc:"Freeze. The head snaps over, the arms twitch, and down you go in a heap, jerking on the floor like something is trying to get back online -- then you snap upright. From the After Hours Pack."},
   // next week's pack (unreleased for now): charge up until your hair goes gold
-  {id:"powersurge",e:"\u26a1",txt:"POWER SURGE",col:"#ffd83a",pack:"jays",fx:"powersurge",rarity:"secret",dur:4.4,
-  desc:"Fists clenched, charge up. A gold aura, lightning, the floor lifting round you, until your hair stands up gold and it all goes off."},
+  {id:"powersurge",e:"\u26a1",txt:"POWER SURGE",col:"#ffd83a",pack:"jays",fx:"powersurge",rarity:"mythic",dur:4.4,
+  desc:"Fists clenched, charge up. A gold aura, lightning, the floor lifting round you, until your hair stands up gold and it all goes off. From the Jbob & Jdog Pack."},
   // the same pack: a little black car, a look round, and a donut out of there
-  {id:"cammy",e:"\ud83d\ude97",txt:"CAMMY",col:"#2ad8ff",pack:"jays",fx:"cammy",rarity:"secret",dur:4.2,
-  desc:"A little black car pops up round you. A look left, a look right, nobody about -- then the lights come on and you spin it out of there in a cloud of smoke."},
+  {id:"cammy",e:"\ud83d\ude97",txt:"CAMMY",col:"#2ad8ff",pack:"jays",fx:"cammy",rarity:"mythic",dur:4.2,
+  desc:"A little black car pops up round you. A look left, a look right, nobody about -- then the lights come on and you spin it out of there in a cloud of smoke. From the Jbob & Jdog Pack."},
   {id:"boo",e:"\ud83d\udc7b",txt:"BOO!",col:"#e8f4ff",pass:55,fx:"boo",rarity:"halloween",
   desc:"A sheet ghost rises over your shoulder and lunges at whoever is looking. From the Halloween Pass, level 55."},
   {id:"zombie",e:"\ud83e\udddf",txt:"BRAINS...",col:"#8aff6a",pass:75,fx:"zombie",rarity:"halloween",
@@ -15879,7 +15879,6 @@ FXD.hogfx={rate:10,c1:0x9adcff,c2:0xffffff,vy:[-1.4,-.2],sp:.15,g:-4,sz:.3,life:
 SWORD_FX.thehog="hogfx";
 SWORD_ICON.tentacle="<path d='M6 36c2-2 4-3 6-3' stroke='#3a0c22' stroke-width='5' stroke-linecap='round'/>"+
   "<path d='M10 33C18 30 22 24 24 17 26 10 31 5 35 7 38 9 36 14 32 13' stroke='#a02a5a' stroke-width='7' fill='none' stroke-linecap='round'/>"+
-  "<path d='M10 33C18 30 22 24 24 17 26 10 31 5 35 7 38 9 36 14 32 13' stroke='#0b1942' stroke-width='1' fill='none' transform='translate(0 0)' opacity='.0'/>"+
   "<g fill='#f2b8c8' stroke='#8a2a4a' stroke-width='.7'><circle cx='14' cy='33' r='1.6'/><circle cx='19' cy='29.5' r='1.5'/><circle cx='22.5' cy='24.5' r='1.4'/><circle cx='24.8' cy='18.8' r='1.3'/><circle cx='27.5' cy='12.5' r='1.1'/><circle cx='31.5' cy='9' r='1'/></g>"+
   "<path d='M34 18l1 3M30 20l-1 3M37 16l2 2' stroke='#9adcff' stroke-width='1.3' stroke-linecap='round'/>";
 SIG_SWING.hogslap={dur:.62,col:0xc84a8a,beats:[{w:.3,coil:true},{w:.54,st:{span:3.2,tilt:-.75,r:2.4,w:1.2,hot:1},col:0xd86aa0,fin:true}]};
@@ -20575,10 +20574,9 @@ var PACKS={
     items:[["skin","dreddy"],["skin","fluffles"],["sword","nightshift"],["emote","sysfail"]],
     desc:"Dreddy and Fluffles (skins), the Nightshift Axe (blade) and the System Failure emote. Some shows never end. Only in this pack, and only for one week.",
     from:EVENT_SHOPS.wendigo.to+7*864e5,to:EVENT_SHOPS.wendigo.to+14*864e5},
-  // next week's: Jbob and Jdog. `off` until it is released: no stand, no
-  // popup, and the server will not sell it. The items are UNRELEASED until
-  // then too, so the only way to have them is a gift
-  jays:{name:"JBOB & JDOG PACK",yen:1800,col:"#4ac0ff",off:true,
+  // the week after After Hours: Jbob, Jdog and the rest of them. (A pack can
+  // be set `off` while it is being built: no stand, no popup, no sale)
+  jays:{name:"JBOB & JDOG PACK",yen:1800,col:"#4ac0ff",trailer:"jays_trailer.mp4",poster:"jays_trailer.jpg",
     items:[["skin","jbob"],["skin","jdog"],["skin","zandeezy"],["skin","bigonion"],["skin","smg"],["skin","ricky"],
       ["sword","jbobfire"],["sword","moakslayer"],["sword","demonyart"],["sword","dutrocannon"],["sword","rampteslacam"],["sword","thehog"],["emote","powersurge"],["emote","cammy"]],
     desc:"Jbob, Jdog, Zandeezy, Big Onion 1, Smg and Ricky (skins), Blue Blaze, The Moak Slayer, Demon Yart, Dutro Cannon, Ramp Tesla Cam and The Hog (blades) and the Power Surge and Cammy emotes. Only in this pack, and only for one week.",
