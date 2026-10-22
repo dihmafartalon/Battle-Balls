@@ -2135,6 +2135,8 @@ var SWORDS=[
   desc:"Big Onion 1's. A big pink hand cannon held at the hip. Every swing fires it, and every hit goes off in a white blast."},
  {id:"rampteslacam",name:"Ramp Tesla Cam",rarity:"secret",price:-1,blade:0xf2f4f6,hilt:0x1a2230,glow:0xcfe4ff,shape:"evcar",hold:"toycar",swing:"carslam",idle:"none",size:1,
   desc:"Smg's. A little white electric car, held by the bumper. Swung overhead, it grows the whole way down, and lands the size of a real one."},
+ {id:"thehog",name:"The Hog",rarity:"secret",price:-1,blade:0xa02a5a,hilt:0x3a0c22,glow:0xc84a8a,shape:"tentacle",hold:"hog",swing:"hogslap",idle:"none",size:1,
+  desc:"Ricky's. A big octopus tentacle, suckers and all. It never quite holds still, and it cracks like a whip -- one wet slap and there's ink on the floor."},
  {id:"plaque",name:"Platinum Plaque",rarity:"mythic",event:"pack",price:-1,yen:345,blade:0xe8eef6,hilt:0x141416,glow:0xdfe8ff,shape:"plaque",hold:"two",swing:"hammer",idle:"none",size:.82,
   desc:"A framed platinum record, swung like a bat. Every block lands with a flash of PARRY!"},
  {id:"vampfang",name:"Vamp Fang",rarity:"mythic",event:"pack",secret:true,price:-1,yen:345,blade:0xf2ead8,hilt:0x141016,glow:0xff1a34,shape:"vampfang",hold:"one",swing:"slash",idle:"none",
@@ -2427,6 +2429,8 @@ var SKINS=[
   desc:"A tall head of tight brown curls, ears out, braces in the grin, and a neck that keeps going. A black tee."},
  {id:"smg",name:"Smg",price:-1,rarity:"secret",style:"smg",body:0xe8e2d4,limb:0x3a4a6a,skin:0xe6c09c,glow:0x000000,
   desc:"Thick dark curls piled high, heavy brows and the widest grin of the lot. A cream tee."},
+ {id:"ricky",name:"Ricky",price:-1,rarity:"secret",style:"ricky",body:0x18181a,limb:0x3a4a6a,skin:0xd9a882,glow:0x000000,
+  desc:"Tight dark curls falling over his forehead, a small closed smile, and a black polo buttoned up."},
  {id:"cartwheel",name:"Playboi Cartwheel",price:-1,yen:330,rarity:"mythic",event:"pack",style:"cartwheel",body:0x141416,limb:0x141416,skin:0x7b4a2d,glow:0x000000,
   desc:"Black dreads, one red eye open and one winking, fangs in the grin. A black long-sleeve with red marks, a silver chain and cross, a red belt with a chain hanging off it."},
  {id:"lilvertigo",name:"Lil Vertigo",price:-1,yen:330,rarity:"mythic",event:"pack",style:"vertigo",body:0x141416,limb:0x141416,skin:0x6e4228,glow:0x000000,
@@ -7822,6 +7826,9 @@ var TAUNTS=[
   // next week's pack (unreleased for now): charge up until your hair goes gold
   {id:"powersurge",e:"\u26a1",txt:"POWER SURGE",col:"#ffd83a",pack:"jays",fx:"powersurge",rarity:"secret",dur:4.4,
   desc:"Fists clenched, charge up. A gold aura, lightning, the floor lifting round you, until your hair stands up gold and it all goes off."},
+  // the same pack: a little black car, a look round, and a donut out of there
+  {id:"cammy",e:"\ud83d\ude97",txt:"CAMMY",col:"#2ad8ff",pack:"jays",fx:"cammy",rarity:"secret",dur:4.2,
+  desc:"A little black car pops up round you. A look left, a look right, nobody about -- then the lights come on and you spin it out of there in a cloud of smoke."},
   {id:"boo",e:"\ud83d\udc7b",txt:"BOO!",col:"#e8f4ff",pass:55,fx:"boo",rarity:"halloween",
   desc:"A sheet ghost rises over your shoulder and lunges at whoever is looking. From the Halloween Pass, level 55."},
   {id:"zombie",e:"\ud83e\udddf",txt:"BRAINS...",col:"#8aff6a",pass:75,fx:"zombie",rarity:"halloween",
@@ -17536,6 +17543,214 @@ SIG_SFX5.carslam=function(d){
     setTimeout(function(){tone(392,392,.22,"square",.05);tone(494,494,.22,"square",.05);},140);},dd*.3);   // the crunch, then the horn
 };
 /* ==== 4.6 END ==== */
+/* ==== 4.7 BEGIN ==== */
+/* ---------------- RICKY ----------------
+   Tight dark curls falling over the forehead, olive skin, a small closed
+   smile, and a black polo, collar out and buttoned up. */
+SIG_SKIN.ricky=function(f,g,sk,box,glowM,darkM,bodyM){
+  var d1=new THREE.MeshLambertMaterial({color:0x221810}),d2=new THREE.MeshLambertMaterial({color:0x34261a}),d3=new THREE.MeshLambertMaterial({color:0x160f0a});
+  var collar=new THREE.MeshLambertMaterial({color:0x18181a}),btn=new THREE.MeshLambertMaterial({color:0x3a3a40}),lip=new THREE.MeshLambertMaterial({color:0xb87868});
+  var H=[];function hb(){var m=box.apply(null,arguments);H.push(m);return m;}
+  hb(.78,.24,.78,0,3.34,-.02,d3);hb(.8,.36,.16,0,3.12,-.32,d3);
+  for(var sd=-1;sd<=1;sd+=2)hb(.06,.26,.5,sd*.37,3.14,-.05,d3);
+  jbCurls(hb,3.38,.44,QUAL>1?36:24,[d1,d2,d3],5.7,3.38);
+  // the curls come down over the forehead
+  for(var i=0;i<7;i++)hb(.14,.15,.13,-.33+i*.11,3.29+jbRnd(i+11)*.06,.33,i%2?d2:d1,[jbRnd(i+5)*2,jbRnd(i+6)*2,0]);
+  jbBrows(box,3.12,0x160f0a,.04,.03);
+  jbEyes(box,0x3a2414,f.mSkin);jbNose(f,box);
+  // a small closed smile, over the base's mouth
+  box(.34,.1,.01,0,2.72,.362,f.mSkin);
+  box(.17,.026,.01,0,2.72,.368,lip);for(sd=-1;sd<=1;sd+=2)box(.04,.022,.01,sd*.095,2.732,.368,lip,[0,0,sd*.4]);
+  jbTee(f,box,bodyM,collar);
+  // the polo: collar points, a placket, buttons
+  for(sd=-1;sd<=1;sd+=2)box(.2,.06,.14,sd*.13,2.6,.3,collar,[.5,0,sd*.35]);
+  box(.06,.26,.02,0,2.46,.365,collar);for(i=0;i<2;i++)box(.04,.04,.02,0,2.52-i*.12,.378,btn);
+  f.sig={kind:"ricky",hair:H};
+};
+SIG_SKIN_ICON.ricky="<g fill='#221810' stroke='#0b1942' stroke-width='.8'><circle cx='12' cy='8' r='3.6'/><circle cx='18' cy='5' r='3.8'/><circle cx='24' cy='5' r='3.8'/><circle cx='29' cy='9' r='3.4'/><circle cx='13' cy='13' r='2.6'/><circle cx='27' cy='13' r='2.6'/></g>"+
+  "<rect x='10.5' y='11' width='19' height='14' rx='4' fill='#d9a882' stroke='#0b1942' stroke-width='1.6'/><g fill='#221810'><circle cx='15' cy='12' r='2.2'/><circle cx='20' cy='11.5' r='2.4'/><circle cx='25' cy='12' r='2.2'/></g>"+
+  "<circle cx='15.5' cy='17.5' r='1.3' fill='#3a2414'/><circle cx='24.5' cy='17.5' r='1.3' fill='#3a2414'/><path d='M17 21.5q3 1.4 6 0' stroke='#9a5a4a' stroke-width='1.3' fill='none'/>"+
+  "<path d='M6 38l2-12h24l2 12z' fill='#18181a' stroke='#0b1942' stroke-width='1.6'/><path d='M15 26l5 4 5-4' stroke='#3a3a40' stroke-width='1.4' fill='none'/><circle cx='20' cy='32' r='.9' fill='#3a3a40'/>";
+
+/* ---------------- CAMMY: an emote ----------------
+   A little black car pops up round you and you are sat in it, hands on the
+   wheel. A look left, a look right, nobody about -- then the lights come on,
+   the engine screams and you spin it round in a donut in a cloud of smoke,
+   and it is gone. All of it is the model: you never move. */
+var CAM={sneak:.45,lights:1.7,go:2.15,stop:3.7,end:4.2};
+P2_EMOTE_POSE.cammy=function(f,a,R,L,g,set){
+  var inn=Math.min(1,a/.25),out=a>CAM.stop?Math.max(0,1-(a-CAM.stop)/(CAM.end-CAM.stop)):1,s=inn*out;
+  var drop=.86*s;g.position.y-=drop;
+  if(f._camCar)f._camCar.position.y=drop;              // the car stays on the floor while you sink into the seat
+  // sat down: legs out in front, hands on the wheel
+  f.legs[0].rotation.x=-1.45*s;f.legs[1].rotation.x=-1.45*s;
+  var steer=0;
+  if(a<CAM.lights){var lk=Math.sin(Math.max(0,a-CAM.sneak)*4.2);g.rotation.y+=.22*lk*s;}    // checking nobody's watching
+  else if(a<CAM.go){g.position.x+=hr(-1,1)*.02;g.position.z+=hr(-1,1)*.02;}                 // revving
+  else if(a<CAM.stop){var u=(a-CAM.go)/(CAM.stop-CAM.go),e=u<.15?u/.15:1;g.rotation.y+=TAU*1.5*(u*u*(3-2*u));g.rotation.z=-.08*e*out;steer=.9*e;}
+  set(R,-1.25*s,.18*s+steer*.25);set(L,-1.25*s,-.18*s+steer*.25);
+};
+function jbCammyFx(f){
+  var t=0,lit=false,gone=false,X=f.pos.x,Y=f.y,Z=f.pos.z,mine=f===player;
+  var car=new THREE.Group(),M=[];
+  function mat(m){M.push(m);return m;}
+  var blk=mat(new THREE.MeshPhongMaterial({color:0x121216,shininess:120,specular:0x5a6070})),str=mat(new THREE.MeshLambertMaterial({color:0x2ad8ff}));
+  var seat=mat(new THREE.MeshLambertMaterial({color:0x3a1a1a})),tyre=mat(new THREE.MeshLambertMaterial({color:0x0c0c0e})),hub=mat(new THREE.MeshPhongMaterial({color:0xb8bec8,shininess:100}));
+  var glass=mat(new THREE.MeshPhongMaterial({color:0x8ab0c8,transparent:true,opacity:.35,shininess:150}));
+  var head=mat(new THREE.MeshBasicMaterial({color:0x2a2a20,toneMapped:false})),tail=mat(new THREE.MeshBasicMaterial({color:0x5a0808,toneMapped:false}));
+  function bx(w,h,d,x,y,z,m,r){var q=new THREE.Mesh(GEO.box,m);q.scale.set(w,h,d);q.position.set(x,y,z);if(r)q.rotation.set(r[0]||0,r[1]||0,r[2]||0);car.add(q);return q;}
+  // an open-top two-seater, the cockpit round where you sit
+  bx(2.1,.42,4.2,0,.5,.1,blk);
+  bx(2.1,.4,1.4,0,.9,1.5,blk);bx(2.1,.36,1.0,0,.88,-1.5,blk);                  // bonnet, boot
+  for(var sd=-1;sd<=1;sd+=2)bx(.16,.42,1.9,sd*.97,.92,0,blk);                    // the sides of the cockpit
+  bx(.3,.03,4.22,-.35,.72,.1,str);bx(.3,.03,4.22,.35,.72,.1,str);              // racing stripes
+  bx(1.9,.05,1.6,0,1.11,1.5,str,[0,0,0]).scale.x=.3;
+  bx(1.9,.62,.06,0,1.38,.82,glass,[-.35,0,0]);                                  // windscreen
+  bx(1.5,.7,.3,0,1.0,-.75,seat);bx(1.5,.2,.9,0,.62,-.4,seat);                    // the seat
+  var wheel=new THREE.Mesh(new THREE.TorusGeometry(.2,.04,6,14),blk);wheel.position.set(0,1.32,.62);wheel.rotation.x=-.5;car.add(wheel);M.push(wheel.geometry);
+  var hl=[],tl=[];
+  for(sd=-1;sd<=1;sd+=2){hl.push(bx(.42,.16,.06,sd*.7,.86,2.21,head));tl.push(bx(.42,.12,.06,sd*.7,.86,-2.01,tail));}
+  var wg=new THREE.CylinderGeometry(.5,.5,1,12);M.push(wg);var wh=[];
+  for(sd=-1;sd<=1;sd+=2)for(var i=0;i<2;i++){var w=new THREE.Mesh(wg,tyre);w.scale.set(.74,.36,.74);w.rotation.z=Math.PI/2;w.position.set(sd*1.04,.37,i?1.35:-1.25);car.add(w);wh.push(w);
+    var h=new THREE.Mesh(wg,hub);h.scale.set(.36,.38,.36);h.rotation.z=Math.PI/2;h.position.copy(w.position);car.add(h);wh.push(h);}
+  // the beams the headlights throw, once they are on
+  var bc=cvs(8,128),bxc=bc.getContext("2d"),bgr=bxc.createLinearGradient(0,0,0,128);bgr.addColorStop(0,"rgba(255,250,220,.5)");bgr.addColorStop(1,"rgba(255,250,220,0)");bxc.fillStyle=bgr;bxc.fillRect(0,0,8,128);
+  var btex=mkTex(bc),beams=[];
+  for(sd=-1;sd<=1;sd+=2){var bm=new THREE.Mesh(new THREE.CylinderGeometry(.15,1.4,7,10,1,true),mat(new THREE.MeshBasicMaterial({map:btex,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide})));
+    bm.rotation.x=Math.PI/2;bm.position.set(sd*.7,.86,5.7);car.add(bm);beams.push(bm);M.push(bm.geometry);}
+  car.scale.setScalar(.01);f.mesh.add(car);f._camCar=car;
+  if(f.sword)f.sword.visible=false;if(f.sword2)f.sword2.visible=false;            // both hands are on the wheel
+  if(QUAL>0)burst(X,Y+1,Z,QUAL>1?20:10,6,0x2ad8ff,1,.3,0);
+  try{noiseHit(.15,.12,2000);tone(300,500,.12,"square",.03);}catch(e){}
+  V4FX.push({tick:function(dt){t+=dt;
+      if(!f.alive||!(f.tauntT>0)||f.tauntK!=="cammy")return false;
+      var inn=Math.min(1,t/.25),out=t>CAM.stop?Math.max(0,1-(t-CAM.stop)/(CAM.end-CAM.stop)):1;
+      car.scale.setScalar(Math.max(.01,(inn<1?1.08*Math.sin(inn*Math.PI/2):1)*out));
+      if(!lit&&t>=CAM.lights){lit=true;hl.forEach(function(m){m.material.color.setHex(0xfffbe0);});tl.forEach(function(m){m.material.color.setHex(0xff1a2a);});
+        try{tone(80,140,.45,"sawtooth",.12);tone(160,300,.45,"square",.04);}catch(e){}}
+      beams.forEach(function(b){b.material.opacity=lit?.7*out:0;});
+      var spin=t>CAM.go&&t<CAM.stop;
+      wh.forEach(function(w){w.rotation.x+=dt*(spin?40:t>CAM.lights?12:0);});
+      if(spin&&QUAL>0){var rate=dt*(mine?60:22);
+        for(;rate>0;rate--){if(rate<1&&Math.random()>rate)break;
+          var a=hr(0,TAU),r=hr(1.4,2.4);spark(X+Math.cos(a)*r,Y+hr(.2,.6),Z+Math.sin(a)*r,hr(-.6,.6),hr(.4,1.4),hr(-.6,.6),.86,.86,.88,hr(1.2,2.2),hr(1,1.7),-.3);}   // tyre smoke
+        if(Math.random()<dt*14){var a2=hr(0,TAU);spark(X+Math.cos(a2)*1.9,Y+.3,Z+Math.sin(a2)*1.9,hr(-3,3),hr(1,3),hr(-3,3),1,.7,.3,.3,.3,-12);}}
+      if(t>=CAM.go&&t-dt<CAM.go){
+        if(f.bubT>.05)f.bubT=.05;                       // the bubble would spin round with the car and read backwards
+        if(QUAL>0)hwDecal(X,Y+.06,Z,"donut",0x9a9aa4,5.6,2.6,0,0);
+        try{noiseHit(1.4,.22,900);tone(120,420,1.4,"sawtooth",.1);tone(240,840,1.4,"square",.025);}catch(e){}}
+      if(!gone&&t>=CAM.stop){gone=true;if(QUAL>0)burst(X,Y+1,Z,QUAL>1?26:12,8,0xd8d8dc,1.4,.4,0);try{noiseHit(.3,.15,1500);}catch(e){}}
+      return true;},
+    done:function(){if(car.parent)car.parent.remove(car);M.forEach(function(m){m.dispose();});btex.dispose();f._camCar=null;
+      if(f.sword)f.sword.visible=true;if(f.sword2)f.sword2.visible=true;}});
+}
+P2_EMOTE_FX.cammy=jbCammyFx;
+// the donut's tyre marks: two rough black circles, one inside the other
+var _jbDecal3=hwDecalTex;
+hwDecalTex=function(kind){
+  if(HW_DEC.tex[kind]||kind!=="donut")return _jbDecal3(kind);
+  var c=cvs(256,256),x=c.getContext("2d"),i,k;x.translate(128,128);x.strokeStyle="#fff";x.lineCap="round";
+  for(k=0;k<2;k++)for(i=0;i<3;i++){x.globalAlpha=.35+.2*i;x.lineWidth=10-i*3;x.beginPath();
+    for(var a=0;a<=TAU+.01;a+=.08){var r=(k?66:104)+Math.sin(a*7+i)*3;x.lineTo(Math.cos(a)*r,Math.sin(a)*r);}x.stroke();}
+  return (HW_DEC.tex[kind]=mkTex(c));
+};
+P2_EMOTE_ICON.cammy="<path d='M5 27l2-6 5-1 3-5h9l4 5 6 1 1 6z' fill='#121216' stroke='#2ad8ff' stroke-width='1.3'/><circle cx='12' cy='28' r='3.2' fill='#0c0c0e' stroke='#b8bec8' stroke-width='1.2'/><circle cx='29' cy='28' r='3.2' fill='#0c0c0e' stroke='#b8bec8' stroke-width='1.2'/>"+
+  "<circle cx='19' cy='12' r='3.2' fill='#d9a882' stroke='#0b1942' stroke-width='1'/><path d='M16 11c0-3 6-3 6 0' fill='#221810'/><path d='M36 22l3-1M36 24h3' stroke='#fffbe0' stroke-width='1.4'/><path d='M2 30c1-2 3-2 4 0' stroke='#d8d8dc' stroke-width='1.4' fill='none'/>";
+
+/* ---------------- THE HOG: Ricky's ----------------
+   A big octopus tentacle, gripped at the thick end: deep red-purple, mottled,
+   with two rows of pale suckers down the inside. It is a chain of joints, so
+   it never holds still -- it sways and curls at rest, and in a swing it lags
+   behind the hand and cracks through like a whip. */
+var HOG_N=11,HOG_L=.44;
+SIG_SHAPE.tentacle=function(g,seg,B,H,G){
+  var skin=new THREE.MeshPhongMaterial({color:0xa02a5a,shininess:90,specular:0xffc0d8,emissive:0x2a0414,emissiveIntensity:.4});
+  var dark=new THREE.MeshPhongMaterial({color:0x6a1438,shininess:60});
+  var suck=new THREE.MeshPhongMaterial({color:0xf2b8c8,shininess:120}),cup=new THREE.MeshLambertMaterial({color:0x8a2a4a});
+  var grip=new THREE.MeshLambertMaterial({color:0x3a0c22});
+  var gc=new THREE.CylinderGeometry(.5,.5,1,10);
+  // the cut end in the fist, wrapped
+  var gp=new THREE.Mesh(gc,grip);gp.scale.set(.5,.62,.5);gp.position.y=.1;g.add(gp);
+  var J=[],parent=g,y0=.42;
+  for(var i=0;i<HOG_N;i++){
+    var u=i/(HOG_N-1),r=.3*(1-u)+.07*u,jt=new THREE.Group();jt.position.y=i?HOG_L:y0;parent.add(jt);J.push(jt);
+    var s=new THREE.Mesh(gc,i%3===1?dark:skin);s.scale.set(r*2,HOG_L*1.08,r*2);s.position.y=HOG_L/2;jt.add(s);
+    if(i===0)s.userData.core=true;
+    var kn=new THREE.Mesh(GEO.sphLo,skin);kn.scale.setScalar(r*2.02);jt.add(kn);   // rounds off each joint
+    // two rows of suckers down the inside (+z), smaller toward the tip
+    for(var sd=-1;sd<=1;sd+=2){var c=new THREE.Mesh(GEO.sphLo,suck);var cs=r*.62;c.scale.set(cs,cs,cs*.5);c.position.set(sd*r*.42,HOG_L*.5,r*.86);jt.add(c);
+      var c2=new THREE.Mesh(GEO.sphLo,cup);c2.scale.set(cs*.45,cs*.45,cs*.3);c2.position.set(sd*r*.42,HOG_L*.5,r*.86+cs*.22);jt.add(c2);}
+    parent=jt;
+  }
+  var tp=new THREE.Mesh(GEO.cone,skin);tp.scale.set(.14,.36,.14);tp.position.y=HOG_L+.12;parent.add(tp);
+  g.userData.hog={J:J,lash:0,at:-1};
+  gp.onBeforeRender=function(){jbHogCurl(g);};jbHogCurl(g);
+  return y0+HOG_N*HOG_L;
+};
+// the curl: at rest a slow sway and a coiled tip; in a swing (lash set by the
+// animation) a wave that runs from the hand out to the tip a beat behind it
+function jbHogCurl(g){
+  var Hd=g.userData.hog,J=Hd.J,t=performance.now()/1000,ph=(g.id%13)*.5;
+  var live=t-Hd.at<.12,p=Hd.lash;
+  for(var i=0;i<J.length;i++){var u=i/(J.length-1),a,z;
+    if(live){var q=p-u*.09;                                              // each joint a little later than the last
+      a=keyed(clamp(q,0,1),[[0,.1],[.28,-.32],[.44,-.1],[.54,.42],[.66,.16],[1,.1]])*(.6+u*.8);z=Math.sin(q*9)*.05*u;}
+    else{a=.06+.05*Math.sin(t*1.8-i*.55+ph)+(u>.6?(u-.6)*.9:0);z=.06*Math.sin(t*1.3-i*.4+ph);}
+    J[i].rotation.x=a;J[i].rotation.z=z;}
+}
+HOLD.hog={sp:[0,-1.24,.12],sr:[1.0,0,0.08],ra:[-0.4,0,0.14],la:null};
+IN_HAND.thehog=1;OWN_GRIP.tentacle=1;
+FXD.hogfx={rate:10,c1:0x9adcff,c2:0xffffff,vy:[-1.4,-.2],sp:.15,g:-4,sz:.3,life:.6,along:.9,sheath:0,motes:0};     // it drips
+SWORD_FX.thehog="hogfx";
+SWORD_ICON.tentacle="<path d='M6 36c2-2 4-3 6-3' stroke='#3a0c22' stroke-width='5' stroke-linecap='round'/>"+
+  "<path d='M10 33C18 30 22 24 24 17 26 10 31 5 35 7 38 9 36 14 32 13' stroke='#a02a5a' stroke-width='7' fill='none' stroke-linecap='round'/>"+
+  "<g fill='#f2b8c8' stroke='#8a2a4a' stroke-width='.7'><circle cx='14' cy='33' r='1.6'/><circle cx='19' cy='29.5' r='1.5'/><circle cx='22.5' cy='24.5' r='1.4'/><circle cx='24.8' cy='18.8' r='1.3'/><circle cx='27.5' cy='12.5' r='1.1'/><circle cx='31.5' cy='9' r='1'/></g>"+
+  "<path d='M34 18l1 3M30 20l-1 3M37 16l2 2' stroke='#9adcff' stroke-width='1.3' stroke-linecap='round'/>";
+SIG_SWING.hogslap={dur:.62,col:0xc84a8a,beats:[{w:.3,coil:true},{w:.54,st:{span:3.2,tilt:-.75,r:2.4,w:1.2,hot:1},col:0xd86aa0,fin:true}]};
+SLASH_STYLE.hogslap=SIG_SWING.hogslap.beats[1].st;SWEEP.hogslap=SWEEP.slash;
+// one motion, one step: the arm goes up and back with the tentacle trailing,
+// then comes down across and the tentacle cracks through after it
+SIG_ANIM5.hogslap=function(f,p,arm,la,sw,h,bx,by,bz){
+  var k=keyed,eRest=h.sr[0]+h.ra[0],E;
+  arm.rotation.x=k(p,[[0,h.ra[0]],[.3,-2.7],[.54,-.55],[1,h.ra[0]]]);
+  arm.rotation.z=k(p,[[0,h.ra[2]],[.3,.6],[.54,-.8],[1,h.ra[2]]]);
+  E=k(p,[[0,eRest],[.3,-.6],[.54,2.0],[1,eRest]]);
+  sw.rotation.z=k(p,[[0,h.sr[2]],[.3,h.sr[2]-.3],[.54,h.sr[2]+.5],[1,h.sr[2]]]);
+  arm.position.z=bz+k(p,[[0,0],[.54,.3],[1,0]]);
+  f.legs[1].rotation.x=k(p,[[0,0],[.54,-.6],[1,0]]);f.legs[0].rotation.x=k(p,[[0,0],[.54,.42],[1,0]]);
+  sw.rotation.x=E-arm.rotation.x;
+  if(f.mesh)f.mesh.rotation.y=f.yaw+k(p,[[0,0],[.3,.4],[.54,-.45],[1,0]]);
+  var Hd=f.sword&&f.sword.userData.hog;if(Hd){Hd.lash=p;Hd.at=performance.now()/1000;}
+};
+SIG_BEAT5.hogslap=function(f,b,i,tip,X,Y,Z,fx,fz){
+  var k,a,I=p4Hex(0x2a0a2a);
+  if(b.coil){for(k=0;k<(QUAL>1?10:4);k++)spark(tip.x,tip.y,tip.z,hr(-1,1),hr(-.5,1),hr(-1,1),.6,.86,1,hr(.25,.4),hr(.4,.6),-6);return;}
+  // the slap: a splat of ink on the floor, spray, ink thrown off the end
+  var gx=X+fx*3.4,gz=Z+fz*3.4;
+  hwDecal(gx,Y+.07,gz,"inksplat",0x8a2a8a,6.5,1.8,0,f.yaw);
+  ringBurst(gx,Y+.5,gz,QUAL>1?22:10,10,0x9adcff,1.1,.4);
+  for(k=0;k<(QUAL>1?34:14);k++){a=hr(0,TAU);var sp=hr(2,7);
+    spark(gx,Y+.4,gz,Math.sin(a)*sp,hr(3,8),Math.cos(a)*sp,k%3?.62:I[0],k%3?.88:I[1],k%3?1:I[2],hr(.3,.6),hr(.5,.9),-14);}   // water, and ink
+  for(k=0;k<(QUAL>1?12:5);k++){a=hr(0,TAU);var r=hr(.6,2);
+    spark(gx+Math.sin(a)*r,Y+.15,gz+Math.cos(a)*r,0,hr(0,.4),0,I[0]*2,I[1]*2,I[2]*2,hr(.8,1.2),hr(1,1.5),0);}       // ink pooling
+  if(f===player)shakeCam(.24);
+};
+SIG_SFX5.hogslap=function(d){
+  var dd=SIG_SWING.hogslap.dur*1000;
+  tone(220,520,.2,"sine",.04);
+  setTimeout(function(){noiseHit(.35,.5,350);tone(90,40,.3,"sine",.3);noiseHit(.5,.18,2400);},dd*.3);   // a wet slap, then the spray
+};
+var _jbDecal4=hwDecalTex;
+hwDecalTex=function(kind){
+  if(HW_DEC.tex[kind]||kind!=="inksplat")return _jbDecal4(kind);
+  var c=cvs(256,256),x=c.getContext("2d"),i;x.translate(128,128);x.fillStyle="#fff";
+  x.beginPath();for(i=0;i<=24;i++){var a=i/24*TAU,r=54+(i%2?18:-4)+Math.sin(i*2.7)*10;x.lineTo(Math.cos(a)*r,Math.sin(a)*r);}x.fill();
+  for(i=0;i<14;i++){var a2=i*2.4,d=80+((i*37)%40),rr=4+(i%4)*3;x.beginPath();x.arc(Math.cos(a2)*d,Math.sin(a2)*d,rr,0,TAU);x.fill();
+    x.lineWidth=rr*.8;x.strokeStyle="#fff";x.beginPath();x.moveTo(Math.cos(a2)*60,Math.sin(a2)*60);x.lineTo(Math.cos(a2)*(d-rr),Math.sin(a2)*(d-rr));x.stroke();}
+  return (HW_DEC.tex[kind]=mkTex(c));
+};
+/* ==== 4.7 END ==== */
+
 
 
 
@@ -22188,9 +22403,9 @@ var PACKS={
   // popup, and the server will not sell it. The items are UNRELEASED until
   // then too, so the only way to have them is a gift
   jays:{name:"JBOB & JDOG PACK",yen:1800,col:"#4ac0ff",off:true,
-    items:[["skin","jbob"],["skin","jdog"],["skin","zandeezy"],["skin","bigonion"],["skin","smg"],
-      ["sword","jbobfire"],["sword","moakslayer"],["sword","demonyart"],["sword","dutrocannon"],["sword","rampteslacam"],["emote","powersurge"]],
-    desc:"Jbob, Jdog, Zandeezy, Big Onion 1 and Smg (skins), Blue Blaze, The Moak Slayer, Demon Yart, Dutro Cannon and Ramp Tesla Cam (blades) and the Power Surge emote. Only in this pack, and only for one week.",
+    items:[["skin","jbob"],["skin","jdog"],["skin","zandeezy"],["skin","bigonion"],["skin","smg"],["skin","ricky"],
+      ["sword","jbobfire"],["sword","moakslayer"],["sword","demonyart"],["sword","dutrocannon"],["sword","rampteslacam"],["sword","thehog"],["emote","powersurge"],["emote","cammy"]],
+    desc:"Jbob, Jdog, Zandeezy, Big Onion 1, Smg and Ricky (skins), Blue Blaze, The Moak Slayer, Demon Yart, Dutro Cannon, Ramp Tesla Cam and The Hog (blades) and the Power Surge and Cammy emotes. Only in this pack, and only for one week.",
     from:EVENT_SHOPS.wendigo.to+14*864e5,to:EVENT_SHOPS.wendigo.to+21*864e5}
 };
 // the pack the stand is showing: the one on sale, or the next to open
