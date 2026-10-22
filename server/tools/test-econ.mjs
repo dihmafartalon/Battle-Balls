@@ -260,39 +260,39 @@ console.log("currency split tests passed"); }
   console.log("after hours pack tests passed");
 }
 
-// ---- next week's pack (Jbob, Jdog, Zandeezy, Big Onion 1, Smg): set up but switched off, its items unreleased ----
+// ---- the Jbob & Jdog Pack: Oct 22-29 (Pacific), 1800 yen, fourteen items, once ----
 {
   const { CAT } = await import("../src/catalog.js");
   const P = CAT.packs.jays, A = CAT.packs.afterhours;
-  assert.ok(P && P.off, "switched off"); assert.equal(P.from, A.to, "slotted for the week after After Hours");
-  for (const now of [P.from - 1, P.from + 864e5, P.to - 1, P.to + 1]) {
-    const s = ensure({ yen: 1e5, econ: { v: 1 } });
-    const r = applyAct(s, { k: "pack", pack: "jays" }, { now });
-    assert.equal(r.ok, false, "never on sale while off"); assert.equal(s.yen, 1e5);
-    assert.ok(!s.skins.jbob && !s.skins.smg && !s.swords.moakslayer && !s.swords.rampteslacam && !s.emotes.powersurge);
-  }
-  const it = (t, id) => CAT.items[t].list.find(x => x.id === id);
+  assert.ok(!P.off, "released"); assert.equal(P.yen, 1800);
+  assert.equal(P.from, A.to, "opens the moment After Hours closes");
+  assert.equal(new Date(P.from).toISOString(), "2026-10-22T07:00:00.000Z");
+  assert.equal(new Date(P.to).toISOString(), "2026-10-29T07:00:00.000Z");
   const ALL = [["skin", "jbob"], ["skin", "jdog"], ["skin", "zandeezy"], ["skin", "bigonion"], ["skin", "smg"], ["skin", "ricky"],
     ["sword", "jbobfire"], ["sword", "moakslayer"], ["sword", "demonyart"], ["sword", "dutrocannon"], ["sword", "rampteslacam"], ["sword", "thehog"]];
-  assert.deepEqual(P.items.filter(q => q[0] !== "emote").map(q => q[1]).sort(), ALL.map(q => q[1]).sort(), "every skin and blade is in the pack");
-  for (const [t, id] of ALL) {
-    assert.ok(it(t, id), id); assert.equal(it(t, id).r, "secret", id + " is unreleased"); assert.equal(it(t, id).v, 0, id + " has no value");
-  }
-  // never in a chest, and a gifted one cannot be sold
-  for (let i = 0; i < 300; i++) { const t = ensure({ coins: 1e6 }); for (const tab of ["skin", "sword"]) { const rr = applyAct(t, { k: "chest", tab, grade: "normal", n: 10 }, { now: P.from, rnd: Math.random });
+  const EM = ["powersurge", "cammy"];
+  assert.deepEqual(P.items.filter(q => q[0] !== "emote").map(q => q[1]).sort(), ALL.map(q => q[1]).sort(), "every skin and blade is in it");
+  assert.deepEqual(P.items.filter(q => q[0] === "emote").map(q => q[1]).sort(), EM.slice().sort(), "both emotes are in it");
+  const it = (t, id) => CAT.items[t].list.find(x => x.id === id);
+  for (const [t, id] of ALL) { assert.ok(it(t, id), id); assert.equal(it(t, id).r, "mythic", id); }
+  const mid = P.from + 3 * 864e5;
+  let s = ensure({ yen: 5000, econ: { v: 1 } });
+  let r = applyAct(s, { k: "pack", pack: "jays" }, { now: P.from - 1 });
+  assert.equal(r.ok, false, "not before it opens"); assert.equal(s.yen, 5000);
+  r = applyAct(s, { k: "pack", pack: "jays" }, { now: mid });
+  assert.ok(r.ok, JSON.stringify(r)); assert.equal(s.yen, 3200);
+  for (const [t, id] of ALL) assert.ok((t === "skin" ? s.skins : s.swords)[id], "got " + id);
+  for (const id of EM) assert.ok(s.emotes[id], "got " + id);
+  r = applyAct(s, { k: "pack", pack: "jays" }, { now: mid }); assert.equal(r.ok, false, "never twice"); assert.equal(s.yen, 3200);
+  r = applyAct(ensure({ yen: 5000, econ: { v: 1 } }), { k: "pack", pack: "jays" }, { now: P.to }); assert.equal(r.ok, false, "gone when it closes");
+  // not enough yen: nothing taken, nothing given
+  const s3 = ensure({ yen: 1799, econ: { v: 1 } });
+  r = applyAct(s3, { k: "pack", pack: "jays" }, { now: mid }); assert.equal(r.ok, false); assert.equal(s3.yen, 1799); assert.ok(!s3.skins.jbob);
+  // never in a chest, and the emotes are not ones everybody has
+  for (let i = 0; i < 300; i++) { const t = ensure({ coins: 1e6 }); for (const tab of ["skin", "sword"]) { const rr = applyAct(t, { k: "chest", tab, grade: "normal", n: 10 }, { now: mid, rnd: Math.random });
     for (const w of rr.res.won) assert.ok(!ALL.some(q => q[1] === w.id), w.id); } }
-  const g = ensure({ econ: { v: 1 } }); g.skins.jbob = 1; g.swords.moakslayer = 1;
-  assert.equal(applyAct(g, { k: "sell", tab: "skin", id: "jbob" }, { now: P.from }).ok, false, "a gifted Jbob cannot be sold");
-  assert.equal(applyAct(g, { k: "sell", tab: "sword", id: "moakslayer" }, { now: P.from }).ok, false);
-  g.skins.smg = 1; g.swords.rampteslacam = 1;
-  assert.equal(applyAct(g, { k: "sell", tab: "skin", id: "smg" }, { now: P.from }).ok, false);
-  assert.equal(applyAct(g, { k: "sell", tab: "sword", id: "rampteslacam" }, { now: P.from }).ok, false);
-  for (const id of ["powersurge", "cammy"]) {
-    assert.ok(P.items.some(q => q[0] === "emote" && q[1] === id), id + " is in the pack");
-    assert.ok(!CAT.emotes.find(e => e.id === id).base, id + " is not one everybody has");
-  }
-  // the After Hours Pack is untouched
-  const s4 = ensure({ yen: 5000, econ: { v: 1 } });
-  assert.ok(applyAct(s4, { k: "pack", pack: "afterhours" }, { now: A.from + 864e5 }).ok);
+  for (const id of EM) assert.ok(!CAT.emotes.find(e => e.id === id).base, id);
+  // After Hours is over by then
+  assert.equal(applyAct(ensure({ yen: 5000, econ: { v: 1 } }), { k: "pack", pack: "afterhours" }, { now: mid }).ok, false);
   console.log("jbob & jdog pack tests passed");
 }
